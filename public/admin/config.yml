@@ -18,9 +18,10 @@ collections:
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
-      - label: 'Partners'
-        name: 'partners'
+      - label: 'Partner'
+        name: 'partner'
         folder: 'content/partners'
+        identifier_field: name
         create: true
         fields:
           - { label: 'Name', name: 'name', widget: 'string' }

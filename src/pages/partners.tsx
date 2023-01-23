@@ -41,5 +41,5 @@ const Partners = ({ partners, title, content }: Props) => {
 export default Partners
 
 export const getStaticProps = () => ({
-  props: { partners: getFolder('partners'), ...getFile('partnerPage') },
+  props: { partners: getFolder('partners'), ...getFile('partners') },
 })
