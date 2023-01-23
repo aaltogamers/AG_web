@@ -1,26 +1,26 @@
 backend:
   name: git-gateway
-media_folder: public/img
-public_folder: img
+media_folder: public/images
+public_folder: public/images
 collections:
   - name: 'pages'
     label: 'Pages'
     files:
       - label: 'Landing'
         name: 'landing'
-        file: 'content/landing.md'
+        file: 'src/content/landing.md'
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
       - label: 'Partners'
         name: 'partners'
-        file: 'content/partners.md'
+        file: 'src/content/partners.md'
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
       - label: 'Partner'
         name: 'partner'
-        folder: 'content/partners'
+        folder: 'src/content/partners'
         create: true
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
