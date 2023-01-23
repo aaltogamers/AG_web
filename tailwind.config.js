@@ -5,7 +5,7 @@ module.exports = {
     // fontFamily: { sans: ["Roboto"],},
     extend: {
       colors: {
-        black: '#000000',
+        black: '#090221',
         red: '#FE574A',
       },
     },
