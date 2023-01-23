@@ -16,7 +16,6 @@ const Home = () => {
   return (
     <>
       <Head>
-        <script src="https://identity.netlify.com/v1/netlify-identity-widget.js" />
         <title>Aalto Gamers</title>
       </Head>
       <article>
