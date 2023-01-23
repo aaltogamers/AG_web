@@ -18,7 +18,6 @@ const Home = () => {
       <Head>
         <script src="https://identity.netlify.com/v1/netlify-identity-widget.js" />
         <title>Aalto Gamers</title>
-        <html lang="en" />
       </Head>
       <article>
         <h1>{title}</h1>
