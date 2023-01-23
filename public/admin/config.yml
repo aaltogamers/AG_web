@@ -18,14 +18,14 @@ collections:
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
-      - label: 'Partner'
-        name: 'partner'
-        folder: 'src/content/partners'
-        create: true
-        fields:
-          - { label: 'Title', name: 'title', widget: 'string' }
-          - { label: 'Name', name: 'name', widget: 'string' }
-          - { label: 'Image', name: 'image', widget: 'image' }
-          - { label: 'Finnish Link', name: 'finnishLink', widget: 'string' }
-          - { label: 'English Link', name: 'englishLink', widget: 'string' }
-          - { label: 'Body', name: 'body', widget: 'markdown' }
+  - label: 'Partner'
+    name: 'partner'
+    folder: 'src/content/partners'
+    create: true
+    fields:
+      - { label: 'Title', name: 'title', widget: 'string' }
+      - { label: 'Name', name: 'name', widget: 'string' }
+      - { label: 'Image', name: 'image', widget: 'image' }
+      - { label: 'Finnish Link', name: 'finnishLink', widget: 'string' }
+      - { label: 'English Link', name: 'englishLink', widget: 'string' }
+      - { label: 'Body', name: 'body', widget: 'markdown' }
