@@ -1,5 +1,4 @@
 module.exports = {
-  experimental: { appDir: true },
   reactStrictMode: true,
   webpack: (cfg) => {
     cfg.module.rules.push({

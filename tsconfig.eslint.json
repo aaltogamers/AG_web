@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "include": [
-    "./app/**/*",
+    "./pages/**/*",
     "next.config.js",
     ".eslintrc.js",
     "tailwind.config.js",

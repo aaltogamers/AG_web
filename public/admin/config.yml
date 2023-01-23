@@ -3,8 +3,8 @@ backend:
 media_folder: public/img
 public_folder: img
 collections:
-  - name: 'app'
-    label: 'App'
+  - name: 'pages'
+    label: 'Pages'
     files:
       - label: 'Home'
         name: 'home'
