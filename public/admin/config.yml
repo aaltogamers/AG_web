@@ -21,9 +21,9 @@ collections:
       - label: 'Partner'
         name: 'partner'
         folder: 'content/partners'
-        identifier_field: name
         create: true
         fields:
+          - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Name', name: 'name', widget: 'string' }
           - { label: 'Image', name: 'image', widget: 'image' }
           - { label: 'Finnish Link', name: 'finnishLink', widget: 'string' }

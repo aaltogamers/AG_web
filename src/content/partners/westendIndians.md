@@ -1,4 +1,5 @@
 ---
+title: westendIndians
 name: Westend Indians
 image: /images/westendIndians.png
 finnishLink: [https://westendindians.fi/]
