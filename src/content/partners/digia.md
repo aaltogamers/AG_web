@@ -1,5 +1,4 @@
 ---
-title: digia
 name: Digia
 image: /images/digia.png
 finnishLink: [https://digia.com/rekrytointi/]

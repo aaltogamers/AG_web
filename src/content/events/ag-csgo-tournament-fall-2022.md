@@ -1,5 +1,4 @@
 ---
-title: csTournament2022
 name: AG CS:GO Tournament Fall 2022
 image: /images/digia.png
 isRecurring: false

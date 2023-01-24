@@ -22,8 +22,8 @@ collections:
     name: 'partner'
     folder: 'src/content/partners'
     create: true
+    identifier_field: name
     fields:
-      - { label: 'Title', name: 'title', widget: 'string' }
       - { label: 'Name', name: 'name', widget: 'string' }
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Finnish Link', name: 'finnishLink', widget: 'string' }
@@ -33,8 +33,8 @@ collections:
     name: 'event'
     folder: 'src/content/events'
     create: true
+    identifier_field: name
     fields:
-      - { label: 'Title', name: 'title', widget: 'string' }
       - { label: 'Name', name: 'name', widget: 'string' }
       - {
           label: 'Time',
@@ -42,8 +42,9 @@ collections:
           widget: 'datetime',
           date_format: 'DD.MM.YYYY',
           time_format: false,
+          required: false,
         }
       - { label: 'Image', name: 'image', widget: 'image' }
-      - { label: 'isRecurring', name: 'isRecurring', widget: 'boolean' }
+      - { label: 'Recurring', name: 'isRecurring', widget: 'boolean' }
       - { label: 'Description', name: 'description', widget: 'markdown' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
