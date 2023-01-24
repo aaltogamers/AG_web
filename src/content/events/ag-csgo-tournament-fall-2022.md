@@ -1,6 +1,6 @@
 ---
 name: AG CS:GO Tournament Fall 2022
-image: /images/digia.png
+image: images/digia.png
 isRecurring: false
 description: The CS:GO announcements just keep coming! This time, it's our biggest tournament of the fall season. Behold the Aalto Gamers CS:GO Fall tournament 2022. Gather up your team of young (or old) hitters to compete for a prize pool of a 1000€ or come just to have fun with your best mates! Online qualifiers will be held on Sunday 27.11. and the four best teams will face off in live finals at Design factory on Saturday 3.12.
 time: 03-11-2022
