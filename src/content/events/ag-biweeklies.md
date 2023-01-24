@@ -1,6 +1,5 @@
 ---
 name: AG Biweeklies
-time: 2023-01-24T10:47:46.085Z
 image: public/images/biweekly.png
 isRecurring: true
 description: Biweeklies are relaxed gaming nights organized every other Friday

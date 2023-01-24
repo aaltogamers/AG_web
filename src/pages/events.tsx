@@ -14,9 +14,9 @@ const Events = ({ events }: Props) => {
   const todayEvents: AGEvent[] = []
   const pastEvents: AGEvent[] = []
   events.forEach((event) => {
-    const eventMoment = moment(event.time, 'DD.MM.YYYY')
     const nowMoment = moment()
     const { isRecurring } = event
+    const eventMoment = isRecurring ? nowMoment : moment(event.time, 'DD-MM-YYYY')
     const isToday = eventMoment.isSame(nowMoment, 'day')
     const isInFuture = eventMoment.isAfter(nowMoment)
     if (isRecurring) {

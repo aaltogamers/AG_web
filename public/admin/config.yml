@@ -19,7 +19,7 @@ collections:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
   - label: 'Partners'
-    name: 'partner'
+    name: 'partners'
     folder: 'src/content/partners'
     create: true
     identifier_field: name
@@ -30,7 +30,7 @@ collections:
       - { label: 'English Link', name: 'englishLink', widget: 'string' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
   - label: 'Events'
-    name: 'event'
+    name: 'events'
     folder: 'src/content/events'
     create: true
     identifier_field: name
@@ -40,6 +40,7 @@ collections:
           label: 'Time',
           name: 'time',
           widget: 'datetime',
+          format: 'DD.MM.YYYY',
           date_format: 'DD.MM.YYYY',
           time_format: false,
           required: false,
