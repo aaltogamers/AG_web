@@ -6,9 +6,9 @@ collections:
   - name: 'pages'
     label: 'Pages'
     files:
-      - label: 'Landing'
-        name: 'landing'
-        file: 'src/content/landing.md'
+      - label: 'Home'
+        name: 'home'
+        file: 'src/content/home.md'
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
@@ -18,7 +18,7 @@ collections:
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
-  - label: 'Partner'
+  - label: 'Partners'
     name: 'partner'
     folder: 'src/content/partners'
     create: true
@@ -28,4 +28,21 @@ collections:
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Finnish Link', name: 'finnishLink', widget: 'string' }
       - { label: 'English Link', name: 'englishLink', widget: 'string' }
+      - { label: 'Body', name: 'body', widget: 'markdown' }
+  - label: 'Events'
+    name: 'event'
+    folder: 'src/content/events'
+    create: true
+    fields:
+      - { label: 'Title', name: 'title', widget: 'string' }
+      - { label: 'Name', name: 'name', widget: 'string' }
+      - {
+          label: 'Time',
+          name: 'time',
+          widget: 'datetime',
+          date_format: 'DD.MM.YYYY',
+          time_format: 'HH:mm',
+        }
+      - { label: 'Image', name: 'image', widget: 'image' }
+      - { label: 'isRecurring', name: 'isRecurring', widget: 'boolean' }
       - { label: 'Body', name: 'body', widget: 'markdown' }

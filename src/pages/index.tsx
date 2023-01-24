@@ -7,7 +7,7 @@ type Props = {
   content: string
 }
 
-const Landing = ({ title, content }: Props) => {
+const Home = ({ title, content }: Props) => {
   return (
     <>
       <Head>
@@ -21,8 +21,8 @@ const Landing = ({ title, content }: Props) => {
   )
 }
 
-export default Landing
+export default Home
 
 export const getStaticProps = () => ({
-  props: getFile('landing'),
+  props: getFile('home'),
 })
