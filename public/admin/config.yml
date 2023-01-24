@@ -41,8 +41,9 @@ collections:
           name: 'time',
           widget: 'datetime',
           date_format: 'DD.MM.YYYY',
-          time_format: 'HH:mm',
+          time_format: false,
         }
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'isRecurring', name: 'isRecurring', widget: 'boolean' }
+      - { label: 'Description', name: 'description', widget: 'markdown' }
       - { label: 'Body', name: 'body', widget: 'markdown' }

@@ -1,41 +1,52 @@
+import moment from 'moment'
 import Head from 'next/head'
-import ReactMarkdown from 'react-markdown'
+import EventList from '../components/EventList'
+import { AGEvent } from '../types/types'
 import { getFolder } from '../utils/fileUtils'
 
-type Event = {
-  name: string
-  image: string
-  time: string
-  content: string
-  isRecurring: boolean
-}
-
 type Props = {
-  events: Event[]
+  events: AGEvent[]
 }
 
-const Partners = ({ events }: Props) => {
+const Events = ({ events }: Props) => {
+  const recurringEvents: AGEvent[] = []
+  const upcomingEvents: AGEvent[] = []
+  const todayEvents: AGEvent[] = []
+  const pastEvents: AGEvent[] = []
+  events.forEach((event) => {
+    const eventMoment = moment(event.time, 'DD.MM.YYYY')
+    const nowMoment = moment()
+    const { isRecurring } = event
+    const isToday = eventMoment.isSame(nowMoment, 'day')
+    const isInFuture = eventMoment.isAfter(nowMoment)
+    if (isRecurring) {
+      recurringEvents.push(event)
+    } else if (isToday) {
+      todayEvents.push(event)
+    } else if (isInFuture) {
+      upcomingEvents.push(event)
+    } else {
+      pastEvents.push(event)
+    }
+  })
   return (
     <>
       <Head>
-        <title>Partners - Aalto Gamers</title>
+        <title>Events - Aalto Gamers</title>
       </Head>
       <div>
         <h1>Events</h1>
-        {events.map((event) => (
-          <div key={event.name}>
-            <h3>{event.name}</h3>
-            <img src={event.image} alt={`${event.name}`} />
-            <ReactMarkdown>{event.content}</ReactMarkdown>
-          </div>
-        ))}
+        <EventList name="Events right now" events={todayEvents} />
+        <EventList name="Upcoming events" events={upcomingEvents} />
+        <EventList name="Recurring events" events={recurringEvents} />
+        <EventList name="Past events" events={pastEvents} />
       </div>
     </>
   )
 }
 
-export default Partners
+export default Events
 
 export const getStaticProps = () => ({
-  props: { partners: getFolder('events') },
+  props: { events: getFolder('events') },
 })
