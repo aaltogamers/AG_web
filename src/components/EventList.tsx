@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown'
 import { AGEvent } from '../types/types'
+import Header from './Header'
 
 type Props = {
   name: string
@@ -8,13 +9,25 @@ type Props = {
 
 const EventList = ({ events, name }: Props) => {
   return events.length > 0 ? (
-    <div>
-      <h2>{name}</h2>
+    <div className="flex flex-col w-full items-center">
+      <Header>{name}</Header>
       {events.map((event) => (
-        <div key={event.name}>
-          <h3>{event.name}</h3>
-          <img src={event.image} alt={`${event.name}`} />
-          <ReactMarkdown>{event.description}</ReactMarkdown>
+        <div className="flex flex-col py-20 w-3/4 justify-center" key={event.name}>
+          <hr className="bg-gray w-full" />
+          <div className="flex">
+            <img
+              src={event.image}
+              alt={`${event.name}`}
+              className="w-[40%] max-h-96 object-contain"
+            />
+            <div className="flex flex-col p-10">
+              <h3>{event.name}</h3>
+              <ReactMarkdown>{event.description}</ReactMarkdown>
+              <a href="/events-2022-lol-osm" className="button primary">
+                Learn more
+              </a>
+            </div>
+          </div>
         </div>
       ))}
     </div>

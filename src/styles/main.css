@@ -3035,7 +3035,7 @@ input[type='button']:disabled,
 }
 
 .goto-next:before {
-  background-image: url('../../public/images/arrow.svg');
+  background-image: url('/images/arrow.svg');
   background-position: center center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -3143,7 +3143,7 @@ input[type='button']:disabled,
 }
 
 .spotlight:before {
-  background-image: url('../../public/images/overlay.png');
+  background-image: url('/images/overlay.png');
   content: '';
   display: block;
   height: 100%;
@@ -3481,7 +3481,7 @@ body.landing #page-wrapper {
 #banner {
   background-attachment: fixed;
   background-color: #272833;
-  background-image: url('../../public/images/home-cover.png');
+  background-image: url('/images/home-cover.png');
   background-position: center center;
   background-size: cover;
   box-shadow: 0 0.25em 0.5em 0 rgba(0, 0, 0, 0.25);
@@ -3501,7 +3501,7 @@ body.landing #page-wrapper {
 
 #banner:after {
   background-image: linear-gradient('to bottom', rgba(23, 24, 32, 0.95), rgba(23, 24, 32, 0.95)),
-    url('../../public/images/overlay.png');
+    url('/images/overlay.png');
   content: '';
   display: block;
   height: 100%;

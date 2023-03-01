@@ -1,6 +1,7 @@
 import moment from 'moment'
 import Head from 'next/head'
 import EventList from '../components/EventList'
+import Layout from '../components/Layout'
 import { AGEvent } from '../types/types'
 import { getFolder } from '../utils/fileUtils'
 
@@ -34,13 +35,14 @@ const Events = ({ events }: Props) => {
       <Head>
         <title>Events - Aalto Gamers</title>
       </Head>
-      <div>
-        <h1>Events</h1>
-        <EventList name="Events right now" events={todayEvents} />
-        <EventList name="Upcoming events" events={upcomingEvents} />
-        <EventList name="Recurring events" events={recurringEvents} />
-        <EventList name="Past events" events={pastEvents} />
-      </div>
+      <Layout>
+        <div>
+          <EventList name="Events right now" events={todayEvents} />
+          <EventList name="Upcoming events" events={upcomingEvents} />
+          <EventList name="Recurring events" events={recurringEvents} />
+          <EventList name="Past events" events={pastEvents} />
+        </div>
+      </Layout>
     </>
   )
 }
