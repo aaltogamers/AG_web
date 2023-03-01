@@ -1,8 +1,7 @@
 import React from 'react'
-import pic01 from '../../public/AG_images/logo-white.png'
 import { Link as ScrollLink } from 'react-scroll'
 
-const Banner = (props) => (
+const Banner = () => (
   <section id="banner">
     <div className="content">
       <header>
@@ -18,17 +17,17 @@ const Banner = (props) => (
         </p>
       </header>
       <span className="image">
-        <img src={pic01} alt="intro" />
+        <img src="images/logo-white.png" alt="intro" />
       </span>
     </div>
     <ScrollLink
       to="one"
       className="goto-next"
       activeClass="active"
-      smooth={true}
+      smooth
       offset={50}
       duration={1500}
-      spy={true}
+      spy
     >
       Next
     </ScrollLink>

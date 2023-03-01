@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'Blockletter';
+  src: url('../../public/fonts/Blockletter.otf');
+}
+
+@layer base {
+  a {
+    @apply hover:text-red;
+  }
+}

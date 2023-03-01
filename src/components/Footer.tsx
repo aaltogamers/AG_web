@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Footer = (props) => (
+const Footer = () => (
   <footer id="footer">
     <ul className="icons">
       <li>
@@ -31,9 +31,6 @@ const Footer = (props) => (
     </ul>
     <ul className="copyright">
       <li>&copy; 2022 Aalto Gamers ry. All rights reserved.</li>
-      <li>
-        Design: <a href="http://html5up.net">HTML5 UP</a>
-      </li>
     </ul>
   </footer>
 )

@@ -3,7 +3,7 @@ import { Link } from 'next'
 
 const MobileMenu = ({ menuLinks }) => (
   <nav>
-    {menuLinks.map((link) =>
+    {menuLinks?.map((link) =>
       link.items ? (
         <React.Fragment key={link.name}>
           <Link className="link depth-0" to={link.link}>
