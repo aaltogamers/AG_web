@@ -49,3 +49,14 @@ collections:
       - { label: 'Recurring', name: 'isRecurring', widget: 'boolean' }
       - { label: 'Description', name: 'description', widget: 'markdown' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
+  - label: 'LandingInfos'
+    name: 'landinginfos'
+    folder: 'src/content/landingInfos'
+    create: true
+    identifier_field: Title
+    fields:
+      - { label: 'Title', name: 'title', widget: 'string' }
+      - { label: 'Subtitle', name: 'subtitle', widget: 'string' }
+      - { label: 'Link', name: 'link', widget: 'string' }
+      - { label: 'Image', name: 'image', widget: 'image' }
+      - { label: 'Body', name: 'body', widget: 'markdown' }

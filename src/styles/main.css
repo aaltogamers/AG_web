@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto:100,300,100italic,300italic');
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Black:100,300,100italic,300italic');
 @import url('https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Gentium+Basic:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap');
@@ -3501,13 +3500,7 @@ body.landing #page-wrapper {
 }
 
 #banner:after {
-  background-image: -moz-linear-gradient(top, rgba(23, 24, 32, 0.95), rgba(23, 24, 32, 0.95)),
-    url('../../public/images/overlay.png');
-  background-image: -webkit-linear-gradient(top, rgba(23, 24, 32, 0.95), rgba(23, 24, 32, 0.95)),
-    url('../../public/images/overlay.png');
-  background-image: -ms-linear-gradient(top, rgba(23, 24, 32, 0.95), rgba(23, 24, 32, 0.95)),
-    url('../../public/images/overlay.png');
-  background-image: linear-gradient(top, rgba(23, 24, 32, 0.95), rgba(23, 24, 32, 0.95)),
+  background-image: linear-gradient('to bottom', rgba(23, 24, 32, 0.95), rgba(23, 24, 32, 0.95)),
     url('../../public/images/overlay.png');
   content: '';
   display: block;

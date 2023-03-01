@@ -4,7 +4,7 @@ import { Link as ScrollLink } from 'react-scroll'
 const MainInfoBox = () => {
   const content = [
     <header>
-      <h2>Who are we?</h2>ges
+      <h2>Who are we?</h2>
       <p>Aalto Gamers is a gaming community based in Aalto University.</p>
     </header>,
     <p>
@@ -31,8 +31,11 @@ const MainInfoBox = () => {
       <div className="content">
         <div className="container">
           <div className="row">
-            {content.map((item) => (
-              <div className="col-4 col-12-medium">{item}</div>
+            {content.map((item, i) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <div key={i} className="col-4 col-12-medium">
+                {item}
+              </div>
             ))}
           </div>
         </div>

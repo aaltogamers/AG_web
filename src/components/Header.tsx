@@ -75,7 +75,7 @@ const Header = () => {
         >
           <nav className="flex flex-col p-4 w-[50vw] min-h-full">
             {links.map(({ name, link }) => (
-              <Link href={link} className="text-2xl py-4">
+              <Link href={link} key={name} className="text-2xl py-4">
                 {name}
               </Link>
             ))}

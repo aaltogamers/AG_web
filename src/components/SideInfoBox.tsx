@@ -1,26 +1,26 @@
 import React from 'react'
 import { Link as ScrollLink } from 'react-scroll'
+import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
 
 interface Props {
   title: string
   subtitle: string
   content: string
   image: string
-  imageAltText: string
   link: string
 }
 
-const SideInfoBox = ({ title, subtitle, content, image, imageAltText, link }: Props) => (
+const SideInfoBox = ({ title, subtitle, content, image, link }: Props) => (
   <section className="spotlight style2 left" style={{ backgroundImage: `url(images/${image})` }}>
     <span className="image fit main bottom">
-      <img src={`images/${image}`} alt={imageAltText} />
+      <img src={`images/${image}`} alt={title} />
     </span>
     <div className="content">
       <header>
         <h2>{title}</h2>
         <p>{subtitle}</p>
       </header>
-      <p>{content}</p>
+      <ReactMarkdown>{content}</ReactMarkdown>
       <ul className="actions">
         <li>
           <a href={link} className="button">
