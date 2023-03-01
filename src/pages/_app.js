@@ -1,4 +1,5 @@
 import '../styles/globals.css'
+import '../styles/main.css'
 
 // eslint-disable-next-line react/function-component-definition
 export default function App({ Component, pageProps }) {

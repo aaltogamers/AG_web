@@ -1,6 +1,14 @@
 import Head from 'next/head'
 import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
 import { getFile } from '../utils/fileUtils'
+import Layout from '../components/layout'
+import Banner from '../components/Banner'
+import One from '../components/One'
+import Two from '../components/Two'
+import Three from '../components/Three'
+import Four from '../components/Four'
+import Five from '../components/Five'
+import Six from '../components/Six'
 
 type Props = {
   title: string
@@ -13,10 +21,13 @@ const Home = ({ title, content }: Props) => {
       <Head>
         <title>Aalto Gamers</title>
       </Head>
-      <div>
-        <h1>{title}</h1>
-        <ReactMarkdown>{content}</ReactMarkdown>
-      </div>
+      <Layout>
+        <Banner />
+        <One />
+        <Two />
+        <Four />
+        <Six />
+      </Layout>
     </>
   )
 }
