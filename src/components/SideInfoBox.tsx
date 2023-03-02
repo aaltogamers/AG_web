@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link as ScrollLink } from 'react-scroll'
-import { ReactMarkdown } from 'react-markdown/lib/react-markdown'
+import Markdown from './Markdown'
 
 interface Props {
   title: string
@@ -20,7 +20,7 @@ const SideInfoBox = ({ title, subtitle, content, image, link }: Props) => (
         <h2>{title}</h2>
         <p>{subtitle}</p>
       </header>
-      <ReactMarkdown>{content}</ReactMarkdown>
+      <Markdown>{content}</Markdown>
       <ul className="actions">
         <li>
           <a href={link} className="button">

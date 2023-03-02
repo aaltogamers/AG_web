@@ -1,5 +1,7 @@
 import Head from 'next/head'
-import ReactMarkdown from 'react-markdown'
+
+import Header from '../components/Header'
+import Markdown from '../components/Markdown'
 import { getFolder, getFile } from '../utils/fileUtils'
 
 type Partner = {
@@ -23,16 +25,18 @@ const Partners = ({ partners, title, content }: Props) => {
       <Head>
         <title>Partners - Aalto Gamers</title>
       </Head>
-      <div>
-        <h1>{title}</h1>
+      <Header>{title}</Header>
+      <div className="flex mt-20 flex-wrap justify-around">
         {partners.map((partner) => (
-          <div key={partner.name}>
-            <h3>{partner.name}</h3>
+          <div key={partner.name} className="flex flex-col items-center px-8 max-w-xl text-center">
             <img src={partner.image} alt={`${partner.name} logo`} />
-            <ReactMarkdown>{partner.content}</ReactMarkdown>
+            <h3>{partner.name}</h3>
+            <Markdown>{partner.content}</Markdown>
           </div>
         ))}
-        <ReactMarkdown>{content}</ReactMarkdown>
+      </div>
+      <div className="flex flex-col p-20">
+        <Markdown>{content}</Markdown>
       </div>
     </>
   )

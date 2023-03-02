@@ -1,6 +1,6 @@
-import ReactMarkdown from 'react-markdown'
 import { AGEvent } from '../types/types'
 import Header from './Header'
+import Markdown from './Markdown'
 
 type Props = {
   name: string
@@ -22,7 +22,7 @@ const EventList = ({ events, name }: Props) => {
             />
             <div className="flex flex-col p-10">
               <h3>{event.name}</h3>
-              <ReactMarkdown>{event.description}</ReactMarkdown>
+              <Markdown>{event.description}</Markdown>
               <a href="/events-2022-lol-osm" className="button primary">
                 Learn more
               </a>
