@@ -1,8 +1,6 @@
 import Header from '../components/Header'
 
-interface Props {}
-
-const HallOfFame = ({}: Props) => {
+const HallOfFame = () => {
   return (
     <div>
       <Header>Hall of Fame</Header>

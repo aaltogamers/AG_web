@@ -1,8 +1,6 @@
 import Header from '../components/Header'
 
-interface Props {}
-
-const About = ({}: Props) => {
+const About = () => {
   return (
     <div>
       <Header>About us</Header>
