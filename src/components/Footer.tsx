@@ -1,37 +1,17 @@
+import Link from 'next/link'
 import React from 'react'
+import { medias } from '../utils/contants'
 
 const Footer = () => (
-  <footer id="footer">
-    <ul className="icons">
-      <li>
-        <a href="https://discord.gg/Ew7nGQqHgc" className="icon brands fa-discord">
-          <span className="label">discord</span>
-        </a>
-      </li>
-      <li>
-        <a href="http://facebook.com/aaltogamers/" className="icon brands fa-facebook-f">
-          <span className="label">Facebook</span>
-        </a>
-      </li>
-      <li>
-        <a href="http://www.instagram.com/aaltogamers/" className="icon brands fa-instagram">
-          <span className="label">Instagram</span>
-        </a>
-      </li>
-      <li>
-        <a href="http://bit.do/aaltogamerslobby" className="icon brands fa-telegram">
-          <span className="label">Telegram</span>
-        </a>
-      </li>
-      <li>
-        <a href="http://twitch.tv/aaltogamers" className="icon brands fa-twitch">
-          <span className="label">Twitch</span>
-        </a>
-      </li>
-    </ul>
-    <ul className="copyright">
-      <li>&copy; 2022 Aalto Gamers ry. All rights reserved.</li>
-    </ul>
+  <footer className="flex flex-col justify-center items-center">
+    <div className="flex justify-center mt-10">
+      {medias.slice(1).map(({ link, Icon }) => (
+        <Link href={link}>
+          <Icon size={30} className="mx-2" />
+        </Link>
+      ))}
+    </div>
+    <div className="py-10">&copy; 2022 Aalto Gamers ry. All rights reserved.</div>
   </footer>
 )
 
