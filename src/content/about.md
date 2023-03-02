@@ -1,5 +1,5 @@
 ---
-title: About Us
+title: About us
 boardTitle: Aalto Gamers Board of 2023
 ---
 
