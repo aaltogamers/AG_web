@@ -7,14 +7,17 @@ interface ComponentProps {
 
 interface MarkdownProps {
   children: string
+  noMargins?: boolean
 }
 
-const P = ({ children }: ComponentProps) => <p className="m-0">{children}</p>
+const PWithOutMargins = ({ children }: ComponentProps) => <p className="m-0">{children}</p>
 
-const Markdown = ({ children }: MarkdownProps) => {
-  const components: Components = {
-    p: P,
-  }
+const Markdown = ({ children, noMargins = false }: MarkdownProps) => {
+  const components: Components = noMargins
+    ? {
+        p: PWithOutMargins,
+      }
+    : {}
 
   return <ReactMarkdown components={components}>{children}</ReactMarkdown>
 }

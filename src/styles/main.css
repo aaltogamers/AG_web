@@ -122,6 +122,10 @@ ul {
   list-style: none;
 }
 
+html {
+  font-family: Oswald;
+}
+
 blockquote,
 q {
   quotes: none;

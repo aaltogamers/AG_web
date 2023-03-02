@@ -18,6 +18,13 @@ collections:
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
+      - label: 'About'
+        name: 'about'
+        file: 'src/content/about.md'
+        fields:
+          - { label: 'Title', name: 'title', widget: 'string' }
+          - { label: 'Board Title', name: 'boardTitle', widget: 'string' }
+          - { label: 'Body', name: 'body', widget: 'markdown' }
   - label: 'Partners'
     name: 'partners'
     folder: 'src/content/partners'
@@ -60,3 +67,14 @@ collections:
       - { label: 'Link', name: 'link', widget: 'string' }
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
+  - label: 'BoardMembers'
+    name: 'boardmembers'
+    folder: 'src/content/boardmembers'
+    create: true
+    identifier_field: Name
+    fields:
+      - { label: 'Name', name: 'name', widget: 'string' }
+      - { label: 'Title', name: 'title', widget: 'string' }
+      - { label: 'Status', name: 'status', widget: 'string' }
+      - { label: 'Game', name: 'game', widget: 'string' }
+      - { label: 'Image', name: 'image', widget: 'image', required: false }
