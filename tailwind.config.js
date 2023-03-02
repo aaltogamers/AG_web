@@ -2,12 +2,12 @@
 module.exports = {
   content: ['./src/pages/**/*.{js,ts,jsx,tsx}', './src/components/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    fontFamily: { blockletter: 'Blockletter' },
+    fontFamily: { blockletter: 'Blockletter', oswald: 'Oswald' },
     extend: {
       colors: {
-        black: '#090221',
+        black: '#1C1D26',
         red: '#FE574A',
-        darkBlue: '#23242D',
+        darkGray: '#23242D',
       },
     },
   },

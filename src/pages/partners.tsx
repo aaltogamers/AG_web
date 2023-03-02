@@ -2,6 +2,7 @@ import Head from 'next/head'
 
 import Header from '../components/Header'
 import Markdown from '../components/Markdown'
+import PageWrapper from '../components/PageWrapper'
 import { getFolder, getFile } from '../utils/fileUtils'
 
 type Partner = {
@@ -21,7 +22,7 @@ type Props = {
 
 const Partners = ({ partners, title, content }: Props) => {
   return (
-    <>
+    <PageWrapper>
       <Head>
         <title>Partners - Aalto Gamers</title>
       </Head>
@@ -38,7 +39,7 @@ const Partners = ({ partners, title, content }: Props) => {
       <div className="flex flex-col p-20">
         <Markdown noMargins>{content}</Markdown>
       </div>
-    </>
+    </PageWrapper>
   )
 }
 

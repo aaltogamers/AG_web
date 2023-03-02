@@ -1,11 +1,11 @@
 import React from 'react'
-import { Link as ScrollLink } from 'react-scroll'
+import ScrollLink from './ScrollLink'
 
 const MainInfoBox = () => {
   const content = [
     <header>
       <h2>Who are we?</h2>
-      <p>Aalto Gamers is a gaming community based in Aalto University.</p>
+      <h3>Aalto Gamers is a gaming community based in Aalto University.</h3>
     </header>,
     <p>
       We organise high quality tournaments as well as more casual and regular gaming nights. The
@@ -21,36 +21,22 @@ const MainInfoBox = () => {
   ]
   return (
     <section
-      id="one"
-      className="style1 bottom spotlight"
-      style={{ backgroundImage: `url(images/kuva_AG_3.jpg)` }}
+      id="mainInfo"
+      className="bg-[url('/images/kuva_AG_3.jpg')] relative h-[100vh] flex flex-col justify-end  bg-center bg-fixed bg-cover"
     >
-      <span className="image fit main">
-        <img src="images/kuva_AG_3.jpg" alt="" />
-      </span>
-      <div className="content">
-        <div className="container">
-          <div className="row">
+      <div>
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-3 py-16 bg-black bg-opacity-90 w-full border-t-8 border-red">
             {content.map((item, i) => (
               // eslint-disable-next-line react/no-array-index-key
-              <div key={i} className="col-4 col-12-medium">
+              <div key={i} className="mx-4">
                 {item}
               </div>
             ))}
           </div>
         </div>
       </div>
-      <ScrollLink
-        to="two"
-        className="goto-next"
-        activeClass="active"
-        smooth
-        offset={50}
-        duration={1500}
-        spy
-      >
-        Next
-      </ScrollLink>
+      <ScrollLink to="sideInfo1" />
     </section>
   )
 }

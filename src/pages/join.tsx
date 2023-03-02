@@ -1,10 +1,15 @@
+import Head from 'next/head'
 import Link from 'next/link'
 import Header from '../components/Header'
+import PageWrapper from '../components/PageWrapper'
 import { medias } from '../utils/contants'
 
 const Join = () => {
   return (
-    <div>
+    <PageWrapper>
+      <Head>
+        <title>Join - Aalto Gamers</title>
+      </Head>
       <Header>Join us</Header>
       <h3 className="w-full text-center mt-10">Be a part of the coolest gaming community!</h3>
       <div className="w-full justify-center flex">
@@ -17,7 +22,7 @@ const Join = () => {
           ))}
         </div>
       </div>
-    </div>
+    </PageWrapper>
   )
 }
 

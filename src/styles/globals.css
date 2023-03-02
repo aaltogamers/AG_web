@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,7 +9,39 @@
 }
 
 @layer base {
+  html,
+  body {
+    @apply text-white bg-black  font-thin;
+    font-family: 'Oswald', sans-serif;
+  }
   a {
     @apply hover:text-red;
+  }
+  .mainbutton {
+    @apply bg-red text-white py-2 px-4 rounded text-center;
+  }
+  .mainbutton:hover {
+    @apply filter brightness-110;
+  }
+  h1 {
+    @apply text-5xl;
+  }
+  h2 {
+    @apply text-4xl;
+  }
+  h3 {
+    @apply text-3xl;
+  }
+  h4 {
+    @apply text-2xl;
+  }
+  h5 {
+    @apply text-xl;
+  }
+  h6 {
+    @apply text-lg;
+  }
+  hr {
+    @apply border-0 border-b-2 border-gray-600 my-8;
   }
 }
