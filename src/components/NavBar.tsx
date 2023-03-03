@@ -40,18 +40,25 @@ const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
         AALTO GAMERS
       </Link>
     </div>
-    <div
-      className={`fixed bg-darkGray z-[100000] top-16 left-0 w-full h-full transition-[max-width] ease-in-out duration-500 pt-12 ${
-        isOpen ? 'max-w-[50%] overflow-x-hidden overflow-y-auto' : 'max-w-0 overflow-hidden'
-      }`}
-    >
-      <nav className="flex flex-col p-4 w-[50vw] min-h-full">
-        {links.map(({ name, link }) => (
-          <Link href={link} key={name} className="text-2xl py-4">
-            {name}
-          </Link>
-        ))}
-      </nav>
+    <div className="flex">
+      <div
+        className={`fixed bg-darkGray top-16 left-0 w-full h-full transition-[max-width] ease-in-out duration-500 pt-12 ${
+          isOpen ? 'max-w-[50%] overflow-x-hidden overflow-y-auto' : 'max-w-0 overflow-hidden'
+        }`}
+      >
+        <nav className="flex flex-col p-4 w-[50vw] min-h-full">
+          {links.map(({ name, link }) => (
+            <Link href={link} key={name} className="text-2xl py-4" onClick={() => setIsOpen(false)}>
+              {name}
+            </Link>
+          ))}
+        </nav>
+      </div>
+      <div
+        onClick={() => setIsOpen(false)}
+        aria-hidden="true"
+        className={isOpen ? 'fixed w-[50vw] min-h-full  right-0 top-16' : 'hidden'}
+      />
     </div>
   </div>
 )

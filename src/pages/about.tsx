@@ -39,7 +39,7 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
               ) : (
                 <img src="images/board-photos/juho.jpg" alt={`${boardMember.name}`} />
               )}
-              <h3>{boardMember.title}</h3>
+              <h3 className="mt-4 mb-2">{boardMember.title}</h3>
               <h4>{boardMember.name}</h4>
               <div>{boardMember.status}</div>
               <div>Favorite game: {boardMember.game}</div>

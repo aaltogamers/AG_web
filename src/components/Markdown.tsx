@@ -11,13 +11,12 @@ interface MarkdownProps {
 }
 
 const PWithOutMargins = ({ children }: ComponentProps) => <p className="m-0">{children}</p>
+const PWithMargins = ({ children }: ComponentProps) => <p className="my-4">{children}</p>
 
 const Markdown = ({ children, noMargins = false }: MarkdownProps) => {
-  const components: Components = noMargins
-    ? {
-        p: PWithOutMargins,
-      }
-    : {}
+  const components: Components = {
+    p: noMargins ? PWithOutMargins : PWithMargins,
+  }
 
   return <ReactMarkdown components={components}>{children}</ReactMarkdown>
 }
