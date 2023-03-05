@@ -19,7 +19,7 @@ type MobileProps = {
 
 const DesktopNavBar = ({ links }: DesktopProps) => (
   <nav className="hidden md:flex h-16  bg-darkGray">
-    <Link href="/" className="flex">
+    <Link href="/" className="flex w-60">
       <img src="/images/ag-banner.png" alt="Aalto Gamers" />
     </Link>
     <div className="flex justify-end w-full text-center items-center">
@@ -45,7 +45,7 @@ const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
     </div>
     <div className="flex">
       <div
-        className={`fixed bg-darkGray top-16 left-0 w-full h-full transition-[max-width] ease-in-out duration-500 pt-12 ${
+        className={`fixed bg-darkGray z-10 top-16 left-0 w-full h-full transition-[max-width] ease-in-out duration-500 pt-12 ${
           isOpen ? 'max-w-[50%] overflow-x-hidden overflow-y-auto' : 'max-w-0 overflow-hidden'
         }`}
       >
