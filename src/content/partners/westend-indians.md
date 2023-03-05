@@ -1,6 +1,6 @@
 ---
 name: Westend Indians
-image: images/westendIndians.png
+image: images/westend-indians.png
 finnishLink: [https://westendindians.fi/]
 englishLink: [https://westendindians.fi/english/]
 ---

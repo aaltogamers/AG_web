@@ -1,7 +1,7 @@
 ---
 title: 'Aalto Gamers CS:GO Fall Tournament 2022'
 subtitle: 'Sunday 27.11. to Saturday 3.12.'
-image: cs-tournament-fall-2022/cs_image.jpg
+image: csgo-fall-2022.jpg
 link: events/2022-fall-csgo-tournament
 ---
 

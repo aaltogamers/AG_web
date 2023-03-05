@@ -1,7 +1,7 @@
 ---
 title: Join us!
 subtitle: Become a member of the Aalto Gamers community
-image: pokemon_go.jpg
+image: landing-pokemongo.jpg
 link: events/2022-fall-csgo-tournament
 ---
 

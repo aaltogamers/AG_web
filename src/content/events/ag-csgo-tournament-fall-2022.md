@@ -1,7 +1,7 @@
 ---
 name: AG CS:GO Tournament Fall 2022
 time: 03-11-2022
-image: images/csgo-fall-tournament.jpg
+image: images/csgo-fall-2022.jpg
 isRecurring: false
 description: The CS:GO announcements just keep coming! This time, it's our
   biggest tournament of the fall season. Behold the Aalto Gamers CS:GO Fall

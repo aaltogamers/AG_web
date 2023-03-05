@@ -22,7 +22,7 @@ const MainInfoBox = () => {
   return (
     <section
       id="mainInfo"
-      className="bg-[url('/images/kuva_AG_3.jpg')] relative h-[100vh] flex flex-col justify-end  bg-center bg-fixed bg-cover"
+      className="bg-[url('/images/landing-hearthstone.jpg')] relative h-[100vh] flex flex-col justify-end  bg-center bg-fixed bg-cover"
     >
       <div>
         <div>
