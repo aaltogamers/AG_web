@@ -11,6 +11,7 @@ type BoardMember = {
   status: string
   game: string
   image?: string
+  orderNumber: number
 }
 
 interface Props {
@@ -33,21 +34,23 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
         </div>
         <h2>{boardTitle}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-lg">
-          {boardMembers.map((boardMember) => (
-            <div key={boardMember.name} className="flex flex-col align-center m-8">
-              <img
-                src={boardMember.image || '/images/board-placeholder.png'}
-                alt={`${boardMember.name}`}
-              />
-              <h3 className="mt-4">{boardMember.title}</h3>
-              <h4>{boardMember.name}</h4>
-              <div className="mt-4 ">
-                {boardMember.status}
-                <br />
-                Favorite game: {boardMember.game}
+          {boardMembers
+            .sort((member1, member2) => member1.orderNumber - member2.orderNumber)
+            .map((boardMember) => (
+              <div key={boardMember.name} className="flex flex-col align-center m-8">
+                <img
+                  src={boardMember.image || '/images/board-placeholder.png'}
+                  alt={`${boardMember.name}`}
+                />
+                <h3 className="mt-4">{boardMember.title}</h3>
+                <h4>{boardMember.name}</h4>
+                <div className="mt-4 ">
+                  {boardMember.status}
+                  <br />
+                  Favorite game: {boardMember.game}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     </PageWrapper>

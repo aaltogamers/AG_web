@@ -72,4 +72,13 @@ collections:
       - { label: 'Title', name: 'title', widget: 'string' }
       - { label: 'Status', name: 'status', widget: 'string' }
       - { label: 'Game', name: 'game', widget: 'string' }
+      - {
+          label: 'Order number',
+          name: 'orderNumber',
+          widget: 'number',
+          value_type: 'int',
+          min: 1,
+          max: 20,
+          hint: 'The order in which the board members are displayed. Smallest first.',
+        }
       - { label: 'Image', name: 'image', widget: 'image', required: false }
