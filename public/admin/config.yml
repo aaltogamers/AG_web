@@ -1,7 +1,7 @@
 backend:
   name: git-gateway
 media_folder: public/images
-public_folder: images
+public_folder: /images
 collections:
   - name: 'pages'
     label: 'Pages'
@@ -55,6 +55,7 @@ collections:
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Recurring', name: 'isRecurring', widget: 'boolean' }
       - { label: 'Description', name: 'description', widget: 'markdown' }
+      - { label: 'TLDR', name: 'tldr', widget: 'markdown' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
   - label: 'LandingInfos'
     name: 'landinginfos'

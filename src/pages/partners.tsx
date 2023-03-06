@@ -46,7 +46,7 @@ const Partners = ({ partners, title, content }: Props) => {
         ))}
       </div>
       <div className="flex flex-col p-20">
-        <Markdown noMargins>{content}</Markdown>
+        <Markdown>{content}</Markdown>
       </div>
     </PageWrapper>
   )

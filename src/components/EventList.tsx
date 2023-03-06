@@ -30,7 +30,7 @@ const EventList = ({ events, name }: Props) => {
               <div className="flex flex-col md:p-10 items-center md:items-start">
                 <h3 className="mt-8 md:mt-0">{event.name}</h3>
                 <Markdown>{event.description}</Markdown>
-                <a href="/events-2022-lol-osm" className="mainbutton">
+                <a href={`/events/${event.slug}`} className="mainbutton">
                   Learn more
                 </a>
               </div>

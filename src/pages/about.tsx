@@ -36,7 +36,7 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
           {boardMembers.map((boardMember) => (
             <div key={boardMember.name} className="flex flex-col align-center m-8">
               <img
-                src={boardMember.image || 'images/board-placeholder.png'}
+                src={boardMember.image || '/images/board-placeholder.png'}
                 alt={`${boardMember.name}`}
               />
               <h3 className="mt-4">{boardMember.title}</h3>

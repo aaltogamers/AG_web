@@ -1,6 +1,6 @@
 ---
 name: Digia
-image: images/digia.png
+image: /images/digia.png
 finnishLink: [https://digia.com/rekrytointi/]
 englishLink: [https://digia.com/en/careers/]
 ---

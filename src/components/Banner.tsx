@@ -13,7 +13,7 @@ const Banner = () => (
           </h4>
         </div>
         <img
-          src="images/ag-white.png"
+          src="/images/ag-white.png"
           alt="intro"
           className="object-cover h-32 md:h-40 mt-8 md:mt-4"
         />

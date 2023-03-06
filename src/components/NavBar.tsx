@@ -20,7 +20,7 @@ type MobileProps = {
 const DesktopNavBar = ({ links }: DesktopProps) => (
   <nav className="hidden md:flex h-20 text-xl  bg-darkGray">
     <Link href="/" className="flex w-60">
-      <img src="images/ag-banner.png" alt="AG" />
+      <img src="/images/ag-banner.png" alt="AG" />
     </Link>
     <div className="flex justify-end w-full text-center items-center">
       {links.map(({ name, link }) => (
@@ -37,8 +37,8 @@ const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
     <div className="flex items-center  bg-darkGray h-16">
       <BurgerButton open={isOpen} onClick={() => setIsOpen(!isOpen)} />
       <div className="flex justify-center w-full">
-        <Link href="/" className="flex">
-          <img src="images/ag-text.svg" alt="Aalto Gamers" className="h-14" />
+        <Link href="/" className="flex" onClick={() => setIsOpen(false)}>
+          <img src="/images/ag-text.svg" alt="Aalto Gamers" className="h-14" />
         </Link>
       </div>
     </div>

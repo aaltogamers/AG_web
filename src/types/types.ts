@@ -5,4 +5,6 @@ export type AGEvent = {
   content: string
   description: string
   isRecurring?: boolean
+  tldr: string
+  slug: string
 }

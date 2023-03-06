@@ -11,11 +11,9 @@ interface AProps extends ComponentProps {
 
 interface MarkdownProps {
   children: string
-  noMargins?: boolean
 }
 
-const PWithOutMargins = ({ children }: ComponentProps) => <p className="m-0">{children}</p>
-const PWithMargins = ({ children }: ComponentProps) => <p className="mt-8 mb-16">{children}</p>
+const P = ({ children }: ComponentProps) => <p className="mt-4 mb-8">{children}</p>
 const H1 = ({ children }: ComponentProps) => <h1 className="text-white">{children}</h1>
 const H2 = ({ children }: ComponentProps) => <h2 className="text-white">{children}</h2>
 const H3 = ({ children }: ComponentProps) => <h3 className="text-white">{children}</h3>
@@ -28,9 +26,9 @@ const A = ({ children, href }: AProps) => (
   </a>
 )
 
-const Markdown = ({ children, noMargins = false }: MarkdownProps) => {
+const Markdown = ({ children }: MarkdownProps) => {
   const components: Components = {
-    p: noMargins ? PWithOutMargins : PWithMargins,
+    p: P,
     h1: H1,
     h2: H2,
     h3: H3,
