@@ -5,6 +5,10 @@ interface ComponentProps {
   children: ReactNode
 }
 
+interface AProps extends ComponentProps {
+  href?: string
+}
+
 interface MarkdownProps {
   children: string
   noMargins?: boolean
@@ -18,6 +22,11 @@ const H3 = ({ children }: ComponentProps) => <h3 className="text-white">{childre
 const H4 = ({ children }: ComponentProps) => <h4 className="text-white">{children}</h4>
 const H5 = ({ children }: ComponentProps) => <h5 className="text-white">{children}</h5>
 const Strong = ({ children }: ComponentProps) => <strong className="text-white">{children}</strong>
+const A = ({ children, href }: AProps) => (
+  <a className="text-white" href={href} target="_blank" rel="noopener noreferrer">
+    {children}
+  </a>
+)
 
 const Markdown = ({ children, noMargins = false }: MarkdownProps) => {
   const components: Components = {
@@ -28,6 +37,7 @@ const Markdown = ({ children, noMargins = false }: MarkdownProps) => {
     h4: H4,
     h5: H5,
     strong: Strong,
+    a: A,
   }
 
   return (

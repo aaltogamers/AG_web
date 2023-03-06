@@ -14,6 +14,9 @@
     @apply text-white bg-black  font-thin;
     font-family: 'Oswald', sans-serif;
   }
+  a:hover {
+    @apply text-red cursor-pointer;
+  }
   .link {
     @apply text-red transition duration-200 ease-in-out border-b-2 border-dotted border-transparent hover:border-red;
   }
@@ -21,7 +24,7 @@
     @apply bg-red text-white text-xl py-3 px-8 rounded text-center max-w-fit;
   }
   .mainbutton:hover {
-    @apply brightness-75;
+    @apply brightness-75 text-white;
   }
   .borderbutton {
     @apply text-white border-lightGray border-[1px] text-xl py-3 px-8 text-center max-w-fit hover:border-red;

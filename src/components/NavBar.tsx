@@ -24,7 +24,7 @@ const DesktopNavBar = ({ links }: DesktopProps) => (
     </Link>
     <div className="flex justify-end w-full text-center items-center">
       {links.map(({ name, link }) => (
-        <Link href={link} key={name} className="px-4 h-fit  hover:text-red">
+        <Link href={link} key={name} className="px-4 h-fit">
           {name}
         </Link>
       ))}
@@ -50,12 +50,7 @@ const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
       >
         <nav className="flex flex-col p-4 w-[50vw] min-h-full">
           {links.map(({ name, link }) => (
-            <Link
-              href={link}
-              key={name}
-              className="text-2xl py-4 hover:text-red"
-              onClick={() => setIsOpen(false)}
-            >
+            <Link href={link} key={name} className="text-2xl py-4" onClick={() => setIsOpen(false)}>
               {name}
             </Link>
           ))}

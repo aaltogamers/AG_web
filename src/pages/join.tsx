@@ -15,11 +15,7 @@ const Join = () => {
       <div className="w-full justify-center flex">
         <div className="grid grid-cols-3 gap-4 w-3/4">
           {medias.map(({ name, link, Icon }) => (
-            <Link
-              href={link}
-              key={name}
-              className="flex items-center justify-center text-xl hover:text-red"
-            >
+            <Link href={link} key={name} className="flex items-center justify-center text-xl">
               {name}
               <Icon size={100} className="m-4" />
             </Link>

@@ -2,18 +2,15 @@
 name: AG Biweeklies
 image: images/biweekly.png
 isRecurring: true
-description: Biweeklies are relaxed gaming nights organized every other Friday
-  at 18 and onwards. At biweeklies, you can count on having fun and making new
-  friends. Biweeklies usually start with League of Legends games and then later
-  on with new games such as Among us, Jackbox, CS:GO, Minecraft, Valorant or
-  anything people want! So don't be shy to join, even if your main game was not
-  on the list. Join alone or bring your team and friends to challenge other
-  Biweekly people!
+description: "Biweeklies are relaxed gaming nights organised every other Friday at 18 and onwards. 
+At biweeklies, you can count on having fun and making new friends. 
+At biweeklies we play all kinds of games: League of Legends, Overwatch 2, Valorant, CS:GO, Fall Guys, Among Us, Geoguessr, Minecraft and many more!
+So don't be shy to join, even if your main game was not on the list. You can even bring your friends to challenge other Biweekly people!"
 ---
 
 ## WHEN?
 
-At 18-22 every other Friday starting from 16.9.2022
+At 18-23 every other Friday starting from 16.9.2022
 
 ## WHERE?
 
