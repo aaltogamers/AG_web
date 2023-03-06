@@ -1,0 +1,6 @@
+---
+name: Tuukka Grönberg
+title: Partnerships
+status: Aalto University School of Business
+game: League of Legends
+---
