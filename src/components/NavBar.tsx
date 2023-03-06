@@ -33,12 +33,12 @@ const DesktopNavBar = ({ links }: DesktopProps) => (
 )
 
 const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
-  <div className="md:hidden">
+  <div className="md:hidden fixed top-0 left-0 z-20 w-full">
     <div className="flex items-center  bg-darkGray h-16">
       <BurgerButton open={isOpen} onClick={() => setIsOpen(!isOpen)} />
       <div className="flex justify-center w-full">
         <Link href="/" className="flex">
-          <img src="images/ag-text.png" alt="Aalto Gamers" className="h-14" />
+          <img src="images/ag-text.svg" alt="Aalto Gamers" className="h-14" />
         </Link>
       </div>
     </div>

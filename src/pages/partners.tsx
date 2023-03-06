@@ -35,7 +35,7 @@ const Partners = ({ partners, title, content }: Props) => {
             <Markdown>{partner.content}</Markdown>
             <h3>Contact Partner:</h3>
             {[partner.finnishLink, partner.englishLink].map((link) => (
-              <a href={link} className="link text-xl">
+              <a href={link} className="link text-xl" key={link}>
                 {link}
               </a>
             ))}
