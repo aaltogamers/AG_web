@@ -21,14 +21,14 @@ const EventList = ({ events, name }: Props) => {
         .map((event) => (
           <div className="flex flex-col py-20 w-3/4 justify-center" key={event.name}>
             <hr className="bg-gray w-full" />
-            <div className="flex">
+            <div className="flex flex-col md:flex-row text-center md:text-left items-center">
               <img
                 src={event.image}
                 alt={`${event.name}`}
-                className="w-[40%] max-h-96 object-contain"
+                className="w-full md:w-2/5 max-h-96 object-contain"
               />
-              <div className="flex flex-col p-10">
-                <h3>{event.name}</h3>
+              <div className="flex flex-col md:p-10 items-center md:items-start">
+                <h3 className="mt-8 md:mt-0">{event.name}</h3>
                 <Markdown>{event.description}</Markdown>
                 <a href="/events-2022-lol-osm" className="mainbutton">
                   Learn more

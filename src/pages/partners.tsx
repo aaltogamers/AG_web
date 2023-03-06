@@ -27,9 +27,12 @@ const Partners = ({ partners, title, content }: Props) => {
         <title>Partners - Aalto Gamers</title>
       </Head>
       <Header>{title}</Header>
-      <div className="flex mt-20 flex-wrap justify-around">
+      <div className="flex mt-20 flex-wrap justify-between">
         {partners.map((partner) => (
-          <div key={partner.name} className="flex flex-col items-center px-8 max-w-xl text-center">
+          <div
+            key={partner.name}
+            className="flex flex-col items-center px-8 max-w-xl text-center mb-24 md:mb-0 md:w-2/5"
+          >
             <img src={partner.image} alt={`${partner.name} logo`} />
             <h3 className="pt-12">{partner.name}</h3>
             <Markdown>{partner.content}</Markdown>

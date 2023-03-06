@@ -1,5 +1,4 @@
 import React from 'react'
-import ScrollLink from './ScrollLink'
 
 const Banner = () => (
   <section>
@@ -20,7 +19,6 @@ const Banner = () => (
         />
       </header>
     </div>
-    <ScrollLink to="mainInfo" />
   </section>
 )
 

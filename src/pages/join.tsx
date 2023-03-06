@@ -13,7 +13,7 @@ const Join = () => {
       <Header>Join us</Header>
       <h3 className="w-full text-center mt-10">Be a part of the coolest gaming community!</h3>
       <div className="w-full justify-center flex">
-        <div className="grid grid-cols-3 gap-4 w-3/4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-3/4">
           {medias.map(({ name, link, Icon }) => (
             <Link href={link} key={name} className="flex items-center justify-center text-xl">
               {name}

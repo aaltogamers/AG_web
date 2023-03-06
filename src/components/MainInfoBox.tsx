@@ -1,5 +1,4 @@
 import React from 'react'
-import ScrollLink from './ScrollLink'
 
 const MainInfoBox = () => {
   return (
@@ -27,7 +26,6 @@ const MainInfoBox = () => {
           </p>
         </div>
       </div>
-      <ScrollLink to="sideInfo1" />
     </section>
   )
 }

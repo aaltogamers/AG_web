@@ -24,7 +24,7 @@ const Home = ({ landingInfos }: Props) => {
       </Head>
       <Banner />
       <MainInfoBox />
-      {landingInfos.map(({ title, subtitle, content, image, link }, i) => (
+      {landingInfos.map(({ title, subtitle, content, image, link }) => (
         <SideInfoBox
           key={title}
           title={title}
@@ -32,8 +32,6 @@ const Home = ({ landingInfos }: Props) => {
           content={content}
           image={image}
           link={link}
-          scrollLinkTo={i + 1 < landingInfos.length ? `sideInfo${i + 2}` : undefined}
-          scrollLinkId={`sideInfo${i + 1}`}
         />
       ))}
     </>

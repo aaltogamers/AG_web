@@ -1,6 +1,5 @@
 import React from 'react'
 import Markdown from './Markdown'
-import ScrollLink from './ScrollLink'
 
 interface Props {
   title: string
@@ -8,22 +7,11 @@ interface Props {
   content: string
   image: string
   link: string
-  scrollLinkTo?: string
-  scrollLinkId: string
 }
 
-const SideInfoBox = ({
-  title,
-  subtitle,
-  content,
-  image,
-  link,
-  scrollLinkTo,
-  scrollLinkId,
-}: Props) => {
+const SideInfoBox = ({ title, subtitle, content, image, link }: Props) => {
   return (
     <section
-      id={scrollLinkId}
       style={{ backgroundImage: `url(images/${image})` }}
       className="relative min-h-screen flex flex-col md:flex-row bg-center bg-fixed bg-cover bg-black text-center md:text-left"
     >
@@ -41,7 +29,6 @@ const SideInfoBox = ({
           </a>
         </div>
       </div>
-      {scrollLinkTo && <ScrollLink to={scrollLinkTo} />}
     </section>
   )
 }
