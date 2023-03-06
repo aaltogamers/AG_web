@@ -6,12 +6,6 @@ collections:
   - name: 'pages'
     label: 'Pages'
     files:
-      - label: 'Home'
-        name: 'home'
-        file: 'src/content/home.md'
-        fields:
-          - { label: 'Title', name: 'title', widget: 'string' }
-          - { label: 'Body', name: 'body', widget: 'markdown' }
       - label: 'Partners'
         name: 'partners'
         file: 'src/content/partners.md'
@@ -55,7 +49,7 @@ collections:
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Recurring', name: 'isRecurring', widget: 'boolean' }
       - { label: 'Description', name: 'description', widget: 'markdown' }
-      - { label: 'TLDR', name: 'tldr', widget: 'markdown' }
+      - { label: 'TLDR', name: 'tldr', widget: 'markdown', hint: 'When?, Where?, Who?, How?' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
   - label: 'LandingInfos'
     name: 'landinginfos'
