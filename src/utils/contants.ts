@@ -1,4 +1,11 @@
-import { FaGamepad, FaDiscord, FaTelegram, FaFacebook, FaInstagram, FaTwitch } from 'react-icons/fa'
+import {
+  FaGamepad,
+  FaDiscord,
+  FaTelegram,
+  FaCalendarDay,
+  FaInstagram,
+  FaTwitch,
+} from 'react-icons/fa'
 
 export const medias = [
   {
@@ -17,9 +24,9 @@ export const medias = [
     Icon: FaTelegram,
   },
   {
-    name: 'Find us on facebook',
-    link: 'http://facebook.com/aaltogamers/',
-    Icon: FaFacebook,
+    name: 'Add our events to your calendar',
+    link: 'https://calendar.google.com/calendar/embed?src=c_88f02ba0db633a673bf597b424a2bd94c295bc16a80761ef60b020508a18624f%40group.calendar.google.com&ctz=Europe%2FHelsinki',
+    Icon: FaCalendarDay,
   },
   {
     name: 'Check out our instagram',

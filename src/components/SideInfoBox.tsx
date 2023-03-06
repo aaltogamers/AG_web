@@ -19,7 +19,7 @@ const SideInfoBox = ({ title, subtitle, content, image, link }: Props) => {
         style={{ backgroundImage: `url(${image})` }}
         className="min-h-[300px] h-full bg-cover bg-center md:hidden"
       />
-      <div className="md:w-2/5 bg-black md:bg-opacity-90 border-red border-t-8 md:border-r-8 flex flex-col justify-start p-8 md:pt-24 md:pb-0">
+      <div className="md:w-2/5 bg-black md:bg-opacity-90 border-red border-t-8 md:border-t-0 md:border-r-8 flex flex-col justify-start p-8 md:pt-24 md:pb-0">
         <h2>{title}</h2>
         <h3 className="mt-2 mb-4">{subtitle}</h3>
         <div className="my-8 text-lightGray text-xl">
