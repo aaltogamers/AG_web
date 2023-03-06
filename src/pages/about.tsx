@@ -1,4 +1,5 @@
 import Head from 'next/head'
+
 import Header from '../components/Header'
 import Markdown from '../components/Markdown'
 import PageWrapper from '../components/PageWrapper'
@@ -31,18 +32,20 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
           <Markdown>{content}</Markdown>
         </div>
         <h2>{boardTitle}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-lg">
           {boardMembers.map((boardMember) => (
-            <div key={boardMember.name} className="flex flex-col justify-center align-center m-8">
-              {boardMember.image ? (
-                <img src={boardMember.image} alt={`${boardMember.name}`} />
-              ) : (
-                <img src="images/board-juho.jpg" alt={`${boardMember.name}`} />
-              )}
-              <h3 className="mt-4 mb-2">{boardMember.title}</h3>
+            <div key={boardMember.name} className="flex flex-col align-center m-8">
+              <img
+                src={boardMember.image || 'images/board-placeholder.png'}
+                alt={`${boardMember.name}`}
+              />
+              <h3 className="mt-4">{boardMember.title}</h3>
               <h4>{boardMember.name}</h4>
-              <div>{boardMember.status}</div>
-              <div>Favorite game: {boardMember.game}</div>
+              <div className="mt-4 ">
+                {boardMember.status}
+                <br />
+                Favorite game: {boardMember.game}
+              </div>
             </div>
           ))}
         </div>

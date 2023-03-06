@@ -31,8 +31,14 @@ const Partners = ({ partners, title, content }: Props) => {
         {partners.map((partner) => (
           <div key={partner.name} className="flex flex-col items-center px-8 max-w-xl text-center">
             <img src={partner.image} alt={`${partner.name} logo`} />
-            <h3>{partner.name}</h3>
+            <h3 className="pt-12">{partner.name}</h3>
             <Markdown>{partner.content}</Markdown>
+            <h3>Contact Partner:</h3>
+            {[partner.finnishLink, partner.englishLink].map((link) => (
+              <a href={link} className="link text-xl">
+                {link}
+              </a>
+            ))}
           </div>
         ))}
       </div>

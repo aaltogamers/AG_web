@@ -18,13 +18,13 @@ type MobileProps = {
 }
 
 const DesktopNavBar = ({ links }: DesktopProps) => (
-  <nav className="hidden md:flex h-16  bg-darkGray">
+  <nav className="hidden md:flex h-20 text-xl  bg-darkGray">
     <Link href="/" className="flex w-60">
-      <img src="/images/ag-banner.png" alt="Aalto Gamers" />
+      <img src="images/ag-banner.png" alt="AG" />
     </Link>
     <div className="flex justify-end w-full text-center items-center">
       {links.map(({ name, link }) => (
-        <Link href={link} key={name} className="px-4 h-fit">
+        <Link href={link} key={name} className="px-4 h-fit  hover:text-red">
           {name}
         </Link>
       ))}
@@ -34,14 +34,13 @@ const DesktopNavBar = ({ links }: DesktopProps) => (
 
 const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
   <div className="md:hidden">
-    <div className="flex items-center bg-darkGray h-16">
+    <div className="flex items-center  bg-darkGray h-16">
       <BurgerButton open={isOpen} onClick={() => setIsOpen(!isOpen)} />
-      <Link
-        href="/"
-        className="flex w-full text-center h-fit font-blockletter text-3xl pr-16 justify-center"
-      >
-        <img src="images/ag-text.svg" alt="Aalto Gamers" className="h-14" />
-      </Link>
+      <div className="flex justify-center w-full">
+        <Link href="/" className="flex">
+          <img src="images/ag-text.png" alt="Aalto Gamers" className="h-14" />
+        </Link>
+      </div>
     </div>
     <div className="flex">
       <div
@@ -51,7 +50,12 @@ const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
       >
         <nav className="flex flex-col p-4 w-[50vw] min-h-full">
           {links.map(({ name, link }) => (
-            <Link href={link} key={name} className="text-2xl py-4" onClick={() => setIsOpen(false)}>
+            <Link
+              href={link}
+              key={name}
+              className="text-2xl py-4 hover:text-red"
+              onClick={() => setIsOpen(false)}
+            >
               {name}
             </Link>
           ))}
@@ -70,7 +74,6 @@ const NavBar = () => {
   const links: HeaderLink[] = [
     { name: 'Events', link: '/events' },
     { name: 'About', link: '/about' },
-    { name: 'Hall of Fame', link: '/halloffame' },
     { name: 'Partners', link: '/partners' },
     { name: 'Join', link: '/join' },
   ]

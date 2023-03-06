@@ -14,17 +14,17 @@
     @apply text-white bg-black  font-thin;
     font-family: 'Oswald', sans-serif;
   }
-  a {
-    @apply hover:text-red;
-  }
-  button a {
-    @apply hover:text-white;
+  .link {
+    @apply text-red transition duration-200 ease-in-out border-b-2 border-dotted border-transparent hover:border-red;
   }
   .mainbutton {
-    @apply bg-red text-white py-2 px-4 rounded text-center;
+    @apply bg-red text-white text-xl py-3 px-8 rounded text-center max-w-fit;
   }
   .mainbutton:hover {
-    @apply filter brightness-110;
+    @apply brightness-75;
+  }
+  .borderbutton {
+    @apply text-white border-lightGray border-[1px] text-xl py-3 px-8 text-center max-w-fit hover:border-red;
   }
   h1 {
     @apply text-5xl;

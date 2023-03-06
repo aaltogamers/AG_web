@@ -4,6 +4,6 @@ interface Props {
   children: ReactNode
 }
 
-const PageWrapper = ({ children }: Props) => <div className=" p-8 md:p-20">{children}</div>
+const PageWrapper = ({ children }: Props) => <div className="p-8 md:px-56">{children}</div>
 
 export default PageWrapper
