@@ -67,9 +67,10 @@ const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
 
 const NavBar = () => {
   const links: HeaderLink[] = [
-    { name: 'Events', link: '/events' },
     { name: 'About', link: '/about' },
+    { name: 'Events', link: '/events' },
     { name: 'Partners', link: '/partners' },
+    { name: 'Gallery', link: '/gallery' },
     { name: 'Join', link: '/join' },
   ]
   const [isOpen, setIsOpen] = React.useState(false)

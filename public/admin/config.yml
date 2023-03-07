@@ -82,3 +82,12 @@ collections:
           hint: 'The order in which the board members are displayed. Smallest first.',
         }
       - { label: 'Image', name: 'image', widget: 'image', required: false }
+  - label: 'Albums'
+    name: 'albumn'
+    folder: 'src/content/albums'
+    create: true
+    identifier_field: Name
+    fields:
+      - { label: 'Name', name: 'name', widget: 'string' }
+      - { label: 'Link', name: 'link', widget: 'string', hint: 'Flickr etc. link to album' }
+      - { label: 'Image', name: 'image', widget: 'image' }
