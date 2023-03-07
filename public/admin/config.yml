@@ -86,7 +86,7 @@ collections:
     name: 'albumn'
     folder: 'src/content/albums'
     create: true
-    identifier_field: Name
+    identifier_field: name
     fields:
       - { label: 'Name', name: 'name', widget: 'string' }
       - { label: 'Link', name: 'link', widget: 'string', hint: 'Flickr etc. link to album' }
