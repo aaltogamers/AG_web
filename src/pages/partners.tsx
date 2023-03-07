@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Image from 'next/image'
 
 import Header from '../components/Header'
 import Markdown from '../components/Markdown'
@@ -33,7 +34,7 @@ const Partners = ({ partners, title, content }: Props) => {
             key={partner.name}
             className="flex flex-col items-center px-8 max-w-xl text-center mb-24 md:mb-0 md:w-2/5"
           >
-            <img src={partner.image} alt={`${partner.name} logo`} />
+            <Image src={partner.image} alt={partner.name} width={1500} height={1500} />
             <h3 className="pt-12">{partner.name}</h3>
             <Markdown>{partner.content}</Markdown>
             <h3>Contact Partner:</h3>

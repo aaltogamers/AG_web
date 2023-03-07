@@ -1,7 +1,7 @@
 ---
 title: Join us!
 subtitle: Become a member of the Aalto Gamers community
-image: /images/pointing.jpg
+image: /images/info-pointing.webp
 link: https://t.me/AaltoGamersAnnouncements
 ---
 

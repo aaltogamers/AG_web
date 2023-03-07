@@ -2,7 +2,7 @@ import React from 'react'
 
 const Banner = () => (
   <section>
-    <div className="bg-[url('/images/landing-cover.png')] relative h-[100vh] bg-center md:bg-fixed bg-cover flex justify-center">
+    <div className="bg-[url('/images/landing/cover.webp')] relative h-[100vh] bg-center md:bg-fixed bg-cover flex justify-center">
       <header className="flex flex-col md:flex-row items-center justify-center ">
         <div className="flex flex-col text-center md:text-right mr-8 m-0 font-light">
           <h2 className="mb-8 text-md md:text-5xl">We are Aalto Gamers</h2>
@@ -13,7 +13,7 @@ const Banner = () => (
           </h4>
         </div>
         <img
-          src="/images/ag-white.png"
+          src="/images/landing/ag-white.png"
           alt="intro"
           className="object-cover h-32 md:h-40 mt-8 md:mt-4"
         />

@@ -1,5 +1,6 @@
 import { GetStaticPropsContext } from 'next'
 import Head from 'next/head'
+import Image from 'next/image'
 import Header from '../../components/Header'
 import Markdown from '../../components/Markdown'
 import PageWrapper from '../../components/PageWrapper'
@@ -19,8 +20,14 @@ const Event = ({ event }: Props) => {
       <Header>{event.name}</Header>
       <div className="flex flex-col items-center">
         <div className="py-16 md:w-3/4">
-          <div className="flex flex-col md:flex-row">
-            <img src={event.image} alt={event.name} className="max-h-[350px] object-scale-down" />
+          <div className="flex flex-col md:flex-row justify-center">
+            <Image
+              src={event.image}
+              alt={event.name}
+              className="max-h-[500px] object-scale-down md:max-w-[50%] pb-8"
+              width={1500}
+              height={1500}
+            />
             <div className="mt-8 md:mt-0 md:pl-8 text-lightGray text-xl text-center md:text-left">
               <Markdown>{event.tldr}</Markdown>
             </div>

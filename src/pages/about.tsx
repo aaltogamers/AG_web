@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Image from 'next/image'
 
 import Header from '../components/Header'
 import Markdown from '../components/Markdown'
@@ -38,9 +39,11 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
             .sort((member1, member2) => member1.orderNumber - member2.orderNumber)
             .map((boardMember) => (
               <div key={boardMember.name} className="flex flex-col align-center m-8">
-                <img
+                <Image
                   src={boardMember.image || '/images/board-placeholder.png'}
-                  alt={`${boardMember.name}`}
+                  alt={boardMember.name}
+                  width={1500}
+                  height={1500}
                 />
                 <h3 className="mt-4">{boardMember.title}</h3>
                 <h4>{boardMember.name}</h4>

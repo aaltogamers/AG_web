@@ -4,9 +4,9 @@ const MainInfoBox = () => {
   return (
     <section
       id="mainInfo"
-      className="md:bg-[url('/images/landing-hearthstone.jpg')] relative min-h-screen flex flex-col justify-end bg-center md:bg-fixed bg-cover"
+      className="md:bg-[url('/images/landing/hearthstone.webp')] relative min-h-screen flex flex-col justify-end bg-center md:bg-fixed bg-cover"
     >
-      <div className="h-full min-h-[300px] bg-[url('/images/landing-hearthstone.jpg')] bg-cover bg-center md:hidden" />
+      <div className="h-full min-h-[300px] bg-[url('/images/landing/hearthstone.webp')] bg-cover bg-center md:hidden" />
       <div>
         <div className="grid grid-cols-1 md:grid-cols-3 py-16 bg-black bg-opacity-90 w-full border-t-8 border-red text-center md:text-left">
           <header className="pb-8 md:pb-0 mx-8">

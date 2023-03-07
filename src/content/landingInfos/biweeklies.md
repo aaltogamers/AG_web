@@ -1,7 +1,7 @@
 ---
 title: Biweeklies
 subtitle: Every other Friday starting at 18
-image: /images/biweekly-old.jpg
+image: /images/info-biweekly.webp
 link: https://t.me/AaltoGamersAnnouncements
 ---
 
