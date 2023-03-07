@@ -1,5 +1,5 @@
 import moment from 'moment'
-import Image from 'next/image'
+import ExportedImage from 'next-image-export-optimizer'
 import { AGEvent } from '../types/types'
 import Header from './Header'
 import Markdown from './Markdown'
@@ -26,7 +26,7 @@ const EventList = ({ events, name }: Props) => {
           <div className="flex flex-col w-3/4 justify-center" key={event.name}>
             <hr className="bg-gray w-full" />
             <div className="flex flex-col md:flex-row text-center md:text-left items-center">
-              <Image
+              <ExportedImage
                 src={event.image}
                 alt=""
                 width={1500}

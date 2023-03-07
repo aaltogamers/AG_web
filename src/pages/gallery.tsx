@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import Image from 'next/image'
+import ExportedImage from 'next-image-export-optimizer'
 import PageWrapper from '../components/PageWrapper'
 import { getFolder } from '../utils/fileUtils'
 
@@ -28,7 +28,7 @@ const Gallery = ({ albums }: Props) => {
                 <div className="darkenedBackground absolute l-0 t-0 w-60 h-60 p-8 flex flex-col justify-end z-10">
                   <h4>{album.name}</h4>
                 </div>
-                <Image src={album.image} alt="" fill className="object-cover" />
+                <ExportedImage src={album.image} alt="" fill className="object-cover" />
               </a>
             )),
           ]}

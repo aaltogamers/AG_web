@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import Image from 'next/image'
+import ExportedImage from 'next-image-export-optimizer'
 
 import Header from '../components/Header'
 import Markdown from '../components/Markdown'
@@ -39,7 +39,7 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
             .sort((member1, member2) => member1.orderNumber - member2.orderNumber)
             .map((boardMember) => (
               <div key={boardMember.name} className="flex flex-col align-center m-8">
-                <Image
+                <ExportedImage
                   src={boardMember.image || '/images/board-placeholder.png'}
                   alt={boardMember.name}
                   width={1500}
