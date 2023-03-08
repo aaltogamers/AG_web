@@ -20,7 +20,7 @@ export const medias = [
   },
   {
     name: 'Join our telegram group',
-    link: 'https://t.me/AaltoGamersAnnouncements',
+    link: 'https://t.me/+1nNBzegP0hthMmM0',
     Icon: FaTelegram,
   },
   {
