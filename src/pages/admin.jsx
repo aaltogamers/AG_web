@@ -1,6 +1,5 @@
-import dynamic from 'next/dynamic'
+import { useEffect } from 'react'
 import SideInfoBox from '../components/SideInfoBox'
-import Event from './events/[pid]'
 
 const landingInfosPreview = ({ entry, getAsset }) => {
   const image = entry.getIn(['data', 'image'])
@@ -16,17 +15,16 @@ const landingInfosPreview = ({ entry, getAsset }) => {
   )
 }
 
-const CMS = dynamic(
-  () =>
-    import('netlify-cms-app').then(async (cms) => {
-      cms.init()
-      cms.registerPreviewTemplate('landingInfos', landingInfosPreview)
-      cms.registerPreviewTemplate('events', Event)
-    }),
-  { ssr: false, loading: () => <p>Loading Admin...</p> }
-)
-
 const Admin = () => {
-  return <CMS />
+  useEffect(() => {
+    ;(async () => {
+      const CMS = (await import('netlify-cms-app')).default
+      CMS.registerPreviewTemplate('landingInfos', SideInfoBox)
+      CMS.registerPreviewTemplate('events', Event)
+      CMS.init()
+    })()
+  }, [])
+
+  return <div />
 }
 export default Admin
