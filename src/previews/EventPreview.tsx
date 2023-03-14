@@ -13,8 +13,7 @@ const EventsPreview: React.FC<PreviewTemplateComponentProps> = ({ entry }) => {
     tldr: entry.getIn(['data', 'tldr']),
     slug: '',
   }
-  console.log(event)
-  return <Event event={event} />
+  return <Event event={event} isPreview />
 }
 
 export default EventsPreview

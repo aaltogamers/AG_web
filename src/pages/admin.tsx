@@ -7,8 +7,9 @@ const Admin = () => {
     ;(async () => {
       const CMS = (await import('netlify-cms-app')).default
       CMS.init()
+      CMS.registerPreviewStyle('https://aaltogamers.fi/_next/static/css/78e8bd7be338bb55.css')
+      CMS.registerPreviewTemplate('landingInfos', LandingInfosPreview)
       CMS.registerPreviewTemplate('events', EventPreview)
-      // CMS.registerPreviewTemplate('landingInfos', LandingInfosPreview)
     })()
   }, [])
 

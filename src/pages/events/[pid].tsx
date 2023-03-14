@@ -1,17 +1,18 @@
 import { GetStaticPropsContext } from 'next'
 import Head from 'next/head'
-import ExportedImage from 'next-image-export-optimizer'
 import Header from '../../components/Header'
 import Markdown from '../../components/Markdown'
 import PageWrapper from '../../components/PageWrapper'
 import { AGEvent } from '../../types/types'
 import { getFile, getFolder } from '../../utils/fileUtils'
+import ImageThatWorksWithPreview from '../../components/ImageThatWorksWithPreview'
 
 type Props = {
   event: AGEvent
+  isPreview?: boolean
 }
 
-const Event = ({ event }: Props) => {
+const Event = ({ event, isPreview }: Props) => {
   return (
     <PageWrapper>
       <Head>
@@ -21,12 +22,13 @@ const Event = ({ event }: Props) => {
       <div className="flex flex-col items-center">
         <div className="py-16 md:w-3/4">
           <div className="flex flex-col md:flex-row justify-center">
-            <ExportedImage
+            <ImageThatWorksWithPreview
               src={event.image}
               alt={event.name}
               className="max-h-[500px] object-scale-down md:max-w-[50%] pb-8"
               width={1500}
               height={1500}
+              isPreview={isPreview}
             />
             <div className="mt-8 md:mt-0 md:pl-8 text-lightGray text-xl text-center md:text-left">
               <Markdown>{event.tldr}</Markdown>
