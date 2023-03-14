@@ -83,7 +83,7 @@ collections:
         }
       - { label: 'Image', name: 'image', widget: 'image', required: false }
   - label: 'Albums'
-    name: 'albumn'
+    name: 'albums'
     folder: 'src/content/albums'
     create: true
     identifier_field: name
