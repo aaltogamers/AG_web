@@ -1,18 +1,18 @@
 import { PreviewTemplateComponentProps } from 'netlify-cms-core'
 import { AGEvent } from '../types/types'
 import Event from '../pages/events/[pid]'
+import objFromPreviewProps from './objFromPreviewProps'
 
-const EventsPreview: React.FC<PreviewTemplateComponentProps> = ({ entry }) => {
-  const event: AGEvent = {
-    name: entry.getIn(['data', 'name']),
-    image: entry.getIn(['data', 'image']),
-    time: entry.getIn(['data', 'time']),
-    content: entry.getIn(['data', 'body']),
-    description: entry.getIn(['data', 'description']),
-    isRecurring: entry.getIn(['data', 'isRecurring']),
-    tldr: entry.getIn(['data', 'tldr']),
-    slug: '',
-  }
+const EventsPreview: React.FC<PreviewTemplateComponentProps> = (props) => {
+  const event = objFromPreviewProps(props, [
+    'name',
+    'image',
+    'time',
+    'content',
+    'description',
+    'isRecurring',
+    'tldr',
+  ]) as AGEvent
   return <Event event={event} isPreview />
 }
 

@@ -3,10 +3,10 @@ import ExportedImage from 'next-image-export-optimizer'
 type ImgProps = {
   src: string
   alt: string
-  className: string
+  className?: string
   width: number
   height: number
-  isPreview?: boolean
+  isPreview: boolean
 }
 
 const ImageThatWorksWithPreview = ({ src, alt, className, width, height, isPreview }: ImgProps) => {

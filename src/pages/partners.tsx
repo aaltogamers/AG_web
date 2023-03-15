@@ -1,22 +1,13 @@
 import Head from 'next/head'
-import ExportedImage from 'next-image-export-optimizer'
-
 import Header from '../components/Header'
 import Markdown from '../components/Markdown'
 import PageWrapper from '../components/PageWrapper'
 import { getFolder, getFile } from '../utils/fileUtils'
-
-type Partner = {
-  name: string
-  image: string
-  description: string
-  finnishLink: string
-  englishLink: string
-  content: string
-}
+import { AGPartner } from '../types/types'
+import Partner from '../components/Partner'
 
 type Props = {
-  partners: Partner[]
+  partners: AGPartner[]
   title: string
   content: string
 }
@@ -30,20 +21,7 @@ const Partners = ({ partners, title, content }: Props) => {
       <Header>{title}</Header>
       <div className="flex mt-20 flex-wrap justify-evenly">
         {partners.map((partner) => (
-          <div
-            key={partner.name}
-            className="flex flex-col items-center px-8 max-w-xl text-center mb-24 md:mb-0 md:w-2/5"
-          >
-            <ExportedImage src={partner.image} alt={partner.name} width={1500} height={1500} />
-            <h3 className="pt-12">{partner.name}</h3>
-            <Markdown>{partner.content}</Markdown>
-            <h3>Contact Partner:</h3>
-            {[partner.finnishLink, partner.englishLink].map((link) => (
-              <a href={link} className="link text-xl" key={link}>
-                {link}
-              </a>
-            ))}
-          </div>
+          <Partner partner={partner} />
         ))}
       </div>
       <div className="flex flex-col p-20">

@@ -28,7 +28,7 @@ const Event = ({ event, isPreview }: Props) => {
               className="max-h-[500px] object-scale-down md:max-w-[50%] pb-8"
               width={1500}
               height={1500}
-              isPreview={isPreview}
+              isPreview={isPreview || false}
             />
             <div className="mt-8 md:mt-0 md:pl-8 text-lightGray text-xl text-center md:text-left">
               <Markdown>{event.tldr}</Markdown>

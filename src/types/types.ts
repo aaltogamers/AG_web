@@ -8,3 +8,12 @@ export type AGEvent = {
   tldr: string
   slug: string
 }
+
+export type AGPartner = {
+  name: string
+  image: string
+  description: string
+  finnishLink: string
+  englishLink: string
+  content: string
+}

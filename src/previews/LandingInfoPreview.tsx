@@ -1,14 +1,16 @@
 import { PreviewTemplateComponentProps } from 'netlify-cms-core'
 import SideInfoBox from '../components/SideInfoBox'
+import objFromPreviewProps from './objFromPreviewProps'
 
-const LandingInfosPreview: React.FC<PreviewTemplateComponentProps> = ({ entry }) => {
+const LandingInfosPreview: React.FC<PreviewTemplateComponentProps> = (props) => {
+  const obj = objFromPreviewProps(props, ['title', 'subtitle', 'content', 'image', 'link'])
   return (
     <SideInfoBox
-      title={entry.getIn(['data', 'title'])}
-      subtitle={entry.getIn(['data', 'subtitle'])}
-      content={entry.getIn(['data', 'content'])}
-      image={entry.getIn(['data', 'image'])}
-      link={entry.getIn(['data', 'link'])}
+      title={obj.title}
+      subtitle={obj.subtitle}
+      content={obj.content}
+      image={obj.image}
+      link={obj.link}
     />
   )
 }
