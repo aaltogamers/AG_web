@@ -2,7 +2,6 @@ backend:
   name: git-gateway
 media_folder: public/images
 public_folder: /images¨
-local_backend: true
 collections:
   - name: 'pages'
     label: 'Pages'
@@ -20,8 +19,8 @@ collections:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Board Title', name: 'boardTitle', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
-  - label: 'Partners'
-    name: 'partners'
+  - label: 'Partner'
+    name: 'partner'
     folder: 'src/content/partners'
     create: true
     identifier_field: name
@@ -31,8 +30,8 @@ collections:
       - { label: 'Finnish Link', name: 'finnishLink', widget: 'string' }
       - { label: 'English Link', name: 'englishLink', widget: 'string' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
-  - label: 'Events'
-    name: 'events'
+  - label: 'Event'
+    name: 'event'
     folder: 'src/content/events'
     create: true
     identifier_field: name
@@ -52,8 +51,8 @@ collections:
       - { label: 'Description', name: 'description', widget: 'markdown' }
       - { label: 'TLDR', name: 'tldr', widget: 'markdown', hint: 'When?, Where?, Who?, How?' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
-  - label: 'LandingInfos'
-    name: 'landinginfos'
+  - label: 'Landing info'
+    name: 'landing info'
     folder: 'src/content/landingInfos'
     create: true
     identifier_field: Title
@@ -63,9 +62,9 @@ collections:
       - { label: 'Link', name: 'link', widget: 'string' }
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
-  - label: 'BoardMembers'
-    name: 'boardmembers'
-    folder: 'src/content/boardmembers'
+  - label: 'Board member'
+    name: 'board member'
+    folder: 'src/content/boardMembers'
     create: true
     identifier_field: name
     fields:
@@ -83,8 +82,8 @@ collections:
           hint: 'The order in which the board members are displayed. Smallest first.',
         }
       - { label: 'Image', name: 'image', widget: 'image', required: false }
-  - label: 'Albums'
-    name: 'albums'
+  - label: 'Album'
+    name: 'album'
     folder: 'src/content/albums'
     create: true
     identifier_field: name

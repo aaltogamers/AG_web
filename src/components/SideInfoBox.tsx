@@ -1,15 +1,13 @@
 import React from 'react'
+import { LandingInfo } from '../types/types'
 import Markdown from './Markdown'
 
-interface Props {
-  title: string
-  subtitle: string
-  content: string
-  image: string
-  link: string
+type Props = {
+  landingInfo: LandingInfo
 }
 
-const SideInfoBox = ({ title, subtitle, content, image, link }: Props) => {
+const SideInfoBox = ({ landingInfo }: Props) => {
+  const { title, subtitle, content, image, link } = landingInfo
   return (
     <section
       style={{ backgroundImage: `url(${image})` }}

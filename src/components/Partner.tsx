@@ -16,8 +16,6 @@ const Partner = ({ partner, isPreview }: Props) => {
       <ImageThatWorksWithPreview
         src={partner.image}
         alt={partner.name}
-        width={1500}
-        height={1500}
         isPreview={isPreview || false}
       />
       <h3 className="pt-12">{partner.name}</h3>

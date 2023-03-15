@@ -1,7 +1,8 @@
 import { PreviewTemplateComponentProps } from 'netlify-cms-core'
 import { AGEvent } from '../types/types'
-import Event from '../pages/events/[pid]'
+import EventPage from '../pages/events/[pid]'
 import objFromPreviewProps from './objFromPreviewProps'
+import Event from '../components/Event'
 
 const EventsPreview: React.FC<PreviewTemplateComponentProps> = (props) => {
   const event = objFromPreviewProps(props, [
@@ -13,7 +14,14 @@ const EventsPreview: React.FC<PreviewTemplateComponentProps> = (props) => {
     'isRecurring',
     'tldr',
   ]) as AGEvent
-  return <Event event={event} isPreview />
+  return (
+    <div>
+      <div className="flex justify-center">
+        <Event event={event} isPreview />
+      </div>
+      <EventPage event={event} isPreview />
+    </div>
+  )
 }
 
 export default EventsPreview

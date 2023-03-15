@@ -1,8 +1,7 @@
 import moment from 'moment'
-import ExportedImage from 'next-image-export-optimizer'
 import { AGEvent } from '../types/types'
+import Event from './Event'
 import Header from './Header'
-import Markdown from './Markdown'
 
 type Props = {
   name: string
@@ -23,26 +22,7 @@ const EventList = ({ events, name }: Props) => {
             : -1
         })
         .map((event) => (
-          <div className="flex flex-col w-3/4 justify-center" key={event.name}>
-            <hr className="bg-gray w-full" />
-            <div className="flex flex-col md:flex-row text-center md:text-left items-center">
-              <ExportedImage
-                src={event.image}
-                alt=""
-                width={1500}
-                height={1500}
-                className="w-full md:w-2/5 max-h-96 object-contain"
-              />
-
-              <div className="flex flex-col md:p-10 items-center md:items-start">
-                <h3 className="mt-8 md:mt-0">{event.name}</h3>
-                <Markdown>{event.description}</Markdown>
-                <a href={`/events/${event.slug}`} className="mainbutton">
-                  Learn more
-                </a>
-              </div>
-            </div>
-          </div>
+          <Event event={event} key={event.name} />
         ))}
     </div>
   ) : null

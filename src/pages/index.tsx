@@ -24,15 +24,8 @@ const Home = ({ landingInfos }: Props) => {
       </Head>
       <Banner />
       <MainInfoBox />
-      {landingInfos.map(({ title, subtitle, content, image, link }) => (
-        <SideInfoBox
-          key={title}
-          title={title}
-          subtitle={subtitle}
-          content={content}
-          image={image}
-          link={link}
-        />
+      {landingInfos.map((landingInfo) => (
+        <SideInfoBox landingInfo={landingInfo} key={landingInfo.title} />
       ))}
     </>
   )

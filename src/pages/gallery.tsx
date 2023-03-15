@@ -1,17 +1,11 @@
 import Head from 'next/head'
-import ExportedImage from 'next-image-export-optimizer'
 import PageWrapper from '../components/PageWrapper'
 import { getFolder } from '../utils/fileUtils'
-
-type Album = {
-  name: string
-  link: string
-  image: string
-  photoCount: number
-}
+import Album from '../components/Album'
+import { AGAlbum } from '../types/types'
 
 interface Props {
-  albums: Album[]
+  albums: AGAlbum[]
 }
 
 const Gallery = ({ albums }: Props) => {
@@ -22,16 +16,7 @@ const Gallery = ({ albums }: Props) => {
       </Head>
       <div className="flex justify-center mt-16 ">
         <div className="flex flex-wrap">
-          {[
-            albums.map((album) => (
-              <a href={album.link} className="w-60 h-60 bg-cover m-8 relative">
-                <div className="darkenedBackground absolute l-0 t-0 w-60 h-60 p-8 flex flex-col justify-end z-10">
-                  <h4>{album.name}</h4>
-                </div>
-                <ExportedImage src={album.image} alt="" fill className="object-cover" />
-              </a>
-            )),
-          ]}
+          {[albums.map((album) => <Album album={album} key={album.name} />)]}
         </div>
       </div>
     </PageWrapper>

@@ -17,3 +17,25 @@ export type AGPartner = {
   englishLink: string
   content: string
 }
+
+export type AGBoardMember = {
+  name: string
+  title: string
+  status: string
+  game: string
+  image?: string
+  orderNumber: number
+}
+
+export type AGAlbum = {
+  name: string
+  link: string
+  image: string
+}
+export type LandingInfo = {
+  title: string
+  subtitle: string
+  content: string
+  image: string
+  link: string
+}
