@@ -52,7 +52,7 @@ collections:
       - { label: 'TLDR', name: 'tldr', widget: 'markdown', hint: 'When?, Where?, Who?, How?' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
   - label: 'Landing info'
-    name: 'landing info'
+    name: 'landinginfo'
     folder: 'src/content/landinginfos'
     create: true
     identifier_field: Title
@@ -62,7 +62,7 @@ collections:
       - { label: 'Link', name: 'link', widget: 'string' }
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
-  - label: 'Boardmember'
+  - label: 'Board member'
     name: 'boardmember'
     folder: 'src/content/boardmembers'
     create: true

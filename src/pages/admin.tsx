@@ -13,10 +13,10 @@ const Admin = () => {
       const CMS = (await import('netlify-cms-app')).default
       CMS.init()
       CMS.registerPreviewStyle('/previewStyles.css')
-      CMS.registerPreviewTemplate('landing info', LandingInfosPreview)
+      CMS.registerPreviewTemplate('landinginfo', LandingInfosPreview)
       CMS.registerPreviewTemplate('event', EventPreview)
       CMS.registerPreviewTemplate('partner', PartnerPreview)
-      CMS.registerPreviewTemplate('board member', BoardMemberPreview)
+      CMS.registerPreviewTemplate('boardmember', BoardMemberPreview)
       CMS.registerPreviewTemplate('about', AboutPreview)
       CMS.registerPreviewTemplate('partners', PartnersPreview)
       CMS.registerPreviewTemplate('album', AlbumPreview)
