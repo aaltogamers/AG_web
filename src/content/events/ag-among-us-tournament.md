@@ -6,17 +6,24 @@ isRecurring: false
 description: Aalto Gamers is proud to present our 🚀Among Us🚀 Tournament held
   on Saturday April 15 starting at 13:00 in Aalto Gamers Discord Server🚨
 tldr: |-
-  ## TL;DR
-  \\\
   #### WHERE?
+
   Aalto Gamers Discord Channel
+
   #### WHEN?
+
   Saturday April 15 from 13:00 onwards.
+
   #### WHY?
+
   Prizes for the top 5. Sweatiest level of Among Us.
+
   #### SIGN-UP:
+
   <https://forms.gle/c7dZ4FQDXjek9F2TA>
+
   #### AMOGUS?
+
   amogus.
 ---
 Aalto Gamers is proud to present our 🚀Among Us🚀 Tournament held on Saturday April 15 starting at 13:00🚨
