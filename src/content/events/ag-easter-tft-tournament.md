@@ -20,7 +20,7 @@ tldr: |-
 
   * **WHEN?**
 
-  Saturday, April 1st (Not an April Fools Joke)
+  Saturday, April 1st starting at 11:00 (Not an April Fools Joke)
 
   * **WHY?**
 
