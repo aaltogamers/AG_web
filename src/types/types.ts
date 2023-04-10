@@ -39,3 +39,10 @@ export type LandingInfo = {
   image: string
   link: string
 }
+
+export type EditableInputType = 'text' | 'select' | 'info'
+
+export type EditableInputObj = {
+  number: number
+  type: EditableInputType
+}

@@ -10,6 +10,9 @@ module.exports = {
         darkGray: '#23242D',
         lightGray: '#AAABAD',
       },
+      gridTemplateColumns: {
+        input: '200px 200px',
+      },
     },
   },
   plugins: [],
