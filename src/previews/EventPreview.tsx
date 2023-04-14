@@ -13,6 +13,7 @@ const EventsPreview: React.FC<PreviewTemplateComponentProps> = (props) => {
     'description',
     'isRecurring',
     'tldr',
+    'signupFields',
   ]) as AGEvent
   return (
     <div>

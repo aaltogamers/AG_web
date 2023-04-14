@@ -7,6 +7,19 @@ export type AGEvent = {
   isRecurring?: boolean
   tldr: string
   slug: string
+  signupFields?: SignupField[]
+}
+
+export type SignupField = {
+  name: string
+  type: 'text' | 'select'
+  required: boolean
+  placeholder?: string
+  options?: Option[]
+}
+
+export type Option = {
+  option: string
 }
 
 export type AGPartner = {

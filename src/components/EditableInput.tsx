@@ -55,12 +55,18 @@ const EditableInput = ({
           />
         )}
         {type !== 'info' && (
-          <label className="text-black">
-            Required
-            <input {...register(`${number}-required`)} type="checkbox" className="ml-4" />
-          </label>
+          <div className="flex gap-4">
+            <label className="text-black">
+              Required
+              <input {...register(`${number}-required`)} type="checkbox" className="ml-1" />
+            </label>
+            <label className="text-black">
+              Public
+              <input {...register(`${number}-public`)} type="checkbox" className="ml-1" />
+            </label>
+          </div>
         )}
-        <input type="hidden" value={type} />
+        <input {...register(`${number}-type`)} type="hidden" value={type} />
       </div>
       <div className="text-lightGray flex flex-col justify-between pl-4">
         {index === 0 ? (
