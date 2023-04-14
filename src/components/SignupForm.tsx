@@ -1,8 +1,10 @@
+/* eslint-disable react/jsx-props-no-spreading */
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, query, where, getDocs, DocumentData } from 'firebase/firestore'
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
-import { SignupField } from '../types/types'
-import Field from './Field'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import { SignUpData } from '../types/types'
+import Input from './Input'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAWhfwD5GSsgZ8qzNyvn2kmNn3yVu0QaHY',
@@ -15,31 +17,28 @@ const firebaseConfig = {
 
 type Props = {
   eventName: string
-  signupFields: SignupField[]
 }
 
-const SignUp = ({ eventName, signupFields }: Props) => {
+const SignUp = ({ eventName }: Props) => {
   const app = initializeApp(firebaseConfig)
   const db = getFirestore(app)
-  const [event, setEvent] = useState<DocumentData | null>(null)
+  const [event, setEvent] = useState<SignUpData | null>(null)
+  const { register, handleSubmit } = useForm()
+
+  const onSubmit: SubmitHandler<any> = (data) => {
+    console.log(data)
+  }
 
   useEffect(() => {
-    const getThing = async () => {
+    const getSignUpData = async () => {
       const q = query(collection(db, 'events'), where('name', '==', eventName))
       const querySnapshot = await getDocs(q)
       const rawEvent = querySnapshot.docs[0]
-      setEvent({ id: rawEvent.id, ...rawEvent.data() })
+      const signUpData = rawEvent.data() as SignUpData
+      setEvent(signUpData)
     }
-    getThing()
+    getSignUpData()
   }, [])
-
-  const signUp = (e) => {
-    e.preventDefault()
-    const form = e.target
-    const formData = new FormData(form)
-    const formJson = Object.fromEntries(formData.entries())
-    console.log(formJson)
-  }
 
   return (
     event && (
@@ -47,11 +46,51 @@ const SignUp = ({ eventName, signupFields }: Props) => {
         <h2>Sign up </h2>
         <h3>{event.name}</h3>
         <h4>0 / {event.maxParticipants}</h4>
-        <form method="post" onSubmit={signUp} id="singupForm">
-          {signupFields.map((field) => (
-            <Field field={field} key={field.name} />
-          ))}
-          <input type="submit" value="Submit" />
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center">
+          <div className="flex-col grid grid-cols-input">
+            {event.inputs.map((input) => {
+              const lowerCaseTitle = input.title.toLowerCase()
+              switch (input.type) {
+                case 'text':
+                  return (
+                    <Input
+                      register={register}
+                      name={lowerCaseTitle}
+                      displayName={input.title}
+                      type="text"
+                      key={input.title}
+                      required={input.required}
+                    />
+                  )
+                case 'select':
+                  return (
+                    <>
+                      <label htmlFor={lowerCaseTitle}>
+                        {input.title}
+                        <span className="text-red">{input.required && '*'}</span>
+                      </label>
+                      <select {...register(lowerCaseTitle)} className="p-2" id={lowerCaseTitle}>
+                        {input.options?.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )
+                case 'info':
+                  return (
+                    <div className="col-span-2">
+                      <p>{input.title}</p>
+                      <p>{input.description}</p>
+                    </div>
+                  )
+                default:
+                  return null
+              }
+            })}
+          </div>
+          <input type="submit" className="text-white p-4 text-2xl hover:cursor-pointer" />
         </form>
       </div>
     )

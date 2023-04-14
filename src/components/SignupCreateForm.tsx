@@ -1,19 +1,19 @@
-/* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable jsx-a11y/label-has-associated-control */
+/* eslint-disable react/jsx-props-no-spreading */
 import moment from 'moment'
 import { useForm, SubmitHandler } from 'react-hook-form'
-import { useState } from 'react'
-import { getFirestore, setDoc, doc } from 'firebase/firestore'
+import { useEffect, useState } from 'react'
+import { getFirestore, setDoc, doc, collection, query, where, getDocs } from 'firebase/firestore'
 import { FirebaseApp } from 'firebase/app'
 import Input from './Input'
-import { AGEvent, EditableInputObj, EditableInputType } from '../types/types'
+import { AGEvent, EditableInputObj, EditableInputType, SignUpData } from '../types/types'
 import EditableInput from './EditableInput'
 
 type Inputs = {
-  eventName: string
+  name: string
   maxParticipants: string
   openFrom: string
-  openTill: string
+  openUntil: string
   inputs: EditableInputObj[]
 }
 
@@ -24,8 +24,63 @@ type Props = {
 
 const SignUpCreateForm = ({ events, app }: Props) => {
   const db = getFirestore(app)
-  const { register, handleSubmit } = useForm<Inputs>()
+  const { register, handleSubmit, setValue, reset, getValues, resetField } = useForm<Inputs>()
   const [editableInputs, setEditableInputs] = useState<EditableInputObj[]>([])
+
+  const addEditableInput = (type: EditableInputType, predefinedNumber?: number) => {
+    let max = 0
+    editableInputs.forEach(({ number }) => {
+      if (number > max) {
+        max = number
+      }
+    })
+    const number = predefinedNumber || max + 1
+    setEditableInputs((oldInputs) => [...oldInputs, { number, type }])
+    return number
+  }
+
+  const resetForm = () => {
+    reset()
+    setEditableInputs([])
+  }
+
+  const getSignUpData = async (eventName: string) => {
+    const q = query(collection(db, 'events'), where('name', '==', eventName))
+    const querySnapshot = await getDocs(q)
+    if (querySnapshot.docs.length === 0) {
+      resetForm()
+      setValue('name', eventName)
+    } else {
+      const rawEvent = querySnapshot.docs[0]
+      const signUpData = rawEvent.data() as SignUpData
+      resetForm()
+      setValue('name', signUpData.name)
+      setValue('maxParticipants', signUpData.maxParticipants.toString())
+      setValue('openFrom', signUpData.openFrom)
+      setValue('openUntil', signUpData.openUntil)
+      signUpData.inputs.forEach(({ type, ...rest }, i) => {
+        const number = i + 1
+        addEditableInput(type, number)
+        Object.entries(rest).forEach(([key, value]) => {
+          let actualValue = value
+          switch (key) {
+            case 'options':
+              actualValue = (value as string[]).join(', ')
+              break
+            default:
+              actualValue = value.toString()
+          }
+          setValue(`${number}-${key}` as keyof Inputs, actualValue as string)
+        })
+      })
+    }
+  }
+
+  useEffect(() => {
+    const values = getValues()
+    getSignUpData(values.name)
+  }, [])
+
   const onSubmit: SubmitHandler<Inputs> = (data) => {
     const finalData = data
     const entries = Object.entries(data)
@@ -41,25 +96,29 @@ const SignUpCreateForm = ({ events, app }: Props) => {
       })
       return obj
     })
-    finalData.inputs = inputs
-    setDoc(doc(db, 'events', finalData.eventName), {
+    finalData.inputs = inputs.map((input) => {
+      if (input.type === 'select') {
+        const options = input.options.split(',')
+        return {
+          ...input,
+          options,
+        }
+      }
+      return input
+    })
+    Object.entries(finalData).forEach(([key, value]) => {
+      if (value === undefined) {
+        delete finalData[key as keyof Inputs]
+      }
+    })
+    const maxParticipantsAsInt = parseInt(finalData.maxParticipants.toString(), 10) || 0
+    setDoc(doc(db, 'events', finalData.name), {
       ...finalData,
-      maxParticipants: parseInt(finalData.maxParticipants.toString(), 10),
+      maxParticipants: maxParticipantsAsInt,
     })
   }
 
   const nowMoment = moment()
-
-  const addEditableInput = (type: EditableInputType) => {
-    let max = 0
-    editableInputs.forEach(({ number }) => {
-      if (number > max) {
-        max = number
-      }
-    })
-    const number = max + 1
-    setEditableInputs((oldInputs) => [...oldInputs, { number, type }])
-  }
 
   const editableInputUp = (thisObj: EditableInputObj) => {
     const indexOfThis = editableInputs.findIndex((item) => item.number === thisObj.number)
@@ -87,13 +146,24 @@ const SignUpCreateForm = ({ events, app }: Props) => {
 
   const editableInputDelete = (number: number) => {
     setEditableInputs((oldInputs) => oldInputs.filter((item) => item.number !== number))
+    const fields = ['title', 'description', 'options', 'required', 'public', 'type']
+    fields.forEach((key) => {
+      resetField(`${number}-${key}` as keyof Inputs)
+    })
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center">
       <div className="grid grid-cols-input">
-        <label className="flex items-center">Event</label>
-        <select {...register('eventName')} className="p-2">
+        <label htmlFor="nameInput" className="flex items-center">
+          Event
+        </label>
+        <select
+          {...register('name')}
+          className="p-2"
+          id="nameInput"
+          onChange={(e) => getSignUpData(e.target.value)}
+        >
           {events
             .sort((event1, event2) => {
               const event1Moment = moment(event1.time || nowMoment, 'DD-MM-YYYY')
@@ -108,7 +178,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
           register={register}
           name="maxParticipants"
           displayName="Maximum participants"
-          placeHolder="24"
+          placeHolder="ex. 24"
           type="number"
         />
         <Input register={register} name="openFrom" displayName="Sign-up open from" type="date" />

@@ -34,7 +34,7 @@ const Event = ({ event, isPreview }: Props) => {
             </div>
           </div>
           <Markdown>{event.content}</Markdown>
-          <SignUpForm eventName={event.name} signupFields={event.signupFields ?? []} />
+          <SignUpForm eventName={event.name} />
         </div>
       </div>
     </PageWrapper>

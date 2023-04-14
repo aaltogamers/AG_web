@@ -7,15 +7,6 @@ export type AGEvent = {
   isRecurring?: boolean
   tldr: string
   slug: string
-  signupFields?: SignupField[]
-}
-
-export type SignupField = {
-  name: string
-  type: 'text' | 'select'
-  required: boolean
-  placeholder?: string
-  options?: Option[]
 }
 
 export type Option = {
@@ -58,4 +49,21 @@ export type EditableInputType = 'text' | 'select' | 'info'
 export type EditableInputObj = {
   number: number
   type: EditableInputType
+}
+
+export type SignupInput = {
+  title: string
+  description?: string
+  type: EditableInputType
+  public: boolean
+  required: boolean
+  options?: string[]
+}
+
+export type SignUpData = {
+  name: string
+  maxParticipants: number
+  openFrom: string
+  openUntil: string
+  inputs: SignupInput[]
 }
