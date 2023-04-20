@@ -68,6 +68,10 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             case 'options':
               actualValue = (value as string[]).join(', ')
               break
+            case 'public':
+            case 'required':
+              actualValue = value === true || value === 'true'
+              break
             default:
               actualValue = value
           }

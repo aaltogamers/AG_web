@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/jsx-props-no-spreading */
 import { initializeApp } from 'firebase/app'
 import {
@@ -9,8 +10,10 @@ import {
   setDoc,
   doc,
   addDoc,
+  deleteDoc,
+  serverTimestamp,
 } from 'firebase/firestore'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { SignUpData } from '../types/types'
 import Input from './Input'
@@ -35,49 +38,92 @@ const SignUp = ({ eventName }: Props) => {
   const db = getFirestore(app)
   const [event, setEvent] = useState<SignUpData | null>(null)
   const [participants, setParticipants] = useState<Data[]>([])
-  const { register, handleSubmit } = useForm()
+  const hasAlreadySignedUp = useRef(false)
+  const { register, handleSubmit, setValue, reset } = useForm()
 
-  console.log(participants)
+  const setLocalStorageId = (id: string) => {
+    localStorage.setItem(`signupId-${eventName}`, id)
+    hasAlreadySignedUp.current = true
+  }
+
+  const getLocalStorageId = () => {
+    return localStorage.getItem(`signupId-${eventName}`)
+  }
+
+  const removeLocalStorageId = () => {
+    hasAlreadySignedUp.current = false
+    localStorage.removeItem(`signupId-${eventName}`)
+  }
+
+  const getParticipantData = async () => {
+    const q = query(collection(db, 'signups'), where('event', '==', eventName))
+    const snapshot = await getDocs(q)
+    const newParticipants = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))
+    const signupIdFromLocalStorage = getLocalStorageId()
+    if (signupIdFromLocalStorage) {
+      const signup = newParticipants.find((item) => item.id === signupIdFromLocalStorage)
+      if (signup) {
+        Object.entries(signup).forEach(([key, value]) => {
+          setValue(key, value)
+        })
+        hasAlreadySignedUp.current = true
+      }
+    }
+    setParticipants(newParticipants)
+  }
+
+  const removeSignUp = async () => {
+    const localStorageSignupId = getLocalStorageId()
+    if (localStorageSignupId) {
+      setParticipants((oldParticipants) =>
+        oldParticipants.filter((item) => item.id !== localStorageSignupId)
+      )
+      removeLocalStorageId()
+      await deleteDoc(doc(db, 'signups', localStorageSignupId))
+      reset()
+    }
+  }
 
   const onSubmit: SubmitHandler<any> = async (data) => {
-    const privateData: Data = {}
-    const publicData: Data = {}
-    Object.entries(data).forEach(([key, value]) => {
-      const isPublic = key === 'event' || event?.inputs.find((input) => input.title === key)?.public
-      if (isPublic) {
-        publicData[key] = value
-      } else {
-        privateData[key] = value
-      }
-    })
-    const res1 = await addDoc(collection(db, 'signups-public'), publicData)
-    const { id } = res1
-    await setDoc(doc(db, 'signups-private', id), privateData)
+    const localStorageSignupId = getLocalStorageId()
+    if (hasAlreadySignedUp.current && localStorageSignupId) {
+      const docRef = doc(db, 'signups', localStorageSignupId)
+      await setDoc(docRef, data)
+      setParticipants((oldParticipants) =>
+        oldParticipants.map((item) => (item.id === localStorageSignupId ? data : item))
+      )
+    } else {
+      const creationTime = serverTimestamp()
+      const res = await addDoc(collection(db, 'signups'), { ...data, creationTime })
+      const { id } = res
+      setLocalStorageId(id)
+      const dataWithId = { ...data, id }
+      setParticipants((oldParticipants) => [...oldParticipants, dataWithId])
+    }
   }
 
   useEffect(() => {
     const getSignUpData = async () => {
       const q = query(collection(db, 'events'), where('name', '==', eventName))
       const snapshot = await getDocs(q)
-      const rawEvent = snapshot.docs[0]
-      const signUpData = rawEvent.data() as SignUpData
-      setEvent(signUpData)
-    }
-    const getParticipantData = async () => {
-      const q = query(collection(db, 'signups-public'), where('event', '==', eventName))
-      const snapshot = await getDocs(q)
-      const participants = snapshot.docs.map((doc) => doc.data())
-      setParticipants(participants)
+      if (!snapshot.empty) {
+        const rawSignupDataEvent = snapshot.docs[0]
+        const signUpData = rawSignupDataEvent.data() as SignUpData
+        setEvent(signUpData)
+      }
     }
     getSignUpData()
     getParticipantData()
   }, [])
 
   const participantHeaders = Object.keys(participants[0] || [])
-    .filter((key) => key !== 'event')
+    .filter(
+      (key) =>
+        key !== 'event' && key !== 'id' && event?.inputs.find((item) => item.title === key)?.public
+    )
     .sort(
       (a, b) =>
-        (event?.inputs.findIndex((item) => item.title == a) || 0) -
+        (event?.inputs.findIndex((item) => item.title === a) || 0) -
         (event?.inputs.findIndex((item) => item.title === b) || 0)
     )
 
@@ -126,11 +172,23 @@ const SignUp = ({ eventName }: Props) => {
                   return null
               }
             })}
+            <div className="col-span-2 text-lightGray mb-4 text-sm">
+              Never input any sensitive data on this form
+            </div>
             <input type="hidden" value={event.name} {...register('event')} />
-            <div className="col-span-2 flex justify-center">
-              <button type="submit" className="mainbutton">
-                Sign up
-              </button>
+            <div className="col-span-2 flex justify-center gap-8">
+              <div>
+                <button type="submit" className="mainbutton">
+                  {hasAlreadySignedUp.current ? 'Update sign-up' : 'Sign up'}
+                </button>
+              </div>
+              {hasAlreadySignedUp.current && (
+                <div>
+                  <button type="button" className="mainbutton" onClick={removeSignUp}>
+                    Remove sign-up
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </form>
@@ -139,18 +197,26 @@ const SignUp = ({ eventName }: Props) => {
             Participants {participants.length} / {event.maxParticipants}
           </h3>
           <table className="table-auto">
-            <tr>
-              {participantHeaders.map((header) => (
-                <th className="text-left p-2 pl-0">{header}</th>
-              ))}
-            </tr>
-            {participants.map((participant) => (
+            <thead>
               <tr>
                 {participantHeaders.map((header) => (
-                  <td className="p-2 pl-0">{participant[header]}</td>
+                  <th className="text-left p-2 pl-0" key={header}>
+                    {header}
+                  </th>
                 ))}
               </tr>
-            ))}
+            </thead>
+            <tbody>
+              {participants.map((participant) => (
+                <tr key={participant[participantHeaders[0]]}>
+                  {participantHeaders.map((header) => (
+                    <td className="p-2 pl-0" key={participant[header]}>
+                      {participant[header]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </div>

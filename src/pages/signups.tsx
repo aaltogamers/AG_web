@@ -4,6 +4,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { useState } from 'react'
+import Head from 'next/head'
 import Input from '../components/Input'
 import PageWrapper from '../components/PageWrapper'
 import { AGEvent } from '../types/types'
@@ -62,6 +63,9 @@ const SignUps = ({ events }: Props) => {
 
   return (
     <PageWrapper>
+      <Head>
+        <title>Signups - Aalto Gamers</title>
+      </Head>
       <div className="mt-8">
         {auth.currentUser ? (
           <SignUpCreateForm app={app} events={events} />
