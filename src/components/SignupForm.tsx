@@ -1,6 +1,15 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  setDoc,
+  doc,
+  addDoc,
+} from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { SignUpData } from '../types/types'
@@ -18,70 +27,98 @@ const firebaseConfig = {
 type Props = {
   eventName: string
 }
-
+type Data = {
+  [key: string | number]: any
+}
 const SignUp = ({ eventName }: Props) => {
   const app = initializeApp(firebaseConfig)
   const db = getFirestore(app)
   const [event, setEvent] = useState<SignUpData | null>(null)
+  const [participants, setParticipants] = useState<Data[]>([])
   const { register, handleSubmit } = useForm()
 
-  const onSubmit: SubmitHandler<any> = (data) => {
-    console.log(data)
+  console.log(participants)
+
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    const privateData: Data = {}
+    const publicData: Data = {}
+    Object.entries(data).forEach(([key, value]) => {
+      const isPublic = key === 'event' || event?.inputs.find((input) => input.title === key)?.public
+      if (isPublic) {
+        publicData[key] = value
+      } else {
+        privateData[key] = value
+      }
+    })
+    const res1 = await addDoc(collection(db, 'signups-public'), publicData)
+    const { id } = res1
+    await setDoc(doc(db, 'signups-private', id), privateData)
   }
 
   useEffect(() => {
     const getSignUpData = async () => {
       const q = query(collection(db, 'events'), where('name', '==', eventName))
-      const querySnapshot = await getDocs(q)
-      const rawEvent = querySnapshot.docs[0]
+      const snapshot = await getDocs(q)
+      const rawEvent = snapshot.docs[0]
       const signUpData = rawEvent.data() as SignUpData
       setEvent(signUpData)
     }
+    const getParticipantData = async () => {
+      const q = query(collection(db, 'signups-public'), where('event', '==', eventName))
+      const snapshot = await getDocs(q)
+      const participants = snapshot.docs.map((doc) => doc.data())
+      setParticipants(participants)
+    }
     getSignUpData()
+    getParticipantData()
   }, [])
+
+  const participantHeaders = Object.keys(participants[0] || [])
+    .filter((key) => key !== 'event')
+    .sort(
+      (a, b) =>
+        (event?.inputs.findIndex((item) => item.title == a) || 0) -
+        (event?.inputs.findIndex((item) => item.title === b) || 0)
+    )
 
   return (
     event && (
-      <div id="signup">
+      <div id="signup" className="flex flex-col gap-2">
         <h2>Sign up </h2>
-        <h3>{event.name}</h3>
-        <h4>0 / {event.maxParticipants}</h4>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center">
-          <div className="flex-col grid grid-cols-input">
+        <h3 className="mb-4">{event.name}</h3>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
+          <div className="flex-col grid grid-cols-input w-2/3 text-xl">
             {event.inputs.map((input) => {
-              const lowerCaseTitle = input.title.toLowerCase()
               switch (input.type) {
                 case 'text':
                   return (
                     <Input
                       register={register}
-                      name={lowerCaseTitle}
+                      name={input.title}
                       displayName={input.title}
+                      placeHolder={input.description}
                       type="text"
                       key={input.title}
                       required={input.required}
+                      isPublic={input.public}
                     />
                   )
                 case 'select':
                   return (
-                    <>
-                      <label htmlFor={lowerCaseTitle}>
-                        {input.title}
-                        <span className="text-red">{input.required && '*'}</span>
-                      </label>
-                      <select {...register(lowerCaseTitle)} className="p-2" id={lowerCaseTitle}>
-                        {input.options?.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </>
+                    <Input
+                      register={register}
+                      name={input.title}
+                      displayName={input.title}
+                      options={input.options}
+                      key={input.title}
+                      required={input.required}
+                      isPublic={input.public}
+                    />
                   )
                 case 'info':
                   return (
-                    <div className="col-span-2">
-                      <p>{input.title}</p>
+                    <div className="col-span-2" key={input.title}>
+                      <b>{input.title}</b>
                       <p>{input.description}</p>
                     </div>
                   )
@@ -89,9 +126,33 @@ const SignUp = ({ eventName }: Props) => {
                   return null
               }
             })}
+            <input type="hidden" value={event.name} {...register('event')} />
+            <div className="col-span-2 flex justify-center">
+              <button type="submit" className="mainbutton">
+                Sign up
+              </button>
+            </div>
           </div>
-          <input type="submit" className="text-white p-4 text-2xl hover:cursor-pointer" />
         </form>
+        <div>
+          <h3 className="mt-4">
+            Participants {participants.length} / {event.maxParticipants}
+          </h3>
+          <table className="table-auto">
+            <tr>
+              {participantHeaders.map((header) => (
+                <th className="text-left p-2 pl-0">{header}</th>
+              ))}
+            </tr>
+            {participants.map((participant) => (
+              <tr>
+                {participantHeaders.map((header) => (
+                  <td className="p-2 pl-0">{participant[header]}</td>
+                ))}
+              </tr>
+            ))}
+          </table>
+        </div>
       </div>
     )
   )

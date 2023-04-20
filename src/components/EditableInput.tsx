@@ -40,12 +40,13 @@ const EditableInput = ({
           className={className}
           required
         />
-        <textarea
-          {...register(`${number}-description`)}
-          placeholder="description"
-          rows={1}
-          className={className}
-        />
+        {type !== 'select' && (
+          <input
+            {...register(`${number}-description`)}
+            placeholder={type == 'info' ? 'description' : 'placeholder'}
+            className={className}
+          />
+        )}
         {type === 'select' && (
           <input
             {...register(`${number}-options`)}
