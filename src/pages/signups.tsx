@@ -3,7 +3,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { useForm, SubmitHandler } from 'react-hook-form'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Input from '../components/Input'
 import PageWrapper from '../components/PageWrapper'
@@ -55,11 +55,13 @@ const SignUps = ({ events }: Props) => {
       })
   }
 
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      setReload(!reload)
-    }
-  })
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        setReload(!reload)
+      }
+    })
+  }, [])
 
   return (
     <PageWrapper>

@@ -6,8 +6,10 @@ import { useEffect, useState } from 'react'
 import { getFirestore, setDoc, doc, collection, query, where, getDocs } from 'firebase/firestore'
 import { FirebaseApp } from 'firebase/app'
 import Input from './Input'
-import { AGEvent, EditableInputObj, EditableInputType, SignUpData } from '../types/types'
+import { AGEvent, Data, EditableInputObj, EditableInputType, SignUpData } from '../types/types'
 import EditableInput from './EditableInput'
+import ParticipantTable from './ParticipantTable'
+import { getParticipants } from '../utils/db'
 
 type Inputs = {
   name: string
@@ -25,6 +27,8 @@ type Props = {
 const SignUpCreateForm = ({ events, app }: Props) => {
   const db = getFirestore(app)
   const { register, handleSubmit, setValue, reset, getValues, resetField } = useForm<Inputs>()
+  const [signupData, setSignupData] = useState<SignUpData | null>(null)
+  const [participants, setParticipants] = useState<Data[]>([])
   const [editableInputs, setEditableInputs] = useState<EditableInputObj[]>([])
   const [message, setMessage] = useState<string | null>(null)
 
@@ -78,6 +82,9 @@ const SignUpCreateForm = ({ events, app }: Props) => {
           setValue(`${number}-${key}` as keyof Inputs, actualValue as string)
         })
       })
+      const newParticipants = await getParticipants(db, signUpData.name)
+      setSignupData(signUpData)
+      setParticipants(newParticipants)
     }
   }
 
@@ -103,7 +110,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
     })
     finalData.inputs = inputs.map((input) => {
       if (input.type === 'select') {
-        const options = input.options.split(',')
+        const options = input.options.split(',').map((item: string) => item.trim())
         return {
           ...input,
           options,
@@ -163,64 +170,74 @@ const SignUpCreateForm = ({ events, app }: Props) => {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center text-xl">
-      <div className="grid grid-cols-input w-2/3">
-        <Input
-          register={register}
-          name="name"
-          displayName="Event"
-          options={events
-            .sort((event1, event2) => {
-              const event1Moment = moment(event1.time || nowMoment, 'DD-MM-YYYY')
-              const event2Moment = moment(event2.time || nowMoment, 'DD-MM-YYYY')
-              return event1Moment.isBefore(event2Moment) ? 1 : -1
-            })
-            .map((event) => event.name)}
-          onChange={(e) => getSignUpData(e.target.value)}
-        />
-        <Input
-          register={register}
-          name="maxParticipants"
-          displayName="Maximum participants"
-          placeHolder="ex. 24"
-          type="number"
-        />
-        <Input register={register} name="openFrom" displayName="Sign-up open from" type="date" />
-        <Input register={register} name="openUntil" displayName="Sign-up open until" type="date" />
-      </div>
-      <div className="flex flex-col w-2/3">
-        <h2 className="text-center mt-8 mb-4">Sign-up Fields</h2>
-        {editableInputs.map((thisObj, i) => (
-          <EditableInput
-            thisObj={thisObj}
+    <div>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center text-xl">
+        <div className="grid grid-cols-input w-2/3">
+          <Input
             register={register}
-            handleUp={editableInputUp}
-            handleDown={editableInputDown}
-            handleDelete={editableInputDelete}
-            index={i}
-            lastIndex={editableInputs.length - 1}
-            key={thisObj.number}
+            name="name"
+            displayName="Event"
+            options={events
+              .sort((event1, event2) => {
+                const event1Moment = moment(event1.time || nowMoment, 'DD-MM-YYYY')
+                const event2Moment = moment(event2.time || nowMoment, 'DD-MM-YYYY')
+                return event1Moment.isBefore(event2Moment) ? 1 : -1
+              })
+              .map((event) => event.name)}
+            onChange={(e) => getSignUpData(e.target.value)}
           />
-        ))}
-      </div>
-      <div className="w-full flex justify-center gap-4">
-        <button type="button" onClick={() => addEditableInput('text')}>
-          Add text input
-        </button>
-        <button type="button" onClick={() => addEditableInput('select')}>
-          Add select input
-        </button>
-        <button type="button" onClick={() => addEditableInput('info')}>
-          Add info box
-        </button>
-      </div>
-      <div className="text-center h-4 mb-8 mt-4">{message}</div>
-      <div className="flex justify-center mb-16">
-        <button type="submit" className="mainbutton">
-          Save changes
-        </button>
-      </div>
-    </form>
+          <Input
+            register={register}
+            name="maxParticipants"
+            displayName="Maximum participants"
+            placeHolder="ex. 24"
+            type="number"
+          />
+          <Input register={register} name="openFrom" displayName="Sign-up open from" type="date" />
+          <Input
+            register={register}
+            name="openUntil"
+            displayName="Sign-up open until"
+            type="date"
+          />
+        </div>
+        <div className="flex flex-col w-2/3">
+          <h2 className="text-center mt-8 mb-4">Sign-up Fields</h2>
+          {editableInputs.map((thisObj, i) => (
+            <EditableInput
+              thisObj={thisObj}
+              register={register}
+              handleUp={editableInputUp}
+              handleDown={editableInputDown}
+              handleDelete={editableInputDelete}
+              index={i}
+              lastIndex={editableInputs.length - 1}
+              key={thisObj.number}
+            />
+          ))}
+        </div>
+        <div className="w-full flex justify-center gap-4">
+          <button type="button" onClick={() => addEditableInput('text')}>
+            Add text input
+          </button>
+          <button type="button" onClick={() => addEditableInput('select')}>
+            Add select input
+          </button>
+          <button type="button" onClick={() => addEditableInput('info')}>
+            Add info box
+          </button>
+        </div>
+        <div className="text-center h-4 mb-8 mt-4">{message}</div>
+        <div className="flex justify-center mb-16">
+          <button type="submit" className="mainbutton">
+            Save changes
+          </button>
+        </div>
+      </form>
+      {signupData && participants && participants.length > 0 && (
+        <ParticipantTable signupData={signupData} participants={participants} showPrivateData />
+      )}
+    </div>
   )
 }
 

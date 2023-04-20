@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore'
+
 export type AGEvent = {
   name: string
   image: string
@@ -11,6 +13,12 @@ export type AGEvent = {
 
 export type Option = {
   option: string
+}
+
+export type DataValue = string | number | boolean | Timestamp
+
+export type Data = {
+  [key: string]: DataValue
 }
 
 export type AGPartner = {
@@ -55,6 +63,7 @@ export type SignupInput = {
   title: string
   description?: string
   type: EditableInputType
+  number: number
   public: boolean
   required: boolean
   options?: string[]

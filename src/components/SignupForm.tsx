@@ -15,8 +15,10 @@ import {
 } from 'firebase/firestore'
 import { useEffect, useRef, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { SignUpData } from '../types/types'
+import { Data, SignUpData } from '../types/types'
+import { getParticipants } from '../utils/db'
 import Input from './Input'
+import ParticipantTable from './ParticipantTable'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAWhfwD5GSsgZ8qzNyvn2kmNn3yVu0QaHY',
@@ -30,13 +32,11 @@ const firebaseConfig = {
 type Props = {
   eventName: string
 }
-type Data = {
-  [key: string | number]: any
-}
+
 const SignUp = ({ eventName }: Props) => {
   const app = initializeApp(firebaseConfig)
   const db = getFirestore(app)
-  const [event, setEvent] = useState<SignUpData | null>(null)
+  const [signupData, setSignupData] = useState<SignUpData | null>(null)
   const [participants, setParticipants] = useState<Data[]>([])
   const hasAlreadySignedUp = useRef(false)
   const { register, handleSubmit, setValue, reset } = useForm()
@@ -56,9 +56,7 @@ const SignUp = ({ eventName }: Props) => {
   }
 
   const getParticipantData = async () => {
-    const q = query(collection(db, 'signups'), where('event', '==', eventName))
-    const snapshot = await getDocs(q)
-    const newParticipants = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))
+    const newParticipants = await getParticipants(db, eventName)
     const signupIdFromLocalStorage = getLocalStorageId()
     if (signupIdFromLocalStorage) {
       const signup = newParticipants.find((item) => item.id === signupIdFromLocalStorage)
@@ -109,32 +107,21 @@ const SignUp = ({ eventName }: Props) => {
       if (!snapshot.empty) {
         const rawSignupDataEvent = snapshot.docs[0]
         const signUpData = rawSignupDataEvent.data() as SignUpData
-        setEvent(signUpData)
+        setSignupData(signUpData)
       }
     }
     getSignUpData()
     getParticipantData()
   }, [])
 
-  const participantHeaders = Object.keys(participants[0] || [])
-    .filter(
-      (key) =>
-        key !== 'event' && key !== 'id' && event?.inputs.find((item) => item.title === key)?.public
-    )
-    .sort(
-      (a, b) =>
-        (event?.inputs.findIndex((item) => item.title === a) || 0) -
-        (event?.inputs.findIndex((item) => item.title === b) || 0)
-    )
-
   return (
-    event && (
+    signupData && (
       <div id="signup" className="flex flex-col gap-2">
         <h2>Sign up </h2>
-        <h3 className="mb-4">{event.name}</h3>
+        <h3 className="mb-4">{signupData.name}</h3>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
           <div className="flex-col grid grid-cols-input w-2/3 text-xl">
-            {event.inputs.map((input) => {
+            {signupData.inputs.map((input) => {
               switch (input.type) {
                 case 'text':
                   return (
@@ -175,7 +162,7 @@ const SignUp = ({ eventName }: Props) => {
             <div className="col-span-2 text-lightGray mb-4 text-sm">
               Never input any sensitive data on this form
             </div>
-            <input type="hidden" value={event.name} {...register('event')} />
+            <input type="hidden" value={signupData.name} {...register('event')} />
             <div className="col-span-2 flex justify-center gap-8">
               <div>
                 <button type="submit" className="mainbutton">
@@ -192,33 +179,7 @@ const SignUp = ({ eventName }: Props) => {
             </div>
           </div>
         </form>
-        <div>
-          <h3 className="mt-4">
-            Participants {participants.length} / {event.maxParticipants}
-          </h3>
-          <table className="table-auto">
-            <thead>
-              <tr>
-                {participantHeaders.map((header) => (
-                  <th className="text-left p-2 pl-0" key={header}>
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {participants.map((participant) => (
-                <tr key={participant[participantHeaders[0]]}>
-                  {participantHeaders.map((header) => (
-                    <td className="p-2 pl-0" key={participant[header]}>
-                      {participant[header]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ParticipantTable signupData={signupData} participants={participants} />
       </div>
     )
   )

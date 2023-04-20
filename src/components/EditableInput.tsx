@@ -43,7 +43,7 @@ const EditableInput = ({
         {type !== 'select' && (
           <input
             {...register(`${number}-description`)}
-            placeholder={type == 'info' ? 'description' : 'placeholder'}
+            placeholder={type === 'info' ? 'description' : 'placeholder'}
             className={className}
           />
         )}
