@@ -71,13 +71,17 @@ const ParticipantTable = ({ participants, signupData, showPrivateData }: Props) 
         </thead>
         <tbody>
           {participantsThatMadeIt.map((participant) => participantToRow(participant))}
-          <tr>
-            <td colSpan={participantHeaders.length}>
-              <h5 className="mt-4">On reserve list ({participantsThatDidntMakeIt.length})</h5>
-              <hr className="bg-gray w-full mt-2 mb-0" />
-            </td>
-          </tr>
-          {participantsThatDidntMakeIt.map((participant) => participantToRow(participant))}
+          {participantsThatDidntMakeIt.length > 0 && (
+            <>
+              <tr>
+                <td colSpan={participantHeaders.length}>
+                  <h5 className="mt-4">On reserve list ({participantsThatDidntMakeIt.length})</h5>
+                  <hr className="bg-gray w-full mt-2 mb-0" />
+                </td>
+              </tr>
+              {participantsThatDidntMakeIt.map((participant) => participantToRow(participant))}
+            </>
+          )}
         </tbody>
       </table>
     </div>

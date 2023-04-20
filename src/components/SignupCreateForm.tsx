@@ -202,7 +202,11 @@ const SignUpCreateForm = ({ events, app }: Props) => {
           />
         </div>
         <div className="flex flex-col w-2/3">
-          <h2 className="text-center mt-8 mb-4">Sign-up Fields</h2>
+          <h2 className="text-center mt-8 ">Sign-up Fields</h2>
+          <h5 className="text-center text-lightGray">
+            Don&apos;t edit input names or select options after signups have started. Stuff will
+            break.
+          </h5>
           {editableInputs.map((thisObj, i) => (
             <EditableInput
               thisObj={thisObj}
