@@ -186,6 +186,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             options={eventValuesSorted}
             onChangeDo={(value) => getSignUpData(value)}
             control={control}
+            required
           />
           <Input
             register={register}
@@ -194,6 +195,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             placeHolder="ex. 24"
             type="number"
             control={control}
+            required
           />
           <Input
             register={register}
@@ -201,6 +203,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             displayName="Sign-up open from"
             type="date"
             control={control}
+            required
           />
           <Input
             register={register}
@@ -208,6 +211,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             displayName="Sign-up open until"
             type="date"
             control={control}
+            required
           />
         </div>
         <div className="flex flex-col md:flex-row w-full">

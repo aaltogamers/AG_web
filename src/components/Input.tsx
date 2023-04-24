@@ -39,7 +39,7 @@ const TextInput = ({
   isMulti,
 }: Props) => {
   const lowerCaseName = name.toLowerCase()
-  const className = 'm-4 p-2 rounded-md'
+  const commonMargins = 'mt-2 mb-8 md:m-4'
   const optionsWithLabel: OptionWithLabel[] = options?.map((o) => ({ value: o, label: o })) || []
   return (
     <>
@@ -68,7 +68,7 @@ const TextInput = ({
               }}
               options={optionsWithLabel}
               isMulti={isMulti}
-              className="m-4 text-black"
+              className={`${commonMargins} text-black w-full`}
               theme={(theme) => ({
                 ...theme,
                 colors: {
@@ -89,7 +89,7 @@ const TextInput = ({
           min={0}
           required={required}
           {...register(name)}
-          className={className}
+          className={`p-2 rounded-md ${commonMargins} w-full`}
           id={lowerCaseName}
           onChange={(e) => {
             if (onChangeDo) {

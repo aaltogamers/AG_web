@@ -120,7 +120,7 @@ const SignUp = ({ eventName }: Props) => {
         <h2>Sign up </h2>
         <h3 className="mb-4">{signupData.name}</h3>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
-          <div className="flex-col grid grid-cols-input w-2/3 text-xl">
+          <div className="flex-col md:grid md:grid-cols-input text-xl">
             {signupData.inputs.map((input) => {
               switch (input.type) {
                 case 'text':
@@ -153,7 +153,7 @@ const SignUp = ({ eventName }: Props) => {
                   )
                 case 'info':
                   return (
-                    <div className="col-span-2" key={input.title}>
+                    <div className="col-span-2 mt-2 mb-8 md:my-4" key={input.title}>
                       <b>{input.title}</b>
                       <p>{input.description}</p>
                     </div>

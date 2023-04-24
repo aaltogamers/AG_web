@@ -64,7 +64,7 @@ const ParticipantTable = ({
   }
 
   const participantToRow = (participant: Data) => (
-    <tr key={participant[participantHeaders[0]].toString()}>
+    <tr key={participant[participantHeaders[0]]?.toString()}>
       {participantHeaders.map((header) => (
         <td className="p-4 pl-0" key={participant[header].toString()}>
           {parseParticipantData(participant[header], header)}
@@ -105,31 +105,33 @@ const ParticipantTable = ({
       <h3 className="mt-4">
         Signed up ({participantsThatMadeIt.length} / {signupData.maxParticipants})
       </h3>
-      <table className="table-auto">
-        <thead>
-          <tr>
-            {participantHeaders.map((header) => (
-              <th className="text-left p-2 pl-0" key={header}>
-                {parseHeader(header)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {participantsThatMadeIt.map((participant) => participantToRow(participant))}
-          {participantsThatDidntMakeIt.length > 0 && (
-            <>
-              <tr>
-                <td colSpan={participantHeaders.length}>
-                  <h5 className="mt-4">On reserve list ({participantsThatDidntMakeIt.length})</h5>
-                  <hr className="bg-gray w-full mt-2 mb-0" />
-                </td>
-              </tr>
-              {participantsThatDidntMakeIt.map((participant) => participantToRow(participant))}
-            </>
-          )}
-        </tbody>
-      </table>
+      <div className="overflow-x-auto max-w-[90vw]">
+        <table className="table-auto">
+          <thead>
+            <tr>
+              {participantHeaders.map((header) => (
+                <th className="text-left p-2 pl-0" key={header}>
+                  {parseHeader(header)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {participantsThatMadeIt.map((participant) => participantToRow(participant))}
+            {participantsThatDidntMakeIt.length > 0 && (
+              <>
+                <tr>
+                  <td colSpan={participantHeaders.length}>
+                    <h5 className="mt-4">On reserve list ({participantsThatDidntMakeIt.length})</h5>
+                    <hr className="bg-gray w-full mt-2 mb-0" />
+                  </td>
+                </tr>
+                {participantsThatDidntMakeIt.map((participant) => participantToRow(participant))}
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
