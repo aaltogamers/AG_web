@@ -24,7 +24,8 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.43.9",
     "react-icons": "^4.7.1",
-    "react-markdown": "^8.0.5"
+    "react-markdown": "^8.0.5",
+    "react-select": "^5.7.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",

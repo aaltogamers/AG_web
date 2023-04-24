@@ -43,7 +43,7 @@ const EditableInput = ({
         {type !== 'select' && (
           <input
             {...register(`${number}-description`)}
-            placeholder={type === 'info' ? 'description' : 'placeholder'}
+            placeholder={type === 'info' ? 'Description' : 'Placeholder'}
             className={className}
           />
         )}
@@ -65,6 +65,12 @@ const EditableInput = ({
               Public
               <input {...register(`${number}-public`)} type="checkbox" className="ml-1" />
             </label>
+            {type === 'select' && (
+              <label className="text-black">
+                Multiple select
+                <input {...register(`${number}-multi`)} type="checkbox" className="ml-1" />
+              </label>
+            )}
           </div>
         )}
         <input {...register(`${number}-type`)} type="hidden" value={type} />

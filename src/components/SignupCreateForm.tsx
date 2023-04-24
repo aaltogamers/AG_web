@@ -26,7 +26,7 @@ type Props = {
 
 const SignUpCreateForm = ({ events, app }: Props) => {
   const db = getFirestore(app)
-  const { register, handleSubmit, setValue, reset, getValues, resetField } = useForm<Inputs>()
+  const { register, handleSubmit, setValue, reset, resetField, control } = useForm<Inputs>()
   const [signupData, setSignupData] = useState<SignUpData | null>(null)
   const [participants, setParticipants] = useState<Data[]>([])
   const [editableInputs, setEditableInputs] = useState<EditableInputObj[]>([])
@@ -88,9 +88,17 @@ const SignUpCreateForm = ({ events, app }: Props) => {
     }
   }
 
+  const nowMoment = moment()
+  const eventValuesSorted = events
+    .sort((event1, event2) => {
+      const event1Moment = moment(event1.time || nowMoment, 'DD-MM-YYYY')
+      const event2Moment = moment(event2.time || nowMoment, 'DD-MM-YYYY')
+      return event1Moment.isBefore(event2Moment) ? 1 : -1
+    })
+    .map((event) => event.name)
+
   useEffect(() => {
-    const values = getValues()
-    getSignUpData(values.name)
+    getSignUpData(eventValuesSorted[0])
   }, [])
 
   const onSubmit: SubmitHandler<Inputs> = (data) => {
@@ -135,8 +143,6 @@ const SignUpCreateForm = ({ events, app }: Props) => {
       .catch((error) => setMessage(`Error: ${error}`))
   }
 
-  const nowMoment = moment()
-
   const editableInputUp = (thisObj: EditableInputObj) => {
     const indexOfThis = editableInputs.findIndex((item) => item.number === thisObj.number)
     if (indexOfThis !== 0) {
@@ -177,14 +183,9 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             register={register}
             name="name"
             displayName="Event"
-            options={events
-              .sort((event1, event2) => {
-                const event1Moment = moment(event1.time || nowMoment, 'DD-MM-YYYY')
-                const event2Moment = moment(event2.time || nowMoment, 'DD-MM-YYYY')
-                return event1Moment.isBefore(event2Moment) ? 1 : -1
-              })
-              .map((event) => event.name)}
-            onChange={(e) => getSignUpData(e.target.value)}
+            options={eventValuesSorted}
+            onChangeDo={(value) => getSignUpData(value)}
+            control={control}
           />
           <Input
             register={register}
@@ -192,55 +193,88 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             displayName="Maximum participants"
             placeHolder="ex. 24"
             type="number"
+            control={control}
           />
-          <Input register={register} name="openFrom" displayName="Sign-up open from" type="date" />
+          <Input
+            register={register}
+            name="openFrom"
+            displayName="Sign-up open from"
+            type="date"
+            control={control}
+          />
           <Input
             register={register}
             name="openUntil"
             displayName="Sign-up open until"
             type="date"
+            control={control}
           />
         </div>
-        <div className="flex flex-col w-2/3">
-          <h2 className="text-center mt-8 ">Sign-up Fields</h2>
-          <h5 className="text-center text-lightGray">
-            Don&apos;t edit input names or select options after signups have started. Stuff will
-            break.
-          </h5>
-          {editableInputs.map((thisObj, i) => (
-            <EditableInput
-              thisObj={thisObj}
-              register={register}
-              handleUp={editableInputUp}
-              handleDown={editableInputDown}
-              handleDelete={editableInputDelete}
-              index={i}
-              lastIndex={editableInputs.length - 1}
-              key={thisObj.number}
-            />
-          ))}
-        </div>
-        <div className="w-full flex justify-center gap-4">
-          <button type="button" onClick={() => addEditableInput('text')}>
-            Add text input
-          </button>
-          <button type="button" onClick={() => addEditableInput('select')}>
-            Add select input
-          </button>
-          <button type="button" onClick={() => addEditableInput('info')}>
-            Add info box
-          </button>
-        </div>
-        <div className="text-center h-4 mb-8 mt-4">{message}</div>
-        <div className="flex justify-center mb-16">
-          <button type="submit" className="mainbutton">
-            Save changes
-          </button>
+        <div className="flex flex-col md:flex-row w-full">
+          <div className="w-full md:w-1/2">
+            <div className="flex flex-col">
+              <h3 className="text-center mt-4 mb-5">Sign-up Fields</h3>
+              <h5 className="text-center text-lightGray">
+                Don&apos;t edit input names or select options after signups have started. Stuff will
+                break.
+              </h5>
+              {editableInputs.map((thisObj, i) => (
+                <EditableInput
+                  thisObj={thisObj}
+                  register={register}
+                  handleUp={editableInputUp}
+                  handleDown={editableInputDown}
+                  handleDelete={editableInputDelete}
+                  index={i}
+                  lastIndex={editableInputs.length - 1}
+                  key={thisObj.number}
+                />
+              ))}
+            </div>
+            <div className="w-full flex justify-center gap-4 p-4">
+              <button
+                type="button"
+                className="borderbutton"
+                onClick={() => addEditableInput('text')}
+              >
+                Add text input
+              </button>
+              <button
+                type="button"
+                className="borderbutton"
+                onClick={() => addEditableInput('select')}
+              >
+                Add select input
+              </button>
+              <button
+                type="button"
+                className="borderbutton"
+                onClick={() => addEditableInput('info')}
+              >
+                Add info box
+              </button>
+            </div>
+            <div className="text-center h-4 mb-8 mt-4">{message}</div>
+            <div className="flex justify-center mb-16">
+              <button type="submit" className="mainbutton">
+                Save changes
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-col w-full md:w-1/2">
+            {signupData && (
+              <ParticipantTable
+                signupData={signupData}
+                participants={participants}
+                showPrivateData
+                allowEdit
+                db={db}
+                setParticipants={setParticipants}
+              />
+            )}
+          </div>
         </div>
       </form>
-      {signupData && participants && participants.length > 0 && (
-        <ParticipantTable signupData={signupData} participants={participants} showPrivateData />
-      )}
     </div>
   )
 }

@@ -1,13 +1,23 @@
-import { Timestamp } from 'firebase/firestore'
+import { deleteDoc, doc, Firestore, Timestamp } from 'firebase/firestore'
 import { Data, DataValue, SignUpData } from '../types/types'
 
 type Props = {
   participants: Data[]
   signupData: SignUpData
   showPrivateData?: boolean
+  allowEdit?: boolean
+  db?: Firestore
+  setParticipants?: (participants: Data[]) => void
 }
 
-const ParticipantTable = ({ participants, signupData, showPrivateData }: Props) => {
+const ParticipantTable = ({
+  participants,
+  signupData,
+  showPrivateData,
+  allowEdit,
+  db,
+  setParticipants,
+}: Props) => {
   const participantHeaders = Object.keys(participants[0] || [])
     .filter((key) => {
       const isPublic = signupData?.inputs.find((item) => item.title === key)?.public
@@ -25,6 +35,9 @@ const ParticipantTable = ({ participants, signupData, showPrivateData }: Props) 
         return date.toDate().toLocaleString()
       }
       default:
+        if (Array.isArray(dataValue)) {
+          return dataValue.join(', ')
+        }
         return dataValue.toString()
     }
   }
@@ -35,6 +48,21 @@ const ParticipantTable = ({ participants, signupData, showPrivateData }: Props) 
     return dateA && dateB && dateA.toMillis() > dateB.toMillis() ? 1 : -1
   })
 
+  const deleteParticipant = async (participant: Data) => {
+    if (
+      participant.id &&
+      db &&
+      setParticipants &&
+      // eslint-disable-next-line no-alert
+      window.confirm(
+        `Are you sure you want to delete ${participant[participantHeaders[1]] || 'this sign-up'}?`
+      )
+    ) {
+      await deleteDoc(doc(db, 'signups', participant.id as string))
+      setParticipants(participants.filter((item) => item.id !== participant.id))
+    }
+  }
+
   const participantToRow = (participant: Data) => (
     <tr key={participant[participantHeaders[0]].toString()}>
       {participantHeaders.map((header) => (
@@ -42,6 +70,17 @@ const ParticipantTable = ({ participants, signupData, showPrivateData }: Props) 
           {parseParticipantData(participant[header], header)}
         </td>
       ))}
+      {allowEdit && (
+        <td>
+          <button
+            type="button"
+            className="mainbutton"
+            onClick={() => deleteParticipant(participant)}
+          >
+            Delete
+          </button>
+        </td>
+      )}
     </tr>
   )
 
@@ -54,6 +93,13 @@ const ParticipantTable = ({ participants, signupData, showPrivateData }: Props) 
     signupData.maxParticipants
   )
 
+  const parseHeader = (header: string) => {
+    if (header === 'creationTime') {
+      return 'Signed up at'
+    }
+    return header
+  }
+
   return (
     <div>
       <h3 className="mt-4">
@@ -64,7 +110,7 @@ const ParticipantTable = ({ participants, signupData, showPrivateData }: Props) 
           <tr>
             {participantHeaders.map((header) => (
               <th className="text-left p-2 pl-0" key={header}>
-                {header}
+                {parseHeader(header)}
               </th>
             ))}
           </tr>

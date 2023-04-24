@@ -67,6 +67,7 @@ export type SignupInput = {
   public: boolean
   required: boolean
   options?: string[]
+  multi?: boolean
 }
 
 export type SignUpData = {

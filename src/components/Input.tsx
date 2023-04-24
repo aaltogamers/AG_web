@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import { HTMLInputTypeAttribute } from 'react'
-import { UseFormRegister } from 'react-hook-form'
+import { UseFormRegister, Controller, Control } from 'react-hook-form'
+import Select from 'react-select'
 
 type Props = {
   name: string
@@ -13,7 +14,14 @@ type Props = {
   options?: string[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register: UseFormRegister<any>
-  onChange?: (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => void
+  onChangeDo?: (value: any) => void
+  control: Control<any, any>
+  isMulti?: boolean
+}
+
+type OptionWithLabel = {
+  value: string
+  label: string
 }
 
 const TextInput = ({
@@ -25,11 +33,14 @@ const TextInput = ({
   register,
   required,
   options,
-  onChange,
+  onChangeDo,
   isPublic,
+  control,
+  isMulti,
 }: Props) => {
   const lowerCaseName = name.toLowerCase()
   const className = 'm-4 p-2 rounded-md'
+  const optionsWithLabel: OptionWithLabel[] = options?.map((o) => ({ value: o, label: o })) || []
   return (
     <>
       <label className="flex items-center" htmlFor={lowerCaseName}>
@@ -37,13 +48,38 @@ const TextInput = ({
         <span className="text-red">{required && '*'}</span>
       </label>
       {options && options.length > 0 ? (
-        <select {...register(name)} className={className} id={lowerCaseName} onChange={onChange}>
-          {options?.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+        <Controller
+          control={control}
+          defaultValue={isMulti ? [] : [options[0]]}
+          name={name}
+          render={({ field: { onChange, value, ref } }) => (
+            <Select
+              ref={ref}
+              required={required}
+              value={optionsWithLabel.filter((c) => value.includes(c.value))}
+              onChange={(val) => {
+                const actualValue = isMulti
+                  ? (val as OptionWithLabel[]).map((c) => c.value)
+                  : (val as OptionWithLabel).value
+                onChange(actualValue)
+                if (onChangeDo) {
+                  onChangeDo(actualValue)
+                }
+              }}
+              options={optionsWithLabel}
+              isMulti={isMulti}
+              className="m-4 text-black"
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary25: 'lightGray',
+                  primary: 'red',
+                },
+              })}
+            />
+          )}
+        />
       ) : (
         <input
           defaultValue={defaultValue}
@@ -55,7 +91,11 @@ const TextInput = ({
           {...register(name)}
           className={className}
           id={lowerCaseName}
-          onChange={onChange}
+          onChange={(e) => {
+            if (onChangeDo) {
+              onChangeDo(e?.target.value)
+            }
+          }}
         />
       )}
     </>

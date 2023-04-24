@@ -39,7 +39,7 @@ const SignUp = ({ eventName }: Props) => {
   const [signupData, setSignupData] = useState<SignUpData | null>(null)
   const [participants, setParticipants] = useState<Data[]>([])
   const hasAlreadySignedUp = useRef(false)
-  const { register, handleSubmit, setValue, reset } = useForm()
+  const { register, handleSubmit, setValue, reset, control } = useForm()
 
   const setLocalStorageId = (id: string) => {
     localStorage.setItem(`signupId-${eventName}`, id)
@@ -134,6 +134,7 @@ const SignUp = ({ eventName }: Props) => {
                       key={input.title}
                       required={input.required}
                       isPublic={input.public}
+                      control={control}
                     />
                   )
                 case 'select':
@@ -146,6 +147,8 @@ const SignUp = ({ eventName }: Props) => {
                       key={input.title}
                       required={input.required}
                       isPublic={input.public}
+                      isMulti={input.multi}
+                      control={control}
                     />
                   )
                 case 'info':
