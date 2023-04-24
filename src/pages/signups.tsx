@@ -36,6 +36,7 @@ const SignUps = ({ events }: Props) => {
     handleSubmit,
     formState: { errors },
     setError,
+    control,
   } = useForm<Inputs>()
   const [reload, setReload] = useState(false)
   const onSubmit: SubmitHandler<Inputs> = (data) => {
@@ -74,6 +75,7 @@ const SignUps = ({ events }: Props) => {
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center">
             <Input
+              control={control}
               register={register}
               name="password"
               defaultValue=""
