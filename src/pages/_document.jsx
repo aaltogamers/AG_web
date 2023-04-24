@@ -5,6 +5,7 @@ const Document = () => {
     <Html lang="en" className="h-full">
       <Head>
         <link rel="shortcut icon" href="/images/favicon.png" />
+        <script src="/sw.js" />
       </Head>
       <body className="text-white min-h-full">
         <Main />
