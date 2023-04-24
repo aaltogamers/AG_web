@@ -1,7 +1,7 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable react/jsx-props-no-spreading */
 import { HTMLInputTypeAttribute } from 'react'
-import { UseFormRegister } from 'react-hook-form'
+import { UseFormRegister, Controller, Control } from 'react-hook-form'
+import Select from 'react-select'
 
 type Props = {
   name: string
@@ -9,23 +9,95 @@ type Props = {
   type?: HTMLInputTypeAttribute
   placeHolder?: string
   defaultValue?: string
+  required?: boolean
+  isPublic?: boolean
+  options?: string[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register: UseFormRegister<any>
+  onChangeDo?: (value: any) => void
+  control: Control<any, any>
+  isMulti?: boolean
 }
 
-const TextInput = ({ name, displayName, type, placeHolder, defaultValue, register }: Props) => {
+type OptionWithLabel = {
+  value: string
+  label: string
+}
+
+const TextInput = ({
+  name,
+  displayName,
+  type,
+  placeHolder,
+  defaultValue,
+  register,
+  required,
+  options,
+  onChangeDo,
+  isPublic,
+  control,
+  isMulti,
+}: Props) => {
+  const lowerCaseName = name.toLowerCase()
+  const commonMargins = 'mt-2 mb-8 md:m-4'
+  const optionsWithLabel: OptionWithLabel[] = options?.map((o) => ({ value: o, label: o })) || []
   return (
     <>
-      <label className="flex items-center">{displayName}</label>
-      <input
-        defaultValue={defaultValue}
-        placeholder={placeHolder}
-        type={type}
-        step={1}
-        min={0}
-        {...register(name)}
-        className=" m-4 p-2 rounded-md"
-      />
+      <label className="flex items-center" htmlFor={lowerCaseName}>
+        {displayName + (isPublic ? ' (public)' : '')}
+        <span className="text-red">{required && '*'}</span>
+      </label>
+      {options && options.length > 0 ? (
+        <Controller
+          control={control}
+          defaultValue={isMulti ? [] : [options[0]]}
+          name={name}
+          render={({ field: { onChange, value, ref } }) => (
+            <Select
+              ref={ref}
+              required={required}
+              value={optionsWithLabel.filter((c) => value.includes(c.value))}
+              onChange={(val) => {
+                const actualValue = isMulti
+                  ? (val as OptionWithLabel[]).map((c) => c.value)
+                  : (val as OptionWithLabel).value
+                onChange(actualValue)
+                if (onChangeDo) {
+                  onChangeDo(actualValue)
+                }
+              }}
+              options={optionsWithLabel}
+              isMulti={isMulti}
+              className={`${commonMargins} text-black w-full`}
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary25: 'lightGray',
+                  primary: 'red',
+                },
+              })}
+            />
+          )}
+        />
+      ) : (
+        <input
+          defaultValue={defaultValue}
+          placeholder={placeHolder}
+          type={type}
+          step={1}
+          min={0}
+          required={required}
+          {...register(name)}
+          className={`p-2 rounded-md ${commonMargins} w-full`}
+          id={lowerCaseName}
+          onChange={(e) => {
+            if (onChangeDo) {
+              onChangeDo(e?.target.value)
+            }
+          }}
+        />
+      )}
     </>
   )
 }

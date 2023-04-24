@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore'
+
 export type AGEvent = {
   name: string
   image: string
@@ -7,6 +9,16 @@ export type AGEvent = {
   isRecurring?: boolean
   tldr: string
   slug: string
+}
+
+export type Option = {
+  option: string
+}
+
+export type DataValue = string | number | boolean | Timestamp
+
+export type Data = {
+  [key: string]: DataValue
 }
 
 export type AGPartner = {
@@ -45,4 +57,23 @@ export type EditableInputType = 'text' | 'select' | 'info'
 export type EditableInputObj = {
   number: number
   type: EditableInputType
+}
+
+export type SignupInput = {
+  title: string
+  description?: string
+  type: EditableInputType
+  number: number
+  public: boolean
+  required: boolean
+  options?: string[]
+  multi?: boolean
+}
+
+export type SignUpData = {
+  name: string
+  maxParticipants: number
+  openFrom: string
+  openUntil: string
+  inputs: SignupInput[]
 }

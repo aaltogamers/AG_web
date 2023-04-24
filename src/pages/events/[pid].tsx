@@ -6,6 +6,7 @@ import PageWrapper from '../../components/PageWrapper'
 import { AGEvent } from '../../types/types'
 import { getFile, getFolder } from '../../utils/fileUtils'
 import ImageThatWorksWithPreview from '../../components/ImageThatWorksWithPreview'
+import SignUpForm from '../../components/SignupForm'
 
 type Props = {
   event: AGEvent
@@ -33,6 +34,7 @@ const Event = ({ event, isPreview }: Props) => {
             </div>
           </div>
           <Markdown>{event.content}</Markdown>
+          <SignUpForm eventName={event.name} />
         </div>
       </div>
     </PageWrapper>

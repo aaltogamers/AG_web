@@ -11,7 +11,7 @@ module.exports = {
         lightGray: '#AAABAD',
       },
       gridTemplateColumns: {
-        input: '200px 200px',
+        input: 'minmax(250px, 0.1fr) 400px',
       },
     },
   },
