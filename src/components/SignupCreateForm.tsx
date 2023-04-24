@@ -201,7 +201,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             register={register}
             name="openFrom"
             displayName="Sign-up open from"
-            type="date"
+            type="datetime-local"
             control={control}
             required
           />
@@ -209,7 +209,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             register={register}
             name="openUntil"
             displayName="Sign-up open until"
-            type="date"
+            type="datetime-local"
             control={control}
             required
           />
