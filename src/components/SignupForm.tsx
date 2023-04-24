@@ -88,18 +88,16 @@ const SignUp = ({ eventName }: Props) => {
     const localStorageSignupId = getLocalStorageId()
     if (hasAlreadySignedUp.current && localStorageSignupId) {
       const docRef = doc(db, 'signups', localStorageSignupId)
-      await setDoc(docRef, data)
-      setParticipants((oldParticipants) =>
-        oldParticipants.map((item) => (item.id === localStorageSignupId ? data : item))
-      )
+      const oldData = participants.find((item) => item.id === localStorageSignupId)
+      const newData = { ...data, creationTime: oldData?.creationTime }
+      await setDoc(docRef, newData)
     } else {
       const creationTime = serverTimestamp()
       const res = await addDoc(collection(db, 'signups'), { ...data, creationTime })
       const { id } = res
       setLocalStorageId(id)
-      const dataWithId = { ...data, id }
-      setParticipants((oldParticipants) => [...oldParticipants, dataWithId])
     }
+    await getParticipantData()
     setIsNewUpdate(true)
     setTimeout(() => {
       setIsNewUpdate(false)

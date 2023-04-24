@@ -7,7 +7,7 @@ type Props = {
   showPrivateData?: boolean
   allowEdit?: boolean
   db?: Firestore
-  setParticipants?: (participants: Data[]) => void
+  getNewParticipants?: () => void
 }
 
 const ParticipantTable = ({
@@ -16,7 +16,7 @@ const ParticipantTable = ({
   showPrivateData,
   allowEdit,
   db,
-  setParticipants,
+  getNewParticipants,
 }: Props) => {
   const participantHeaders = Object.keys(participants[0] || [])
     .filter((key) => {
@@ -52,14 +52,14 @@ const ParticipantTable = ({
     if (
       participant.id &&
       db &&
-      setParticipants &&
+      getNewParticipants &&
       // eslint-disable-next-line no-alert
       window.confirm(
         `Are you sure you want to delete ${participant[participantHeaders[1]] || 'this sign-up'}?`
       )
     ) {
       await deleteDoc(doc(db, 'signups', participant.id as string))
-      setParticipants(participants.filter((item) => item.id !== participant.id))
+      getNewParticipants()
     }
   }
 

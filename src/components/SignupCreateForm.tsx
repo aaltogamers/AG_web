@@ -82,8 +82,15 @@ const SignUpCreateForm = ({ events, app }: Props) => {
           setValue(`${number}-${key}` as keyof Inputs, actualValue as string)
         })
       })
-      const newParticipants = await getParticipants(db, signUpData.name)
       setSignupData(signUpData)
+      const newParticipants = await getParticipants(db, signUpData.name)
+      setParticipants(newParticipants)
+    }
+  }
+
+  const getNewParticipants = async () => {
+    if (signupData) {
+      const newParticipants = await getParticipants(db, signupData.name)
       setParticipants(newParticipants)
     }
   }
@@ -273,7 +280,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
                 showPrivateData
                 allowEdit
                 db={db}
-                setParticipants={setParticipants}
+                getNewParticipants={getNewParticipants}
               />
             )}
           </div>
