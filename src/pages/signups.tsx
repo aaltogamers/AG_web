@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable react/jsx-props-no-spreading */
 import { initializeApp } from 'firebase/app'
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
@@ -57,6 +57,9 @@ const SignUps = ({ events }: Props) => {
   }
 
   useEffect(() => {
+    if (auth?.currentUser && auth?.currentUser?.email !== 'board@aaltogamers.fi') {
+      signOut(auth)
+    }
     auth.onAuthStateChanged((user) => {
       if (user) {
         setReload(!reload)
@@ -70,7 +73,7 @@ const SignUps = ({ events }: Props) => {
         <title>Signups - Aalto Gamers</title>
       </Head>
       <div className="mt-8">
-        {auth.currentUser ? (
+        {auth?.currentUser?.email === 'board@aaltogamers.fi' ? (
           <SignUpCreateForm app={app} events={events} />
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center">
