@@ -13,7 +13,7 @@ description: >-
   There will also be some free snacks and small prices for the winners of our in-house games.
 
 
-  The gaming chairs are limited so be fast to secure your seat!!!
+  The gaming chairs are limited so be fast to secure your seat by signing up!!!
 
 
   See you there 👀
