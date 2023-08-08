@@ -16,7 +16,11 @@ const Gallery = ({ albums }: Props) => {
       </Head>
       <div className="flex justify-center mt-16 ">
         <div className="flex flex-wrap">
-          {[albums.map((album) => <Album album={album} key={album.name} />)]}
+          {[
+            albums
+              .sort((a, b) => a.orderNumber - b.orderNumber)
+              .map((album) => <Album album={album} key={album.name} />),
+          ]}
         </div>
       </div>
     </PageWrapper>

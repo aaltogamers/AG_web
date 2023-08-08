@@ -92,3 +92,11 @@ collections:
       - { label: 'Name', name: 'name', widget: 'string' }
       - { label: 'Link', name: 'link', widget: 'string', hint: 'Flickr etc. link to album' }
       - { label: 'Image', name: 'image', widget: 'image' }
+      - {
+          label: 'Order number',
+          name: 'orderNumber',
+          widget: 'number',
+          value_type: 'int',
+          min: 1,
+          hint: 'The order in which the albums are displayed. Smallest first.',
+        }

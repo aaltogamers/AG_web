@@ -43,6 +43,7 @@ export type AGAlbum = {
   name: string
   link: string
   image: string
+  orderNumber: number
 }
 export type LandingInfo = {
   title: string
