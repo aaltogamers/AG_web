@@ -4,4 +4,5 @@ title: Marketing & Communication
 status: Aalto University School of Electrical Engineering
 game: League of Legends
 orderNumber: 5
+image: /images/lenni.png
 ---
