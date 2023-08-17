@@ -4,4 +4,5 @@ title: Chair of the Board
 status: Aalto University School of Electrical Engineering
 game: CS:GO
 orderNumber: 1
+image: /images/juho.png
 ---
