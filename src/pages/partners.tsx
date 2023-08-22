@@ -24,7 +24,7 @@ const Partners = ({ partners, title, content }: Props) => {
           <Partner partner={partner} />
         ))}
       </div>
-      <div className="flex flex-col p-20">
+      <div className="flex flex-col items-center text-center p-20">
         <Markdown>{content}</Markdown>
       </div>
     </PageWrapper>

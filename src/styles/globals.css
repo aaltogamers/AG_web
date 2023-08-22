@@ -11,7 +11,7 @@
 @layer base {
   html,
   body {
-    @apply text-white bg-black  font-thin;
+    @apply text-white bg-black font-thin md:font-light;
     font-family: 'Oswald', sans-serif;
   }
   input,
