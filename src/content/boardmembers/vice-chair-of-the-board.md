@@ -4,4 +4,5 @@ title: Vice-Chair of the Board
 status: Aalto University School of Business
 game: Xenoblade Chronicles
 orderNumber: 2
+image: /images/otto-h.png
 ---
