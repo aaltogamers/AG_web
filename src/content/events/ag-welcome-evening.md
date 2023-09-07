@@ -11,7 +11,7 @@ description: >-
   The event starts at 18. Taking part is completely FREE with the possibility to buy snacks and refreshments in the bar. 
 
 
-  Signup opens 7.9. at 12:00 here at the AG website. Seats are limited so be fast!
+  Signup opens 8.9. at 12:00 here at the AG website. Seats are limited so be fast!
 tldr: |-
   #### WHERE?
 
