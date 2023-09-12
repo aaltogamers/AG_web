@@ -4,5 +4,5 @@ title: Tech and Website
 status: Aalto University School of Science
 game: CS:GO
 orderNumber: 7
-image: /images/otto-s.png
+image: /images/otto.png
 ---
