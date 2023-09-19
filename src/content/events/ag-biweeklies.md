@@ -11,7 +11,10 @@ description: >-
   Biweeklies also include a tournament game that's player at the start of each session. The players at the top of the tournament leaderboard at the end of season get rewarded from our 100€+ prize pool. 
 
 
-  The tournament games can be anything from Scribb.io to Minecraft Hunger Games. After at, we have all sorts of free gaming you can play e.g. League of Legends, Overwatch 2, Valorant, CS:GO, Fall Guys, Among Us, Geoguessr, Minecraft or anything else you want! So don't be shy to join, even if your main game was not on the list, all games are welcome. You can even bring your friends to challenge other Biweekly people!
+  The tournament game can be anything from Scribb.io to Minecraft Hunger Games. After that, everybody can play whatever they want. Popular games include: League of Legends, Overwatch 2, Valorant, CS:GO, Fall Guys, Among Us, Geoguessr and Minecraft. 
+
+
+  So don't be shy to join, even if your main game was not listed above. You can eveb bring your friends, or find new ones at AG Biweeklies!
 tldr: >-
   ### When?
 
@@ -30,6 +33,6 @@ Aalto Gamers Biweeklies are fun events happening every other Friday, where ANYON
 
 Biweeklies also include a tournament game that's player at the start of each session. The players at the top of the tournament leaderboard at the end of season get rewarded from our 100€+ prize pool. 
 
-The tournament games can be anything from Scribb.io to Minecraft Hunger Games. After at, we have all sorts of free gaming you can play e.g. League of Legends, Overwatch 2, Valorant, CS:GO, Fall Guys, Among Us, Geoguessr, Minecraft or anything else you want! So don't be shy to join, even if your main game was not on the list, all games are welcome. You can even bring your friends to challenge other Biweekly people!
+The tournament game can be anything from Scribb.io to Minecraft Hunger Games. After that, everybody can play whatever they want. Popular games include: League of Legends, Overwatch 2, Valorant, CS:GO, Fall Guys, Among Us, Geoguessr and Minecraft. 
 
-Hop into a voice channel and join in on the fun!
+So don't be shy to join, even if your main game was not listed above. You can eveb bring your friends, or find new ones at AG Biweeklies!
