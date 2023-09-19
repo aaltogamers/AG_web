@@ -2,6 +2,8 @@
 
 Made using React, Next.js and Netlify CMS
 
+Node.js version 18
+
 Install packages with:
 
 ```

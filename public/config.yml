@@ -20,6 +20,36 @@ collections:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Board Title', name: 'boardTitle', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
+      - label: 'Leaderboard'
+        name: 'leaderboard'
+        file: 'src/content/leaderboard.md'
+        fields:
+          - label: 'Leaderboard entries'
+            name: 'learderboard_entries'
+            label_singular: 'Leaderboard entry'
+            widget: 'list'
+            allow_add: true
+            summary: '{{fields.name}}'
+            fields:
+              - { label: 'Name', name: 'name', widget: 'string' }
+              - label: 'Point entries'
+                name: 'point_entries'
+                label_singular: 'Point entry'
+                widget: 'list'
+                allow_add: true
+                minimize_collapsed: true
+                summary: '{{fields.points_acquired_on}} - {{fields.points}}'
+                fields:
+                  - { label: Points, name: points, widget: number, required: true }
+                  - {
+                      label: Point acquired on,
+                      name: points_acquired_on,
+                      widget: datetime,
+                      format: 'DD.MM.YYYY',
+                      date_format: 'DD.MM.YYYY',
+                      time_format: false,
+                      required: true,
+                    }
   - label: 'Partner'
     name: 'partner'
     folder: 'src/content/partners'

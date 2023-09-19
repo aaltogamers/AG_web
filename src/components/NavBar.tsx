@@ -71,6 +71,7 @@ const NavBar = () => {
     { name: 'Events', link: '/events' },
     { name: 'Partners', link: '/partners' },
     { name: 'Gallery', link: '/gallery' },
+    { name: 'Leaderboard', link: '/leaderboard' },
     { name: 'Join', link: '/join' },
   ]
   const [isOpen, setIsOpen] = React.useState(false)
