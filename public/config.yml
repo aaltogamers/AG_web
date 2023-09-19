@@ -37,7 +37,6 @@ collections:
                 label_singular: 'Point entry'
                 widget: 'list'
                 allow_add: true
-                minimize_collapsed: true
                 summary: '{{fields.points_acquired_on}} - {{fields.points}}'
                 fields:
                   - { label: Points, name: points, widget: number, required: true }

@@ -13,7 +13,7 @@ module.exports = {
       gridTemplateColumns: {
         input: 'minmax(500px, 0.1fr) 400px',
         event: 'minmax(15rem, 30rem) auto',
-        leaderboard: '1rem minmax(10rem, 1fr) auto',
+        leaderboard: '1rem 1fr 4rem',
       },
     },
   },

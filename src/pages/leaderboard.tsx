@@ -33,7 +33,7 @@ const Top3Entry = ({ name, score, place, filter, isTrophy }: Top3Entry) => {
 
 type LeaderBoardEntryWithHistory = {
   name: string
-  pointEntries: { points: number; date: string }[]
+  point_entries: { points: number; date: string }[]
 }
 
 type Props = {
@@ -42,10 +42,10 @@ type Props = {
 
 const LeaderBoard = ({ learderboard_entries }: Props) => {
   const entries: LeaderboardEntry[] = learderboard_entries
-    ? learderboard_entries.map(({ name, pointEntries }) => {
+    ? learderboard_entries.map(({ name, point_entries }) => {
         return {
           name,
-          score: pointEntries.reduce((acc, { points }) => acc + points, 0),
+          score: point_entries?.reduce((acc, { points }) => acc + points, 0) || 0,
         }
       })
     : []
@@ -65,7 +65,7 @@ const LeaderBoard = ({ learderboard_entries }: Props) => {
       {entries.length >= 3 ? (
         <div className="flex justify-center">
           <div className="flex flex-col items-center mt-10">
-            <div className="flex flex-col mb-12 w-full pt-16">
+            <div className="flex flex-col w-full pt-24">
               <Top3Entry
                 name={first.name}
                 score={first.score}
@@ -90,15 +90,16 @@ const LeaderBoard = ({ learderboard_entries }: Props) => {
               </div>
             </div>
             <ol>
+              <hr />
               {afterFirstThree.map(({ name, score }, index) => (
-                <>
-                  <li className="text-2xl grid grid-cols-leaderboard w-full py-3 gap-20 px-4">
+                <li key={name}>
+                  <div className="text-2xl grid grid-cols-leaderboard w-full py-3 gap-10 md:gap-20 px-4">
                     <span>{index + 4}th</span>
-                    <span>{name}</span>
+                    <span className="break-words min-w-0">{name}</span>
                     <span className="text-right">{score} pt</span>
-                  </li>
+                  </div>
                   <hr />
-                </>
+                </li>
               ))}
             </ol>
           </div>
