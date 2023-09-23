@@ -20,4 +20,16 @@ learderboard_entries:
     point_entries:
       - points_acquired_on: 22.09.2023
         points: 2
+  - name: Sbara
+    point_entries:
+      - points_acquired_on: 22.09.2023
+        points: 1
+  - name: Abbe
+    point_entries:
+      - points_acquired_on: 22.09.2023
+        points: 1
+  - name: LeBoat
+    point_entries:
+      - points_acquired_on: 22.09.2023
+        points: 1
 ---
