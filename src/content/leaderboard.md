@@ -36,4 +36,8 @@ learderboard_entries:
     point_entries:
       - points_acquired_on: 22.09.2023
         points: 1
+  - name: Juubeli
+    point_entries:
+      - points_acquired_on: 22.09.2023
+        points: 0
 ---
