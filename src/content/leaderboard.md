@@ -20,7 +20,7 @@ learderboard_entries:
     point_entries:
       - points_acquired_on: 22.09.2023
         points: 2
-  - name: Sbara
+  - name: Stara
     point_entries:
       - points_acquired_on: 22.09.2023
         points: 1
