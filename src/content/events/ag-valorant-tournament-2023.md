@@ -4,10 +4,10 @@ time: 22.10.2023
 image: /images/agvalo.png
 description: >-
   It’s time for the first real competition of the Fall semester and that’s of
-  course the Valorant Tournament!
+  course the Valorant Tournament🏆
 
 
-  Gather a team of friends or join a flex team to compete against other teams in this epic battle for cash and glory on October 22!
+  Gather a group of friends or join a flex team to compete against others in this epic battle for cash and glory!
 tldr: |-
   #### WHERE?
 
