@@ -1,5 +1,5 @@
 ---
-name: AG Valorant Tournament 2023
+name: AG Valorant Tournament
 time: 22.10.2023
 image: /images/agvalo.png
 description: >-
