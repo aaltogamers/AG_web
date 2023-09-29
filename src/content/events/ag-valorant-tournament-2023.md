@@ -15,7 +15,7 @@ tldr: |-
 
   #### WHEN?
 
-  Sunday October 22.
+  Sunday, October 22, starting at 13:00.
 
   #### WHY?
 
@@ -30,7 +30,7 @@ tldr: |-
 
 It’s time for the first real competition of the Fall semester and that’s of course the Valorant Tournament 🏆
 
-Gather a team of friends or join a flex team to compete against other teams in this epic battle for cash and glory!
+Gather a group of friends or join a flex team to compete against others in this epic battle for cash and glory!
 
 **The prizes are as follows:**
 
