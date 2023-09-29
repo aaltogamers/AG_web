@@ -59,7 +59,7 @@ learderboard_entries:
   - name: Jedd
     point_entries:
       - points_acquired_on: 29.09.2023
-        points: 1
+        points: 3
   - name: Junnu
     point_entries:
       - points_acquired_on: 29.09.2023
