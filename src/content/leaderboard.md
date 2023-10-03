@@ -12,7 +12,7 @@ learderboard_entries:
     point_entries:
       - points_acquired_on: 22.09.2023
         points: 4
-  - name: Jannimal
+  - name: Janniml
     point_entries:
       - points_acquired_on: 22.09.2023
         points: 3
