@@ -24,12 +24,6 @@ tldr: >-
   Kinopoli, at Otakaari 20A. Better instructions will be given on the day of the event. 
 
 
-  #### SIGN-UP:
-
-
-  <https://forms.gle/c7dZ4FQDXjek9F2TA>
-
-
   #### PRICE?
 
 
