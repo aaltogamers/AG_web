@@ -29,4 +29,4 @@ tldr: >-
 
   NOTHING! Bring your own snacks and stuff if you want to, but we’ll have something for everyone.
 ---
-SIGN UP BELOW! The theater has 18 seats, but the sign up has 13 spots because some are reserved for AG members that are organizing the whole sitch.
+The theater has 18 seats, but the sign up below only has 13 spots because some are reserved for AG members that are organizing the whole sitch.
