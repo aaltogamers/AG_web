@@ -1,6 +1,6 @@
 ---
 name: AG CS2 Masters
-time: 18.11.2023
+time: 25.11.2023
 image: /images/cs2_ag.jpg
 description: >-
   ⚪️AG CS2 Masters🟠
