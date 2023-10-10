@@ -20,7 +20,7 @@ tldr: >-
   #### WHEN?
 
 
-  Between Saturday, November 18, and Saturday, November 25. [18.11-25.11]
+  Between Saturday, November 18, and Saturday, November 25. \[18.11-25.11]
 
 
   #### WHY?
@@ -29,8 +29,12 @@ tldr: >-
   Chance to compete for a portion of the whopping 1000€ prize pool and the title of the AG CS2 Masters champion🏆
 
 
-  #### SIGN-UP:
+  #### FORMAT:
 
+  The format and schedule are further specified on the event's challengermode page
+
+
+  #### SIGN-UP:
 
   * FULL TEAM: [HERE](https://forms.gle/7XCN5trD9WMAwev38)
 
