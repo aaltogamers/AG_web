@@ -20,9 +20,9 @@ tldr: >-
   #### WHEN?
 
 
-  Qualifiers on Saturday 18.11.  
+  Qualifiers on Saturday 18.11. 12-\
 
-  Finals on Saturday 25.11.
+  Finals on Saturday 25.11. 12-
 
 
   #### WHY?
@@ -32,6 +32,7 @@ tldr: >-
 
 
   #### SIGN-UP
+
 
   * FULL TEAM [HERE](https://forms.gle/7XCN5trD9WMAwev38)
 
