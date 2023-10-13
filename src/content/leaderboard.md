@@ -3,7 +3,7 @@ learderboard_entries:
   - name: JamJam
     point_entries:
       - points_acquired_on: 22.09.2023
-        points: 4
+        points: 5
   - name: Kalle
     point_entries:
       - points_acquired_on: 22.09.2023
@@ -19,7 +19,7 @@ learderboard_entries:
   - name: Noke
     point_entries:
       - points_acquired_on: 22.09.2023
-        points: 3
+        points: 6
   - name: Stara
     point_entries:
       - points_acquired_on: 22.09.2023
@@ -75,7 +75,7 @@ learderboard_entries:
   - name: Otju
     point_entries:
       - points_acquired_on: 29.09.2023
-        points: 2
+        points: 4
   - name: Qwerty
     point_entries:
       - points_acquired_on: 29.09.2023
