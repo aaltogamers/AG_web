@@ -144,5 +144,4 @@ learderboard_entries:
   point_entries:
   - points: 50
     points_acquired_on: 14.10.2023
-
 ---
