@@ -140,4 +140,8 @@ learderboard_entries:
     point_entries:
       - points_acquired_on: 14.10.2023
         points: 1
+  - name: TEST
+    point_entries:
+      - points_acquired_on: 14.10.2023
+        points: 100
 ---
