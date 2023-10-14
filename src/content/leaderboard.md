@@ -1,7 +1,7 @@
 ---
 learderboard_entries:
 - discord_user_id: 493112428867878922
-  name: JamJam
+  name: '!JamJam'
   point_entries:
   - points: 4
     points_acquired_on: 22.09.2023
@@ -17,7 +17,7 @@ learderboard_entries:
   - points: 1
     points_acquired_on: 14.09.2023
 - discord_user_id: 214302568820506625
-  name: Janniml
+  name: Janni
   point_entries:
   - points: 2
     points_acquired_on: 22.09.2023
@@ -26,7 +26,7 @@ learderboard_entries:
   - points: 1
     points_acquired_on: 14.09.2023
 - discord_user_id: 255331841123287043
-  name: Kalle
+  name: '[AG] Silverhand'
   point_entries:
   - points: 3
     points_acquired_on: 22.09.2023
@@ -42,7 +42,7 @@ learderboard_entries:
   - points: 3
     points_acquired_on: 27.09.2023
 - discord_user_id: 121256836081909760
-  name: Stara
+  name: stara
   point_entries:
   - points: 1
     points_acquired_on: 22.09.2023
@@ -51,7 +51,7 @@ learderboard_entries:
   - points: 1
     points_acquired_on: 14.10.2023
 - discord_user_id: 234636890970521601
-  name: UberOtto
+  name: AG Otto
   point_entries:
   - points: 1
     points_acquired_on: 22.09.2023
@@ -63,7 +63,7 @@ learderboard_entries:
   - points: 1
     points_acquired_on: 22.09.2023
 - discord_user_id: 183974494346412032
-  name: LeBoat
+  name: LeBoat LeBin
   point_entries:
   - points: 1
     points_acquired_on: 22.09.2023
@@ -73,12 +73,12 @@ learderboard_entries:
   - points: 1
     points_acquired_on: 29.09.2023
 - discord_user_id: 252871467971248130
-  name: Lentsu
+  name: AG Lentsu
   point_entries:
   - points: 1
     points_acquired_on: 29.09.2023
 - discord_user_id: 152517953710063616
-  name: Juubeli
+  name: BuuBeli
   point_entries:
   - points: 1
     points_acquired_on: 22.09.2023
@@ -151,7 +151,7 @@ learderboard_entries:
   - points: 1
     points_acquired_on: 29.09.2023
 - discord_user_id: 288296943346515968
-  name: OtjuNick
+  name: Otju
   point_entries:
   - points: 2
     points_acquired_on: 29.09.2023
@@ -159,18 +159,20 @@ learderboard_entries:
     points_acquired_on: 14.10.2023
   - points: 1
     points_acquired_on: 14.10.2023
+  - points: 4
+    points_acquired_on: 14.10.2023
 - discord_user_id: 300964614127222785
   name: Puulz
   point_entries:
   - points: 4
     points_acquired_on: 14.10.2023
 - discord_user_id: 567841217749057586
-  name: EndiLc
+  name: EndiLC
   point_entries:
   - points: 1
     points_acquired_on: 14.10.2023
 - discord_user_id: 139733869640286209
-  name: Heni
+  name: HENI
   point_entries:
   - points: 1
     points_acquired_on: 14.10.2023
