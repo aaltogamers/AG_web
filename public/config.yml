@@ -32,6 +32,7 @@ collections:
             summary: '{{fields.name}}'
             fields:
               - { label: 'Name', name: 'name', widget: 'string' }
+              - { label: 'Discord User ID', name: 'discord_user_id', widget: 'string' }
               - label: 'Point entries'
                 name: 'point_entries'
                 label_singular: 'Point entry'
