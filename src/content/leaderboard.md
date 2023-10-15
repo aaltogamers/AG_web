@@ -157,8 +157,6 @@ learderboard_entries:
         points_acquired_on: 29.09.2023
       - points: 2
         points_acquired_on: 14.10.2023
-      - points: 1
-        points_acquired_on: 14.10.2023
   - discord_user_id: 300964614127222800
     name: Puulz
     point_entries:
