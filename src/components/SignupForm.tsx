@@ -21,6 +21,7 @@ import { Data, SignUpData } from '../types/types'
 import { getParticipants } from '../utils/db'
 import Input from './Input'
 import ParticipantTable from './ParticipantTable'
+import { FaCircleNotch } from 'react-icons/fa'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAWhfwD5GSsgZ8qzNyvn2kmNn3yVu0QaHY',
@@ -40,6 +41,7 @@ const SignUp = ({ eventName }: Props) => {
   const db = getFirestore(app)
   const auth = getAuth()
   const [signupData, setSignupData] = useState<SignUpData | null>(null)
+  const [hasPossibleSignUp, setHasPossibleSignUp] = useState<boolean>(true)
   const [participants, setParticipants] = useState<Data[]>([])
   const hasAlreadySignedUp = useRef(false)
   const { register, handleSubmit, setValue, reset, control } = useForm()
@@ -120,6 +122,8 @@ const SignUp = ({ eventName }: Props) => {
         const rawSignupDataEvent = snapshot.docs[0]
         const signUpData = rawSignupDataEvent.data() as SignUpData
         setSignupData(signUpData)
+      } else {
+        setHasPossibleSignUp(false)
       }
     }
     logIn()
@@ -133,85 +137,87 @@ const SignUp = ({ eventName }: Props) => {
   const signUpNotYetOpen = nowMoment.isBefore(signUpStart)
   const signUpClosed = nowMoment.isAfter(signUpEnd)
   const signUpNotOpen = signUpNotYetOpen || signUpClosed
-  return (
-    signupData && (
-      <div id="signup" className="flex flex-col gap-2">
-        <h2>Sign up </h2>
-        <h3>{signupData.name}</h3>
-        <h5 className="mb-4">Open until {signUpEndString}</h5>
-        {signUpNotOpen ? (
-          <h5>{signUpClosed ? 'Sign-up has closed.' : `Sign-up opens on ${signUpStartString}.`}</h5>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
-            <div className="flex-col md:grid md:grid-cols-input text-xl">
-              {signupData.inputs.map((input) => {
-                switch (input.type) {
-                  case 'text':
-                    return (
-                      <Input
-                        register={register}
-                        name={input.title}
-                        displayName={input.title}
-                        placeHolder={input.description}
-                        type="text"
-                        key={input.title}
-                        required={input.required}
-                        isPublic={input.public}
-                        control={control}
-                      />
-                    )
-                  case 'select':
-                    return (
-                      <Input
-                        register={register}
-                        name={input.title}
-                        displayName={input.title}
-                        options={input.options}
-                        key={input.title}
-                        required={input.required}
-                        isPublic={input.public}
-                        isMulti={input.multi}
-                        control={control}
-                      />
-                    )
-                  case 'info':
-                    return (
-                      <div className="col-span-2 mt-2 mb-8 md:my-4" key={input.title}>
-                        <b>{input.title}</b>
-                        <p>{input.description}</p>
-                      </div>
-                    )
-                  default:
-                    return null
-                }
-              })}
-              <div className="col-span-2 text-lightGray mb-4 text-sm">
-                Never input any sensitive data on this form
-              </div>
-              <input type="hidden" value={signupData.name} {...register('event')} />
-              <div className="col-span-2 flex justify-center gap-8">
-                <div>
-                  <button type="submit" className="mainbutton flex gap-2">
-                    {hasAlreadySignedUp.current ? 'Update sign-up' : 'Sign up'}
-                    <div className="relative text-md">
-                      <div className={`${isNewUpdate && 'checkmark'}`} />
+  return signupData ? (
+    <div id="signup" className="flex flex-col gap-2">
+      <h2>Sign up </h2>
+      <h3>{signupData.name}</h3>
+      <h5 className="mb-4">Open until {signUpEndString}</h5>
+      {signUpNotOpen ? (
+        <h5>{signUpClosed ? 'Sign-up has closed.' : `Sign-up opens on ${signUpStartString}.`}</h5>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
+          <div className="flex-col md:grid md:grid-cols-input text-xl">
+            {signupData.inputs.map((input) => {
+              switch (input.type) {
+                case 'text':
+                  return (
+                    <Input
+                      register={register}
+                      name={input.title}
+                      displayName={input.title}
+                      placeHolder={input.description}
+                      type="text"
+                      key={input.title}
+                      required={input.required}
+                      isPublic={input.public}
+                      control={control}
+                    />
+                  )
+                case 'select':
+                  return (
+                    <Input
+                      register={register}
+                      name={input.title}
+                      displayName={input.title}
+                      options={input.options}
+                      key={input.title}
+                      required={input.required}
+                      isPublic={input.public}
+                      isMulti={input.multi}
+                      control={control}
+                    />
+                  )
+                case 'info':
+                  return (
+                    <div className="col-span-2 mt-2 mb-8 md:my-4" key={input.title}>
+                      <b>{input.title}</b>
+                      <p>{input.description}</p>
                     </div>
+                  )
+                default:
+                  return null
+              }
+            })}
+            <div className="col-span-2 text-lightGray mb-4 text-sm">
+              Never input any sensitive data on this form
+            </div>
+            <input type="hidden" value={signupData.name} {...register('event')} />
+            <div className="col-span-2 flex justify-center gap-8">
+              <div>
+                <button type="submit" className="mainbutton flex gap-2">
+                  {hasAlreadySignedUp.current ? 'Update sign-up' : 'Sign up'}
+                  <div className="relative text-md">
+                    <div className={`${isNewUpdate && 'checkmark'}`} />
+                  </div>
+                </button>
+              </div>
+              {hasAlreadySignedUp.current && (
+                <div>
+                  <button type="button" className="mainbutton" onClick={removeSignUp}>
+                    Remove sign-up
                   </button>
                 </div>
-                {hasAlreadySignedUp.current && (
-                  <div>
-                    <button type="button" className="mainbutton" onClick={removeSignUp}>
-                      Remove sign-up
-                    </button>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-          </form>
-        )}
-        <ParticipantTable signupData={signupData} participants={participants} />
-      </div>
-    )
+          </div>
+        </form>
+      )}
+      <ParticipantTable signupData={signupData} participants={participants} />
+    </div>
+  ) : hasPossibleSignUp ? (
+    <FaCircleNotch className="spinner h-12" size={34} />
+  ) : (
+    <div className="h-12"></div>
   )
 }
 
