@@ -33,10 +33,11 @@ tldr: >-
 
   #### SIGN-UP
 
+  FULL TEAM [HERE](https://forms.gle/7XCN5trD9WMAwev38)  
 
-  * FULL TEAM [HERE](https://forms.gle/7XCN5trD9WMAwev38)
+  FLEX (1-4 players) [HERE](https://forms.gle/RCsp8ShwbYKazC5h7)  
 
-  * FLEX (1-4 players) [HERE](https://forms.gle/RCsp8ShwbYKazC5h7)
+  Open until 14.11. 16:00 or when spots are filled (32 teams)
 ---
 It's time for Aalto Gamers' biggest tournament of the Fall semester and that's of course the AG CS2 Masters!
 
