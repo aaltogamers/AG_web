@@ -56,6 +56,8 @@ learderboard_entries:
         points_acquired_on: 27.09.2023
       - points: 1
         points_acquired_on: 14.10.2023
+      - points_acquired_on: 27.10.2023
+        points: 1
   - discord_user_id: 234636890970521600
     name: AG Otto
     point_entries:
@@ -189,6 +191,8 @@ learderboard_entries:
     point_entries:
       - points: 1
         points_acquired_on: 14.10.2023
+      - points_acquired_on: 27.10.2023
+        points: 1
   - discord_user_id: 339429776030826500
     name: Markesz
     point_entries:
