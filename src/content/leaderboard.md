@@ -16,6 +16,8 @@ learderboard_entries:
         points_acquired_on: 29.09.2023
       - points: 1
         points_acquired_on: 14.09.2023
+      - points_acquired_on: 27.10.2023
+        points: 1
   - discord_user_id: 214302568820506620
     name: Janni
     point_entries:
@@ -25,6 +27,8 @@ learderboard_entries:
         points_acquired_on: 29.09.2023
       - points: 1
         points_acquired_on: 14.09.2023
+      - points_acquired_on: 27.10.2023
+        points: 1
   - discord_user_id: 255331841123287040
     name: "[AG] Silverhand"
     point_entries:
@@ -41,6 +45,8 @@ learderboard_entries:
         points_acquired_on: 27.09.2023
       - points: 3
         points_acquired_on: 27.09.2023
+      - points_acquired_on: 27.10.2023
+        points: 1
   - discord_user_id: 121256836081909760
     name: stara
     point_entries:
@@ -94,6 +100,8 @@ learderboard_entries:
         points_acquired_on: 29.09.2023
       - points: 1
         points_acquired_on: 14.10.2023
+      - points_acquired_on: 27.10.2023
+        points: 1
   - discord_user_id: 637991483529494500
     name: Hassu
     point_entries:
@@ -135,11 +143,15 @@ learderboard_entries:
         points_acquired_on: 29.09.2023
       - points: 1
         points_acquired_on: 14.10.2023
+      - points_acquired_on: 27.10.2023
+        points: 4
   - discord_user_id: 330809603602513900
     name: Vaahto
     point_entries:
       - points: 4
         points_acquired_on: 29.09.2023
+      - points_acquired_on: 27.10.2023
+        points: 2
   - discord_user_id: 302068603778367500
     name: Derpvi
     point_entries:
@@ -199,4 +211,14 @@ learderboard_entries:
     point_entries:
       - points: 1
         points_acquired_on: 14.10.2023
+  - discord_user_id: "228880393963569152"
+    name: Haliitti
+    point_entries:
+      - points_acquired_on: 27.10.2023
+        points: 3
+  - discord_user_id: "273193047167205377"
+    name: Belgie
+    point_entries:
+      - points_acquired_on: 27.10.2023
+        points: 1
 ---
