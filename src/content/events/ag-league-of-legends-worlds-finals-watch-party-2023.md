@@ -1,6 +1,6 @@
 ---
 name: AG League of Legends Worlds Finals Watch Party 2023
-time: 06.11.2023
+time: 19.11.2023
 image: /images/watch_party.jpg
 description: >-
   Our traditional League of Legends Worlds Finals Watch Party is here again❗️
