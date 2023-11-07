@@ -22,15 +22,7 @@ import { getParticipants } from '../utils/db'
 import Input from './Input'
 import ParticipantTable from './ParticipantTable'
 import { FaCircleNotch } from 'react-icons/fa'
-
-const firebaseConfig = {
-  apiKey: 'AIzaSyAWhfwD5GSsgZ8qzNyvn2kmNn3yVu0QaHY',
-  authDomain: 'ag-web-ab4d9.firebaseapp.com',
-  projectId: 'ag-web-ab4d9',
-  storageBucket: 'ag-web-ab4d9.appspot.com',
-  messagingSenderId: '477042062646',
-  appId: '1:477042062646:web:ceb714216dc980f72b2f97',
-}
+import { firebaseConfig } from '../utils/db'
 
 type Props = {
   eventName: string

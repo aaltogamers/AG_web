@@ -8,7 +8,9 @@ const App = ({ Component, pageProps }) => {
   const router = useRouter()
 
   const LayoutToUse =
-    router.asPath.startsWith('/admin') || router.asPath.startsWith('/signups')
+    router.asPath.startsWith('/admin') ||
+    router.asPath.startsWith('/signups') ||
+    router.asPath.startsWith('/poll')
       ? React.Fragment
       : Layout
 

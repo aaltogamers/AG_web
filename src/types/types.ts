@@ -78,3 +78,16 @@ export type SignUpData = {
   openUntil: string
   inputs: SignupInput[]
 }
+
+export type Poll = {
+  id: string
+  question: string
+  options: string[]
+}
+
+export type Vote = {
+  pickedOption: string
+  pointsOnWin: number
+  poll: string
+  user: string
+}

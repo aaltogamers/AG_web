@@ -10,15 +10,7 @@ import PageWrapper from '../components/PageWrapper'
 import { AGEvent } from '../types/types'
 import SignUpCreateForm from '../components/SignupCreateForm'
 import { getFolder } from '../utils/fileUtils'
-
-const firebaseConfig = {
-  apiKey: 'AIzaSyAWhfwD5GSsgZ8qzNyvn2kmNn3yVu0QaHY',
-  authDomain: 'ag-web-ab4d9.firebaseapp.com',
-  projectId: 'ag-web-ab4d9',
-  storageBucket: 'ag-web-ab4d9.appspot.com',
-  messagingSenderId: '477042062646',
-  appId: '1:477042062646:web:ceb714216dc980f72b2f97',
-}
+import { firebaseConfig } from '../utils/db'
 
 type Props = {
   events: AGEvent[]

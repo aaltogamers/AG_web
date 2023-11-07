@@ -9,6 +9,7 @@ module.exports = {
         red: '#F32929',
         darkGray: '#23242D',
         lightGray: '#AAABAD',
+        transparentBlack: 'rgba(0,0,0,0.8)',
       },
       gridTemplateColumns: {
         input: 'minmax(500px, 0.1fr) 400px',

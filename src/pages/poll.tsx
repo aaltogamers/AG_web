@@ -1,0 +1,128 @@
+import Head from 'next/head'
+import { useEffect, useState } from 'react'
+import { firebaseConfig, getActivePoll, getVotesForPoll } from '../utils/db'
+import { getFirestore } from 'firebase/firestore'
+import { initializeApp } from 'firebase/app'
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+import { Poll, Vote } from '../types/types'
+
+type Count = {
+  name: string
+  count: number
+  color: string
+}
+
+const Vote = () => {
+  const app = initializeApp(firebaseConfig)
+  const db = getFirestore(app)
+  const auth = getAuth()
+  const [activePoll, setActivePoll] = useState<Poll | null>(null)
+  const [votesForPoll, setVotesForPoll] = useState<Vote[]>([])
+
+  const getAndSetActivePoll = async () => {
+    const newActivePoll = await getActivePoll(db)
+    setActivePoll(newActivePoll)
+    return newActivePoll
+  }
+
+  const refreshGraph = async () => {
+    const newActivePoll = await getAndSetActivePoll()
+    const newVotes = await getVotesForPoll(db, newActivePoll.id)
+    setVotesForPoll(newVotes)
+  }
+
+  useEffect(() => {
+    const bodyElem = document.querySelector('body')
+    const htmlElem = document.querySelector('html')
+    if (bodyElem && htmlElem) {
+      bodyElem.style.backgroundColor = 'transparent'
+      htmlElem.style.backgroundColor = 'transparent'
+    }
+    signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword').then(() => {
+      refreshGraph()
+    })
+    const interval = setInterval(() => refreshGraph(), 1000000) // 5000 ?
+    return () => {
+      clearInterval(interval)
+    }
+  }, [])
+
+  if (!activePoll) {
+    return <></>
+  }
+
+  const countMap = new Map()
+  activePoll.options.forEach((option) => countMap.set(option, 0))
+  votesForPoll.forEach(({ pickedOption }) => {
+    if (countMap.has(pickedOption)) {
+      countMap.set(pickedOption, countMap.get(pickedOption) + 1)
+    }
+  })
+
+  const counts: Count[] = []
+
+  const colors = ['#262E70', '#F89E1B', '#F4D35E', '#70C1B3', '#1098F7', '#14281D']
+
+  let i = 0
+  countMap.forEach((value, key) => {
+    counts.push({ name: key.toString(), count: value, color: colors[i] })
+    i++
+  })
+
+  const screenWidth = 800
+  const screenHeight = 500
+  const topTextHeight = 75
+  const bottomTextHeight = 50
+  const graphHeight = screenHeight - bottomTextHeight - topTextHeight
+
+  const barAndMarginHeight = graphHeight / counts.length
+
+  const barHeight = barAndMarginHeight * 0.8
+  const marginHeight = barAndMarginHeight * 0.2
+
+  const totalMaybe0 = counts.reduce((acc, { count }) => acc + count, 0)
+
+  const total = totalMaybe0 === 0 ? 1 : totalMaybe0
+
+  return (
+    <>
+      <Head>
+        <title>Twitch Stream Voting - Aalto Gamers</title>
+      </Head>
+      <main className={`text-white flex flex-col text-4xl h-[${screenHeight}px]`}>
+        <div className={`h[${topTextHeight}px] flex justify-end`}>
+          <p className=" bg-transparentBlack p-2 w-fit text-5xl mx-2 my-2">{activePoll.question}</p>
+        </div>
+        {counts
+          .sort((a, b) => b.count - a.count)
+          .map(({ count, name, color }) => {
+            const percentage = (count / total) * 100
+            return (
+              <div
+                className="flex items-center pl-8 justify-end "
+                style={{ marginBottom: marginHeight }}
+                key={name}
+              >
+                <div className="mr-4 p-2 bg-transparentBlack">{name}</div>
+                <div
+                  className="flex items-center pl-4"
+                  style={{
+                    width: Math.max((percentage / 100) * screenWidth, 75),
+                    height: barHeight,
+                    backgroundColor: color,
+                  }}
+                >
+                  {percentage.toFixed(0)}%
+                </div>
+              </div>
+            )
+          })}
+        <p style={{ height: bottomTextHeight }} className="flex justify-end px-4">
+          Vote using the Twitch chat. {total} Votes
+        </p>
+      </main>
+    </>
+  )
+}
+
+export default Vote
