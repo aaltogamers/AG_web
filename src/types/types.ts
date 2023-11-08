@@ -87,7 +87,6 @@ export type Poll = {
 
 export type Vote = {
   pickedOption: string
-  pointsOnWin: number
   poll: string
   user: string
 }

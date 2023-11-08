@@ -25,6 +25,17 @@ const Vote = () => {
     return newActivePoll
   }
 
+  const generateCountMap = (votes: Vote[], poll: Poll) => {
+    const countMap = new Map()
+    poll.options.forEach((option) => countMap.set(option, 0))
+    votes.forEach(({ pickedOption }) => {
+      if (countMap.has(pickedOption)) {
+        countMap.set(pickedOption, countMap.get(pickedOption) + 1)
+      }
+    })
+    return countMap
+  }
+
   const refreshGraph = async () => {
     const newActivePoll = await getAndSetActivePoll()
     const newVotes = await getVotesForPoll(db, newActivePoll.id)
@@ -41,7 +52,7 @@ const Vote = () => {
     signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword').then(() => {
       refreshGraph()
     })
-    const interval = setInterval(() => refreshGraph(), 1000000) // 5000 ?
+    const interval = setInterval(() => refreshGraph(), 5000)
     return () => {
       clearInterval(interval)
     }
@@ -51,23 +62,19 @@ const Vote = () => {
     return <></>
   }
 
-  const countMap = new Map()
-  activePoll.options.forEach((option) => countMap.set(option, 0))
-  votesForPoll.forEach(({ pickedOption }) => {
-    if (countMap.has(pickedOption)) {
-      countMap.set(pickedOption, countMap.get(pickedOption) + 1)
-    }
-  })
-
-  const counts: Count[] = []
+  const countMap = generateCountMap(votesForPoll, activePoll)
 
   const colors = ['#262E70', '#F89E1B', '#F4D35E', '#70C1B3', '#1098F7', '#14281D']
 
-  let i = 0
-  countMap.forEach((value, key) => {
-    counts.push({ name: key.toString(), count: value, color: colors[i] })
-    i++
-  })
+  const mapArray = Array.from(countMap, ([key, value]) => ({ name: key.toString(), count: value }))
+
+  const counts: Count[] = mapArray
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(({ name, count }, i) => ({
+      name,
+      count,
+      color: colors[i],
+    }))
 
   const screenWidth = 800
   const screenHeight = 500
@@ -84,6 +91,13 @@ const Vote = () => {
 
   const total = totalMaybe0 === 0 ? 1 : totalMaybe0
 
+  /*
+  const odds = new Map()
+  countMap.forEach((count, option) => {
+    odds.set(option, votesForPoll.length / count)
+  })
+  */
+
   return (
     <>
       <Head>
@@ -97,6 +111,7 @@ const Vote = () => {
           .sort((a, b) => b.count - a.count)
           .map(({ count, name, color }) => {
             const percentage = (count / total) * 100
+            // const pointsOnWin = odds.get(name) * 100
             return (
               <div
                 className="flex items-center pl-8 justify-end "
@@ -117,8 +132,8 @@ const Vote = () => {
               </div>
             )
           })}
-        <p style={{ height: bottomTextHeight }} className="flex justify-end px-4">
-          Vote using the Twitch chat. {total} Votes
+        <p style={{ height: bottomTextHeight }} className="flex justify-end px-4 text-3xl">
+          {total} Votes. You can vote using the Twitch chat.
         </p>
       </main>
     </>
