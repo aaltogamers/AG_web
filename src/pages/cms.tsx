@@ -7,7 +7,7 @@ import AboutPreview from '../previews/AboutPreview'
 import PartnersPreview from '../previews/PartnersPreview'
 import AlbumPreview from '../previews/AlbumPreview'
 
-const Admin = () => {
+const CMSPage = () => {
   useEffect(() => {
     ;(async () => {
       const CMS = (await import('netlify-cms-app')).default
@@ -25,4 +25,4 @@ const Admin = () => {
 
   return <div />
 }
-export default Admin
+export default CMSPage
