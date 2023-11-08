@@ -8,9 +8,9 @@ const App = ({ Component, pageProps }) => {
   const router = useRouter()
 
   const LayoutToUse =
+    router.asPath.startsWith('/cms') ||
     router.asPath.startsWith('/admin') ||
-    router.asPath.startsWith('/signups') ||
-    router.asPath.startsWith('/poll')
+    router.asPath.startsWith('/bet')
       ? React.Fragment
       : Layout
 
