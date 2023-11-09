@@ -7,10 +7,16 @@ export const getParticipants = async (db: Firestore, eventName: string) => {
   return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))
 }
 
-export const getActivePoll = async (db: Firestore) => {
-  const q = query(collection(db, 'polls'), where('active', '==', true))
+export const getPolls = async (db: Firestore) => {
+  const q = query(collection(db, 'polls'))
   const snapshot = await getDocs(q)
-  return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))[0] as unknown as Poll
+  return snapshot.docs.map((item) => ({ id: item.id, ...item.data() })) as Poll[]
+}
+
+export const getVisiblePoll = async (db: Firestore) => {
+  const q = query(collection(db, 'polls'), where('isVisible', '==', true))
+  const snapshot = await getDocs(q)
+  return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))[0] as Poll | undefined
 }
 
 export const getVotesForPoll = async (db: Firestore, pollId: string) => {

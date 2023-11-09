@@ -83,9 +83,14 @@ export type Poll = {
   id: string
   question: string
   options: string[]
+  isVisible: boolean
+  isVotable: boolean
+  correctOption?: string
+  pointsForWin?: number
 }
 
 export type Vote = {
+  id: string
   pickedOption: string
   poll: string
   user: string

@@ -11,6 +11,7 @@ import { AGEvent } from '../types/types'
 import SignUpCreateForm from '../components/SignupCreateForm'
 import { getFolder } from '../utils/fileUtils'
 import { firebaseConfig } from '../utils/db'
+import BetManagement from '../components/BetManagement'
 
 type Props = {
   events: AGEvent[]
@@ -20,7 +21,7 @@ type Inputs = {
   password: string
 }
 
-const SignUps = ({ events }: Props) => {
+const Admin = ({ events }: Props) => {
   const app = initializeApp(firebaseConfig)
   const auth = getAuth()
   const {
@@ -31,6 +32,7 @@ const SignUps = ({ events }: Props) => {
     control,
   } = useForm<Inputs>()
   const [reload, setReload] = useState(false)
+  const [tab, setTab] = useState<'signups' | 'bets'>('signups')
   const onSubmit: SubmitHandler<Inputs> = (data) => {
     const email = 'board@aaltogamers.fi'
     signInWithEmailAndPassword(auth, email, data.password)
@@ -62,11 +64,28 @@ const SignUps = ({ events }: Props) => {
   return (
     <PageWrapper>
       <Head>
-        <title>Signups - Aalto Gamers</title>
+        <title>Admin - Aalto Gamers</title>
       </Head>
       <div className="mt-8">
         {auth?.currentUser?.email === 'board@aaltogamers.fi' ? (
-          <SignUpCreateForm app={app} events={events} />
+          <div>
+            <div className="flex gap-8 justify-center mb-20 text-4xl">
+              <button
+                className={`${tab === 'signups' && 'underline'}`}
+                onClick={() => setTab('signups')}
+              >
+                Signups
+              </button>
+              <button className={`${tab === 'bets' && 'underline'}`} onClick={() => setTab('bets')}>
+                Bets
+              </button>
+            </div>
+            {tab === 'signups' ? (
+              <SignUpCreateForm app={app} events={events} />
+            ) : (
+              <BetManagement app={app} />
+            )}
+          </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center">
             <Input
@@ -86,7 +105,7 @@ const SignUps = ({ events }: Props) => {
   )
 }
 
-export default SignUps
+export default Admin
 
 export const getStaticProps = () => ({
   props: { events: getFolder('events') },

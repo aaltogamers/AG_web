@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { useEffect, useState } from 'react'
-import { firebaseConfig, getActivePoll, getVotesForPoll } from '../utils/db'
+import { firebaseConfig, getVisiblePoll, getVotesForPoll } from '../utils/db'
 import { getFirestore } from 'firebase/firestore'
 import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
@@ -16,13 +16,13 @@ const Vote = () => {
   const app = initializeApp(firebaseConfig)
   const db = getFirestore(app)
   const auth = getAuth()
-  const [activePoll, setActivePoll] = useState<Poll | null>(null)
+  const [visiblePoll, setVisiblePoll] = useState<Poll | undefined>(undefined)
   const [votesForPoll, setVotesForPoll] = useState<Vote[]>([])
 
-  const getAndSetActivePoll = async () => {
-    const newActivePoll = await getActivePoll(db)
-    setActivePoll(newActivePoll)
-    return newActivePoll
+  const getAndSetVisiblePoll = async () => {
+    const newVisiblePoll = await getVisiblePoll(db)
+    setVisiblePoll(newVisiblePoll)
+    return newVisiblePoll
   }
 
   const generateCountMap = (votes: Vote[], poll: Poll) => {
@@ -37,9 +37,11 @@ const Vote = () => {
   }
 
   const refreshGraph = async () => {
-    const newActivePoll = await getAndSetActivePoll()
-    const newVotes = await getVotesForPoll(db, newActivePoll.id)
-    setVotesForPoll(newVotes)
+    const newVisiblePoll = await getAndSetVisiblePoll()
+    if (newVisiblePoll) {
+      const newVotes = await getVotesForPoll(db, newVisiblePoll.id)
+      setVotesForPoll(newVotes)
+    }
   }
 
   useEffect(() => {
@@ -58,11 +60,11 @@ const Vote = () => {
     }
   }, [])
 
-  if (!activePoll) {
+  if (!visiblePoll) {
     return <></>
   }
 
-  const countMap = generateCountMap(votesForPoll, activePoll)
+  const countMap = generateCountMap(votesForPoll, visiblePoll)
 
   const colors = ['#262E70', '#F89E1B', '#F4D35E', '#70C1B3', '#1098F7', '#14281D']
 
@@ -91,13 +93,6 @@ const Vote = () => {
 
   const total = totalMaybe0 === 0 ? 1 : totalMaybe0
 
-  /*
-  const odds = new Map()
-  countMap.forEach((count, option) => {
-    odds.set(option, votesForPoll.length / count)
-  })
-  */
-
   return (
     <>
       <Head>
@@ -105,7 +100,9 @@ const Vote = () => {
       </Head>
       <main className={`text-white flex flex-col text-4xl h-[${screenHeight}px]`}>
         <div className={`h[${topTextHeight}px] flex justify-end`}>
-          <p className=" bg-transparentBlack p-2 w-fit text-5xl mx-2 my-2">{activePoll.question}</p>
+          <p className=" bg-transparentBlack p-2 w-fit text-5xl mx-2 my-2">
+            {visiblePoll.question}
+          </p>
         </div>
         {counts
           .sort((a, b) => b.count - a.count)
@@ -133,7 +130,8 @@ const Vote = () => {
             )
           })}
         <p style={{ height: bottomTextHeight }} className="flex justify-end px-4 text-3xl">
-          {total} Votes. You can vote using the Twitch chat.
+          {total} Bets.
+          {visiblePoll.isVotable ? ' Betting is open! Use the chat to bet.' : ' Betting is closed.'}
         </p>
       </main>
     </>
