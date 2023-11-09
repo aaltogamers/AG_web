@@ -1,8 +1,9 @@
 import { FirebaseApp } from 'firebase/app'
-import { getFirestore, doc, updateDoc, deleteField } from 'firebase/firestore'
+import { getFirestore, doc, updateDoc, deleteField, deleteDoc } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import { Poll } from '../types/types'
 import { getPolls, getVotesForPoll } from '../utils/db'
+import BetCreateForm from './BetCreateForm'
 
 type Props = {
   app: FirebaseApp
@@ -61,6 +62,13 @@ const BetManagement = ({ app }: Props) => {
     await updatePolls()
   }
 
+  const deletePoll = async (poll: Poll) => {
+    const canDelete = confirm(`re you sure you want to delete the poll "${poll.question}"?`)
+    if (canDelete) {
+      await deleteDoc(doc(db, 'polls', poll.id))
+    }
+  }
+
   useEffect(() => {
     updatePolls()
   }, [])
@@ -68,9 +76,9 @@ const BetManagement = ({ app }: Props) => {
   const buttonFields: ButtonField[] = ['isVisible', 'isVotable']
 
   return (
-    <div className="flex gap-8">
+    <div className="flex gap-8 flex-wrap">
       {polls.map((poll) => (
-        <div className="p-4 border-2" key={poll.id}>
+        <div className="p-4 border-2 relative" key={poll.id}>
           <h4>{poll.question}</h4>
           <div className="flex flex-col gap-2 items-start mt-4">
             {poll.options.map((option) => (
@@ -101,8 +109,14 @@ const BetManagement = ({ app }: Props) => {
               </button>
             ))}
           </div>
+          <button className="absolute top-0 right-1 text-xl p-2" onClick={() => deletePoll(poll)}>
+            ✖
+          </button>
         </div>
       ))}
+      <div>
+        <BetCreateForm app={app} />
+      </div>
     </div>
   )
 }
