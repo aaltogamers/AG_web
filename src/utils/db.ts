@@ -22,7 +22,13 @@ export const getVisiblePoll = async (db: Firestore) => {
 export const getVotesForPoll = async (db: Firestore, pollId: string) => {
   const q = query(collection(db, 'votes'), where('poll', '==', pollId))
   const snapshot = await getDocs(q)
-  return snapshot.docs.map((item) => ({ id: item.id, ...item.data() })) as unknown as Vote[]
+  return snapshot.docs.map((item) => ({ id: item.id, ...item.data() })) as Vote[]
+}
+
+export const getVotesWithPoints = async (db: Firestore) => {
+  const q = query(collection(db, 'votes'), where('points', '!=', null))
+  const snapshot = await getDocs(q)
+  return snapshot.docs.map((item) => ({ id: item.id, ...item.data() })) as Vote[]
 }
 
 export const firebaseConfig = {

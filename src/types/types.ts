@@ -94,4 +94,10 @@ export type Vote = {
   pickedOption: string
   poll: string
   user: string
+  points?: number
+}
+
+export type ScoreBoardEntry = {
+  name: string
+  score: number
 }

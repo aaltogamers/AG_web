@@ -5,6 +5,7 @@ import { getFirestore } from 'firebase/firestore'
 import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { Poll, Vote } from '../types/types'
+import makeBackgroundInvisible from '../utils/makeBackgroundInvisible'
 
 type Count = {
   name: string
@@ -45,12 +46,7 @@ const Vote = () => {
   }
 
   useEffect(() => {
-    const bodyElem = document.querySelector('body')
-    const htmlElem = document.querySelector('html')
-    if (bodyElem && htmlElem) {
-      bodyElem.style.backgroundColor = 'transparent'
-      htmlElem.style.backgroundColor = 'transparent'
-    }
+    makeBackgroundInvisible()
     signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword').then(() => {
       refreshGraph()
     })
@@ -96,7 +92,7 @@ const Vote = () => {
   return (
     <>
       <Head>
-        <title>Twitch Stream Voting - Aalto Gamers</title>
+        <title>Twitch Stream Betting - Aalto Gamers</title>
       </Head>
       <main className={`text-white flex flex-col text-4xl h-[${screenHeight}px]`}>
         <div className={`h[${topTextHeight}px] flex justify-end`}>
@@ -108,14 +104,30 @@ const Vote = () => {
           .sort((a, b) => b.count - a.count)
           .map(({ count, name, color }) => {
             const percentage = (count / total) * 100
-            // const pointsOnWin = odds.get(name) * 100
+            const isCorrectOption = visiblePoll.correctOption === name
+            const pollHasEnded = visiblePoll.correctOption !== undefined
+            let textClass = ''
+            let pointsText = ''
+            if (pollHasEnded) {
+              if (isCorrectOption) {
+                textClass = 'text-green-500'
+                pointsText = `+${visiblePoll.pointsForWin} pt`
+              } else {
+                textClass = 'text-red'
+                pointsText = `+0 pt`
+              }
+            }
+
             return (
               <div
                 className="flex items-center pl-8 justify-end "
                 style={{ marginBottom: marginHeight }}
                 key={name}
               >
-                <div className="mr-4 p-2 bg-transparentBlack">{name}</div>
+                <div className={`mr-4 p-2 bg-transparentBlack text-center ${textClass}`}>
+                  <p>{name}</p>
+                  <p>{pointsText}</p>
+                </div>
                 <div
                   className="flex items-center pl-4"
                   style={{
