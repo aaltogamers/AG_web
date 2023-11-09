@@ -19,7 +19,7 @@ type ButtonField = 'isVisible' | 'isVotable'
 
 const BetManagement = ({ app }: Props) => {
   const db = getFirestore(app)
-  const polls = useFirestore(db, 'polls') as Poll[]
+  const polls = useFirestore(app, 'polls') as Poll[]
 
   const setAsCorrectOption = async (poll: Poll, option: string) => {
     const pollRef = doc(db, 'polls', poll.id)

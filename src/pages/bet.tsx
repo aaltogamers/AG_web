@@ -1,9 +1,7 @@
 import Head from 'next/head'
 import { useEffect } from 'react'
 import { firebaseConfig, useVisiblePollAndVotes } from '../utils/db'
-import { getFirestore } from 'firebase/firestore'
 import { initializeApp } from 'firebase/app'
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { Poll, Vote } from '../types/types'
 import makeBackgroundInvisible from '../utils/makeBackgroundInvisible'
 
@@ -15,9 +13,7 @@ type Count = {
 
 const Vote = () => {
   const app = initializeApp(firebaseConfig)
-  const db = getFirestore(app)
-  const auth = getAuth()
-  const { visiblePoll, votesForPoll } = useVisiblePollAndVotes(db)
+  const { visiblePoll, votesForPoll } = useVisiblePollAndVotes(app)
 
   const generateCountMap = (votes: Vote[], poll: Poll) => {
     const countMap = new Map()
@@ -32,7 +28,6 @@ const Vote = () => {
 
   useEffect(() => {
     makeBackgroundInvisible()
-    signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword').then(() => {})
   }, [])
 
   const countMap = visiblePoll ? generateCountMap(votesForPoll, visiblePoll) : new Map()

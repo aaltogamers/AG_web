@@ -1,22 +1,18 @@
 import Head from 'next/head'
 import { useEffect } from 'react'
 import { firebaseConfig, useFirestore } from '../utils/db'
-import { getFirestore, where } from 'firebase/firestore'
+import { where } from 'firebase/firestore'
 import { initializeApp } from 'firebase/app'
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { ScoreBoardEntry, Vote } from '../types/types'
 import makeBackgroundInvisible from '../utils/makeBackgroundInvisible'
 import Scoreboard from '../components/Scoreboard'
 
 const Vote = () => {
   const app = initializeApp(firebaseConfig)
-  const db = getFirestore(app)
-  const auth = getAuth()
-  const votes = useFirestore(db, 'votes', where('points', '!=', null)) as Vote[]
+  const votes = useFirestore(app, 'votes', where('points', '!=', null)) as Vote[]
 
   useEffect(() => {
     makeBackgroundInvisible()
-    signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword')
   }, [])
 
   const userPoints = new Map()
@@ -41,7 +37,7 @@ const Vote = () => {
         <title>Twitch Stream Betting Scoreboard- Aalto Gamers</title>
       </Head>
       <main className="text-white bg-transparentBlack w-[500px] h-[100vh]">
-        <Scoreboard entries={entries} placeholderText="No entries" />
+        <Scoreboard entries={entries} placeholderText="Less than 3 entries" />
       </main>
     </>
   )
