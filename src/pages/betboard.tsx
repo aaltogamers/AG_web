@@ -1,7 +1,7 @@
 import Head from 'next/head'
-import { useEffect, useState } from 'react'
-import { firebaseConfig, getVotesWithPoints } from '../utils/db'
-import { getFirestore } from 'firebase/firestore'
+import { useEffect } from 'react'
+import { firebaseConfig, useFirestore } from '../utils/db'
+import { getFirestore, where } from 'firebase/firestore'
 import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { ScoreBoardEntry, Vote } from '../types/types'
@@ -12,22 +12,11 @@ const Vote = () => {
   const app = initializeApp(firebaseConfig)
   const db = getFirestore(app)
   const auth = getAuth()
-  const [votes, setVotes] = useState<Vote[]>([])
-
-  const refreshData = async () => {
-    const newVotes = await getVotesWithPoints(db)
-    setVotes(newVotes)
-  }
+  const votes = useFirestore(db, 'votes', where('points', '!=', null)) as Vote[]
 
   useEffect(() => {
     makeBackgroundInvisible()
-    signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword').then(() => {
-      refreshData()
-    })
-    const interval = setInterval(() => refreshData(), 5000)
-    return () => {
-      clearInterval(interval)
-    }
+    signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword')
   }, [])
 
   const userPoints = new Map()

@@ -1,6 +1,6 @@
 import Head from 'next/head'
-import { useEffect, useState } from 'react'
-import { firebaseConfig, getVisiblePoll, getVotesForPoll } from '../utils/db'
+import { useEffect } from 'react'
+import { firebaseConfig, useVisiblePollAndVotes } from '../utils/db'
 import { getFirestore } from 'firebase/firestore'
 import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
@@ -17,14 +17,7 @@ const Vote = () => {
   const app = initializeApp(firebaseConfig)
   const db = getFirestore(app)
   const auth = getAuth()
-  const [visiblePoll, setVisiblePoll] = useState<Poll | undefined>(undefined)
-  const [votesForPoll, setVotesForPoll] = useState<Vote[]>([])
-
-  const getAndSetVisiblePoll = async () => {
-    const newVisiblePoll = await getVisiblePoll(db)
-    setVisiblePoll(newVisiblePoll)
-    return newVisiblePoll
-  }
+  const { visiblePoll, votesForPoll } = useVisiblePollAndVotes(db)
 
   const generateCountMap = (votes: Vote[], poll: Poll) => {
     const countMap = new Map()
@@ -37,23 +30,9 @@ const Vote = () => {
     return countMap
   }
 
-  const refreshGraph = async () => {
-    const newVisiblePoll = await getAndSetVisiblePoll()
-    if (newVisiblePoll) {
-      const newVotes = await getVotesForPoll(db, newVisiblePoll.id)
-      setVotesForPoll(newVotes)
-    }
-  }
-
   useEffect(() => {
     makeBackgroundInvisible()
-    signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword').then(() => {
-      refreshGraph()
-    })
-    const interval = setInterval(() => refreshGraph(), 5000)
-    return () => {
-      clearInterval(interval)
-    }
+    signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword').then(() => {})
   }, [])
 
   const countMap = visiblePoll ? generateCountMap(votesForPoll, visiblePoll) : new Map()

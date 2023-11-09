@@ -2,28 +2,32 @@ import { FirebaseApp } from 'firebase/app'
 import { addDoc, collection, getFirestore } from 'firebase/firestore'
 import { useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
+import { Poll } from '../types/types'
 import Input from './Input'
 
 type Props = {
   app: FirebaseApp
 }
 
+type CreatableBet = Omit<Poll, 'id'>
+
 const BetCreateForm = ({ app }: Props) => {
   const [isFormVisible, setIsFormVisible] = useState(false)
-  const { register, handleSubmit, control } = useForm()
+  const { register, handleSubmit, control, reset } = useForm()
   const db = getFirestore(app)
 
   const onSubmit: SubmitHandler<any> = async (data) => {
-    console.log(data)
     const options = data.options.split(',').map((option: string) => option.trim())
-    const newBet = {
+    const newBet: CreatableBet = {
       question: data.question,
       options,
       isVotable: false,
       isVisible: false,
+      creationTimeStamp: Date.now(),
     }
     await addDoc(collection(db, 'polls'), newBet)
     setIsFormVisible(false)
+    reset()
   }
 
   return (
