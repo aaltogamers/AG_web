@@ -22,7 +22,7 @@ export const getParticipants = async (db: Firestore, eventName: string) => {
 const loginIfNotLoggedIn = async (app: FirebaseApp) => {
   const db = getFirestore(app)
   const auth = getAuth(app)
-  console.log(auth.currentUser)
+  //console.log(auth.currentUser)
   if (!auth.currentUser) {
     await signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword')
   }
@@ -44,7 +44,7 @@ export const useFirestore = (
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const newItems = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))
         setItems(newItems)
-        console.log(new Date())
+        // console.log(new Date())
       })
       return () => unsubscribe()
     }
@@ -67,7 +67,7 @@ export const useVisiblePollAndVotes = (app: FirebaseApp) => {
           ...item.data(),
         }))[0] as Poll
         setVisiblePoll(visiblePoll)
-        console.log(new Date())
+        //console.log(new Date())
       })
       return () => unsubscribe()
     }
@@ -85,7 +85,7 @@ export const useVisiblePollAndVotes = (app: FirebaseApp) => {
             ...item.data(),
           })) as Vote[]
           setVotesForPoll(votes)
-          console.log(new Date())
+          // console.log(new Date())
         })
         return () => unsubscribe()
       } else {
