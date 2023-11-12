@@ -34,7 +34,7 @@ learderboard_entries:
   - points: 1
     points_acquired_on: 27.10.2023
 - discord_user_id: '255331841123287043'
-  name: '[AG] Silverhand'
+  name: '[AG] N3GATE'
   point_entries:
   - points: 3
     points_acquired_on: 22.09.2023
@@ -140,7 +140,7 @@ learderboard_entries:
   - points: 2
     points_acquired_on: 10.11.2023
 - discord_user_id: '780813046552854568'
-  name: Shayaan_Ahmed
+  name: Shayaan from Junction
   point_entries:
   - points: 1
     points_acquired_on: 29.09.2023
@@ -247,7 +247,7 @@ learderboard_entries:
   - points: 3
     points_acquired_on: 27.10.2023
 - discord_user_id: '273193047167205377'
-  name: Belgie
+  name: belgie.ni
   point_entries:
   - points: 1
     points_acquired_on: 27.10.2023
