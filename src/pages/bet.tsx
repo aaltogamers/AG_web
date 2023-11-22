@@ -113,12 +113,13 @@ const Vote = () => {
                   </div>
                 )
               })}
-            <p style={{ height: bottomTextHeight }} className="flex justify-end px-4 text-3xl">
-              {total.toFixed(0)} Bets.
-              {visiblePoll.isVotable
-                ? ' Betting is open! Use the chat to bet.'
-                : ' Betting is closed.'}
-            </p>
+            <div className={`h[${topTextHeight}px] flex justify-end `}>
+              <p className="flex justify-end px-4 text-3xl bg-transparentBlack w-fit p-2">
+                {visiblePoll.isVotable
+                  ? ' Betting is open! Use the chat to bet.'
+                  : ' Betting is closed.'}
+              </p>
+            </div>
           </>
         )}
       </main>
