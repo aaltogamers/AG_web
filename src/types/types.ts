@@ -87,6 +87,7 @@ export type Poll = {
   isVotable: boolean
   correctOption?: string
   pointsForWin?: number
+  additionalMessage?: string
   creationTimeStamp: number
 }
 

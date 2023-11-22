@@ -67,7 +67,7 @@ const BetManagement = ({ app }: Props) => {
   }
 
   const deletePoll = async (poll: Poll) => {
-    const canDelete = confirm(`re you sure you want to delete the poll "${poll.question}"?`)
+    const canDelete = confirm(`Are you sure you want to delete the poll "${poll.question}"?`)
     if (canDelete) {
       await deleteDoc(doc(db, 'polls', poll.id))
     }
@@ -112,6 +112,8 @@ const BetManagement = ({ app }: Props) => {
                 </button>
               ))}
             </div>
+            {poll.additionalMessage && <p className="text-md">{poll.additionalMessage}</p>}
+
             <button className="absolute top-0 right-1 text-xl p-2" onClick={() => deletePoll(poll)}>
               ✖
             </button>

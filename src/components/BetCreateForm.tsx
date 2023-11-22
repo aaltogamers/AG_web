@@ -23,6 +23,7 @@ const BetCreateForm = ({ app }: Props) => {
       options,
       isVotable: false,
       isVisible: false,
+      additionalMessage: data.additionalMessage,
       creationTimeStamp: Date.now(),
     }
     await addDoc(collection(db, 'polls'), newBet)
@@ -50,6 +51,14 @@ const BetCreateForm = ({ app }: Props) => {
             placeHolder="Option1, Option2"
             type="text"
             required
+            control={control}
+          />
+          <Input
+            register={register}
+            name="additionalMessage"
+            displayName="Additional Chat Message"
+            defaultValue="The betting will be open for the first 4 rounds of the match."
+            type="text"
             control={control}
           />
           <button type="submit" className="mainbutton ml-4 ">
