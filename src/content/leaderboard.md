@@ -9,6 +9,8 @@ learderboard_entries:
     points_acquired_on: 14.10.2023
   - points: 1
     points_acquired_on: 10.11.2023
+  - points: 1
+    points_acquired_on: 24.11.2023
 - discord_user_id: '265604180759019520'
   name: Vesipeto
   point_entries:
@@ -22,6 +24,8 @@ learderboard_entries:
     points_acquired_on: 27.10.2023
   - points: 1
     points_acquired_on: 10.11.2023
+  - points: 1
+    points_acquired_on: 24.11.2023
 - discord_user_id: '214302568820506625'
   name: Janni
   point_entries:
@@ -33,6 +37,8 @@ learderboard_entries:
     points_acquired_on: 14.09.2023
   - points: 1
     points_acquired_on: 27.10.2023
+  - points: 1
+    points_acquired_on: 24.11.2023
 - discord_user_id: '255331841123287043'
   name: '[AG] N3GATE'
   point_entries:
@@ -66,6 +72,8 @@ learderboard_entries:
     points_acquired_on: 27.10.2023
   - points: 1
     points_acquired_on: 10.11.2023
+  - points: 2
+    points_acquired_on: 24.11.2023
 - discord_user_id: '234636890970521601'
   name: AG Otto
   point_entries:
@@ -97,6 +105,8 @@ learderboard_entries:
     points_acquired_on: 29.09.2023
   - points: 1
     points_acquired_on: 10.11.2023
+  - points: 2
+    points_acquired_on: 24.11.2023
 - discord_user_id: '152517953710063616'
   name: BuuBeli
   point_entries:
@@ -130,6 +140,8 @@ learderboard_entries:
   point_entries:
   - points: 1
     points_acquired_on: 29.09.2023
+  - points: 2
+    points_acquired_on: 24.11.2023
 - discord_user_id: '336984731910668291'
   name: Karo
   point_entries:
@@ -139,6 +151,8 @@ learderboard_entries:
     points_acquired_on: 14.10.2023
   - points: 2
     points_acquired_on: 10.11.2023
+  - points: 3
+    points_acquired_on: 24.11.2023
 - discord_user_id: '780813046552854568'
   name: Shayaan from Junction
   point_entries:
@@ -165,8 +179,10 @@ learderboard_entries:
     points_acquired_on: 27.10.2023
   - points: 3
     points_acquired_on: 10.11.2023
+  - points: 3
+    points_acquired_on: 24.11.2023
 - discord_user_id: '330809603602513921'
-  name: Vaahto
+  name: '!Vaahto'
   point_entries:
   - points: 4
     points_acquired_on: 29.09.2023
@@ -193,6 +209,8 @@ learderboard_entries:
     points_acquired_on: 14.10.2023
   - points: 1
     points_acquired_on: 10.11.2023
+  - points: 1
+    points_acquired_on: 24.11.2023
 - discord_user_id: '300964614127222785'
   name: Puulz
   point_entries:
@@ -210,6 +228,8 @@ learderboard_entries:
     points_acquired_on: 14.10.2023
   - points: 1
     points_acquired_on: 10.11.2023
+  - points: 1
+    points_acquired_on: 24.11.2023
 - discord_user_id: '757997992992047105'
   name: KrystalMoon
   point_entries:
@@ -219,6 +239,8 @@ learderboard_entries:
     points_acquired_on: 27.10.2023
   - points: 1
     points_acquired_on: 10.11.2023
+  - points: 1
+    points_acquired_on: 24.11.2023
 - discord_user_id: '339429776030826498'
   name: Markesz
   point_entries:
@@ -253,6 +275,8 @@ learderboard_entries:
     points_acquired_on: 27.10.2023
   - points: 1
     points_acquired_on: 10.11.2023
+  - points: 1
+    points_acquired_on: 24.11.2023
 - discord_user_id: '228879189938274305'
   name: Vahlaz
   point_entries:
@@ -263,4 +287,9 @@ learderboard_entries:
   point_entries:
   - points: 1
     points_acquired_on: 10.11.2023
+- discord_user_id: '359781322710974464'
+  name: mursu
+  point_entries:
+  - points: 4
+    points_acquired_on: 24.11.2023
 ---
