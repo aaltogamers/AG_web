@@ -11,6 +11,8 @@ learderboard_entries:
     points_acquired_on: 10.11.2023
   - points: 1
     points_acquired_on: 24.11.2023
+  - points: 3
+    points_acquired_on: 8.12.2023
 - discord_user_id: '265604180759019520'
   name: Vesipeto
   point_entries:
@@ -26,6 +28,8 @@ learderboard_entries:
     points_acquired_on: 10.11.2023
   - points: 1
     points_acquired_on: 24.11.2023
+  - points: 1
+    points_acquired_on: 8.12.2023
 - discord_user_id: '214302568820506625'
   name: Janni
   point_entries:
@@ -59,6 +63,8 @@ learderboard_entries:
     points_acquired_on: 27.10.2023
   - points: 4
     points_acquired_on: 10.11.2023
+  - points: 2
+    points_acquired_on: 8.12.2023
 - discord_user_id: '121256836081909760'
   name: stara
   point_entries:
@@ -74,6 +80,8 @@ learderboard_entries:
     points_acquired_on: 10.11.2023
   - points: 2
     points_acquired_on: 24.11.2023
+  - points: 3
+    points_acquired_on: 8.12.2023
 - discord_user_id: '234636890970521601'
   name: AG Otto
   point_entries:
@@ -81,6 +89,8 @@ learderboard_entries:
     points_acquired_on: 22.09.2023
   - points: 1
     points_acquired_on: 27.09.2023
+  - points: 2
+    points_acquired_on: 8.12.2023
 - discord_user_id: '322442773980774411'
   name: Abbe
   point_entries:
@@ -119,6 +129,8 @@ learderboard_entries:
     points_acquired_on: 29.09.2023
   - points: 1
     points_acquired_on: 10.11.2023
+  - points: 1
+    points_acquired_on: 8.12.2023
 - discord_user_id: '445983049830760448'
   name: Jedd
   point_entries:
@@ -153,6 +165,8 @@ learderboard_entries:
     points_acquired_on: 10.11.2023
   - points: 3
     points_acquired_on: 24.11.2023
+  - points: 1
+    points_acquired_on: 8.12.2023
 - discord_user_id: '780813046552854568'
   name: Shayaan from Junction
   point_entries:
@@ -211,6 +225,8 @@ learderboard_entries:
     points_acquired_on: 10.11.2023
   - points: 1
     points_acquired_on: 24.11.2023
+  - points: 4
+    points_acquired_on: 8.12.2023
 - discord_user_id: '300964614127222785'
   name: Puulz
   point_entries:
@@ -241,6 +257,8 @@ learderboard_entries:
     points_acquired_on: 10.11.2023
   - points: 1
     points_acquired_on: 24.11.2023
+  - points: 1
+    points_acquired_on: 8.12.2023
 - discord_user_id: '339429776030826498'
   name: Markesz
   point_entries:
@@ -268,6 +286,8 @@ learderboard_entries:
   point_entries:
   - points: 3
     points_acquired_on: 27.10.2023
+  - points: 1
+    points_acquired_on: 8.12.2023
 - discord_user_id: '273193047167205377'
   name: belgie.ni
   point_entries:
@@ -292,4 +312,21 @@ learderboard_entries:
   point_entries:
   - points: 4
     points_acquired_on: 24.11.2023
+  - points: 1
+    points_acquired_on: 8.12.2023
+- discord_user_id: '372451207739998208'
+  name: Cephin
+  point_entries:
+  - points: 1
+    points_acquired_on: 8.12.2023
+- discord_user_id: '227824436810612737'
+  name: Kai
+  point_entries:
+  - points: 1
+    points_acquired_on: 8.12.2023
+- discord_user_id: '366203052455231490'
+  name: nnaa
+  point_entries:
+  - points: 1
+    points_acquired_on: 8.12.2023
 ---
