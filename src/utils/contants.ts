@@ -10,7 +10,7 @@ import {
 export const medias = [
   {
     name: 'Become a member',
-    link: 'http://tinyurl.com/joinaaltogamers',
+    link: 'https://forms.gle/N8sDm4mgt8JGKK1b7',
     Icon: FaGamepad,
   },
   {
