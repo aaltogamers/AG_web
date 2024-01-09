@@ -11,7 +11,7 @@ const Footer = () => (
         </Link>
       ))}
     </div>
-    <div className="py-10 ">&copy; 2023 Aalto Gamers ry. All rights reserved.</div>
+    <div className="py-10 ">&copy; 2024 Aalto Gamers ry. All rights reserved.</div>
   </footer>
 )
 
