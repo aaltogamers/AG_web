@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import React from 'react'
-import { medias } from '../utils/contants'
+import { medias } from '../utils/socialMediaLinks'
 
 const Footer = () => (
   <footer className="flex flex-col justify-center items-center">

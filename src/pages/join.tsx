@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import Header from '../components/Header'
 import PageWrapper from '../components/PageWrapper'
-import { medias } from '../utils/contants'
+import { medias } from '../utils/socialMediaLinks'
 
 const Join = () => {
   return (
