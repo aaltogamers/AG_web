@@ -1,6 +1,6 @@
 ---
 name: Tuukka Grönberg
-title: Marketing and Partnerships
+title: Head of Streaming
 status: Aalto University School of Business
 game: League of Legends
 orderNumber: 4
