@@ -1,5 +1,5 @@
 ---
-name: Mikko Sulamaa
+name: Atte Räty
 title: Head of Logistics
 status: Aalto University School of Science
 game: "-"
