@@ -1,8 +1,8 @@
 ---
-name: Lenni Toikkanen
-title: Marketing & Communication
+name: László Sólyom
+title: Head Of Marketing
 status: Aalto University School of Electrical Engineering
-game: League of Legends
+game: "-"
 orderNumber: 5
 image: /images/lenni.png
 ---
