@@ -1,8 +1,8 @@
 ---
-name: Otto Hämäläinen
+name: Mikko Sulamaa
 title: Vice-Chair of the Board
 status: Aalto University School of Business
-game: Xenoblade Chronicles
+game: God of War
 orderNumber: 2
-image: /images/otto-h.png
+image: /images/mikko.png
 ---
