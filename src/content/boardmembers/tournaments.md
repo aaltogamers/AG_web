@@ -1,8 +1,8 @@
 ---
 name: Mikko Sulamaa
-title: Tournaments
-status: Aalto University School of Business
-game: God of War
+title: Head of Logistics
+status: Aalto University School of Science
+game: "-"
 orderNumber: 8
-image: /images/mikko.png
+image: /images/board-placeholder.png
 ---
