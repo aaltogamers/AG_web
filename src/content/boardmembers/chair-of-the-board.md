@@ -1,8 +1,8 @@
 ---
-name: Juho Arjanne
+name: Otto Söderman
 title: Chair of the Board
-status: Aalto University School of Electrical Engineering
+status: Aalto University School of Science
 game: CS:GO
 orderNumber: 1
-image: /images/juho.png
+image: /images/otto.png
 ---
