@@ -4,5 +4,5 @@ title: Head of Internal Operations
 status: Aalto University School of Electrical Engineering
 game: CS2
 orderNumber: 9
-image: /images/board-placeholder.png
+image: /images/juho.png
 ---
