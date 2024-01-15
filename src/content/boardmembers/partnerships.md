@@ -1,8 +1,8 @@
 ---
-name: Tuukka Grönberg
-title: Head of Streaming
-status: Aalto University School of Business
-game: League of Legends
-orderNumber: 4
-image: /images/tuukka.png
+name: Kalle Jokipaltio
+title: Head of Partnerships
+status: Aalto University School of Engineering
+game: -
+orderNumber: 10
+image: /images/board-placeholder.png
 ---
