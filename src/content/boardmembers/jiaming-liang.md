@@ -1,8 +1,8 @@
 ---
-name: Jiaming Liang
-title: Art Director
+name: Janni Lätti
+title: Head of Brand & Design
 status: Aalto University School of Arts
-game: Cyberpunk 2077
+game: "-"
 orderNumber: 7
-image: /images/jami.png
+image: /images/board-placeholder.png
 ---
