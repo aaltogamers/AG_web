@@ -1,13 +1,14 @@
 ---
 name: AG Biweeklies
-time: ''
+time: ""
 image: /images/biweekly.png
 isRecurring: true
 description: >-
-  Biweeklies are relaxed gaming nights organised every other Friday at 18:30 onwards. At biweeklies, you can count on having fun and making new friends.
+  Biweeklies are relaxed gaming nights organised every other Friday at 18:30
+  onwards. At biweeklies, you can count on having fun and making new friends.
 
 
-  Biweeklies also include a tournament game that's played at the start of each session. The players at the top of the tournament leaderboard at the end of season get rewarded from our 100€+ prize pool. 
+  Biweeklies also include a tournament game that's played at the start of each session. The players at the top of the tournament leaderboard at the end of the season will win some awesome rewards!
 
 
   The tournament game can be anything from Skribbl.io to Minecraft Hunger Games. After that, everybody can play whatever they want. Popular games include: League of Legends, Overwatch 2, Valorant, CS:GO, Fall Guys, Among Us, Geoguessr and Minecraft. 
