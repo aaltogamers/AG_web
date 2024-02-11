@@ -4,5 +4,5 @@ title: Head of Logistics
 status: Aalto University School of Science
 game: "-"
 orderNumber: 8
-image: /images/board-placeholder.png
+image: /images/atte_2024.jpg
 ---
