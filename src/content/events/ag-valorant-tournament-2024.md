@@ -1,5 +1,5 @@
 ---
-name: AG Valorant Tournament 2024
+name: AG Valorant Tournament
 time: 09.03.2024
 image: /images/ag-valorant-tournament.png
 description: >-
