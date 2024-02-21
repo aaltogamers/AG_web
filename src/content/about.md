@@ -12,5 +12,8 @@ Our ultimate goal is to give students a gaming community and make it easier for 
 
 ## Contact
 
-Want to get in touch with us? Contact us with your questions at &nbsp;&nbsp;\
+Want to get in touch with us? Contact us with your questions at \
 [board@aaltogamers.fi](mailto:board@aaltogamers.fi)
+
+If you are interested in partnering with Aalto Gamers, contact \
+[partnerships@aaltogamers.fi](#)
