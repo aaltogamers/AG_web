@@ -1,7 +1,7 @@
 ---
 name: AG Valorant Tournament
 time: 09.03.2024
-image: /images/val.jpg
+image: /images/ag-valorant-tournament.png
 description: >-
   🔥 Warm up your guns, dust off the surprise strat book and get ready for the
   AG Valorant Tournament! 🔥
