@@ -21,6 +21,8 @@ learderboard_entries:
     points_acquired_on: 2.2.2024
   - points: 3
     points_acquired_on: 16.2.2024
+  - points: 4
+    points_acquired_on: 1.3.2024
 - discord_user_id: '225338705513152512'
   name: sonamu
   point_entries:
@@ -30,11 +32,15 @@ learderboard_entries:
     points_acquired_on: 2.2.2024
   - points: 4
     points_acquired_on: 16.2.2024
+  - points: 4
+    points_acquired_on: 1.3.2024
 - discord_user_id: '234363752567275520'
   name: Finski
   point_entries:
   - points: 1
     points_acquired_on: 19.1.2024
+  - points: 4
+    points_acquired_on: 1.3.2024
 - discord_user_id: '214302568820506625'
   name: Janni
   point_entries:
@@ -44,6 +50,8 @@ learderboard_entries:
     points_acquired_on: 2.2.2024
   - points: 1
     points_acquired_on: 16.2.2024
+  - points: 2
+    points_acquired_on: 1.3.2024
 - discord_user_id: '359781322710974464'
   name: mursu
   point_entries:
@@ -53,6 +61,8 @@ learderboard_entries:
     points_acquired_on: 2.2.2024
   - points: 1
     points_acquired_on: 16.2.2024
+  - points: 1
+    points_acquired_on: 1.3.2024
 - discord_user_id: '265604180759019520'
   name: Vesipeto
   point_entries:
@@ -62,6 +72,8 @@ learderboard_entries:
     points_acquired_on: 2.2.2024
   - points: 1
     points_acquired_on: 16.2.2024
+  - points: 1
+    points_acquired_on: 1.3.2024
 - discord_user_id: '353869777791352834'
   name: Sqidr
   point_entries:
@@ -69,6 +81,8 @@ learderboard_entries:
     points_acquired_on: 19.1.2024
   - points: 2
     points_acquired_on: 2.2.2024
+  - points: 3
+    points_acquired_on: 1.3.2024
 - discord_user_id: '246339018655137793'
   name: Hise
   point_entries:
@@ -90,6 +104,8 @@ learderboard_entries:
     points_acquired_on: 19.1.2024
   - points: 3
     points_acquired_on: 16.2.2024
+  - points: 4
+    points_acquired_on: 1.3.2024
 - discord_user_id: '493112428867878922'
   name: '!JamJam'
   point_entries:
@@ -111,6 +127,8 @@ learderboard_entries:
     points_acquired_on: 2.2.2024
   - points: 1
     points_acquired_on: 16.2.2024
+  - points: 1
+    points_acquired_on: 1.3.2024
 - discord_user_id: '255331841123287043'
   name: N3GATE
   point_entries:
@@ -132,6 +150,8 @@ learderboard_entries:
     points_acquired_on: 2.2.2024
   - points: 2
     points_acquired_on: 16.2.2024
+  - points: 2
+    points_acquired_on: 1.3.2024
 - discord_user_id: '381455064574722059'
   name: Crystal Moth
   point_entries:
@@ -149,6 +169,8 @@ learderboard_entries:
   point_entries:
   - points: 1
     points_acquired_on: 16.2.2024
+  - points: 3
+    points_acquired_on: 1.3.2024
 - discord_user_id: '162965516657360896'
   name: Junnu
   point_entries:
@@ -164,9 +186,16 @@ learderboard_entries:
   point_entries:
   - points: 1
     points_acquired_on: 16.2.2024
+  - points: 1
+    points_acquired_on: 1.3.2024
 - discord_user_id: '112278355734241280'
   name: Marcus
   point_entries:
   - points: 1
     points_acquired_on: 16.2.2024
+- discord_user_id: '225310817157906433'
+  name: DeadBunny
+  point_entries:
+  - points: 1
+    points_acquired_on: 1.3.2024
 ---
