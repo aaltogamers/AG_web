@@ -32,7 +32,7 @@ const Vote = () => {
 
   const countMap = visiblePoll ? generateCountMap(votesForPoll, visiblePoll) : new Map()
 
-  const colors = ['#262E70', '#F89E1B', '#F4D35E', '#70C1B3', '#1098F7', '#14281D']
+  const colors = ['#FF4655', '#859900', '#F4D35E', '#70C1B3', '#1098F7', '#14281D']
 
   const mapArray = Array.from(countMap, ([key, value]) => ({ name: key.toString(), count: value }))
 
