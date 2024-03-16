@@ -81,18 +81,3 @@ const BetCreateForm = ({ app }: Props) => {
 }
 
 export default BetCreateForm
-/*  const [options, setOptions] = useState<string[]>([])
-  const [newOption, setNewOption] = useState<string>('')
-  const [question, setQuestion] = useState<string>('')
-    <div>
-      <input value={question} onChange={(e) => setQuestion(e.target.value)}></input>
-      <input value={newOption} onChange={(e) => setNewOption(e.target.value)}></input>
-      <button onClick={() => setOptions([...options, newOption])}>Add option</button>
-      {options.map((option) => (
-        <div key={option}>
-          <span>{option}</span>
-          <button onClick={() => setOptions(options.filter((o) => o !== option))}>X</button>
-        </div>
-      ))}
-    </div>
-    */

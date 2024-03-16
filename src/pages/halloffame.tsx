@@ -2,26 +2,31 @@ import Head from 'next/head'
 import PageWrapper from '../components/PageWrapper'
 import { getFolder } from '../utils/fileUtils'
 import Album from '../components/Album'
-import { AGAlbum } from '../types/types'
+import { AGEvent } from '../types/types'
 import Header from '../components/Header'
 
 interface Props {
-  albums: AGAlbum[]
+  events: AGEvent[]
 }
 
-const Gallery = ({ albums }: Props) => {
+const Gallery = ({ events }: Props) => {
   return (
     <PageWrapper>
       <Head>
-        <title>Gallery - Aalto Gamers</title>
+        <title>Hall of Fame - Aalto Gamers</title>
       </Head>
-      <Header>Gallery</Header>
+      <Header>Hall of Fame</Header>
       <div className="flex justify-center mt-16 ">
         <div className="flex flex-wrap gap-16">
           {[
-            albums
-              .sort((a, b) => a.orderNumber - b.orderNumber)
-              .map((album) => <Album album={album} key={album.name} />),
+            events.map((event) => (
+              <div>
+                <Album album={event} key={event.name} />
+                <p className="pt-4">1st: Bruh</p>
+                <p>2nd: Bruh</p>
+                <p>3rd-4th: Bruh</p>
+              </div>
+            )),
           ]}
         </div>
       </div>
@@ -30,7 +35,7 @@ const Gallery = ({ albums }: Props) => {
 }
 
 export const getStaticProps = () => ({
-  props: { albums: getFolder('albums') },
+  props: { events: getFolder('events') },
 })
 
 export default Gallery
