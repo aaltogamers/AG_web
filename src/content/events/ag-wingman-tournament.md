@@ -10,19 +10,19 @@ description: >-
 
   This is your chance to showcase your skills and compete with other players in a thrilling live event, so sign up fast!
 tldr: |-
-  ### When
+  ### WHEN
 
   23.03. starting at 18:00
 
-  ### Where?
+  ### WHERE?
 
   Heimo Esports Tribe Gamebase at Otahalli
 
-  ### Who?
+  ### WHO?
 
   All CS:GO enjoyers
 
-  ### SIGN-UP:
+  ### SIGN-UP
 
   Ended on 21.03.2023!
 ---

@@ -15,15 +15,15 @@ description: >-
 
   For more information visit the tournament website: [osm.aaltogamers.fi](https://osm.aaltogamers.fi/)
 tldr: |-
-  ### When
+  ### WHEN
 
   Qualifiers 13.05. and Finals 27.05l.
 
-  ### Where?
+  ### WHERE?
 
   Qualifiers Online and Finals at Design Factory, Otaniemi
 
-  ### Who?
+  ### WHO?
 
   All people interested in quality LoL.
 
@@ -31,4 +31,5 @@ tldr: |-
 
   Read more at [osm.aaltogamers.fi](https://osm.aaltogamers.fi/)
 ---
+
 For more information visit the tournament website: [osm.aaltogamers.fi](https://osm.aaltogamers.fi/)

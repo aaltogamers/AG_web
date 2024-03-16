@@ -21,11 +21,12 @@ tldr: |-
 
   Cash and glory! 300€ Prize pool.
 
-  #### SIGN-UP:
+  #### SIGN-UP
 
   * FULL TEAM: [HERE](https://forms.gle/3Ew5YMC3BZw6fe1f6)
   * FLEX (1-4 players): [HERE](https://forms.gle/E3ssUxCCuN9m3sHb6)
 ---
+
 **ARE YOU READYYY?**
 
 It’s time for the first real competition of the Fall semester and that’s of course the Valorant Tournament 🏆
@@ -34,8 +35,8 @@ Gather a team of friends or join a flex team to compete against other teams in t
 
 **The prizes are as follows:**
 
-* **1st place**: 200€ 🥇
-* **2nd place**: 100€ 🥈
+- **1st place**: 200€ 🥇
+- **2nd place**: 100€ 🥈
 
 The Tournament is organized remotely on Aalto Gamers Discord channel on October 22.
 

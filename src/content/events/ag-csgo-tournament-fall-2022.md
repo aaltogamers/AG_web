@@ -14,24 +14,24 @@ description: >-
   qualifiers will be held on Sunday 27.11. and the four best teams will face off
   in live finals at Design factory on Saturday 3.12.
 tldr: >-
-  ### When?
+  ### WHEN?
 
   Qualifiers will be held on Sunday 27.11.
   Finals will be held live in Design factory on Saturday 3.12.
 
   [GET YOUR FINALS TICKETS HERE](https://kide.app/events/39ccfcd6-e6b5-42ff-99f3-152d2112e9bc)!
 
-  ### Where?
+  ### WHERE?
 
   Qualifiers online, finals live in Design factory!!
 
 
-  ### Who?
+  ### WHO?
 
   Either full teams or individual players can sign up for the tournament.
   Also, AT LEAST 3 OUT OF 5 PLAYERS IN THE PLAYING ROSTER MUST BE CURRENTLY STUDYING AND ENROLLED AT A UNIVERSITY/UNIVERSITY OF APPLIED SCIENCES.
 
-  ### How?
+  ### SIGN-UP
 
   Sign up links:
   SIGN UP CLOSED.

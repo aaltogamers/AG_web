@@ -27,10 +27,11 @@ tldr: |-
 
   Fun TFT gaming
 
-  #### SIGN-UP:
+  #### SIGN-UP
 
   <https://forms.gle/segTT4Xfgrt4PHsy8>
 ---
+
 Ready up your champions, prepare your cheese pocket strats and show them off in the Aalto Gamers Teamfight Tactics Tournament! 🏆
 
 Join us on the 25th of February on AG Discord for epic battles and/or total wipes, tons of fun moments and of course, interesting prizes for the best strategists 🔥

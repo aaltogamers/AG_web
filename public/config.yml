@@ -81,15 +81,15 @@ collections:
       - { label: 'Recurring', name: 'isRecurring', widget: 'boolean', 'required': false }
       - { label: 'Description', name: 'description', widget: 'markdown' }
       - { label: 'TLDR', name: 'tldr', widget: 'markdown', default: "
-            ### WHEN?  \n
-            XX-XX on XX  \n
-            ### WHERE?  \n
-            XX  \n
-            ### WHY?  \n
-            To Win XX, to have fun with friends, etc.  \n
-            ### SIGN-UP  \n
-            LINK  \n
-            Open from XX to XX  \n
+            ### WHEN?\n
+            XX-XX on XX\n\n
+            ### WHERE?\n
+            XX\n\n
+            ### WHY?\n
+            To Win XX, to have fun with friends, etc.\n\n
+            ### SIGN-UP\n
+            LINK\n
+            Open from XX to XX
             " }
       - { label: 'Body', name: 'body', widget: 'markdown' }
   - label: 'Landing info'

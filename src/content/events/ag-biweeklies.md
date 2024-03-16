@@ -16,17 +16,17 @@ description: >-
 
   So don't be shy to join, even if your main game was not listed above. You can even bring your friends, or find new ones at AG Biweeklies!
 tldr: >-
-  ### When?
+  ### WHEN?
 
   At 18:30-23 every other Friday
 
-  ### Where?
+  ### WHERE?
 
   Aalto Gamers [Discord](https://discord.com/invite/Ew7nGQqHgc) and Tribe Gamebase
 
-  ### Who?
+  ### WHY?
 
-  Everyone
+  Having fun and getting to know new people with similar intrests!
 ---
 
 Aalto Gamers Biweeklies are fun events happening every other Friday, where ANYONE can join to play some light games with friends. All gamers are warmly welcome to our Biweeklies and to suggest games to play together. Biweeklies are held online in the Aalto Gamers Discord server and often also live at the Tribe Gamebase in Otahalli.
