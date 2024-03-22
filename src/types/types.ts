@@ -32,10 +32,11 @@ export type AGPartner = {
 
 export type AGBoardMember = {
   name: string
-  title: string
-  status: string
-  game: string
+  title?: string
+  status?: string
+  game?: string
   image?: string
+  contactInformation?: string
   orderNumber: number
 }
 
