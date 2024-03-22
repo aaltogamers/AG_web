@@ -33,4 +33,4 @@ the activities as themselves and feel safe.
 
 Anyone who goes against this policy or the event-specific rules set by the AG board, can in serious cases be removed from the event and receive a ban from future events.
 
-Event participants can always contact our harassment contact persons or board members by talking to them directly, or trough messaging on Discord/Telegram/email.
+Event participants can always contact our harassment contact persons or board members by talking to them directly, or through messaging on Discord/Telegram/email.

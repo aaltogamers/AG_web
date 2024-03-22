@@ -34,6 +34,7 @@ const Event = ({ event, isPreview }: Props) => {
             </div>
           </div>
           <Markdown>{event.content}</Markdown>
+          <Markdown>All AG events follow the [AG Safer Space Policy](/safespace).</Markdown>
           <SignUpForm eventName={event.name} />
         </div>
       </div>

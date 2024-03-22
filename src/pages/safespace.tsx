@@ -26,7 +26,7 @@ const SafeSpace = ({ title, content, boardMembers, contactPeopleNames }: Props) 
   return (
     <PageWrapper>
       <Head>
-        <title>Safe Space Principles - Aalto Gamers</title>
+        <title>Safer Space Policy - Aalto Gamers</title>
       </Head>
       <div className="flex justify-center">
         <div className="flex flex-col md:w-3/4 items-center">
