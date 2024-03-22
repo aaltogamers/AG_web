@@ -28,7 +28,7 @@ const SafeSpace = ({ title, content, boardMembers, contactPeopleNames }: Props) 
       <Head>
         <title>Safe Space Principles - Aalto Gamers</title>
       </Head>
-      <div className="flex">
+      <div className="flex justify-center">
         <div className="flex flex-col md:w-3/4 items-center">
           <Header>{title}</Header>
           <div className="my-20">

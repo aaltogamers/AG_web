@@ -1,9 +1,7 @@
 ---
-title: About us
+title: AG Safer Space Policy
 contactPeopleNames: ['Otto Söderman', 'Janni Lätti']
 ---
-
-## AG Safer Space Policy
 
 AG's events have zero tolerance for all forms of harassment, sexism, racism, bullying and
 discrimination. In addition to major gestures and issues, harassment can also include minor
@@ -33,7 +31,6 @@ the activities as themselves and feel safe.
 - Contribute to a positive atmosphere through your own actions
 - Gaming can get heated. A little trash talk can be fine, but take the into account the person you're talking to, and don't continue if you're making them feel uncomfortable.
 
-Our events have a positive and an inclusive atmosphere, and anyone who goes against that,
-or the event-specific rules set by the board of Aalto Gamers, can be removed from the event and/or receive a ban from future events.
+Anyone who goes against this policy or the event-specific rules set by the AG board, can in serious cases be removed from the event and receive a ban from future events.
 
 Event participants can always contact our harassment contact persons or board members by talking to them directly, or trough messaging on Discord/Telegram/email.
