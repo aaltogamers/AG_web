@@ -25,6 +25,13 @@ const A = ({ children, href }: AProps) => (
     {children}
   </a>
 )
+const Ul = ({ children }: ComponentProps) => (
+  <ul className="list-disc list-inside mt-4 mb-8">{children}</ul>
+)
+const Ol = ({ children }: ComponentProps) => (
+  <ol className="list-decimal list-inside mt-4 mb-8">{children}</ol>
+)
+const Li = ({ children }: ComponentProps) => <li className="mb-2">{children}</li>
 
 const Markdown = ({ children }: MarkdownProps) => {
   const components: Components = {
@@ -36,6 +43,9 @@ const Markdown = ({ children }: MarkdownProps) => {
     h5: H5,
     strong: Strong,
     a: A,
+    ul: Ul,
+    ol: Ol,
+    li: Li,
   }
 
   return (
