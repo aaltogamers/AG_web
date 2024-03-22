@@ -20,6 +20,13 @@ collections:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Board Title', name: 'boardTitle', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
+      - label: 'Safer Space Policy'
+        name: 'safespace'
+        file: 'src/content/safespace.md'
+        fields:
+          - { label: 'Title', name: 'title', widget: 'string' }
+          - { label: 'Harassment contact people names', name: 'contactPeopleNames', widget: 'list' }
+          - { label: 'Body', name: 'body', widget: 'markdown' }
       - label: 'Leaderboard'
         name: 'leaderboard'
         file: 'src/content/leaderboard.md'
