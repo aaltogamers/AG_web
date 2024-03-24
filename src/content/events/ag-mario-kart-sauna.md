@@ -12,9 +12,9 @@ description: >-
 
   During the evening you'll have the opportunity to relax and prepare for the next race in a sauna, hot tub or even the sea ❄️ Don't miss the chance to join the only event where drinking and driving is allowed 👀
 tldr: |-
-  ### WHEN?
-
-  07.04., sign-up opens on 24.03.
+  ### WHEN?    
+  07.04. at 18:00  
+  (Tournament games approx. 18-21:30, space open till 2am)
 
   ### WHERE?
 
