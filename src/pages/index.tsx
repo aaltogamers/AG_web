@@ -1,32 +1,38 @@
 import Head from 'next/head'
 import { getFolder } from '../utils/fileUtils'
 import Banner from '../components/Banner'
-import MainInfoBox from '../components/MainInfoBox'
 import SideInfoBox from '../components/SideInfoBox'
+import { AGEvent, LandingInfo } from '../types/types'
+import EventShowCase from '../components/EventShowCase'
 
 type Props = {
   landingInfos: LandingInfo[]
+  events: AGEvent[]
 }
 
-type LandingInfo = {
-  title: string
-  subtitle: string
-  content: string
-  image: string
-  link: string
-}
-
-const Home = ({ landingInfos }: Props) => {
+const Home = ({ landingInfos, events }: Props) => {
   return (
     <>
       <Head>
         <title>Aalto Gamers</title>
       </Head>
       <Banner />
-      <MainInfoBox />
-      {landingInfos.map((landingInfo) => (
-        <SideInfoBox landingInfo={landingInfo} key={landingInfo.title} />
-      ))}
+      <div className="flex justify-center my-16">
+        <main className="flex flex-col w-2/3">
+          {landingInfos.map((info, i) => (
+            <>
+              <SideInfoBox
+                landingInfo={info}
+                key={info.title}
+                isLeft={i % 2 !== 1}
+                isSmallImage={i === 0}
+              />
+            </>
+          ))}
+          <hr className="bg-gray w-full my-16" />
+          <EventShowCase events={events} />
+        </main>
+      </div>
     </>
   )
 }
@@ -34,5 +40,5 @@ const Home = ({ landingInfos }: Props) => {
 export default Home
 
 export const getStaticProps = () => ({
-  props: { landingInfos: getFolder('landingInfos') },
+  props: { landingInfos: getFolder('landingInfos'), events: getFolder('events') },
 })

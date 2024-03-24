@@ -51,7 +51,6 @@ export type LandingInfo = {
   subtitle: string
   content: string
   image: string
-  link: string
 }
 
 export type EditableInputType = 'text' | 'select' | 'info'

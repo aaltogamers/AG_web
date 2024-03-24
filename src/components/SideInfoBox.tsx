@@ -1,34 +1,33 @@
 import React from 'react'
 import { LandingInfo } from '../types/types'
+import ImageThatWorksWithPreview from './ImageThatWorksWithPreview'
 import Markdown from './Markdown'
 
 type Props = {
   landingInfo: LandingInfo
+  isLeft: boolean
+  isSmallImage?: boolean
 }
 
-const SideInfoBox = ({ landingInfo }: Props) => {
-  const { title, subtitle, content, image, link } = landingInfo
+const SideInfoBox = ({ landingInfo, isLeft, isSmallImage }: Props) => {
+  const { title, subtitle, content, image } = landingInfo
   return (
-    <section
-      style={{ backgroundImage: `url(${image})` }}
-      className="relative min-h-screen flex flex-col md:flex-row bg-center bg-fixed bg-cover bg-black text-center md:text-left"
-    >
-      <div
-        style={{ backgroundImage: `url(${image})` }}
-        className="min-h-[300px] h-full bg-cover bg-center md:hidden"
-      />
-      <div className="md:w-2/5 bg-black md:bg-opacity-90 border-red border-t-8 md:border-t-0 md:border-r-8 flex flex-col justify-start p-8 md:pt-24 md:pb-0">
-        <h2>{title}</h2>
+    <section className={`flex gap-8 items-center py-8 ${isLeft && 'flex-row-reverse'} `}>
+      <div className=" bg-black flex flex-col w-1/2">
+        <h2 className="pb-2">{title}</h2>
         <h3 className="mt-2 mb-4">{subtitle}</h3>
-        <div className="my-8 text-lightGray text-xl">
+        <div className=" text-lightGray text-xl">
           <Markdown>{content}</Markdown>
-          <div className="py-8">
-            <a className="borderbutton" href={link}>
-              Learn More
-            </a>
-          </div>
         </div>
       </div>
+      <ImageThatWorksWithPreview
+        src={image}
+        alt={title}
+        className={`object-cover w-1/2 h-full border-red
+        ${!isSmallImage && (isLeft ? 'border-l-8' : 'border-r-8')}
+        ${isSmallImage && 'px-16 object-scale-down'} `}
+        isPreview={false}
+      />
     </section>
   )
 }
