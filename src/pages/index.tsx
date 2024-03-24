@@ -18,7 +18,7 @@ const Home = ({ landingInfos, events }: Props) => {
       </Head>
       <Banner />
       <div className="flex justify-center my-16">
-        <main className="flex flex-col w-2/3">
+        <main className="flex flex-col md:w-2/3">
           {landingInfos.map((info, i) => (
             <>
               <SideInfoBox
