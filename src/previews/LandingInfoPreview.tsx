@@ -11,7 +11,7 @@ const LandingInfosPreview: React.FC<PreviewTemplateComponentProps> = (props) => 
     'image',
     'link',
   ]) as LandingInfo
-  return <SideInfoBox landingInfo={landingInfo} />
+  return <SideInfoBox landingInfo={landingInfo} isLeft={false} isSmallImage={true} />
 }
 
 export default LandingInfosPreview

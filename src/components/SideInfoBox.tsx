@@ -9,8 +9,8 @@ type Props = {
   isSmallImage?: boolean
 }
 
-const SideInfoBox = ({ landingInfo, isLeft, isSmallImage }: Props) => {
-  const { title, subtitle, content, image } = landingInfo
+const SideInfoBox = ({ landingInfo, isLeft }: Props) => {
+  const { title, subtitle, content, image, isSmallImage } = landingInfo
   return (
     <section
       className={`flex flex-col text-center md:text-start md:flex-row gap-8 items-center py-8  

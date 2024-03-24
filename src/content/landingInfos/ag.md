@@ -2,6 +2,7 @@
 title: Aalto Gamers
 subtitle: A gaming community based in Aalto University
 image: /images/ag-white.png
+isSmallImage: true
 ---
 
 Aalto Gamers was founded in 2016 and has grown to become the biggest student e-sports and gaming organisation in Finland.

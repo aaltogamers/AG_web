@@ -51,6 +51,7 @@ export type LandingInfo = {
   subtitle: string
   content: string
   image: string
+  isSmallImage?: boolean
 }
 
 export type EditableInputType = 'text' | 'select' | 'info'
