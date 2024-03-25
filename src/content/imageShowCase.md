@@ -1,0 +1,15 @@
+---
+images:
+  [
+    '/images/showcase_1.jpg',
+    '/images/showcase_2.jpg',
+    '/images/showcase_3.jpg',
+    '/images/showcase_4.jpg',
+    '/images/showcase_5.jpg',
+    '/images/showcase_6.jpg',
+    '/images/showcase_7.jpg',
+    '/images/showcase_8.jpg',
+    '/images/showcase_9.jpg',
+    '/images/showcase_10.jpg',
+  ]
+---

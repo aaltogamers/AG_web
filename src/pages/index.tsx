@@ -1,16 +1,20 @@
 import Head from 'next/head'
-import { getFolder } from '../utils/fileUtils'
+import { getFile, getFolder } from '../utils/fileUtils'
 import Banner from '../components/Banner'
 import SideInfoBox from '../components/SideInfoBox'
 import { AGEvent, LandingInfo } from '../types/types'
 import EventShowCase from '../components/EventShowCase'
+import ImageShowCase from '../components/ImageShowCase'
 
 type Props = {
   landingInfos: LandingInfo[]
   events: AGEvent[]
+  imageShowCase: {
+    images: string[]
+  }
 }
 
-const Home = ({ landingInfos, events }: Props) => {
+const Home = ({ landingInfos, events, imageShowCase }: Props) => {
   return (
     <>
       <Head>
@@ -27,7 +31,9 @@ const Home = ({ landingInfos, events }: Props) => {
               isSmallImage={i === 0}
             />
           ))}
-          <hr className="bg-gray w-full my-16" />
+          <hr className="bg-gray w-full md:my-16" />
+          <ImageShowCase images={imageShowCase.images} />
+          <hr className="bg-gray w-full md:my-16" />
           <EventShowCase events={events} />
         </main>
       </div>
@@ -38,5 +44,9 @@ const Home = ({ landingInfos, events }: Props) => {
 export default Home
 
 export const getStaticProps = () => ({
-  props: { landingInfos: getFolder('landingInfos'), events: getFolder('events') },
+  props: {
+    landingInfos: getFolder('landingInfos'),
+    events: getFolder('events'),
+    imageShowCase: getFile('imageShowCase'),
+  },
 })

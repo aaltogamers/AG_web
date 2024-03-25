@@ -27,6 +27,24 @@ collections:
           - { label: 'Title', name: 'title', widget: 'string' }
           - { label: 'Harassment contact people names', name: 'contactPeopleNames', widget: 'list' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
+      - label: 'Image Showcase'
+        name: 'imageshowcase'
+        file: 'src/content/imageShowCase.md'
+            fields:
+              - label: 'Images'
+                name: 'images'
+                label_singular: 'Images'
+                widget: 'list'
+                allow_add: true
+                fields:
+                  - { label: 'Image', name: 'image', widget: 'image' }
+      - label: 'Safer Space Policy'
+        name: 'safespace'
+        file: 'src/content/safespace.md'
+        fields:
+          - { label: 'Title', name: 'title', widget: 'string' }
+          - { label: 'Harassment contact people names', name: 'contactPeopleNames', widget: 'list' }
+          - { label: 'Body', name: 'body', widget: 'markdown' }
       - label: 'Leaderboard'
         name: 'leaderboard'
         file: 'src/content/leaderboard.md'
@@ -107,7 +125,6 @@ collections:
     fields:
       - { label: 'Title', name: 'title', widget: 'string' }
       - { label: 'Subtitle', name: 'subtitle', widget: 'string' }
-      - { label: 'Link', name: 'link', widget: 'string' }
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
   - label: 'Board member'

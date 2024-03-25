@@ -151,4 +151,10 @@
       transform: rotate(360deg);
     }
   }
+  .abs-center-y {
+    @apply top-1/2 transform -translate-y-1/2;
+  }
+  .abs-center-x {
+    @apply right-1/2 transform -translate-x-1/2;
+  }
 }
