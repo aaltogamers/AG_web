@@ -20,14 +20,12 @@ const Home = ({ landingInfos, events }: Props) => {
       <div className="flex justify-center my-16">
         <main className="flex flex-col md:w-2/3">
           {landingInfos.map((info, i) => (
-            <>
-              <SideInfoBox
-                landingInfo={info}
-                key={info.title}
-                isLeft={i % 2 !== 1}
-                isSmallImage={i === 0}
-              />
-            </>
+            <SideInfoBox
+              landingInfo={info}
+              key={info.title}
+              isLeft={i % 2 !== 1}
+              isSmallImage={i === 0}
+            />
           ))}
           <hr className="bg-gray w-full my-16" />
           <EventShowCase events={events} />

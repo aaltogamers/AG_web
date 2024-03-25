@@ -3,7 +3,8 @@ import React from 'react'
 const Banner = () => (
   <section>
     <div className="bg-[url('/images/landing/cover.webp')] relative h-[100vh] bg-center md:bg-fixed bg-cover flex justify-center border-red border-b-8">
-      <header className="flex flex-col md:flex-row items-center justify-center ">
+      <div className="absolute inset-0 bg-black opacity-40 z-100" />
+      <header className="flex flex-col md:flex-row items-center justify-center relative">
         <div className="flex flex-col text-center md:text-right mr-8 m-0 font-light">
           <h2 className="mb-8 text-md md:text-5xl">We are Aalto Gamers</h2>
           <h4>
