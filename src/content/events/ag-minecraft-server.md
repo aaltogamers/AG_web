@@ -60,6 +60,7 @@ Register now to secure your spot! 🔥
 3. No exploits (you can ask a moderator, if you're unsure whether something is allowed or not)
 4. No non-consensual PVP (don't kill random people and take their stuff, but you can fight with friends if you both want)
 5. No excessively inappropriate language
+6. No builds that excessively lag the server
 
 Breaking these rules may result in a ban
 
