@@ -26,7 +26,7 @@ tldr: >-
 
   ### WHERE?
 
-  IP to be released  
+  IP: mc.aaltogamers.fi
 
   You can discuss the server on the [AG Discord](https://discord.gg/Ew7nGQqHgc)
 
