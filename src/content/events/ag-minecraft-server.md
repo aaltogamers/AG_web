@@ -1,6 +1,6 @@
 ---
 name: AG Minecraft Server
-time: 06.04.2024
+time: 28.03.2024
 image: /images/ag-minecraft-server.png
 description: >-
   🌍 Are you an urban architect with mindblowing build ideas, a PhD in Redstone
