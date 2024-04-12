@@ -3,16 +3,10 @@ name: League of Legends OSM 2024
 time: 26.05.2024
 image: /images/ag-osm-2024-main-post.png
 description: >-
-  ⚔️ Jahti alkakoon! Aalto Gamers ylpeänä esittää: League of Legends OSM 2024
-  ⚔️\
+  ⚔️ The hunting season is upon us! Aalto Gamers proudly presents League of
+  Legends OSM 2024 ⚔️   
 
-  \
-
-  ⚔️ ⚔️ ⚔️ ⚔️ ⚔️ \
-
-  \
-
-  ⚔️ Hunting season is upon us! Aalto Gamers proudly presents League of Legends OSM 2024 ⚔️
+  Also check out the [OSM website](https://osm.aaltogamers.fi/)!
 tldr: |-
   ### WHEN?
 
@@ -32,13 +26,15 @@ tldr: |-
 
 ⚔️ Jahti alkakoon! Aalto Gamers ylpeänä esittää: League of Legends OSM 2024 ⚔️
 
-🏹 Haasta parhaista parhaat Suomen suurimmassa League of Legends -opiskelijaturnauksessa ja voita osuutesi 1500 € palkintopotista 🏆 
+Osallistu Suomen suurimpaan League of Legends -opiskelijaturnaukseen ja voita osuutesi 1500 € palkintopotista 🏆
 
-🎓**Kaikkien** joukkueen jäsenten tulee olla korkeakouluopiskelijoita (yliopisto/AMK) tai vastavalmistuneita (valmistunut 1.1.2023 jälkeen).
+🎓Kaikkien joukkueen jäsenten tulee olla korkeakouluopiskelijoita tai vastavalmistuneita (valmistunut 1.1.2023 jälkeen).
 
-📝 Aikataulut, säännöt sekä paljon muuta tietoa löytyy OSM:n verkkosivuilta: https://osm.aaltogamers.fi/
+📝 Aikataulut, säännöt sekä muuta tietoa löytyy [OSM:n verkkosivuilta](https://osm.aaltogamers.fi/)!
 
-Joukkuepaikkoja on rajoitetusti, joten varmista paikkasi ja ilmoittaudu täällä 👈 mahdollisimman pian! 🔥
+Ilmoittaudu [täällä](https://forms.gle/bQxF5UNXoQ7CXzJD6) 👈 ja varmista paikkasi! 🔥
+
+Liittykää [Telegram](https://t.me/+1nNBzegP0hthMmM0) & [Discord](https://discord.com/invite/Ew7nGQqHgc) kanavillemme lisätietoja varten!
 
 ⚔️⚔️⚔️⚔️⚔️
 
@@ -48,6 +44,8 @@ Joukkuepaikkoja on rajoitetusti, joten varmista paikkasi ja ilmoittaudu tääll�
 
 🎓**All** team members have to be university/AMK students or recent graduates (graduated after 1.1.2023).
 
-📝Schedule, rules and much more info can be found on the OSM website: https://osm.aaltogamers.fi/
+📝Schedule, rules and much more info can be found on the [OSM website](https://osm.aaltogamers.fi/).
 
-Team slots are limited, so make sure to sign-up here 👈 as soon as possible to secure your spot! 🔥
+Make sure to sign-up [here](https://forms.gle/bQxF5UNXoQ7CXzJD6) 👈 and secure your spot! 🔥
+
+Join our [Telegram](https://t.me/+1nNBzegP0hthMmM0) & [Discord](https://discord.com/invite/Ew7nGQqHgc) channels for more information!
