@@ -1,6 +1,8 @@
 ---
 title: AG Safer Space Policy
-contactPeopleNames: ['Otto Söderman', 'Janni Lätti']
+contactPeopleNames:
+  - Otto Söderman
+  - Janni Lätti
 ---
 
 AG's events have zero tolerance for all forms of harassment, sexism, racism, bullying and
@@ -29,7 +31,7 @@ the activities as themselves and feel safe.
   verbally, or by touching or staring.
 - Do not pressure anyone to use alcohol or other substances.
 - Contribute to a positive atmosphere through your own actions
-- Gaming can get heated. A little trash talk can be fine, but take the into account the person you're talking to, and don't continue if you're making them feel uncomfortable.
+- Gaming can get heated. A little trash talk can be fine, but take into account the person you're talking to, and don't continue if you're making them feel uncomfortable.
 
 Anyone who goes against this policy or the event-specific rules set by the AG board, can in serious cases be removed from the event and receive a ban from future events.
 
