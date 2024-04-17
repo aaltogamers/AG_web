@@ -4,23 +4,39 @@ time: 26.05.2024
 image: /images/ag-osm-2024-main-post.png
 description: >-
   ⚔️ The hunting season is upon us! Aalto Gamers proudly presents League of
-  Legends OSM 2024 ⚔️   
+  Legends OSM 2024 ⚔️
+
+
+  T﻿ickets for sale on [Kide.app](https://kide.app/events/52662ade-10d0-4863-af06-578036125f7b)!\
 
   Also check out the [OSM website](https://osm.aaltogamers.fi/)!
-tldr: |-
+tldr: >-
   ### WHEN?
 
+
   Q﻿ualifiers - 18.05.\
+
   Finals - 26.05.
+
 
   ### WHERE?
 
+
   Q﻿ualifiers online\
+
   F﻿inals live @ Design Factory, Puumiehenkuja 5a, Espoo
 
-  ### SIGN-UP
+
+  ### T﻿EAM SIGN-UP
+
 
   [H﻿ere](https://forms.gle/bQxF5UNXoQ7CXzJD6)
+
+
+  ### T﻿ICKETS
+
+
+  [Kide.app](<T﻿ickets for sale on [Kide.app](https://kide.app/events/52662ade-10d0-4863-af06-578036125f7b)!>)
 ---
 *English below!*
 
