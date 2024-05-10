@@ -46,6 +46,8 @@ learderboard_entries:
     points_acquired_on: 15.3.2024
   - points: 2
     points_acquired_on: 12.4.2024
+  - points: 1
+    points_acquired_on: 10.5.2024
 - discord_user_id: '234363752567275520'
   name: Finski
   point_entries:
