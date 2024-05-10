@@ -29,6 +29,8 @@ learderboard_entries:
     points_acquired_on: 15.3.2024
   - points: 1
     points_acquired_on: 12.4.2024
+  - points: 1
+    points_acquired_on: 10.5.2024
 - discord_user_id: '225338705513152512'
   name: sonamu
   point_entries:
@@ -81,6 +83,8 @@ learderboard_entries:
     points_acquired_on: 15.3.2024
   - points: 1
     points_acquired_on: 12.4.2024
+  - points: 4
+    points_acquired_on: 10.5.2024
 - discord_user_id: '265604180759019520'
   name: Vesipeto
   point_entries:
@@ -92,6 +96,8 @@ learderboard_entries:
     points_acquired_on: 16.2.2024
   - points: 1
     points_acquired_on: 1.3.2024
+  - points: 3
+    points_acquired_on: 10.5.2024
 - discord_user_id: '353869777791352834'
   name: sqidr
   point_entries:
@@ -174,6 +180,8 @@ learderboard_entries:
     points_acquired_on: 15.3.2024
   - points: 2
     points_acquired_on: 12.4.2024
+  - points: 1
+    points_acquired_on: 10.5.2024
 - discord_user_id: '247078589684645888'
   name: Mr. Gellert
   point_entries:
@@ -232,6 +240,8 @@ learderboard_entries:
     points_acquired_on: 1.3.2024
   - points: 3
     points_acquired_on: 12.4.2024
+  - points: 1
+    points_acquired_on: 10.5.2024
 - discord_user_id: '112278355734241280'
   name: Marcus
   point_entries:
@@ -249,6 +259,8 @@ learderboard_entries:
     points_acquired_on: 15.3.2024
   - points: 1
     points_acquired_on: 12.4.2024
+  - points: 2
+    points_acquired_on: 10.5.2024
 - discord_user_id: '217304104672821251'
   name: lammu
   point_entries:
