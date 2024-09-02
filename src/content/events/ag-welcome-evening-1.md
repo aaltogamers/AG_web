@@ -3,17 +3,21 @@ name: AG Welcome Evening
 time: 12.09.2024
 image: /images/ag_welcome_evening.jpg
 description: \-
-tldr: |-2
-   ### WHEN?
-   XX-XX on XX
+tldr: |-
+  ### WHEN?
 
-   ### WHERE?
-   XX
+   18:00-22:00 on 12.9.2024
 
-   ### WHY?
+  ### WHERE?
+
+   Arkade Bar, Kalevankatu 30, Helsinki
+
+  ### WHY?
+
    To Win XX, to have fun with friends, etc.
 
-   ### SIGN-UP
+  ### SIGN-UP
+
    LINK
    Open from XX to XX
 ---
