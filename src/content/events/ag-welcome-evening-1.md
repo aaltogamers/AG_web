@@ -1,5 +1,5 @@
 ---
-name: AG Welcome Evening
+name: AG Welcome Evening 2024
 time: 12.09.2024
 image: /images/ag_welcome_evening.jpg
 description: \-
