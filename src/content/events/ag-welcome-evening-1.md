@@ -30,5 +30,5 @@ If you would like to get to know Aalto Gamers a bit more, make sure to join our 
 
 Taking part in the event is completely FREE with the possibility to buy snacks and refreshments in the bar. 
 
-Make sure to sign-up down bleow to secure your spot, as places are limited❗
+Make sure to sign-up down below to secure your spot, as places are limited❗
 See you there 🔥
