@@ -24,4 +24,7 @@ tldr: |-
   ### SIGN-UP
   [Down below](#signup)
 ---
-&nbsp;
+A warm welcome to the Aalto Gamers community wouldn't be complete without our first event of the year: the Welcome Evening 🎉
+
+
+If you would like to get to know Aalto Gamers a bit more, make sure to join our evening full of fun, games and good times while meeting new friends! 🫶
