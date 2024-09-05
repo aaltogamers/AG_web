@@ -16,7 +16,7 @@ tldr: |-
 
   ### WHERE?
 
-  Arkade Bar, Kalevankatu 30, Helsinki
+  [Arkade Bar](https://www.arkade.fi/), Kalevankatu 30, Helsinki
 
   ### WHY?
   Get to know AG, meet new people and play games
