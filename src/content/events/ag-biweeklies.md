@@ -1,10 +1,10 @@
 ---
 name: AG Biweeklies
-time: ''
+time: ""
 image: /images/biweekly.png
 isRecurring: true
 description: >-
-  Biweeklies are relaxed gaming nights organised every other Friday at 18:30
+  Biweeklies are relaxed gaming nights organised every other Friday at 18:00
   onwards. At biweeklies, you can count on having fun and making new friends.
 
 
