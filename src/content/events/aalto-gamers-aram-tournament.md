@@ -1,6 +1,6 @@
 ---
 name: Aalto Gamers' ARAM Tournament
-time: 27.09.2024
+time: 12.10.2024
 image: /images/aram-tournament.jpg
 description: >-
   ⚔️ Dust off your strat books, gather your team... SIKE! ⚔️
