@@ -1,6 +1,6 @@
 ---
-name: AG CS2 Masters
-time: ""
+name: AG CS2 Masters 2024
+time: 16.11.2024
 image: /images/cs2.jpg
 description: >-
   ☁️ Smokes are bouncing, the aim is on point and your teammate is pushing as CT
