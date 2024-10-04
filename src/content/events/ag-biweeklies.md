@@ -18,13 +18,18 @@ description: >-
 tldr: >-
   ### WHEN?
 
-  At 18:30-23 every other Friday
+
+  At 18:00-23 every other Friday
+
 
   ### WHERE?
 
+
   Aalto Gamers [Discord](https://discord.com/invite/Ew7nGQqHgc) and Tribe Gamebase
 
+
   ### WHY?
+
 
   Having fun and getting to know new people with similar intrests!
 ---
