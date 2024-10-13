@@ -1,10 +1,10 @@
 ---
 name: AG Biweeklies
-time: ''
+time: ""
 image: /images/biweekly.png
 isRecurring: true
 description: >-
-  Biweeklies are relaxed gaming nights organised every other Friday at 18:30
+  Biweeklies are relaxed gaming nights organised every other Friday at 18:00
   onwards. At biweeklies, you can count on having fun and making new friends.
 
 
@@ -18,13 +18,18 @@ description: >-
 tldr: >-
   ### WHEN?
 
-  At 18:30-23 every other Friday
+
+  At 18:00-23 every other Friday
+
 
   ### WHERE?
 
+
   Aalto Gamers [Discord](https://discord.com/invite/Ew7nGQqHgc) and Tribe Gamebase
 
+
   ### WHY?
+
 
   Having fun and getting to know new people with similar intrests!
 ---
