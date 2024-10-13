@@ -130,10 +130,10 @@ const SignUp = ({ eventName }: Props) => {
   const signUpClosed = nowMoment.isAfter(signUpEnd)
   const signUpNotOpen = signUpNotYetOpen || signUpClosed
   return signupData ? (
-    <div id="signup" className="flex flex-col gap-2">
-      <h2>Sign up </h2>
+    <div id="signup" className="flex flex-col gap-4">
+      <h2>Sign up</h2>
       <h3>{signupData.name}</h3>
-      <h5 className="mb-4">Open until {signUpEndString}</h5>
+      <h5 className="mb-2">Open until {signUpEndString}</h5>
       {signUpNotOpen ? (
         <h5>{signUpClosed ? 'Sign-up has closed.' : `Sign-up opens on ${signUpStartString}.`}</h5>
       ) : (
