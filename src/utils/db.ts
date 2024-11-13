@@ -9,9 +9,10 @@ import {
   QueryFieldFilterConstraint,
   where,
   Firestore,
+  doc,
 } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
-import { Poll, Vote } from '../types/types'
+import { MapBanInfo, MapBanOrPick, Poll, Vote } from '../types/types'
 
 export const getParticipants = async (db: Firestore, eventName: string) => {
   const q = query(collection(db, 'signups'), where('event', '==', eventName))
@@ -22,7 +23,6 @@ export const getParticipants = async (db: Firestore, eventName: string) => {
 const loginIfNotLoggedIn = async (app: FirebaseApp) => {
   const db = getFirestore(app)
   const auth = getAuth(app)
-  //console.log(auth.currentUser)
   if (!auth.currentUser) {
     await signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword')
   }
@@ -31,7 +31,7 @@ const loginIfNotLoggedIn = async (app: FirebaseApp) => {
 
 export const useFirestore = (
   app: FirebaseApp,
-  collectionName: 'polls' | 'votes',
+  collectionName: 'polls' | 'votes' | 'mapbans',
   constraint?: QueryFieldFilterConstraint
 ) => {
   const [items, setItems] = useState<Object[]>([])
@@ -95,6 +95,43 @@ export const useVisiblePollAndVotes = (app: FirebaseApp) => {
     inner()
   }, [visiblePoll])
   return { visiblePoll, votesForPoll }
+}
+
+export const useMapBanStatus = (app: FirebaseApp) => {
+  const [mapBans, setMapBans] = useState<MapBanOrPick[]>([])
+  const [mapBanInfo, setMapBanInfo] = useState<MapBanInfo | null>(null)
+
+  useEffect(() => {
+    const inner = async () => {
+      const { db } = await loginIfNotLoggedIn(app)
+      const q = query(collection(db, 'mapbans'))
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const mapBans = snapshot.docs.map((item) => ({
+          id: item.id,
+          ...item.data(),
+        })) as MapBanOrPick[]
+
+        setMapBans(mapBans)
+      })
+      return () => unsubscribe()
+    }
+    inner()
+  }, [])
+
+  useEffect(() => {
+    const inner = async () => {
+      const { db } = await loginIfNotLoggedIn(app)
+      const q = doc(db, 'mapbaninfo', 'mapbaninfo')
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const newMapBanInfo = snapshot.data() as MapBanInfo
+
+        setMapBanInfo(newMapBanInfo)
+      })
+      return () => unsubscribe()
+    }
+    inner()
+  }, [])
+  return { mapBans, mapBanInfo }
 }
 
 export const getVotesForPoll = async (db: Firestore, pollId: string) => {

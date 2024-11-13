@@ -104,3 +104,27 @@ export type ScoreBoardEntry = {
   name: string
   score: number
 }
+
+export const CS_ACTIVE_DUTY_MAPS = [
+  'Ancient',
+  'Anubis',
+  'Dust II',
+  'Inferno',
+  'Mirage',
+  'Nuke',
+  'Vertigo',
+] as const
+
+export type MapName = (typeof CS_ACTIVE_DUTY_MAPS)[number]
+
+export type MapBanOrPick = {
+  id: string
+  type: 'ban' | 'pick' | 'decider'
+  map: MapName
+  team: string
+}
+
+export type MapBanInfo = {
+  team1: string
+  team2: string
+}
