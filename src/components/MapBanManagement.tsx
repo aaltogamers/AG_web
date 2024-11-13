@@ -43,8 +43,9 @@ const MapBanMangement = ({ app }: Props) => {
 
       const isLastBan = mapBans.length === 5
       if (isLastBan) {
+        const mapBansWithNewBan = [...mapBans, newContent]
         const remainingMap = CS_ACTIVE_DUTY_MAPS.filter(
-          (map) => !mapBans.map((mapBan) => mapBan.map).includes(map)
+          (map) => !mapBansWithNewBan.map((mapBan) => mapBan.map).includes(map)
         )
         const remainingMapName = remainingMap[0]
         await addDoc(collection(db, 'mapbans'), {
