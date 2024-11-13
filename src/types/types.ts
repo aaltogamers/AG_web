@@ -122,6 +122,7 @@ export type MapBanOrPick = {
   type: 'ban' | 'pick' | 'decider'
   map: MapName
   team: string
+  index: number
 }
 
 export type MapBanInfo = {

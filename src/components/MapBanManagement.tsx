@@ -2,15 +2,13 @@ import { FirebaseApp } from 'firebase/app'
 import { getFirestore, doc, updateDoc, deleteDoc, addDoc, collection } from 'firebase/firestore'
 import { useEffect } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { CS_ACTIVE_DUTY_MAPS, MapBanOrPick } from '../types/types'
+import { CS_ACTIVE_DUTY_MAPS, MapBanOrPick, MapName } from '../types/types'
 import { useMapBanStatus } from '../utils/db'
 import Input from './Input'
 import MapBans from './MapBans'
 type Props = {
   app: FirebaseApp
 }
-
-type ButtonField = 'isVisible' | 'isVotable'
 
 const MapBanMangement = ({ app }: Props) => {
   const db = getFirestore(app)
@@ -25,22 +23,38 @@ const MapBanMangement = ({ app }: Props) => {
     })
   }
 
-  const addPickOrBan = async (map: string, type: 'pick' | 'ban', team: 'team1' | 'team2') => {
+  const addPickOrBan = async (
+    map: MapName,
+    type: 'pick' | 'ban' | 'decider',
+    team: 'team1' | 'team2'
+  ) => {
     const existingBan = mapBans.find((mapBan) => mapBan.map === map)
-    let newContent = {
+    const newContent: Omit<MapBanOrPick, 'id'> = {
       map,
       type,
       team,
-    } as MapBanOrPick
+      index: mapBans.length,
+    }
+
+    const isLastBan = mapBans.length === 5
 
     if (existingBan) {
       await updateDoc(doc(db, 'mapbans', existingBan.id), newContent)
     } else {
-      if (type === 'pick' && mapBans.length === 6) {
-        newContent = { ...newContent, type: 'decider' }
-      }
-
       await addDoc(collection(db, 'mapbans'), newContent)
+    }
+
+    if (isLastBan) {
+      const remainingMap = CS_ACTIVE_DUTY_MAPS.filter(
+        (map) => !mapBans.map((mapBan) => mapBan.map).includes(map)
+      )
+      const remainingMapName = remainingMap[0]
+      await addDoc(collection(db, 'mapbans'), {
+        map: remainingMapName,
+        type: 'decider',
+        team: 'team1',
+        index: 6,
+      })
     }
   }
 
@@ -65,33 +79,41 @@ const MapBanMangement = ({ app }: Props) => {
     setValue('team2', mapBanInfo?.team2)
   }, [mapBanInfo?.team1, mapBanInfo?.team2])
 
-  const buttonFields: ButtonField[] = ['isVisible', 'isVotable']
-
   return (
     <main className="flex flex-col">
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col w-60 mb-20">
-        <Input
-          register={register}
-          name="team1"
-          displayName="Team 1 name"
-          placeHolder="Natus Vincere"
-          type="text"
-          required
-          control={control}
-        />
-        <Input
-          register={register}
-          name="team2"
-          displayName="Team 2 name"
-          placeHolder="Fnatic"
-          type="text"
-          required
-          control={control}
-        />
-        <button type="submit" className="mainbutton ml-4 ">
-          Update team names
+      <div className="flex flex-row justify-between m-16">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-row gap-16">
+          <div className="w-80">
+            <Input
+              register={register}
+              name="team1"
+              displayName="Team 1 name"
+              placeHolder="Natus Vincere"
+              type="text"
+              required
+              control={control}
+            />
+          </div>
+
+          <div className="w-80">
+            <Input
+              register={register}
+              name="team2"
+              displayName="Team 2 name"
+              placeHolder="Fnatic"
+              type="text"
+              required
+              control={control}
+            />
+          </div>
+          <button type="submit" className="mainbutton ml-4 h-16 mt-4">
+            Update team names
+          </button>
+        </form>
+        <button className="mainbutton ml-16 h-16 mt-4" onClick={resetBans}>
+          Reset all bans
         </button>
-      </form>
+      </div>
       <div className="text-white flex flex-row text-4xl gap-14 justify-center mx-14">
         {CS_ACTIVE_DUTY_MAPS.map((mapName) => {
           return (
