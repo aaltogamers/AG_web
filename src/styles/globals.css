@@ -158,3 +158,16 @@
     @apply right-1/2 transform -translate-x-1/2;
   }
 }
+
+.fade-in {
+  animation: fade-in 0.5s ease-in-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

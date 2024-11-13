@@ -36,25 +36,24 @@ const MapBanMangement = ({ app }: Props) => {
       index: mapBans.length,
     }
 
-    const isLastBan = mapBans.length === 5
-
     if (existingBan) {
       await updateDoc(doc(db, 'mapbans', existingBan.id), newContent)
     } else {
       await addDoc(collection(db, 'mapbans'), newContent)
-    }
 
-    if (isLastBan) {
-      const remainingMap = CS_ACTIVE_DUTY_MAPS.filter(
-        (map) => !mapBans.map((mapBan) => mapBan.map).includes(map)
-      )
-      const remainingMapName = remainingMap[0]
-      await addDoc(collection(db, 'mapbans'), {
-        map: remainingMapName,
-        type: 'decider',
-        team: 'team1',
-        index: 6,
-      })
+      const isLastBan = mapBans.length === 5
+      if (isLastBan) {
+        const remainingMap = CS_ACTIVE_DUTY_MAPS.filter(
+          (map) => !mapBans.map((mapBan) => mapBan.map).includes(map)
+        )
+        const remainingMapName = remainingMap[0]
+        await addDoc(collection(db, 'mapbans'), {
+          map: remainingMapName,
+          type: 'decider',
+          team: 'team1',
+          index: 6,
+        })
+      }
     }
   }
 

@@ -26,12 +26,13 @@ const MapBans = ({ mapBanInfo, mapBans, showAll = true }: Props) => {
         const textColor = mapBan?.type === 'ban' ? 'red' : 'green-700'
         const teamWhoBanned = mapBan?.team === 'team1' ? mapBanInfo?.team1 : mapBanInfo?.team2
         const opacity = mapBan?.type === 'ban' ? 0.7 : 0.3
+        const visibility = showAll || mapBan ? 'visible' : 'hidden'
 
         return (
           <div
-            className="flex flex-col justify-end text-center font-blockletter min-w-0 mb-8"
-            style={{ visibility: showAll || mapBan ? 'visible' : 'hidden' }}
-            key={mapName}
+            className="flex flex-col justify-end text-center font-blockletter min-w-0 mb-8 fade-in"
+            style={{ visibility }}
+            key={mapName + visibility}
           >
             {mapBan && <h2 className={`py-1 bg-black text-${textColor}`}>{mapBan.type}</h2>}
             <h2 className="py-1 bg-white">{mapName}</h2>
