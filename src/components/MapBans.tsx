@@ -20,7 +20,7 @@ const MapBans = ({ mapBanInfo, mapBans, showAll = true }: Props) => {
   }, [mapBans, showAll, mapBanInfo])
 
   return (
-    <div className="text-black flex flex-row text-4xl gap-14 justify-center mx-14 basis-1 flex-1 flex-grow-0">
+    <div className="text-black flex flex-row text-4xl gap-14 justify-center mx-14 basis-1 flex-1 flex-grow-0 font-blockletter">
       {maps.map((mapName) => {
         const mapBan = mapBans.find((mapBan) => mapBan.map === mapName)
         const textColor = mapBan?.type === 'ban' ? 'red' : 'green-700'
@@ -30,7 +30,7 @@ const MapBans = ({ mapBanInfo, mapBans, showAll = true }: Props) => {
 
         return (
           <div
-            className="flex flex-col justify-end text-center font-blockletter min-w-0 mb-8 fade-in"
+            className="flex flex-col justify-end text-center min-w-0 mb-8 fade-in"
             style={{ visibility }}
             key={mapName + visibility}
           >
