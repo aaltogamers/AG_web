@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&display=swap');
+@import url('https://fonts.cdnfonts.com/css/blockletter');
+
 /*
 ! tailwindcss v3.2.4 | MIT License | https://tailwindcss.com
 */
@@ -878,10 +880,6 @@ hr {
 }
 .ease-in-out {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-@font-face {
-  font-family: Blockletter;
-  src: url(webpack:///mini-css-extract-plugin/_next/static/media/Blockletter.90769dea.otf);
 }
 @media (min-width: 640px) {
   .sm\:grid-cols-2 {
