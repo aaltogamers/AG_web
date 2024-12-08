@@ -3,9 +3,9 @@ name: CS2 Shanghai Major Finals Watch Party
 time: 15.12.2024
 image: /images/cs2-shanghai-watch-party-24.jpg
 description: |-
-  Missed your early flight to Shanghai❓️ Don't worry, we got you covered 💨🥷 
+  *Missed your early flight to Shanghai❓️ Don't worry, we got you covered 💨🥷* 
 
-  Aalto Gamers is hosting a CS2 Shanghai Major Finals Watch Party‼️
+  **Aalto Gamers is hosting a CS2 Shanghai Major Finals Watch Party‼️**
 tldr: |-
   ### WHEN?
 
