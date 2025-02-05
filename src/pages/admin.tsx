@@ -24,7 +24,7 @@ type Inputs = {
 
 const Admin = ({ events }: Props) => {
   const app = initializeApp(firebaseConfig)
-  const auth = getAuth()
+  const auth = getAuth(app)
   const {
     register,
     handleSubmit,

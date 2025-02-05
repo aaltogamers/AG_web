@@ -18,7 +18,7 @@ const EventShowCase = ({ events }: Props) => {
       <SmallHeader>Events</SmallHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-4/5">
         {shownEvents.map((event) => (
-          <Link href={`/events/${event.slug}`} className="hover:brightness-75">
+          <Link href={`/events/${event.slug}`} className="hover:brightness-75" key={event.slug}>
             <ImageThatWorksWithPreview src={event.image} alt={event.name} isPreview={false} />
           </Link>
         ))}

@@ -13,7 +13,6 @@ import {
   deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore'
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import moment from 'moment'
 import { useEffect, useRef, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
@@ -31,7 +30,6 @@ type Props = {
 const SignUp = ({ eventName }: Props) => {
   const app = initializeApp(firebaseConfig)
   const db = getFirestore(app)
-  const auth = getAuth()
   const [signupData, setSignupData] = useState<SignUpData | null>(null)
   const [hasPossibleSignUp, setHasPossibleSignUp] = useState<boolean>(true)
   const [participants, setParticipants] = useState<Data[]>([])
@@ -101,12 +99,11 @@ const SignUp = ({ eventName }: Props) => {
   }
 
   useEffect(() => {
-    const logIn = async () => {
-      signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword').then(() => {
-        getSignUpData()
-        getParticipantData()
-      })
+    const inner = async () => {
+      await getSignUpData()
+      await getParticipantData()
     }
+
     const getSignUpData = async () => {
       const q = query(collection(db, 'events'), where('name', '==', eventName))
       const snapshot = await getDocs(q)
@@ -118,7 +115,7 @@ const SignUp = ({ eventName }: Props) => {
         setHasPossibleSignUp(false)
       }
     }
-    logIn()
+    inner()
   }, [])
 
   const signUpStart = moment(signupData?.openFrom)
