@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "next",
     "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
-    "start": "next start",
-    "export": "next build && next export && next-image-export-optimizer",
+    "build-win": "next build && xcopy .next\\static .next\\standalone\\.next\\static\\ /E /Y && xcopy public .next\\standalone\\public\\ /E /Y",
+    "start": "node .next/standalone/server.js",
     "lint": "next lint"
   },
   "keywords": [],
@@ -21,7 +21,6 @@
     "gray-matter": "^4.0.3",
     "moment": "^2.30.1",
     "next": "^15.1.6",
-    "next-image-export-optimizer": "^1.18.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-hook-form": "^7.54.2",

@@ -1,4 +1,4 @@
-import ExportedImage from 'next-image-export-optimizer'
+import Image from 'next/image'
 /* eslint-disable @next/next/no-img-element */
 
 type ImgProps = {
@@ -13,7 +13,7 @@ const ImageThatWorksWithPreview = ({ src, alt, className, isPreview, fill }: Img
   return isPreview ? (
     <img src={src} alt={alt} className={className} />
   ) : (
-    <ExportedImage
+    <Image
       src={src}
       alt={alt}
       className={className}
