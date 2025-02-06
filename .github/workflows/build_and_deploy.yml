@@ -24,3 +24,13 @@ jobs:
       - run: |
           docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/ag-web-container
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/ag-web-container
+
+      - name: 'Run Azure webapp deploy action using Azure Credentials'
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: AG-Website
+          images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/ag-web-container
+
+      - name: logout
+        run: |
+          az logout
