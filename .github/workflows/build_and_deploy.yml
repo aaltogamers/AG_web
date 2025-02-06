@@ -27,4 +27,4 @@ jobs:
 
       - name: 'Run Azure webhook'
         run: |
-          curl -X POST -H "Content-Type: application/json" --data '{"source": "GitHub", "reason": "Push to master", "taskId": "deploy-to-aci"}' ${{ secrets.WEBHOOK_URL }}
+          curl -X POST -H "Content-Type: application/json" --data '{"source": "GitHub", "reason": "Push to master"}' ${{ secrets.WEBHOOK_URL }}

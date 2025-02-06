@@ -7,7 +7,7 @@ const Banner = () => (
       <div className="absolute inset-0 bg-black opacity-40 z-100" />
       <header className="flex flex-col md:flex-row items-center justify-center relative z-1000">
         <div className="flex flex-col text-center md:text-right mr-8 m-0 font-light">
-          <h2 className="mb-8 text-md md:text-5xl">We are Aalto</h2>
+          <h2 className="mb-8 text-md md:text-5xl">We are Aalto Gamers</h2>
           <h4>
             Gaming is about the people around you.
             <br />
