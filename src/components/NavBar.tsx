@@ -70,6 +70,7 @@ const NavBar = () => {
   const links: HeaderLink[] = [
     { name: 'About', link: '/about' },
     { name: 'Events', link: '/events' },
+    { name: 'Equipment', link: '/equipment' },
     { name: 'Partners', link: '/partners' },
     { name: 'Gallery', link: '/gallery' },
     { name: 'Join', link: '/join' },
