@@ -57,7 +57,7 @@ const TextInput = ({
               ref={ref}
               required={required}
               value={optionsWithLabel.filter((c) => value.includes(c.value))}
-              onChange={(val) => {
+              onChange={(val: any) => {
                 const actualValue = isMulti
                   ? (val as OptionWithLabel[]).map((c) => c.value)
                   : (val as OptionWithLabel).value
@@ -69,7 +69,7 @@ const TextInput = ({
               options={optionsWithLabel}
               isMulti={isMulti}
               className={`${commonMargins} text-black w-full`}
-              theme={(theme) => ({
+              theme={(theme: any) => ({
                 ...theme,
                 colors: {
                   ...theme.colors,

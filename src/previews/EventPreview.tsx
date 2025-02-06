@@ -1,4 +1,4 @@
-import { PreviewTemplateComponentProps } from 'netlify-cms-core'
+import { PreviewTemplateComponentProps } from 'decap-cms-core'
 import { AGEvent } from '../types/types'
 import EventPage from '../pages/events/[pid]'
 import objFromPreviewProps from './objFromPreviewProps'

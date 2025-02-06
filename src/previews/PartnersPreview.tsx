@@ -1,4 +1,4 @@
-import { PreviewTemplateComponentProps } from 'netlify-cms-core'
+import { PreviewTemplateComponentProps } from 'decap-cms-core'
 import objFromPreviewProps from './objFromPreviewProps'
 import Partners from '../pages/partners'
 

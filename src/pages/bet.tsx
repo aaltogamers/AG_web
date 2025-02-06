@@ -2,7 +2,7 @@ import Head from 'next/head'
 import { useEffect } from 'react'
 import { firebaseConfig, useVisiblePollAndVotes } from '../utils/db'
 import { initializeApp } from 'firebase/app'
-import { Poll, Vote } from '../types/types'
+import type { Poll, Vote } from '../types/types'
 import makeBackgroundInvisible from '../utils/makeBackgroundInvisible'
 
 type Count = {

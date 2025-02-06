@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { PreviewTemplateComponentProps } from 'netlify-cms-core'
+import { PreviewTemplateComponentProps } from 'decap-cms-core'
 
 const objFromPreviewProps = (
   previewTemplateProps: PreviewTemplateComponentProps,

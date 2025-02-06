@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import ReactMarkdown, { Components } from 'react-markdown'
 
 interface ComponentProps {
-  children: ReactNode
+  children?: ReactNode
 }
 
 interface AProps extends ComponentProps {

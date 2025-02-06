@@ -10,7 +10,7 @@ import AlbumPreview from '../previews/AlbumPreview'
 const CMSPage = () => {
   useEffect(() => {
     ;(async () => {
-      const CMS = (await import('netlify-cms-app')).default
+      const CMS = (await import('decap-cms-app')).default
       CMS.init()
       CMS.registerPreviewStyle('/previewStyles.css')
       CMS.registerPreviewTemplate('landinginfo', LandingInfosPreview)

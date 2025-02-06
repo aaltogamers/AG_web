@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { firebaseConfig, useFirestore } from '../utils/db'
 import { where } from 'firebase/firestore'
 import { initializeApp } from 'firebase/app'
-import { ScoreBoardEntry, Vote } from '../types/types'
+import type { ScoreBoardEntry, Vote } from '../types/types'
 import makeBackgroundInvisible from '../utils/makeBackgroundInvisible'
 import Scoreboard from '../components/Scoreboard'
 

@@ -1,4 +1,4 @@
-import { PreviewTemplateComponentProps } from 'netlify-cms-core'
+import { PreviewTemplateComponentProps } from 'decap-cms-core'
 import SideInfoBox from '../components/SideInfoBox'
 import { LandingInfo } from '../types/types'
 import objFromPreviewProps from './objFromPreviewProps'

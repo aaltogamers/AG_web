@@ -1,4 +1,4 @@
-import { PreviewTemplateComponentProps } from 'netlify-cms-core'
+import { PreviewTemplateComponentProps } from 'decap-cms-core'
 import { AGBoardMember } from '../types/types'
 import objFromPreviewProps from './objFromPreviewProps'
 import BoardMember from '../components/BoardMember'
