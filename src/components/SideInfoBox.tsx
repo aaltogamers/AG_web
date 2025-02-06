@@ -27,7 +27,7 @@ const SideInfoBox = ({ landingInfo, isLeft }: Props) => {
       <div className=" bg-black flex flex-col md:w-1/2">
         <h2 className="pb-2">{title}</h2>
         <h3 className="mt-2 mb-4">{subtitle}</h3>
-        <div className="px-8 md:px-0 text-lightGray text-xl">
+        <div className="px-8 md:px-0 text-lightgray text-xl">
           <Markdown>{content}</Markdown>
         </div>
       </div>

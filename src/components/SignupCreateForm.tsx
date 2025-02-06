@@ -225,7 +225,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
           <div className="w-full md:w-1/2">
             <div className="flex flex-col">
               <h3 className="text-center mt-4 mb-5">Sign-up Fields</h3>
-              <h5 className="text-center text-lightGray">
+              <h5 className="text-center text-lightgray">
                 Don&apos;t edit input names or select options after signups have started. Stuff will
                 break.
               </h5>

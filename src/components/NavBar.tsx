@@ -18,7 +18,7 @@ type MobileProps = {
 }
 
 const DesktopNavBar = ({ links }: DesktopProps) => (
-  <nav className="hidden md:flex h-20 text-xl  bg-darkGray">
+  <nav className="hidden md:flex h-20 text-xl  bg-darkgray">
     <Link href="/" className="flex w-60">
       <img src="/images/navbar/ag-banner.png" alt="AG" />
     </Link>
@@ -34,7 +34,7 @@ const DesktopNavBar = ({ links }: DesktopProps) => (
 
 const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
   <div className="md:hidden fixed top-0 left-0 z-20 w-full">
-    <div className="flex items-center  bg-darkGray h-16">
+    <div className="flex items-center  bg-darkgray h-16">
       <BurgerButton open={isOpen} onClick={() => setIsOpen(!isOpen)} />
       <div className="flex justify-center w-full">
         <Link href="/" className="flex" onClick={() => setIsOpen(false)}>
@@ -44,7 +44,7 @@ const MobileNavBar = ({ isOpen, setIsOpen, links }: MobileProps) => (
     </div>
     <div className="flex">
       <div
-        className={`fixed bg-darkGray z-10 top-16 left-0 w-full h-full transition-[max-width] ease-in-out duration-500 pt-12 ${
+        className={`fixed bg-darkgray z-10 top-16 left-0 w-full h-full transition-[max-width] ease-in-out duration-500 pt-12 ${
           isOpen ? 'max-w-[50%] overflow-x-hidden overflow-y-auto' : 'max-w-0 overflow-hidden'
         }`}
       >

@@ -49,7 +49,7 @@ const Markdown = ({ children }: MarkdownProps) => {
   }
 
   return (
-    <ReactMarkdown components={components} className="text-xl text-lightGray">
+    <ReactMarkdown components={components} className="text-xl text-lightgray">
       {children}
     </ReactMarkdown>
   )

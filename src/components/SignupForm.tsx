@@ -177,7 +177,7 @@ const SignUp = ({ eventName }: Props) => {
                   return null
               }
             })}
-            <div className="col-span-2 text-lightGray mb-4 text-sm">
+            <div className="col-span-2 text-lightgray mb-4 text-sm">
               Never input any sensitive data on this form
             </div>
             <input type="hidden" value={signupData.name} {...register('event')} />

@@ -36,13 +36,13 @@ const ImageShowCase = ({ images }: Props) => {
           className="object-scale-down w-full h-96 md:h-[500px]"
         />
         <button
-          className="absolute text-5xl right-0 abs-center-y text-lightGray"
+          className="absolute text-5xl right-0 abs-center-y text-lightgray"
           onClick={nextImage}
         >
           <BsChevronCompactRight />
         </button>
         <button
-          className="absolute text-5xl left-0 abs-center-y text-lightGray"
+          className="absolute text-5xl left-0 abs-center-y text-lightgray"
           onClick={prevImage}
         >
           <BsChevronCompactLeft />

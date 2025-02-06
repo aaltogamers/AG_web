@@ -29,7 +29,7 @@ const EditableInput = ({
   return (
     <div className="bg-white p-4 m-4 rounded-lg flex">
       <div className="flex flex-col gap-2 flex-1 ">
-        <div className="text-lightGray">
+        <div className="text-lightgray">
           {type === 'text' && 'Text'}
           {type === 'select' && 'Dropdown'}
           {type === 'info' && 'Infobox'}
@@ -75,7 +75,7 @@ const EditableInput = ({
         )}
         <input {...register(`${number}-type`)} type="hidden" value={type} />
       </div>
-      <div className="text-lightGray flex flex-col justify-between pl-4">
+      <div className="text-lightgray flex flex-col justify-between pl-4">
         {index === 0 ? (
           <div />
         ) : (

@@ -1,8 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&display=swap');
 @import url('https://fonts.cdnfonts.com/css/blockletter');
+@import 'tailwindcss';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@config '../../tailwind.config.js';
 
 @layer base {
   html,
@@ -31,7 +34,7 @@
     @apply brightness-75 text-white;
   }
   .borderbutton {
-    @apply text-white border-lightGray border-[1px] text-xl py-3 px-8 text-center max-w-fit hover:border-red;
+    @apply text-white border-lightgray border-[1px] text-xl py-3 px-8 text-center max-w-fit hover:border-red;
   }
   h1 {
     @apply text-4xl md:text-5xl;

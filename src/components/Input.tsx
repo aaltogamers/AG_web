@@ -73,7 +73,7 @@ const TextInput = ({
                 ...theme,
                 colors: {
                   ...theme.colors,
-                  primary25: 'lightGray',
+                  primary25: 'lightgray',
                   primary: 'red',
                 },
               })}
