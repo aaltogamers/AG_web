@@ -22,4 +22,5 @@ module.exports = {
     nextImageExportOptimizer_exportFolderName: 'nextImageExportOptimizer',
     nextImageExportOptimizer_generateAndUseBlurImages: true,
   },
+  output: 'standalone',
 }
