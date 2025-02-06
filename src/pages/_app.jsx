@@ -26,21 +26,30 @@ const App = ({ Component, pageProps }) => {
   useEffect(() => {
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
-        await signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword')
+        try {
+          await signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword')
+        } catch (e) {
+          console.log(e)
+        }
       }
-    })
 
-    const path = router.asPath
-    if (!oldRoutes.current.has(path)) {
-      oldRoutes.current.add(path)
-      addDoc(collection(db, 'analytics'), { path, timestamp: Timestamp.now() })
+      const path = router.asPath
+      await addAnalytic(path)
+    }, [])
+
+    const addAnalytic = async (url) => {
+      if (!oldRoutes.current.has(url)) {
+        oldRoutes.current.add(url)
+        try {
+          await addDoc(collection(db, 'analytics'), { path: url, timestamp: Timestamp.now() })
+        } catch (e) {
+          console.log(e)
+        }
+      }
     }
 
     router.events.on('routeChangeStart', (url) => {
-      if (!oldRoutes.current.has(url)) {
-        oldRoutes.current.add(url)
-        addDoc(collection(db, 'analytics'), { path: url, timestamp: Timestamp.now() })
-      }
+      addAnalytic(url)
     })
   }, [router])
 
