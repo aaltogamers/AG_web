@@ -1,3 +1,4 @@
+/*
 import { useEffect } from 'react'
 import EventPreview from '../previews/EventPreview'
 import LandingInfosPreview from '../previews/LandingInfoPreview'
@@ -6,8 +7,10 @@ import BoardMemberPreview from '../previews/BoardMemberPreview'
 import AboutPreview from '../previews/AboutPreview'
 import PartnersPreview from '../previews/PartnersPreview'
 import AlbumPreview from '../previews/AlbumPreview'
+*/
 
 const CMSPage = () => {
+  /*
   useEffect(() => {
     ;(async () => {
       const CMS = (await import('decap-cms-app')).default
@@ -22,6 +25,7 @@ const CMSPage = () => {
       CMS.registerPreviewTemplate('album', AlbumPreview)
     })()
   }, [])
+  */
 
   return <div />
 }
