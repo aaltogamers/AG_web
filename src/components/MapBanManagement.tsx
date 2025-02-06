@@ -16,6 +16,7 @@ const MapBanMangement = ({ app }: Props) => {
 
   const { register, handleSubmit, control, setValue } = useForm()
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit: SubmitHandler<any> = async (data) => {
     await updateDoc(doc(db, 'mapbaninfo', 'mapbaninfo'), {
       team1: data.team1,
@@ -77,7 +78,7 @@ const MapBanMangement = ({ app }: Props) => {
   useEffect(() => {
     setValue('team1', mapBanInfo?.team1)
     setValue('team2', mapBanInfo?.team2)
-  }, [mapBanInfo?.team1, mapBanInfo?.team2])
+  }, [mapBanInfo?.team1, mapBanInfo?.team2, setValue])
 
   return (
     <main className="flex flex-col">
@@ -117,7 +118,10 @@ const MapBanMangement = ({ app }: Props) => {
       <div className="text-white flex flex-row text-4xl gap-14 justify-center mx-14">
         {CS_ACTIVE_DUTY_MAPS.map((mapName) => {
           return (
-            <div className="flex  flex-col w-full text-center mb-8 text-[1.2rem] gap-4">
+            <div
+              className="flex  flex-col w-full text-center mb-8 text-[1.2rem] gap-4"
+              key={mapName}
+            >
               <button className=" bg-red p-2 rounded-sm" onClick={() => deleteBan(mapName)}>
                 Reset
               </button>

@@ -1,4 +1,5 @@
 import ExportedImage from 'next-image-export-optimizer'
+/* eslint-disable @next/next/no-img-element */
 
 type ImgProps = {
   src: string

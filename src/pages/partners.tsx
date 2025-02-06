@@ -21,7 +21,7 @@ const Partners = ({ partners, title, content }: Props) => {
       <Header>{title}</Header>
       <div className="flex mt-20 flex-wrap justify-evenly">
         {partners.map((partner) => (
-          <Partner partner={partner} />
+          <Partner partner={partner} key={partner.name} />
         ))}
       </div>
       <div className="flex flex-col items-center text-center p-20">

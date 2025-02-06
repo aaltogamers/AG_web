@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
-/* eslint-disable react/jsx-props-no-spreading */
 import moment from 'moment'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { useEffect, useState } from 'react'
@@ -106,6 +104,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
 
   useEffect(() => {
     getSignUpData(eventValuesSorted[0])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const onSubmit: SubmitHandler<Inputs> = (data) => {

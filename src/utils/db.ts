@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { FirebaseApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import {
@@ -34,7 +35,7 @@ export const useFirestore = (
   collectionName: 'polls' | 'votes' | 'mapbans',
   constraint?: QueryFieldFilterConstraint
 ) => {
-  const [items, setItems] = useState<Object[]>([])
+  const [items, setItems] = useState<object[]>([])
   useEffect(() => {
     const inner = async () => {
       const { db } = await loginIfNotLoggedIn(app)

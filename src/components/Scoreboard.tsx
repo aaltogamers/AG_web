@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { ScoreBoardEntry } from '../types/types'
 
 type Top3Entry = ScoreBoardEntry & {
@@ -15,6 +16,7 @@ const Top3Entry = ({ name, score, place, filter, isTrophy }: Top3Entry) => {
         src={picture}
         className="absolute left-[50%] translate-x-[-50%] top-[-5rem] h-20"
         style={{ filter }}
+        alt="trophy"
       />
       <span>{place}</span>
       <span>{name}</span>

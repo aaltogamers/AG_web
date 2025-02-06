@@ -1,8 +1,6 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
 import { FaArrowDown, FaArrowUp, FaTrash } from 'react-icons/fa'
 import { UseFormRegister } from 'react-hook-form'
 import { EditableInputObj } from '../types/types'
-/* eslint-disable react/jsx-props-no-spreading */
 
 type EditableInputProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,4 +1,5 @@
-/* eslint-disable react/jsx-props-no-spreading */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { HTMLInputTypeAttribute } from 'react'
 import { UseFormRegister, Controller, Control } from 'react-hook-form'
 import Select from 'react-select'
@@ -12,7 +13,7 @@ type Props = {
   required?: boolean
   isPublic?: boolean
   options?: string[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   register: UseFormRegister<any>
   onChangeDo?: (value: any) => void
   control: Control<any, any>

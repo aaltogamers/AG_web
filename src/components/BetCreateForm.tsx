@@ -16,6 +16,7 @@ const BetCreateForm = ({ app }: Props) => {
   const { register, handleSubmit, control, reset } = useForm()
   const db = getFirestore(app)
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit: SubmitHandler<any> = async (data) => {
     const options = data.options.split(',').map((option: string) => option.trim())
     const newBet: CreatableBet = {

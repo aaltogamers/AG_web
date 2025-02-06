@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react/jsx-props-no-spreading */
 import { initializeApp } from 'firebase/app'
 import {
   getFirestore,
@@ -78,6 +76,7 @@ const SignUp = ({ eventName }: Props) => {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit: SubmitHandler<any> = async (data) => {
     const localStorageSignupId = getLocalStorageId()
     if (hasAlreadySignedUp.current && localStorageSignupId) {
@@ -116,6 +115,8 @@ const SignUp = ({ eventName }: Props) => {
       }
     }
     inner()
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const signUpStart = moment(signupData?.openFrom)

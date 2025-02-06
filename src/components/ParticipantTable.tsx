@@ -53,7 +53,6 @@ const ParticipantTable = ({
       participant.id &&
       db &&
       getNewParticipants &&
-      // eslint-disable-next-line no-alert
       window.confirm(
         `Are you sure you want to delete ${participant[participantHeaders[1]] || 'this sign-up'}?`
       )
