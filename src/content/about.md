@@ -8,7 +8,7 @@ Aalto Gamers is a community of gamers from Aalto University. We organize both hi
 
 ## Our mission
 
-Our ultimate goal is to give students a gaming community and make it easier for all to join regardless of their level or frequency of gaming. We want to make gaming a channel to connect with others and find like-minded peole. Through tournaments and events we wish to bring value in gaming and let each member find their own community. We also rent out PC sets for people looking to have a lan party with their friends. Don't hesitate to get in contact with us and our community about anything in gaming, our association or just life in general!
+Our ultimate goal is to give students a gaming community and make it easier for all to join regardless of their level or frequency of gaming. We want to make gaming a channel to connect with others and find like-minded peole. Through tournaments and events we wish to bring value in gaming and let each member find their own community. Don't hesitate to get in contact with us and our community about anything in gaming, our association or just life in general!
 
 ## Contact
 
