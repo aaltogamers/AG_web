@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
 import '../styles/globals.css'
 import { initializeApp } from 'firebase/app'
-import { getAuth, signInWithEmailAndPassword, User } from 'firebase/auth'
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { firebaseConfig } from '../utils/db'
 import { Timestamp, getFirestore, addDoc, collection } from 'firebase/firestore'
 
