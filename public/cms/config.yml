@@ -3,7 +3,7 @@ backend:
   branch: master
   repo: aaltogamers/AG_web
   base_url: http://localhost:3000
-  auth_endpoint: /api/auth
+  auth_endpoint: /api/callback
   squash_merges: true
 publish_mode: editorial_workflow
 media_folder: public/images
