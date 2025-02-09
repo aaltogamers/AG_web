@@ -27,7 +27,9 @@
     "react-icons": "^5.4.0",
     "react-markdown": "^9.0.3",
     "react-select": "^5.10.0",
-    "tiny-json-http": "^7.5.1"
+    "sharp": "^0.33.5",
+    "tiny-json-http": "^7.5.1",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.26.7",

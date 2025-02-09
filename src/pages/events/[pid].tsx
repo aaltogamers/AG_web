@@ -46,6 +46,7 @@ export default Event
 
 export async function getStaticPaths() {
   const events = getFolder('events')
+  console.log(events.map((event) => event.slug))
   return {
     paths: events.map((event) => ({ params: { pid: event.slug } })),
     fallback: false,
