@@ -2,8 +2,8 @@ backend:
   name: github
   branch: master
   repo: aaltogamers/AG_web
-  base_url: http://localhost:3000
-  auth_endpoint: /api/callback
+  base_url: https://ag-website-hbgde7hkbwbscse9.northeurope-01.azurewebsites.net/
+  auth_endpoint: /api/auth
   squash_merges: true
 publish_mode: editorial_workflow
 media_folder: public/images

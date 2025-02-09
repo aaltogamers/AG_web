@@ -1,4 +1,6 @@
-module.exports = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
   webpack: (cfg) => {
     cfg.module.rules.push({
@@ -12,4 +14,15 @@ module.exports = {
     formats: ['image/webp'],
   },
   output: 'standalone',
+  async redirects() {
+    return [
+      {
+        source: '/cms',
+        destination: '/cms/index.html',
+        permanent: true,
+      },
+    ]
+  },
 }
+
+export default nextConfig
