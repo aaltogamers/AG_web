@@ -129,3 +129,8 @@ export type MapBanInfo = {
   team1: string
   team2: string
 }
+
+export type HeaderLink = {
+  name: string
+  link: string
+}
