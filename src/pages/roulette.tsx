@@ -76,7 +76,7 @@ const Roulette = () => {
 
     let animationFrameId = 0
     if (refresh) {
-      speed.current = 100 + Math.random() * 50
+      speed.current = 100 + Math.random() * 100
     }
 
     const draw = (ctx: CanvasRenderingContext2D) => {
@@ -84,7 +84,6 @@ const Roulette = () => {
       ctx.clearRect(0, 0, width, height)
       ctx.fillStyle = 'black'
       ctx.fillRect(0, 0, width, height)
-      ctx.fillStyle = 'red'
       const imageElements = patches
         .map(({ game }) => document.getElementById(game) as HTMLImageElement | null)
         .filter((element) => element !== null)
@@ -101,7 +100,7 @@ const Roulette = () => {
       const y = (height - imageHeight) / 2 - 50
 
       const calculateImageX = (index: number) =>
-        ((index * (imageWidth + gapWidth) + frameCount.current) % totalWidth) - imageWidth
+        width - ((index * (imageWidth + gapWidth) + frameCount.current) % totalWidth)
 
       if (speed.current < 0.1 && refresh) {
         speed.current = 0
