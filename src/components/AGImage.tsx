@@ -1,5 +1,3 @@
-import Image from 'next/image'
-
 type ImgProps = {
   src: string
   alt: string
@@ -9,14 +7,13 @@ type ImgProps = {
 
 const AGImage = ({ src, alt, className, fill }: ImgProps) => {
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       src={src}
       alt={alt}
       className={className}
       width={fill ? undefined : 1500}
       height={fill ? undefined : 1500}
-      fill={fill}
-      priority
     />
   )
 }
