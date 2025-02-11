@@ -10,32 +10,32 @@ import {
 export const medias = [
   {
     name: 'Become a member',
-    link: 'https://forms.gle/N8sDm4mgt8JGKK1b7',
+    link: `/link/member-form?ref=website`,
     Icon: FaGamepad,
   },
   {
     name: 'Join our discord server',
-    link: 'https://discord.gg/Ew7nGQqHgc',
+    link: `/link/discord?ref=website`,
     Icon: FaDiscord,
   },
   {
     name: 'Join our telegram group',
-    link: 'https://t.me/+1nNBzegP0hthMmM0',
+    link: `/link/telegram?ref=website`,
     Icon: FaTelegram,
   },
   {
     name: 'Add our events to your calendar',
-    link: 'https://calendar.google.com/calendar/embed?src=c_88f02ba0db633a673bf597b424a2bd94c295bc16a80761ef60b020508a18624f%40group.calendar.google.com&ctz=Europe%2FHelsinki',
+    link: `/link/calendar?ref=website`,
     Icon: FaCalendarDay,
   },
   {
     name: 'Check out our instagram',
-    link: 'http://www.instagram.com/aaltogamers/',
+    link: `/link/instagram?ref=website`,
     Icon: FaInstagram,
   },
   {
     name: 'Watch us on twitch',
-    link: 'https://www.twitch.tv/aaltogamers',
+    link: `/link/twitch?ref=website`,
     Icon: FaTwitch,
   },
 ]

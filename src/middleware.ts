@@ -15,7 +15,11 @@ let lastAuthTime = 0
 
 export default async function middleware(req: NextApiRequest) {
   const url = req.url || ''
-  const path = new URL(url).pathname
+  const urlObj = new URL(url)
+  let path = urlObj.pathname
+  urlObj.searchParams.forEach((value, key) => {
+    path += `?${key}=${value}`
+  })
   const isDev = url.includes('localhost')
   const timeNow = Date.now()
   const secondsSinceLastAuth = (timeNow - lastAuthTime) / 1000
