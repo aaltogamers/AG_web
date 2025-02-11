@@ -10,9 +10,6 @@ const nextConfig: NextConfig = {
     })
     return cfg
   },
-  images: {
-    formats: ['image/webp'],
-  },
   output: 'standalone',
   async redirects() {
     return [
