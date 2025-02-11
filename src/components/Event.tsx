@@ -1,5 +1,5 @@
 import { AGEvent } from '../types/types'
-import AGImage from './ImageThatWorksWithPreview'
+import AGImage from './AGImage'
 import Markdown from './Markdown'
 
 interface Props {

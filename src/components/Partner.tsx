@@ -1,4 +1,4 @@
-import AGImage from './ImageThatWorksWithPreview'
+import AGImage from './AGImage'
 import Markdown from './Markdown'
 import { AGPartner } from '../types/types'
 

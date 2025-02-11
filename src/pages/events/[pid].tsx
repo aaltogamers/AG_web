@@ -5,7 +5,7 @@ import Markdown from '../../components/Markdown'
 import PageWrapper from '../../components/PageWrapper'
 import { AGEvent } from '../../types/types'
 import { getFile, getFolder } from '../../utils/fileUtils'
-import AGImage from '../../components/ImageThatWorksWithPreview'
+import AGImage from '../../components/AGImage'
 import SignUpForm from '../../components/SignupForm'
 
 type Props = {

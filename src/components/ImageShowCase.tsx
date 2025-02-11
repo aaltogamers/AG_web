@@ -1,4 +1,4 @@
-import AGImage from './ImageThatWorksWithPreview'
+import AGImage from './AGImage'
 import { useState } from 'react'
 import { BsChevronCompactRight, BsChevronCompactLeft } from 'react-icons/bs'
 import SmallHeader from './SmallHeader'

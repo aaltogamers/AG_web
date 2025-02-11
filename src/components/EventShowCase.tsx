@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { AGEvent } from '../types/types'
 import { parseEvents } from '../utils/parseEvents'
-import AGImage from './ImageThatWorksWithPreview'
+import AGImage from './AGImage'
 import SmallHeader from './SmallHeader'
 
 type Props = {

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import React from 'react'
 import MobileNavBar from './MobileNavBar'
 import { HeaderLink } from '../types/types'
-import AGImage from './ImageThatWorksWithPreview'
+import AGImage from './AGImage'
 
 type DesktopProps = {
   links: HeaderLink[]

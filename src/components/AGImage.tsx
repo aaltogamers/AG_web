@@ -16,6 +16,7 @@ const AGImage = ({ src, alt, className, fill }: ImgProps) => {
       width={fill ? undefined : 1500}
       height={fill ? undefined : 1500}
       fill={fill}
+      priority
     />
   )
 }

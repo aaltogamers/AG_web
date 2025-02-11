@@ -4,7 +4,7 @@ import { useState } from 'react'
 import BurgerButton from './BurgerButton'
 import Link from 'next/link'
 import { HeaderLink } from '../types/types'
-import AGImage from './ImageThatWorksWithPreview'
+import AGImage from './AGImage'
 
 type MobileProps = {
   links: HeaderLink[]

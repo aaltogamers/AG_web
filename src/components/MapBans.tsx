@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CS_ACTIVE_DUTY_MAPS, MapBanInfo, MapBanOrPick, MapName } from '../types/types'
-import AGImage from './ImageThatWorksWithPreview'
+import AGImage from './AGImage'
 
 type Props = {
   mapBanInfo: MapBanInfo | null
