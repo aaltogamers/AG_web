@@ -11,7 +11,7 @@ const Album = ({ album }: Props) => {
       <div className="darkenedBackground absolute l-0 t-0 w-60 h-60 p-8 flex flex-col justify-end z-10">
         <h4>{album.name}</h4>
       </div>
-      <AGImage src={album.image} alt="" fill className="object-cover" />
+      <AGImage src={album.image} alt={album.name} className="object-cover w-full h-full" />
     </a>
   )
 }
