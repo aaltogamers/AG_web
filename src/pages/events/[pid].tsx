@@ -5,15 +5,14 @@ import Markdown from '../../components/Markdown'
 import PageWrapper from '../../components/PageWrapper'
 import { AGEvent } from '../../types/types'
 import { getFile, getFolder } from '../../utils/fileUtils'
-import ImageThatWorksWithPreview from '../../components/ImageThatWorksWithPreview'
+import AGImage from '../../components/ImageThatWorksWithPreview'
 import SignUpForm from '../../components/SignupForm'
 
 type Props = {
   event: AGEvent
-  isPreview?: boolean
 }
 
-const Event = ({ event, isPreview }: Props) => {
+const Event = ({ event }: Props) => {
   return (
     <PageWrapper>
       <Head>
@@ -23,11 +22,10 @@ const Event = ({ event, isPreview }: Props) => {
       <div className="flex flex-col items-center">
         <div className="py-16 md:w-3/4">
           <div className="flex flex-col md:flex-row justify-center">
-            <ImageThatWorksWithPreview
+            <AGImage
               src={event.image}
               alt={event.name}
               className="max-h-[500px] object-scale-down md:max-w-[50%] pb-8"
-              isPreview={isPreview || false}
             />
             <div className="mt-8 md:mt-0 md:pl-8 text-lightgray text-xl text-center md:text-left">
               <Markdown>{event.tldr}</Markdown>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CS_ACTIVE_DUTY_MAPS, MapBanInfo, MapBanOrPick, MapName } from '../types/types'
-import ImageThatWorksWithPreview from './ImageThatWorksWithPreview'
+import AGImage from './ImageThatWorksWithPreview'
 
 type Props = {
   mapBanInfo: MapBanInfo | null
@@ -45,10 +45,9 @@ const MapBans = ({ mapBanInfo, mapBans, showAll = true }: Props) => {
                   <h2>{mapBan.type !== 'decider' ? teamWhoBanned : ''} </h2>
                 </div>
               )}
-              <ImageThatWorksWithPreview
+              <AGImage
                 src={`/images/${mapName}.jpg`}
                 alt={mapName}
-                isPreview={false}
                 className="h-40 object-cover text-green-700 "
               />
             </div>

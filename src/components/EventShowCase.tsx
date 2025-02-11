@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { AGEvent } from '../types/types'
 import { parseEvents } from '../utils/parseEvents'
-import ImageThatWorksWithPreview from './ImageThatWorksWithPreview'
+import AGImage from './ImageThatWorksWithPreview'
 import SmallHeader from './SmallHeader'
 
 type Props = {
@@ -19,7 +19,7 @@ const EventShowCase = ({ events }: Props) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-4/5">
         {shownEvents.map((event) => (
           <Link href={`/events/${event.slug}`} className="hover:brightness-75" key={event.slug}>
-            <ImageThatWorksWithPreview src={event.image} alt={event.name} isPreview={false} />
+            <AGImage src={event.image} alt={event.name} />
           </Link>
         ))}
       </div>

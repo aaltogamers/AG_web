@@ -1,4 +1,4 @@
-import ImageThatWorksWithPreview from './ImageThatWorksWithPreview'
+import AGImage from './ImageThatWorksWithPreview'
 import { useState } from 'react'
 import { BsChevronCompactRight, BsChevronCompactLeft } from 'react-icons/bs'
 import SmallHeader from './SmallHeader'
@@ -29,10 +29,9 @@ const ImageShowCase = ({ images }: Props) => {
     <section className="flex flex-col items-center">
       <SmallHeader>Images</SmallHeader>
       <div className="relative md:w-5/6 md:mb-16 md:px-16">
-        <ImageThatWorksWithPreview
+        <AGImage
           src={images[currentImage]}
           alt=""
-          isPreview={false}
           className="object-scale-down w-full h-96 md:h-[500px]"
         />
         <button

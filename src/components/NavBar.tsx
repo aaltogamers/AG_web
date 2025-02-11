@@ -75,12 +75,12 @@ const NavBar = () => {
     { name: 'Gallery', link: '/gallery' },
     { name: 'Join', link: '/join' },
   ]
-  const [isOpen, setIsOpen] = React.useState(false)
+  //const [isOpen, setIsOpen] = React.useState(false)
+  //<MobileNavBar isOpen={isOpen} setIsOpen={setIsOpen} links={links} />
 
   return (
     <>
       <DesktopNavBar links={links} />
-      <MobileNavBar isOpen={isOpen} setIsOpen={setIsOpen} links={links} />
     </>
   )
 }
