@@ -170,3 +170,13 @@
     opacity: 1;
   }
 }
+
+.spin-once {
+  animation: spin 0.7s linear;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

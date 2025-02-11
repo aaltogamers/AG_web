@@ -125,7 +125,22 @@ const Roulette = () => {
       })
 
       ctx.fillStyle = '#F32929'
-      ctx.fillRect(width / 2 - 2, y - 50, 4, imageHeight + 100)
+      const path = new Path2D()
+      const center = width / 2
+      const triangleSize = 20
+      const gap = 5
+      const y1 = y - gap
+      path.moveTo(center - triangleSize, y1 - triangleSize)
+      path.lineTo(center, y1)
+      path.lineTo(center + triangleSize, y1 - triangleSize)
+      ctx.fill(path)
+
+      const y2 = y + imageHeight + gap
+      const path2 = new Path2D()
+      path2.moveTo(center - triangleSize, y2 + triangleSize)
+      path2.lineTo(center, y2)
+      path2.lineTo(center + triangleSize, y2 + triangleSize)
+      ctx.fill(path2)
     }
 
     const render = () => {
@@ -170,7 +185,7 @@ const Roulette = () => {
             transition: selectedPatch ? 'opacity 0.75s' : '',
           }}
         >
-          <div className="flex flex-col w-90 text-center gap-2 items-center">
+          <div className="flex flex-col w-90 text-center gap-2 items-center ">
             <h2>{selectedPatch?.game}</h2>
             <h3>{selectedPatch?.tarot}</h3>
             <img src={`/images/patches/${selectedPatch?.image}`} alt={selectedPatch?.game} />
