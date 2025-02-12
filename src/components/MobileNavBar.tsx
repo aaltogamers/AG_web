@@ -14,12 +14,16 @@ const MobileNavBar = ({ links }: MobileProps) => {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <div className="md:hidden fixed top-0 left-0 z-20 w-full">
+    <div className="md:hidden fixed top-0 left-0 z-100 w-full ">
       <div className="flex items-center  bg-darkgray h-16">
         <BurgerButton open={isOpen} onClick={() => setIsOpen(!isOpen)} />
         <div className="flex justify-center w-full">
           <Link href="/" className="flex" onClick={() => setIsOpen(false)}>
-            <AGImage src="/images/navbar/ag-text.svg" alt="Aalto Gamers" className="h-14" />
+            <AGImage
+              src="/images/navbar/ag-text.svg"
+              alt="Aalto Gamers"
+              className="h-14 object-contain w-fit"
+            />
           </Link>
         </div>
       </div>
