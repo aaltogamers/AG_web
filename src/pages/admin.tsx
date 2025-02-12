@@ -11,6 +11,7 @@ import { getFolder } from '../utils/fileUtils'
 import { firebaseConfig } from '../utils/db'
 import BetManagement from '../components/BetManagement'
 import MapBanMangement from '../components/MapBanManagement'
+import SiteStatistics from '../components/SiteStatistics'
 
 type Props = {
   events: AGEvent[]
@@ -31,7 +32,7 @@ const Admin = ({ events }: Props) => {
     control,
   } = useForm<Inputs>()
   const [reload, setReload] = useState(false)
-  const [tab, setTab] = useState<'signups' | 'bets' | 'mapbans'>('signups')
+  const [tab, setTab] = useState<'signups' | 'bets' | 'mapbans' | 'stats'>('signups')
   const onSubmit: SubmitHandler<Inputs> = (data) => {
     const email = 'board@aaltogamers.fi'
     signInWithEmailAndPassword(auth, email, data.password)
@@ -86,13 +87,21 @@ const Admin = ({ events }: Props) => {
               >
                 Map Bans
               </button>
+              <button
+                className={`${tab === 'stats' && 'underline'}`}
+                onClick={() => setTab('stats')}
+              >
+                Statistics
+              </button>
             </div>
             {tab === 'signups' ? (
               <SignUpCreateForm app={app} events={events} />
             ) : tab === 'bets' ? (
               <BetManagement app={app} />
-            ) : (
+            ) : tab === 'mapbans' ? (
               <MapBanMangement app={app} />
+            ) : (
+              <SiteStatistics app={app} />
             )}
           </div>
         ) : (

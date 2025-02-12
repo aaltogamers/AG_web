@@ -32,7 +32,7 @@ const loginIfNotLoggedIn = async (app: FirebaseApp) => {
 
 export const useFirestore = (
   app: FirebaseApp,
-  collectionName: 'polls' | 'votes' | 'mapbans',
+  collectionName: 'polls' | 'votes' | 'mapbans' | 'analytics',
   constraint?: QueryFieldFilterConstraint
 ) => {
   const [items, setItems] = useState<object[]>([])
@@ -45,7 +45,6 @@ export const useFirestore = (
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const newItems = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))
         setItems(newItems)
-        // console.log(new Date())
       })
       return () => unsubscribe()
     }
