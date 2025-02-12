@@ -90,7 +90,7 @@ const TextInput = ({
           min={0}
           required={required}
           {...register(name)}
-          className={`p-2 rounded-md ${commonMargins} w-full`}
+          className={`p-2 rounded-md ${commonMargins} w-full bg-white`}
           id={lowerCaseName}
           onChange={(e) => {
             if (onChangeDo) {
