@@ -11,7 +11,7 @@ type DesktopProps = {
 const DesktopNavBar = ({ links }: DesktopProps) => (
   <nav className="hidden md:flex h-20 text-xl  bg-darkgray">
     <Link href="/" className="flex w-60">
-      <AGImage src="/images/navbar/ag-banner.png" alt="AG" />
+      <AGImage src="/images/navbar/ag-banner.png" alt="AG" priority />
     </Link>
     <div className="flex justify-end w-full text-center items-center">
       {links.map(({ name, link }) => (

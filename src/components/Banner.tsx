@@ -18,6 +18,7 @@ const Banner = () => (
           src="/images/ag-white.png"
           alt="intro"
           className="h-32 md:h-40 mt-8 md:mt-4 object-contain w-fit"
+          priority
         />
       </header>
     </div>

@@ -7,6 +7,7 @@ type ImgProps = {
   fill?: boolean
   className?: string
   id?: string
+  priority?: boolean
 }
 
 const imageLoader = ({ src }: ImageLoaderProps) => {
@@ -15,7 +16,7 @@ const imageLoader = ({ src }: ImageLoaderProps) => {
   return withRighFileEnding
 }
 
-const AGImage = ({ src, alt, className }: ImgProps) => {
+const AGImage = ({ src, alt, className, priority }: ImgProps) => {
   return (
     <Image
       src={src}
@@ -24,6 +25,7 @@ const AGImage = ({ src, alt, className }: ImgProps) => {
       width={1500}
       height={1500}
       loader={imageLoader}
+      priority={priority}
     />
   )
 }
