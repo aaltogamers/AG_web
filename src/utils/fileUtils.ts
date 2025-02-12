@@ -18,8 +18,8 @@ export const getFolder = (folder: string) => {
   return values
 }
 
-export const getFile = (fileName: string) => {
-  const file = fs.readFileSync(`./src/content/${fileName}.md`, 'utf8')
+export const getFile = (fileName: string, folder: string = './src/content/') => {
+  const file = fs.readFileSync(`${folder}${fileName}.md`, 'utf8')
   const matterData = matter(file)
   const fields = matterData.data
   const { content } = matterData

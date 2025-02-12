@@ -13,7 +13,7 @@ type Props = {
 
 const Links = async ({ params }: Props) => {
   const pid = (await params).pid
-  const { redirects } = getFile('redirects') as unknown as { redirects: Redirect[] }
+  const { redirects } = getFile('redirects', './public/') as unknown as { redirects: Redirect[] }
   const redirectItem = redirects.find((r) => r.slug === pid)
 
   if (redirectItem) {
@@ -30,6 +30,6 @@ const Links = async ({ params }: Props) => {
 export default Links
 
 export async function generateStaticParams() {
-  const { redirects } = getFile('redirects') as unknown as { redirects: Redirect[] }
+  const { redirects } = getFile('redirects', './public/') as unknown as { redirects: Redirect[] }
   return redirects.map((item) => ({ slug: `/link/${item.slug}` }))
 }
