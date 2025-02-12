@@ -10,10 +10,10 @@ type ImgProps = {
   priority?: boolean
 }
 
-const imageLoader = ({ src }: ImageLoaderProps) => {
-  const withRighFileEnding =
+const imageLoader = ({ src, width }: ImageLoaderProps) => {
+  const withRightFileEnding =
     process.env.NODE_ENV === 'development' ? src : src.replace(/\.(jpe?g|png)$/i, '.webp')
-  return withRighFileEnding
+  return `${withRightFileEnding}?w=${width}`
 }
 
 const AGImage = ({ src, alt, className, priority }: ImgProps) => {
@@ -22,10 +22,10 @@ const AGImage = ({ src, alt, className, priority }: ImgProps) => {
       src={src}
       alt={alt}
       className={className}
-      width={1500}
-      height={1500}
       loader={imageLoader}
       priority={priority}
+      width={1500}
+      height={1500}
     />
   )
 }
