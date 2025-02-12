@@ -18,7 +18,4 @@ redirects:
   - name: AG Twitch
     slug: twitch
     url: https://www.twitch.tv/aaltogamers
-  - name: Test
-    slug: test
-    url: https://decapcms.org/docs/widgets/#string
 ---
