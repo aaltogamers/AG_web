@@ -14,11 +14,21 @@ const passwordForm = (text: string) => `
   </head>
   <body>
   <h1>Enter password for AG content management system</h1>
-  <form method="post" style="display: flex; flex-direction: column; gap: 0.5rem;">
+  <form method="post" style="display: flex; flex-direction: column; gap: 0.5rem;" onsubmit="submitHandler()">
     <input type="password" name="password" style="width: 300px;"/>
     <span style="color: red;">${text ? text : ''}</span>
     <button type="submit" style="width: 100px;">Submit</button>
   </form>
+  <script>
+      if(localStorage.getItem('cmsPassword')  && ${text ? 'false' : 'true'}) {
+        document.querySelector('input').value = localStorage.getItem('cmsPassword');
+        document.querySelector('button').click();
+      }
+
+      submitHandler = () => {
+        localStorage.setItem('cmsPassword', document.querySelector('input').value);
+      }
+  </script>
   </body>
   </html>
 `
