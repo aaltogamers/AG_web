@@ -13,7 +13,7 @@ const DesktopNavBar = ({ links }: DesktopProps) => (
     <Link href="/" className="flex w-60">
       <AGImage src="/images/navbar/ag-banner.png" alt="AG" priority />
     </Link>
-    <div className="flex justify-end w-full text-center items-center">
+    <div className="flex justify-end w-full text-center items-center mr-4">
       {links.map(({ name, link }) => (
         <Link href={link} key={name} className="px-4 h-fit">
           {name}

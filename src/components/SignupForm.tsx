@@ -20,6 +20,7 @@ import Input from './Input'
 import ParticipantTable from './ParticipantTable'
 import { FaCircleNotch } from 'react-icons/fa'
 import { firebaseConfig } from '../utils/db'
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 
 type Props = {
   eventName: string
@@ -28,6 +29,7 @@ type Props = {
 const SignUp = ({ eventName }: Props) => {
   const app = initializeApp(firebaseConfig)
   const db = getFirestore(app)
+  const auth = getAuth(app)
   const [signupData, setSignupData] = useState<SignUpData | null>(null)
   const [hasPossibleSignUp, setHasPossibleSignUp] = useState<boolean>(true)
   const [participants, setParticipants] = useState<Data[]>([])
@@ -98,10 +100,13 @@ const SignUp = ({ eventName }: Props) => {
   }
 
   useEffect(() => {
-    const inner = async () => {
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        await signInWithEmailAndPassword(auth, 'guest@aaltogamers.fi', 'aaltogamerpassword')
+      }
       await getSignUpData()
       await getParticipantData()
-    }
+    })
 
     const getSignUpData = async () => {
       const q = query(collection(db, 'events'), where('name', '==', eventName))
@@ -114,7 +119,6 @@ const SignUp = ({ eventName }: Props) => {
         setHasPossibleSignUp(false)
       }
     }
-    inner()
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
