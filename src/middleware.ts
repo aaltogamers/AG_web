@@ -24,7 +24,7 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  const isDev = urlObj.hostname !== 'aaltogamers.fi'
+  const isDev = urlObj.hostname.includes('localhost') || urlObj.hostname.includes('0.0')
   const timeNow = Date.now()
   const secondsSinceLastAuth = (timeNow - lastAuthTime) / 1000
 
