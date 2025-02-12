@@ -1,4 +1,4 @@
-import { NextApiRequest } from 'next'
+import { NextRequest, NextResponse } from 'next/server'
 
 let authData: {
   kind: string
@@ -12,13 +12,18 @@ let authData: {
 } | null = null
 let lastAuthTime = 0
 
-export default async function middleware(req: NextApiRequest) {
+export default async function middleware(req: NextRequest) {
   const url = req.url || ''
   const urlObj = new URL(url)
   let path = urlObj.pathname
   urlObj.searchParams.forEach((value, key) => {
     path += `?${key}=${value}`
   })
+
+  if (req.headers.get('purpose') === 'prefetch' || req.headers.get('next-url')) {
+    return NextResponse.next()
+  }
+
   const isDev = urlObj.hostname !== 'aaltogamers.fi'
   const timeNow = Date.now()
   const secondsSinceLastAuth = (timeNow - lastAuthTime) / 1000
@@ -68,6 +73,8 @@ export default async function middleware(req: NextApiRequest) {
       console.error(e)
     }
   }
+
+  return NextResponse.next()
 }
 
 export const config = {
