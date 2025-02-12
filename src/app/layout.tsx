@@ -1,22 +1,9 @@
 import Head from 'next/head'
-//import type { Metadata } from 'next'
-
 import Layout from '../components/Layout'
 import '../styles/globals.css'
 import { Metadata } from 'next'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  /*
-  const LayoutToUse =
-    pathname &&
-    (pathname.startsWith('/cms') ||
-      pathname.startsWith('/admin') ||
-      pathname.startsWith('/bet') ||
-      pathname.startsWith('/mapban'))
-      ? React.Fragment
-      : Layout
-    */
-
   return (
     <html lang="en" className="h-full">
       <Head>

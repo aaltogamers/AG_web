@@ -1,22 +1,24 @@
-import BoardMember from '../../components/BoardMember'
-import Header from '../../components/Header'
-import Markdown from '../../components/Markdown'
-import PageWrapper from '../../components/PageWrapper'
-import { AGBoardMember } from '../../types/types'
-import { getFolder, getFile } from '../../utils/fileUtils'
-import { Metadata } from 'next'
+import Head from 'next/head'
+import BoardMember from '../components/BoardMember'
+import Header from '../components/Header'
+import Markdown from '../components/Markdown'
+import PageWrapper from '../components/PageWrapper'
+import { AGBoardMember } from '../types/types'
+import { getFolder, getFile } from '../utils/fileUtils'
 
-const About = () => {
-  const boardMembers = getFolder('boardmembers') as unknown as AGBoardMember[]
+interface Props {
+  title: string
+  content: string
+  boardTitle: string
+  boardMembers: AGBoardMember[]
+}
 
-  const { title, content, boardTitle } = getFile('about') as {
-    title: string
-    content: string
-    boardTitle: string
-  }
-
+const About = ({ title, content, boardMembers, boardTitle }: Props) => {
   return (
     <PageWrapper>
+      <Head>
+        <title>About - Aalto Gamers</title>
+      </Head>
       <div className="flex justify-center">
         <div className="flex flex-col items-center text-center md:w-3/4">
           <Header>{title}</Header>
@@ -39,6 +41,6 @@ const About = () => {
 
 export default About
 
-export const metadata: Metadata = {
-  title: 'About - Aalto Gamers',
-}
+export const getStaticProps = () => ({
+  props: { boardMembers: getFolder('boardmembers'), ...getFile('about') },
+})
