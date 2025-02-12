@@ -1,5 +1,4 @@
 import { NextApiRequest } from 'next'
-import { v4 as uuidv4 } from 'uuid'
 
 let authData: {
   kind: string
@@ -20,7 +19,7 @@ export default async function middleware(req: NextApiRequest) {
   urlObj.searchParams.forEach((value, key) => {
     path += `?${key}=${value}`
   })
-  const isDev = url.includes('localhost')
+  const isDev = urlObj.hostname !== 'aaltogamers.fi'
   const timeNow = Date.now()
   const secondsSinceLastAuth = (timeNow - lastAuthTime) / 1000
 
@@ -46,7 +45,8 @@ export default async function middleware(req: NextApiRequest) {
   }
 
   if (authData?.idToken) {
-    const newId = uuidv4()
+    const newId: string =
+      new Date().getTime().toString() + Math.random().toString(36).substring(4).toString()
     try {
       await fetch(
         `https://firestore.googleapis.com/v1/projects/ag-web-ab4d9/databases/(default)/documents/analytics/${newId}`,
