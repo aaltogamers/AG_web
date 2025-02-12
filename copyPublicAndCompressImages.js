@@ -16,17 +16,19 @@ const copyAndCompressFolder = (folder, sourceRoot, endRoot) => {
       copyAndCompressFolder(`${folder}/${dirent.name}`, sourceRoot, endRoot)
     } else {
       const shouldCompress = folder !== 'patches'
-      if (!shouldCompress) {
+
+      if (shouldCompress) {
+        const endPathWithFileEnding = endPath.replace(/\.(jpe?g|png)$/i, '.webp')
+        sharp(sourcePath)
+          .rotate()
+          .webp({ quality: 80 })
+          .toFile(endPathWithFileEnding)
+          .catch((err) => {
+            console.error('Error compressing image', sourcePath, err)
+          })
+      } else {
         fs.cpSync(sourcePath, endPath)
-        return
       }
-      sharp(sourcePath)
-        .rotate()
-        .webp({ quality: 80 })
-        .toFile(endPath)
-        .catch((err) => {
-          console.error('Error compressing image', sourcePath, err)
-        })
     }
   })
 }

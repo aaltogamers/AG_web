@@ -12,7 +12,7 @@ type ImgProps = {
 const imageLoader = ({ src }: ImageLoaderProps) => {
   const withRighFileEnding =
     process.env.NODE_ENV === 'development' ? src : src.replace(/\.(jpe?g|png)$/i, '.webp')
-  return `${withRighFileEnding}`
+  return withRighFileEnding
 }
 
 const AGImage = ({ src, alt, className }: ImgProps) => {
