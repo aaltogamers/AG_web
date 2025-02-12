@@ -1,5 +1,5 @@
-/* eslint-disable @next/next/no-img-element */
 import React from 'react'
+import AGImage from './AGImage'
 
 const Banner = () => (
   <section>
@@ -14,10 +14,10 @@ const Banner = () => (
             The games are only the channel to find those people.
           </h4>
         </div>
-        <img
+        <AGImage
           src="/images/ag-white.png"
           alt="intro"
-          className="object-cover h-32 md:h-40 mt-8 md:mt-4"
+          className="h-32 md:h-40 mt-8 md:mt-4 object-contain w-fit"
         />
       </header>
     </div>

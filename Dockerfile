@@ -36,6 +36,10 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
+RUN node copyPublicAndCompressImages.js public public-compressed
+RUN rm -rf public
+RUN mv public-compressed public
+
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app

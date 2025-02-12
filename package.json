@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "next",
-    "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
-    "build-win": "next build && xcopy .next\\static .next\\standalone\\.next\\static\\ /E /Y && xcopy public .next\\standalone\\public\\ /E /Y",
+    "build": "next build && cp -r .next/static .next/standalone/.next/ && node copyPublicAndCompressImages.js",
+    "build-win": "next build && xcopy .next\\static .next\\standalone\\.next\\static\\ /E /Y && node copyPublicAndCompressImages.js",
     "start": "node .next/standalone/server.js",
     "lint": "next lint"
   },
@@ -40,6 +40,7 @@
     "@types/react": "^19.0.8",
     "@types/react-scroll": "^1.8.10",
     "@types/tiny-json-http": "^7.3.4",
+    "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.19.0",
     "eslint-config-next": "^15.1.6",
