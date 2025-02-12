@@ -164,3 +164,24 @@ collections:
           min: 1,
           hint: 'The order in which the albums are displayed. Smallest first.',
         }
+  - label: 'Redirect Links'
+    name: 'links'
+    files:
+      - label: 'Redirect links'
+        name: 'links'
+        file: 'public/redirects.md'
+        fields:
+          - label: 'Redirect links'
+            label_singular: 'Redirect link'
+            name: 'redirects'
+            widget: 'list'
+            allow_add: true
+            fields:
+              - { label: 'Name', name: 'name', widget: 'string', placeholder: 'AG Twitch' }
+              - {
+                  label: 'Path',
+                  name: 'slug',
+                  widget: 'string',
+                  hint: 'The end of the url on the AG website, e.g. aaltogamers.fi/link/*this*',
+                }
+              - { label: 'URL', name: 'url', widget: 'string' }
