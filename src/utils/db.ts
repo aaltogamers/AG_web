@@ -13,7 +13,14 @@ import {
   doc,
 } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
-import { MapBanInfo, MapBanOrPick, Poll, Vote } from '../types/types'
+import {
+  CS_ACTIVE_DUTY_MAPS,
+  MapBanInfo,
+  MapBanOrPick,
+  Poll,
+  VALORANT_ACTIVE_DUTY_MAPS,
+  Vote,
+} from '../types/types'
 
 export const getParticipants = async (db: Firestore, eventName: string) => {
   const q = query(collection(db, 'signups'), where('event', '==', eventName))
@@ -131,7 +138,13 @@ export const useMapBanStatus = (app: FirebaseApp) => {
     }
     inner()
   }, [])
-  return { mapBans, mapBanInfo }
+
+  const maps =
+    mapBanInfo?.game === 'Valorant' ? [...VALORANT_ACTIVE_DUTY_MAPS] : [...CS_ACTIVE_DUTY_MAPS]
+
+  console.log(maps)
+
+  return { mapBans, mapBanInfo, maps }
 }
 
 export const getVotesForPoll = async (db: Firestore, pollId: string) => {

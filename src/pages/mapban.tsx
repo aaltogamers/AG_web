@@ -7,7 +7,7 @@ import MapBans from '../components/MapBans'
 
 const MapBan = () => {
   const app = initializeApp(firebaseConfig)
-  const { mapBanInfo, mapBans } = useMapBanStatus(app)
+  const { mapBanInfo, mapBans, maps } = useMapBanStatus(app)
 
   useEffect(() => {
     makeBackgroundInvisible()
@@ -19,7 +19,7 @@ const MapBan = () => {
         <title>Map Bans - Aalto Gamers</title>
       </Head>
       <main className="flex flex-col justify-end h-[100vh]">
-        <MapBans mapBanInfo={mapBanInfo} mapBans={mapBans} showAll={false} />
+        <MapBans mapBanInfo={mapBanInfo} mapBans={mapBans} maps={maps} showAll={false} />
       </main>
     </>
   )

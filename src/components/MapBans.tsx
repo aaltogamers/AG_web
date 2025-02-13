@@ -1,27 +1,30 @@
 import { useEffect, useState } from 'react'
-import { CS_ACTIVE_DUTY_MAPS, MapBanInfo, MapBanOrPick, MapName } from '../types/types'
+import { MapBanInfo, MapBanOrPick, MapName } from '../types/types'
 import AGImage from './AGImage'
 
 type Props = {
   mapBanInfo: MapBanInfo | null
   mapBans: MapBanOrPick[]
   showAll?: boolean
+  maps: MapName[]
 }
 
-const MapBans = ({ mapBanInfo, mapBans, showAll = true }: Props) => {
-  const [maps, setMaps] = useState<MapName[]>([...CS_ACTIVE_DUTY_MAPS])
+const MapBans = ({ mapBanInfo, mapBans, maps, showAll = true }: Props) => {
+  const [visibleMaps, setVisibleMaps] = useState<MapName[]>([])
 
   useEffect(() => {
-    if (!showAll) {
+    if (showAll) {
+      setVisibleMaps(maps)
+    } else {
       const bannedMaps = mapBans.sort((a, b) => a.index - b.index).map((mapBan) => mapBan.map)
-      const remainingMaps = CS_ACTIVE_DUTY_MAPS.filter((map) => !bannedMaps.includes(map))
-      setMaps([...bannedMaps, ...remainingMaps])
+      const remainingMaps = maps.filter((map) => !bannedMaps.includes(map))
+      setVisibleMaps([...bannedMaps, ...remainingMaps])
     }
-  }, [mapBans, showAll, mapBanInfo])
+  }, [mapBans, showAll, mapBanInfo, maps])
 
   return (
     <div className="text-black flex flex-row text-4xl gap-14 justify-center mx-14 basis-1 flex-1 flex-grow-0 font-blockletter">
-      {maps.map((mapName) => {
+      {visibleMaps.map((mapName) => {
         const mapBan = mapBans.find((mapBan) => mapBan.map === mapName)
         const textColor = mapBan?.type === 'ban' ? 'red' : 'green-700'
         const teamWhoBanned = mapBan?.team === 'team1' ? mapBanInfo?.team1 : mapBanInfo?.team2

@@ -2,7 +2,7 @@ import { FirebaseApp } from 'firebase/app'
 import { getFirestore, doc, updateDoc, deleteDoc, addDoc, collection } from 'firebase/firestore'
 import { useEffect } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { CS_ACTIVE_DUTY_MAPS, MapBanOrPick, MapName } from '../types/types'
+import { Game, MapBanOrPick, MapName } from '../types/types'
 import { useMapBanStatus } from '../utils/db'
 import Input from './Input'
 import MapBans from './MapBans'
@@ -12,7 +12,7 @@ type Props = {
 
 const MapBanMangement = ({ app }: Props) => {
   const db = getFirestore(app)
-  const { mapBans, mapBanInfo } = useMapBanStatus(app)
+  const { mapBans, mapBanInfo, maps } = useMapBanStatus(app)
 
   const { register, handleSubmit, control, setValue } = useForm()
 
@@ -45,7 +45,7 @@ const MapBanMangement = ({ app }: Props) => {
       const isLastBan = mapBans.length === 5
       if (isLastBan) {
         const mapBansWithNewBan = [...mapBans, newContent]
-        const remainingMap = CS_ACTIVE_DUTY_MAPS.filter(
+        const remainingMap = maps.filter(
           (map) => !mapBansWithNewBan.map((mapBan) => mapBan.map).includes(map)
         )
         const remainingMapName = remainingMap[0]
@@ -66,12 +66,28 @@ const MapBanMangement = ({ app }: Props) => {
     }
   }
 
-  const resetBans = async () => {
+  const handleResetBans = async () => {
     const shouldReset = confirm(`Are you sure you want to reset all bans?`)
     if (shouldReset) {
-      for await (const mapBan of mapBans) {
-        await deleteDoc(doc(db, 'mapbans', mapBan.id))
-      }
+      resetBands()
+    }
+  }
+
+  const resetBands = async () => {
+    for await (const mapBan of mapBans) {
+      await deleteDoc(doc(db, 'mapbans', mapBan.id))
+    }
+  }
+
+  const switchGame = async () => {
+    const currentGame = mapBanInfo?.game
+    const otherGame: Game = currentGame === 'CS 2' ? 'Valorant' : 'CS 2'
+    const shouldChange = confirm(`Are you sure you want to switch the game switch to ${otherGame}?`)
+    if (shouldChange) {
+      await resetBands()
+      await updateDoc(doc(db, 'mapbaninfo', 'mapbaninfo'), {
+        game: otherGame,
+      })
     }
   }
 
@@ -82,6 +98,7 @@ const MapBanMangement = ({ app }: Props) => {
 
   return (
     <main className="flex flex-col">
+      <h3 className="text-center">Current game is {mapBanInfo?.game}</h3>
       <div className="flex flex-row justify-between m-16">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-row gap-16">
           <div className="w-80">
@@ -107,16 +124,19 @@ const MapBanMangement = ({ app }: Props) => {
               control={control}
             />
           </div>
-          <button type="submit" className="mainbutton ml-4 h-16 mt-4">
+          <button type="submit" className="mainbutton ml-4 h-16 mt-7">
             Update team names
           </button>
         </form>
-        <button className="mainbutton ml-16 h-16 mt-4" onClick={resetBans}>
+        <button className="mainbutton h-16 mt-7" onClick={switchGame}>
+          Switch game
+        </button>
+        <button className="mainbutton h-16 mt-7" onClick={handleResetBans}>
           Reset all bans
         </button>
       </div>
       <div className="text-white flex flex-row text-4xl gap-14 justify-center mx-14">
-        {CS_ACTIVE_DUTY_MAPS.map((mapName) => {
+        {maps.map((mapName) => {
           return (
             <div
               className="flex  flex-col w-full text-center mb-8 text-[1.2rem] gap-4"
@@ -153,7 +173,7 @@ const MapBanMangement = ({ app }: Props) => {
           )
         })}
       </div>
-      <MapBans mapBanInfo={mapBanInfo} mapBans={mapBans} />
+      <MapBans mapBanInfo={mapBanInfo} mapBans={mapBans} maps={maps} />
     </main>
   )
 }

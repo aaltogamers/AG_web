@@ -115,7 +115,20 @@ export const CS_ACTIVE_DUTY_MAPS = [
   'Vertigo',
 ] as const
 
-export type MapName = (typeof CS_ACTIVE_DUTY_MAPS)[number]
+export const VALORANT_ACTIVE_DUTY_MAPS = [
+  'Abyss',
+  'Bind',
+  'Haven',
+  'Fracture',
+  'Lotus',
+  'Pearl',
+  'Split',
+] as const
+
+export const GAMES = ['CS 2', 'Valorant'] as const
+export type Game = (typeof GAMES)[number]
+
+export type MapName = (typeof CS_ACTIVE_DUTY_MAPS | typeof VALORANT_ACTIVE_DUTY_MAPS)[number]
 
 export type MapBanOrPick = {
   id: string
@@ -128,6 +141,7 @@ export type MapBanOrPick = {
 export type MapBanInfo = {
   team1: string
   team2: string
+  game: string
 }
 
 export type HeaderLink = {
