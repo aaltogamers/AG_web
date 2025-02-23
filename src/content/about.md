@@ -1,6 +1,6 @@
 ---
 title: About us
-boardTitle: Aalto Gamers Board of 2024
+boardTitle: Aalto Gamers Board of 2025
 ---
 ## Aalto Gamers ry
 
