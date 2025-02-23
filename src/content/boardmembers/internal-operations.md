@@ -1,8 +1,8 @@
 ---
-name: Juho Arjanne
+name: Kaisa Koivunen
 title: Head of Internal Operations
-status: Aalto University School of Electrical Engineering
-game: Counter Strike 2
+status: Aalto University School of Chemical Engineering
+game: Beat Saber
 orderNumber: 5
-image: /images/juho_2024.jpg
+image: /images/_dsf3121_kaisa.jpg
 ---
