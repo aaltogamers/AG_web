@@ -24,6 +24,4 @@ tldr: |-
 
    [HERE](https://forms.gle/z8JUiocLzrnVuvet9)
 ---
-⚔️ 8.3 at 14:00 - Minecraft Hunger Games Tournament!
-
-Fight your way to victory in the Hunger Games - only one can survive! 🏆🔥
+More info soon on our socials!
