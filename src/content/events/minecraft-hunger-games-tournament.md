@@ -1,7 +1,7 @@
 ---
 name: Minecraft Hunger Games Tournament
 time: 08.03.2025
-image: /images/minecraft_march.jpg
+image: /images/minecraft_hungergames.jpg
 description: |-
   ⚔️ 8.3 at 14:00 - Minecraft Hunger Games Tournament!
 
