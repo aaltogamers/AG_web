@@ -13,12 +13,11 @@ tldr: |-
 
   ### WHERE?
 
-
-  Fight your way to victory in the Hunger Games - only one can survive! 🏆🔥
+  Online, [Aalto Gamers Discord](https://discord.gg/hwcsUxJ6pX)
 
   ### WHY?
 
-   To Win XX, to have fun with friends, etc.
+  Fight your way to victory in the Hunger Games - only one can survive! 🏆🔥
 
   ### SIGN-UP
 
