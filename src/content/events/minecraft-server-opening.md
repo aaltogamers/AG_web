@@ -20,9 +20,14 @@ tldr: >-
 
    A brand-new world awaits! Come test your skills and prove your speedrun mastery (But not the usual way 😉), or chill and explore at your own pace, you decide! 🏡✨
 
-  ### Whitelist 
+  ### Whitelist
 
-   [SIGN UP HERE](https://forms.gle/V2QU71JJxipo13di7)
+   [SIGN UP HERE](<>)
+
+  ### Address
+
+
+  [mc.aaltogamers.fi](mc.aaltogamers.fi)
 ---
 **⛏️ AG Minecraft March ⛏️**
 
