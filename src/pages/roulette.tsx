@@ -14,32 +14,32 @@ type Patch = {
 const patches: Patch[] = [
   {
     game: 'Among Us',
-    image: 'Among Us.png',
+    image: 'Among Us.webp',
     tarot: 'Death',
   },
   {
     game: 'Mario Kart',
-    image: 'Mario.png',
+    image: 'Mario.webp',
     tarot: 'The Chariot',
   },
   {
     game: 'Minecraft',
-    image: 'Minecraft.png',
+    image: 'Minecraft.webp',
     tarot: 'The World',
   },
   {
     game: 'Pokémon',
-    image: 'Pokemon.png',
+    image: 'Pokemon.webp',
     tarot: 'The Fool',
   },
   {
     game: 'League of Legends',
-    image: 'Teemo.png',
+    image: 'Teemo.webp',
     tarot: 'The Devil',
   },
   {
     game: 'The Legend of Zelda',
-    image: 'Zelda.png',
+    image: 'Zelda.webp',
     tarot: 'High Priestess',
   },
 ]
@@ -169,7 +169,7 @@ const Roulette = () => {
         <canvas ref={canvasRef} width={windowSize.width} height={windowSize.height} />
         {patches.map(({ game, image }) => (
           <img
-            src={`/images/patches/${image.replace('.png', '.webp')}`}
+            src={`/images/patches/${image}`}
             alt={game}
             key={game}
             className="hidden"
