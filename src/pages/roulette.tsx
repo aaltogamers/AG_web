@@ -169,7 +169,7 @@ const Roulette = () => {
         <canvas ref={canvasRef} width={windowSize.width} height={windowSize.height} />
         {patches.map(({ game, image }) => (
           <img
-            src={`/images/patches/${image}`}
+            src={`/images/patches/${image.replace('.png', '.webp')}`}
             alt={game}
             key={game}
             className="hidden"
