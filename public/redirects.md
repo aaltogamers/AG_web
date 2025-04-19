@@ -18,4 +18,10 @@ redirects:
   - name: AG Twitch
     slug: twitch
     url: https://www.twitch.tv/aaltogamers
+  - name: LoL OSM Tickets
+    slug: osmtickets
+    url: https://kide.app/events/bebd5407-6832-4493-9068-c1066d0da262
+  - name: LoL OSM signup
+    slug: https://forms.gle/kUEEqGchkA1JepYd6
+    url: osmsignup
 ---
