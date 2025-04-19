@@ -22,6 +22,6 @@ redirects:
     slug: osmtickets
     url: https://kide.app/events/bebd5407-6832-4493-9068-c1066d0da262
   - name: LoL OSM signup
-    slug: https://forms.gle/kUEEqGchkA1JepYd6
-    url: osmsignup
+    slug: osmsignup
+    url: https://forms.gle/kUEEqGchkA1JepYd6
 ---
