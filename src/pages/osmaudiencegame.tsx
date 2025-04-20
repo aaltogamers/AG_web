@@ -22,7 +22,7 @@ const OSMAudienceGame = () => {
   const phaserRef = useRef<IRefPhaserGame | null>(null)
   const currentScene = (scene: Phaser.Scene) => {}
 
-  if (!loaded) return null
+  if (!loaded && myPlayer()?.getProfile() === undefined) return null
 
   return (
     <div

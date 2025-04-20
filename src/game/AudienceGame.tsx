@@ -4,19 +4,18 @@ import { Preloader } from './scenes/Preloader'
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react'
 import { EventBus } from './EventBus'
 import { MainMenu } from './scenes/MainMenu'
-import { gravity } from 'sharp'
 
 const StartGame = () => {
   const config = {
     type: Phaser.AUTO,
-    width: 400,
-    height: 600,
+    width: 1280,
+    height: 720,
     parent: 'game-container',
     scene: [Boot, Preloader, MainMenu],
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { x: 0, y: 700 },
+        gravity: { x: 0, y: 0 },
       },
     },
   }

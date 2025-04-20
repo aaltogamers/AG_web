@@ -1,10 +1,13 @@
 import { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
-import { getState, isHost, Joystick, myPlayer, onPlayerJoin, PlayerState } from 'playroomkit'
-import nipplejs from 'nipplejs'
-import { useEffect } from 'react'
+import { isHost, Joystick, myPlayer, onPlayerJoin, PlayerState } from 'playroomkit'
 
-const currentLetter = getState('letter')
+const radToXY = (rad: number) => {
+  return {
+    x: Math.sin(rad),
+    y: Math.cos(rad),
+  }
+}
 
 export class MainMenu extends Scene {
   controls = {}
@@ -16,7 +19,7 @@ export class MainMenu extends Scene {
   create() {
     onPlayerJoin((playerState) => {
       const joystick = new Joystick(playerState, {
-        type: 'dpad',
+        type: 'angular',
         buttons: [
           {
             id: 'jump',
@@ -26,14 +29,21 @@ export class MainMenu extends Scene {
       })
       this.addPlayer(playerState, joystick)
     })
-    this.add.image(350, 540, 'background')
+    this.add.image(640, 500, 'background')
     EventBus.emit('current-scene-ready', this)
   }
 
   addPlayer(playerState: PlayerState, joystick: Joystick) {
-    const sprite = this.add.rectangle(this.players.length, 0, 20, 20, 0)
+    const sprite = this.add.rectangle(
+      this.players.length,
+      0,
+      20,
+      20,
+      playerState.getProfile().color.hex
+    )
     this.physics.add.existing(sprite, false)
-    sprite.body.setCollideWorldBounds(true)
+    const body = sprite.body as Phaser.Physics.Arcade.Body
+    body.setCollideWorldBounds(true)
     this.physics.add.collider(
       sprite,
       this.players.map((a) => a.sprite)
@@ -50,22 +60,24 @@ export class MainMenu extends Scene {
     })
   }
   update() {
-    // 3. Pass your game state to Playroom.
     if (isHost()) {
       for (const player of this.players) {
         const controls = player.joystick
-        const body = player.sprite.body
-        if (controls.dpad().x == 'left') {
-          body.setVelocityX(-160)
-        } else if (controls.dpad().x == 'right') {
-          body.setVelocityX(160)
+        const body = player.sprite.body as Phaser.Physics.Arcade.Body
+        const { y, x } = radToXY(controls.angle())
+
+        if (controls.isJoystickPressed()) {
+          body.setVelocityX(Math.round(160 * x))
         } else {
           body.setVelocityX(0)
         }
 
-        if (controls.isPressed('jump') && player.sprite.body.onFloor()) {
-          body.setVelocityY(-330)
+        if (controls.isJoystickPressed()) {
+          body.setVelocityY(Math.round(160 * y))
+        } else {
+          body.setVelocityY(0)
         }
+
         player.state.setState('pos', {
           x: body.x,
           y: body.y,
@@ -74,9 +86,11 @@ export class MainMenu extends Scene {
     } else {
       for (const player of this.players) {
         const pos = player.state.getState('pos')
+        const body = player.sprite.body as Phaser.Physics.Arcade.Body
+
         if (pos) {
-          player.sprite.body.x = pos.x
-          player.sprite.body.y = pos.y
+          body.x = pos.x
+          body.y = pos.y
         }
       }
     }
