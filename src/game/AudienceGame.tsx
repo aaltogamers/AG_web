@@ -1,0 +1,83 @@
+import Phaser from 'phaser'
+import { Boot } from './scenes/Boot'
+import { Preloader } from './scenes/Preloader'
+import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react'
+import { EventBus } from './EventBus'
+import { MainMenu } from './scenes/MainMenu'
+import { gravity } from 'sharp'
+
+const StartGame = () => {
+  const config = {
+    type: Phaser.AUTO,
+    width: 400,
+    height: 600,
+    parent: 'game-container',
+    scene: [Boot, Preloader, MainMenu],
+    physics: {
+      default: 'arcade',
+      arcade: {
+        gravity: { x: 0, y: 700 },
+      },
+    },
+  }
+  return new Phaser.Game(config)
+}
+
+export interface IRefPhaserGame {
+  game: Phaser.Game | null
+  scene: Phaser.Scene | null
+}
+
+interface IProps {
+  currentActiveScene?: (scene_instance: Phaser.Scene) => void
+}
+
+const AudienceGame = forwardRef<IRefPhaserGame, IProps>(function AudienceGame(
+  { currentActiveScene },
+  ref
+) {
+  const game = useRef<Phaser.Game | null>(null!)
+
+  useLayoutEffect(() => {
+    if (game.current === null) {
+      game.current = StartGame()
+    }
+    if (typeof ref === 'function') {
+      ref({ game: game.current, scene: null })
+    } else if (ref) {
+      ref.current = { game: game.current, scene: null }
+    }
+    return () => {
+      if (game.current) {
+        game.current.destroy(true)
+        if (game.current !== null) {
+          game.current = null
+        }
+      }
+    }
+  }, [ref])
+
+  useEffect(() => {
+    EventBus.on(
+      'current-scene-ready',
+      (scene_instance: Phaser.Scene) => {
+        if (currentActiveScene && typeof currentActiveScene === 'function') {
+          currentActiveScene(scene_instance)
+        }
+        if (typeof ref === 'function') {
+          ref({ game: game.current, scene: scene_instance })
+        } else if (ref) {
+          ref.current = { game: game.current, scene: scene_instance }
+        }
+        return () => {
+          EventBus.removeListener('current-scene-ready')
+        }
+      },
+      [currentActiveScene, ref]
+    )
+  })
+
+  return <div id="game-container" className="game-container"></div>
+})
+
+export default AudienceGame

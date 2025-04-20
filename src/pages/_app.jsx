@@ -11,7 +11,8 @@ const App = ({ Component, pageProps }) => {
     router.asPath.startsWith('/admin') ||
     router.asPath.startsWith('/bet') ||
     router.asPath.startsWith('/mapban') ||
-    router.asPath.startsWith('/roulette')
+    router.asPath.startsWith('/roulette') ||
+    router.asPath.startsWith('/osmaudiencegame')
       ? React.Fragment
       : Layout
 
