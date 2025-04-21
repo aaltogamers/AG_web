@@ -1,46 +1,47 @@
 import { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
 import { isHost, Joystick, myPlayer, onPlayerJoin, PlayerState } from 'playroomkit'
+import nipplejs, { JoystickManager } from 'nipplejs'
 
 const radToXY = (rad: number) => {
   return {
-    x: Math.sin(rad),
-    y: Math.cos(rad),
+    x: Math.cos(rad),
+    y: Math.sin(rad),
   }
 }
 
 export class MainMenu extends Scene {
   controls = {}
-  players: { sprite: Phaser.GameObjects.Rectangle; state: PlayerState; joystick: Joystick }[] = []
+  players: {
+    sprite: Phaser.GameObjects.Image
+    state: PlayerState
+    joystick: nipplejs.JoystickManager
+  }[] = []
 
   constructor() {
     super('MainMenu')
   }
   create() {
     onPlayerJoin((playerState) => {
-      const joystick = new Joystick(playerState, {
-        type: 'angular',
-        buttons: [
-          {
-            id: 'jump',
-            label: 'jump',
-          },
-        ],
-      })
       this.addPlayer(playerState, joystick)
     })
-    this.add.image(640, 500, 'background')
+    const joystick = nipplejs.create({})
+
+    joystick.on('move', (_, data) => {
+      const angle = radToXY(data.angle.radian)
+
+      myPlayer().setState('joystick', { ...angle, force: data.force })
+    })
+    joystick.on('end', () => {
+      myPlayer().setState('joystick', { x: 0, y: 0, force: 0 })
+    })
+
+    this.add.image(640, 500, 'background').setScale(0.8)
     EventBus.emit('current-scene-ready', this)
   }
 
-  addPlayer(playerState: PlayerState, joystick: Joystick) {
-    const sprite = this.add.rectangle(
-      this.players.length,
-      0,
-      20,
-      20,
-      playerState.getProfile().color.hex
-    )
+  addPlayer(playerState: PlayerState, joystick: nipplejs.JoystickManager) {
+    const sprite = this.add.image(640, 360, 'player').setScale(0.1)
     this.physics.add.existing(sprite, false)
     const body = sprite.body as Phaser.Physics.Arcade.Body
     body.setCollideWorldBounds(true)
@@ -62,21 +63,10 @@ export class MainMenu extends Scene {
   update() {
     if (isHost()) {
       for (const player of this.players) {
-        const controls = player.joystick
         const body = player.sprite.body as Phaser.Physics.Arcade.Body
-        const { y, x } = radToXY(controls.angle())
 
-        if (controls.isJoystickPressed()) {
-          body.setVelocityX(Math.round(160 * x))
-        } else {
-          body.setVelocityX(0)
-        }
-
-        if (controls.isJoystickPressed()) {
-          body.setVelocityY(Math.round(160 * y))
-        } else {
-          body.setVelocityY(0)
-        }
+        const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
+        body.setVelocity(200 * joystick.x * joystick.force, -200 * joystick.y * joystick.force)
 
         player.state.setState('pos', {
           x: body.x,

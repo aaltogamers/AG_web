@@ -4,8 +4,9 @@ import { Preloader } from './scenes/Preloader'
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react'
 import { EventBus } from './EventBus'
 import { MainMenu } from './scenes/MainMenu'
+import { insertCoin, usePlayersList } from 'playroomkit'
 
-const StartGame = () => {
+const StartGame = async () => {
   const config = {
     type: Phaser.AUTO,
     width: 1280,
@@ -19,7 +20,7 @@ const StartGame = () => {
       },
     },
   }
-  return new Phaser.Game(config)
+  return insertCoin().then(() => new Phaser.Game(config))
 }
 
 export interface IRefPhaserGame {
@@ -39,7 +40,7 @@ const AudienceGame = forwardRef<IRefPhaserGame, IProps>(function AudienceGame(
 
   useLayoutEffect(() => {
     if (game.current === null) {
-      game.current = StartGame()
+      StartGame().then((newGame) => (game.current = newGame))
     }
     if (typeof ref === 'function') {
       ref({ game: game.current, scene: null })
@@ -75,7 +76,6 @@ const AudienceGame = forwardRef<IRefPhaserGame, IProps>(function AudienceGame(
       [currentActiveScene, ref]
     )
   })
-
   return <div id="game-container" className="game-container"></div>
 })
 
