@@ -36,39 +36,24 @@ tldr: |-
 ---
 ***English below:***
 
-
 **⚔️ Todista voimasi! League of Legends OSM 2025 on täällä! ⚔️**
 
-
-
-Osallistu Suomen suurimpaan League of Legends -opiskelijaturnaukseen ja ansaitse osuutesi 1000€ palkintopotista! 🏆
-
+Osallistu Suomen suurimpaan League of Legends -opiskelijaturnaukseen ja ansaitse osuutesi **1000€ palkintopotista**! 🏆
 
 [ILMOITA JOUKKUEESI MUKAAN](<>)
 
-
-
 *🎓Kaikkien joukkueen jäsenten tulee olla korkeakouluopiskelijoita tai vastavalmistuneita (valmistunut 1.1.2024 jälkeen).*
-
 
 🔗 **Lue lisää**: [osm.aaltogamers.fi](<>)
 
-
 🚩🚩🚩
-
-
 
 **⚔️ Prove your strength! League of Legends OSM 2025 is here! ⚔️**
 
-
-Compete in Finland's largest League of Legends student tournament and earn your cut of the 1000€ prize pool! 🏆
-
-
+Compete in Finland's largest League of Legends student tournament and earn your cut of the **1000€ prize pool**! 🏆
 
 [SIGN YOUR TEAM UP HERE](<>)
 
-
 *🎓All team members are required to be university/AMK students or recent graduates (graduated after 1.1.2024).*
-
 
 🔗 **Read more**: [osm.aaltogamers.fi](<>)
