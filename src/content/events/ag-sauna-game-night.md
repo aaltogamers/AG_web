@@ -31,7 +31,7 @@ Grab a towel and head to the *Cave* to play your favorite games and relax in the
 
 **Remember to**:
 
-* Sign up on Monday 24th of May @ 12:00
+* Sign up on Monday 24th of March at @ 12:00
 * Bring Sauna Equipment and cash for refreshments
 * Board Games are also welcome!
 
