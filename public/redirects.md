@@ -24,4 +24,7 @@ redirects:
   - name: LoL OSM signup
     slug: osmsignup
     url: https://forms.gle/kUEEqGchkA1JepYd6
+  - name: Membership form
+    slug: join
+    url: https://forms.gle/HDT4ncn1X6UKMZFt8
 ---
