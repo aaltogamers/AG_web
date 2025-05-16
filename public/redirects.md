@@ -27,4 +27,7 @@ redirects:
   - name: Membership form
     slug: join
     url: https://forms.gle/HDT4ncn1X6UKMZFt8
+  - name: Become an Active
+    url: https://forms.gle/da1Kgy5KE17xRRTM8
+    slug: active
 ---
