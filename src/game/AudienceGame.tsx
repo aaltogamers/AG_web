@@ -4,7 +4,7 @@ import { Preloader } from './scenes/Preloader'
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react'
 import { EventBus } from './EventBus'
 import { MainMenu } from './scenes/MainMenu'
-import { insertCoin, usePlayersList } from 'playroomkit'
+import { insertCoin } from 'playroomkit'
 
 const StartGame = async () => {
   const config = {
@@ -20,7 +20,7 @@ const StartGame = async () => {
       },
     },
   }
-  return insertCoin().then(() => new Phaser.Game(config))
+  return insertCoin({ maxPlayersPerRoom: 20 }).then(() => new Phaser.Game(config))
 }
 
 export interface IRefPhaserGame {
@@ -76,7 +76,14 @@ const AudienceGame = forwardRef<IRefPhaserGame, IProps>(function AudienceGame(
       [currentActiveScene, ref]
     )
   })
-  return <div id="game-container" className="game-container"></div>
+
+  return (
+    <div
+      style={{ width: '100vw', height: '100vh' }}
+      id="game-container"
+      className="game-container"
+    ></div>
+  )
 })
 
 export default AudienceGame

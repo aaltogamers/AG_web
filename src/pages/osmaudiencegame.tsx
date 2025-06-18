@@ -1,6 +1,5 @@
-import { useMultiplayerState, insertCoin, myPlayer } from 'playroomkit'
 import { IRefPhaserGame } from '../game/AudienceGame'
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import dynamic from 'next/dynamic'
 
 const AudienceGame = dynamic(() => import('../game/AudienceGame'), { ssr: false })

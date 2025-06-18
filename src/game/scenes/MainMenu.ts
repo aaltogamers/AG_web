@@ -1,7 +1,7 @@
 import { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
-import { isHost, Joystick, myPlayer, onPlayerJoin, PlayerState } from 'playroomkit'
-import nipplejs, { JoystickManager } from 'nipplejs'
+import { isHost, myPlayer, onPlayerJoin, PlayerState } from 'playroomkit'
+import nipplejs from 'nipplejs'
 
 const radToXY = (rad: number) => {
   return {
@@ -60,25 +60,59 @@ export class MainMenu extends Scene {
       this.players = this.players.filter((p) => p.state !== playerState)
     })
   }
-  update() {
+  update(time: number) {
     if (isHost()) {
+      if (time % 4 == 0) {
+        let vector = new Phaser.Math.Vector2()
+        Phaser.Math.RandomXY(vector)
+        let x, y
+        if (vector.x > vector.y) {
+          x = 0
+          y = Math.abs(vector.y) * 720
+        } else {
+          x = Math.abs(vector.x) * 1280
+          y = 0
+        }
+
+        const rect = this.add.rectangle(x, y, 50, 50, 0)
+        this.physics.add.existing(rect, false)
+        rect.body.setVelocity(vector.x * 100, vector.y * 100)
+
+        this.physics.add.overlap(
+          rect,
+          this.players.map((a) => a.sprite),
+          (_, player) => {
+            player.destroy(true)
+            console.log('touched')
+          }
+        )
+      }
+
       for (const player of this.players) {
-        const body = player.sprite.body as Phaser.Physics.Arcade.Body
+        if (player.sprite.active) {
+          const body = player.sprite.body as Phaser.Physics.Arcade.Body
 
-        const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
-        body.setVelocity(200 * joystick.x * joystick.force, -200 * joystick.y * joystick.force)
+          const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
+          body.setVelocity(200 * joystick.x * joystick.force, -200 * joystick.y * joystick.force)
 
-        player.state.setState('pos', {
-          x: body.x,
-          y: body.y,
-        })
+          player.state.setState('pos', {
+            x: body.x,
+            y: body.y,
+          })
+        } else {
+          player.state.setState('active', false)
+        }
       }
     } else {
       for (const player of this.players) {
+        if (player.state.getState('active') == false) {
+          player.sprite.destroy(true)
+        }
+
         const pos = player.state.getState('pos')
         const body = player.sprite.body as Phaser.Physics.Arcade.Body
 
-        if (pos) {
+        if (pos && body) {
           body.x = pos.x
           body.y = pos.y
         }
