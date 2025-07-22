@@ -2,6 +2,7 @@ import { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
 import { isHost, myPlayer, onPlayerJoin, PlayerState } from 'playroomkit'
 import nipplejs from 'nipplejs'
+import { characterNames } from '../constants'
 
 const radToXY = (rad: number) => {
   return {
@@ -17,31 +18,38 @@ export class MainMenu extends Scene {
     state: PlayerState
     joystick: nipplejs.JoystickManager
   }[] = []
+  alivePlayers: string[] = []
 
   constructor() {
     super('MainMenu')
   }
   create() {
-    onPlayerJoin((playerState) => {
-      this.addPlayer(playerState, joystick)
-    })
     const joystick = nipplejs.create({})
 
     joystick.on('move', (_, data) => {
       const angle = radToXY(data.angle.radian)
-
       myPlayer().setState('joystick', { ...angle, force: data.force })
     })
     joystick.on('end', () => {
       myPlayer().setState('joystick', { x: 0, y: 0, force: 0 })
     })
 
-    this.add.image(640, 500, 'background').setScale(0.8)
+    onPlayerJoin((playerState) => {
+      this.addPlayer(playerState, joystick)
+      console.log(this.players)
+    })
+
+    if (!this.scene.systems.game.device.os.desktop) {
+      this.add.rectangle(640, 460, 1280, 720, 0xd3d3d3)
+    } else {
+      this.add.image(640, 500, 'background').setScale(0.8)
+    }
     EventBus.emit('current-scene-ready', this)
   }
 
   addPlayer(playerState: PlayerState, joystick: nipplejs.JoystickManager) {
-    const sprite = this.add.image(640, 360, 'player').setScale(0.1)
+    let character: string = playerState.getState('character')
+    const sprite = this.add.image(640, 360, character).setScale(0.1)
     this.physics.add.existing(sprite, false)
     const body = sprite.body as Phaser.Physics.Arcade.Body
     body.setCollideWorldBounds(true)
@@ -59,7 +67,9 @@ export class MainMenu extends Scene {
       sprite.destroy()
       this.players = this.players.filter((p) => p.state !== playerState)
     })
+    this.alivePlayers.push(playerState.id)
   }
+
   update(time: number) {
     if (isHost()) {
       if (time % 4 == 0) {
@@ -80,10 +90,9 @@ export class MainMenu extends Scene {
 
         this.physics.add.overlap(
           rect,
-          this.players.map((a) => a.sprite),
+          this.players.map((playerState) => playerState.sprite),
           (_, player) => {
             player.destroy(true)
-            console.log('touched')
           }
         )
       }
@@ -101,7 +110,14 @@ export class MainMenu extends Scene {
           })
         } else {
           player.state.setState('active', false)
+          this.alivePlayers = this.alivePlayers.filter(
+            (alivePlayerID) => alivePlayerID != player.state.id
+          )
         }
+      }
+
+      if (this.alivePlayers.length == 1) {
+        this.add.text(400, 400, this.alivePlayers[0] + ' won')
       }
     } else {
       for (const player of this.players) {

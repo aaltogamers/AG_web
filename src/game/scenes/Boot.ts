@@ -6,7 +6,8 @@ export class Boot extends Scene {
   }
   preload() {
     this.load.image('background', '/images/games/midlane.webp')
-    this.load.image('player', '/images/games/teemo.png')
+    this.load.image('teemo', '/images/games/teemo.png')
+    this.load.image('alistar', '/images/games/alistar.png')
   }
   create() {
     this.scene.start('Preloader')

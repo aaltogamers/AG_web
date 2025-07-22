@@ -11,6 +11,7 @@ const OSMAudienceGame = () => {
   return (
     <div
       style={{
+        width: '100vw',
         display: 'flex',
         justifyContent: 'center',
         flexDirection: 'column',

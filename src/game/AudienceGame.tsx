@@ -20,7 +20,9 @@ const StartGame = async () => {
       },
     },
   }
-  return insertCoin({ maxPlayersPerRoom: 20 }).then(() => new Phaser.Game(config))
+  return insertCoin({ maxPlayersPerRoom: 20, defaultPlayerStates: { ready: false } }).then(
+    () => new Phaser.Game(config)
+  )
 }
 
 export interface IRefPhaserGame {
@@ -77,13 +79,7 @@ const AudienceGame = forwardRef<IRefPhaserGame, IProps>(function AudienceGame(
     )
   })
 
-  return (
-    <div
-      style={{ width: '100vw', height: '100vh' }}
-      id="game-container"
-      className="game-container"
-    ></div>
-  )
+  return <div id="game-container" className="game-container"></div>
 })
 
 export default AudienceGame
