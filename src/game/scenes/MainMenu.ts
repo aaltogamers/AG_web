@@ -1,8 +1,16 @@
 import { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
-import { isHost, myPlayer, onPlayerJoin, PlayerState } from 'playroomkit'
+import {
+  getState,
+  isHost,
+  myPlayer,
+  onPlayerJoin,
+  PlayerState,
+  resetPlayersStates,
+  resetStates,
+  setState,
+} from 'playroomkit'
 import nipplejs from 'nipplejs'
-import { characterNames } from '../constants'
 
 const radToXY = (rad: number) => {
   return {
@@ -12,31 +20,32 @@ const radToXY = (rad: number) => {
 }
 
 export class MainMenu extends Scene {
-  controls = {}
+  joystick: nipplejs.JoystickManager | undefined = undefined
   players: {
     sprite: Phaser.GameObjects.Image
     state: PlayerState
     joystick: nipplejs.JoystickManager
   }[] = []
-  alivePlayers: string[] = []
 
   constructor() {
     super('MainMenu')
   }
-  create() {
-    const joystick = nipplejs.create({})
+  init() {
+    this.joystick = nipplejs.create({})
+    this.players = []
+  }
 
-    joystick.on('move', (_, data) => {
+  create() {
+    this.joystick.on('move', (_, data) => {
       const angle = radToXY(data.angle.radian)
       myPlayer().setState('joystick', { ...angle, force: data.force })
     })
-    joystick.on('end', () => {
+    this.joystick.on('end', () => {
       myPlayer().setState('joystick', { x: 0, y: 0, force: 0 })
     })
 
     onPlayerJoin((playerState) => {
-      this.addPlayer(playerState, joystick)
-      console.log(this.players)
+      this.addPlayer(playerState, this.joystick)
     })
 
     if (!this.scene.systems.game.device.os.desktop) {
@@ -67,10 +76,11 @@ export class MainMenu extends Scene {
       sprite.destroy()
       this.players = this.players.filter((p) => p.state !== playerState)
     })
-    this.alivePlayers.push(playerState.id)
   }
 
   update(time: number) {
+    const alivePlayers: string[] = getState('alivePlayers')
+
     if (isHost()) {
       if (time % 4 == 0) {
         let vector = new Phaser.Math.Vector2()
@@ -88,13 +98,19 @@ export class MainMenu extends Scene {
         this.physics.add.existing(rect, false)
         rect.body.setVelocity(vector.x * 100, vector.y * 100)
 
-        this.physics.add.overlap(
-          rect,
-          this.players.map((playerState) => playerState.sprite),
-          (_, player) => {
-            player.destroy(true)
-          }
-        )
+        this.players.forEach((player) => {
+          this.physics.add.overlap(rect, player.sprite, (_, playerSprite) => {
+            playerSprite.destroy()
+            player.state.setState('active', false)
+            if (player.state.id == myPlayer().id) {
+              this.add.text(500, 500, 'you died')
+            }
+            setState(
+              'alivePlayers',
+              alivePlayers.filter((alivePlayerID) => alivePlayerID != player.state.id)
+            )
+          })
+        })
       }
 
       for (const player of this.players) {
@@ -108,21 +124,16 @@ export class MainMenu extends Scene {
             x: body.x,
             y: body.y,
           })
-        } else {
-          player.state.setState('active', false)
-          this.alivePlayers = this.alivePlayers.filter(
-            (alivePlayerID) => alivePlayerID != player.state.id
-          )
         }
-      }
-
-      if (this.alivePlayers.length == 1) {
-        this.add.text(400, 400, this.alivePlayers[0] + ' won')
       }
     } else {
       for (const player of this.players) {
         if (player.state.getState('active') == false) {
           player.sprite.destroy(true)
+          if (player.state.id == myPlayer().id) {
+            this.joystick?.destroy()
+            this.add.text(500, 500, 'you died')
+          }
         }
 
         const pos = player.state.getState('pos')
@@ -133,6 +144,20 @@ export class MainMenu extends Scene {
           body.y = pos.y
         }
       }
+    }
+
+    if (alivePlayers.length == 1) {
+      this.add.text(400, 400, alivePlayers[0] + ' won')
+      this.time.delayedCall(5000, () => {
+        if (isHost()) {
+          resetPlayersStates()
+          resetStates()
+        }
+        this.joystick?.destroy()
+
+        this.scene.stop('MainMenu')
+        this.scene.start('Preloader')
+      })
     }
   }
 }

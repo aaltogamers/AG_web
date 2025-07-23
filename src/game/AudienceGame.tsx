@@ -20,9 +20,11 @@ const StartGame = async () => {
       },
     },
   }
-  return insertCoin({ maxPlayersPerRoom: 20, defaultPlayerStates: { ready: false } }).then(
-    () => new Phaser.Game(config)
-  )
+  return insertCoin({
+    maxPlayersPerRoom: 20,
+    defaultPlayerStates: { ready: false },
+    defaultStates: { alivePlayers: [] },
+  }).then(() => new Phaser.Game(config))
 }
 
 export interface IRefPhaserGame {

@@ -1,6 +1,6 @@
 import { Scene } from 'phaser'
 import { characterNames } from '../constants'
-import { myPlayer, onPlayerJoin, PlayerState } from 'playroomkit'
+import { getState, isHost, myPlayer, onPlayerJoin, PlayerState, setState } from 'playroomkit'
 
 export class Preloader extends Scene {
   selected: number = 1
@@ -17,6 +17,10 @@ export class Preloader extends Scene {
       if (player.id != myPlayer().id) {
         this.players.push(player)
       }
+      if (isHost()) {
+        const alivePlayers = getState('alivePlayers')
+        setState('alivePlayers', alivePlayers.concat(player.id))
+      }
     })
   }
   create() {
@@ -28,7 +32,6 @@ export class Preloader extends Scene {
         .setInteractive()
       button.on('pointerup', () => {
         this.selected = i
-        console.log(name)
       })
       this.characterButtons.push(button)
     })
