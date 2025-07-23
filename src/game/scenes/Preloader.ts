@@ -24,11 +24,11 @@ export class Preloader extends Scene {
     })
   }
   create() {
-    const nextButton = this.add.rectangle(600, 400, 100, 50, 0).setInteractive()
+    const nextButton = this.add.rectangle(600, 600, 100, 50, 0).setInteractive()
     characterNames.forEach((name, i) => {
       const button = this.add
-        .image(200 * (1 + i), 200, name)
-        .setScale(0.3)
+        .image(200 * (1 + i - 5 * Math.floor(i / 5)), 200 * (1 + Math.floor(i / 5)), name)
+        .setScale(0.25)
         .setInteractive()
       button.on('pointerup', () => {
         this.selected = i
@@ -44,7 +44,10 @@ export class Preloader extends Scene {
   }
 
   update() {
-    this.characterOutline?.setPosition(200 * (1 + this.selected), 200)
+    this.characterOutline?.setPosition(
+      200 * (1 + this.selected - 5 * Math.floor(this.selected / 5)),
+      200 * (1 + Math.floor(this.selected / 5))
+    )
     if (
       this.players.filter((player) => player.getState('ready') == true).length ==
       this.players.length

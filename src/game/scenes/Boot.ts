@@ -1,4 +1,5 @@
 import { Scene } from 'phaser'
+import { characterNames } from '../constants'
 
 export class Boot extends Scene {
   constructor() {
@@ -6,8 +7,9 @@ export class Boot extends Scene {
   }
   preload() {
     this.load.image('background', '/images/games/midlane.webp')
-    this.load.image('teemo', '/images/games/teemo.png')
-    this.load.image('alistar', '/images/games/alistar.png')
+    characterNames.forEach((character) => {
+      this.load.image(character, `/images/games/${character}.png`)
+    })
   }
   create() {
     this.scene.start('Preloader')
