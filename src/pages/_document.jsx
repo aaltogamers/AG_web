@@ -4,7 +4,7 @@ const Document = () => {
   return (
     <Html lang="en" className="h-full">
       <Head>
-        <link rel="shortcut icon" href="/images/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.ico" />
         <script src="/sw.js" />
       </Head>
       <body className="text-white min-h-full">

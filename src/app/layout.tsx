@@ -7,7 +7,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="h-full">
       <Head>
-        <link rel="shortcut icon" href="/images/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.ico" />
       </Head>
       <body className="text-white min-h-full">
         <Layout>{children}</Layout>
