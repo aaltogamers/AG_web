@@ -30,4 +30,8 @@ redirects:
   - name: Become an Active
     url: https://forms.gle/da1Kgy5KE17xRRTM8
     slug: active
+  - name: AG Actives Telegram chat (should not be linked directly, only trough
+      "Become an active" form.
+    slug: actives_telegram
+    url: https://t.me/+a0catz8WPxRkMDA0
 ---
