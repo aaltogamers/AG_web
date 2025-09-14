@@ -34,4 +34,7 @@ redirects:
       "Become an active" form.
     slug: actives_telegram
     url: https://t.me/+a0catz8WPxRkMDA0
+  - name: AG Info presentation
+    url: https://docs.google.com/forms/d/1U_PH0DICX9EgmbhMWHYl961VzcY-RSQHjg9gWEWkFZY/edit
+    slug: info
 ---
