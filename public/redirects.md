@@ -37,4 +37,7 @@ redirects:
   - name: AG Info presentation
     url: https://docs.google.com/presentation/d/1MXpVwkKxKn2ctJwmILUvSMqlQ27AfDE5zFMJWCmsSXA
     slug: info
+  - name: AG Actives Event Calendar
+    slug: actives_calendar
+    url: https://calendar.google.com/calendar/u/1?cid=Y185YjBhZjNjYWMwMDgxNDgxYzY4MWQ5Yjc3OWQxMjhiYzI5MjcwZTBlOTBhYjUxMjk1OWRjYzM4ZDZjY2JlZmYwQGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20
 ---
