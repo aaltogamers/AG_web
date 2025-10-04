@@ -40,4 +40,7 @@ redirects:
   - name: AG Actives Event Calendar
     slug: actives_calendar
     url: https://calendar.google.com/calendar/u/1?cid=Y185YjBhZjNjYWMwMDgxNDgxYzY4MWQ5Yjc3OWQxMjhiYzI5MjcwZTBlOTBhYjUxMjk1OWRjYzM4ZDZjY2JlZmYwQGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20
+  - url: https://kide.app/events/91035be1-49cd-46df-838b-5d85c6a9dc53
+    slug: mario_kart_kide
+    name: Mario Kart Tournament 2025 Kide App
 ---
