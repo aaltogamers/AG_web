@@ -22,10 +22,6 @@ tldr: >-
 
   DL. 17.11. or when 32 teams have signed up
 ---
-### SIGN-UP  
-Team signup: [https://forms.gle/nQZNzpxS3u2vjiWs9](https://forms.gle/nQZNzpxS3u2vjiWs9)  
-Deadline for signups is 17.11. or when we reach 32 teams.
-
 ### Format
 #### Qualifiers
 Max 32 teams → Swiss best of 1 (3 games) →  
@@ -42,18 +38,18 @@ Single-elimination best of 3.
 ### Schedule  
 #### Qualifiers 22.11
 
-    Players ready on Discord 11:30
-    Swiss stage 12:00-15:00
-    Break 15:00-15:45
-    Round of 16 15:45-16:45
-    Quarter finals 16:45 - 18:00
+Players ready on Discord 11:30  
+Swiss stage 12:00-15:00  
+Break 15:00-15:45  
+Round of 16 15:45-16:45  
+Quarter finals 16:45 - 18:00  
 
 #### Finals 29.11.
-    Players ready on Discord 11:30
-    Semi finals game 1 12:00-14:15
-    Semi finals game 2 14:15-16:30
-    Break 16:30-17:15
-    Final 17:15-19:30
+Players ready on Discord 11:30  
+Semi finals game 1 12:00-14:15  
+Semi finals game 2 14:15-16:30  
+Break 16:30-17:15  
+Final 17:15-19:30  
 
 Times are not exact, and may vary by multiple hours in both directions.  
 
