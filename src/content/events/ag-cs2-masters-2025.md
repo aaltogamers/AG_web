@@ -1,7 +1,7 @@
 ---
 name: AG CS2 Masters 2025
 time: 22.11.2025
-image: /images/cs2_logo.png
+image: /images/cs2_masters_final_compressed.jpg
 description: TBA
 tldr: >-
   ### WHEN?
