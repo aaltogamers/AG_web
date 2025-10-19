@@ -42,6 +42,6 @@ Ready to grab the wheel and prove you’re the fastest racer on campus? Join the
 🥇 Blue Shell trophy for the winner
 🥈–🥉 Super Bario game time for 2nd–4th place
 
-**And the best part – free Red Bull for all participants! 🕹️✨**
+And the best part – **free Red Bull for all participants! 🕹️✨**
 
 **⚡ Sign up now and secure your spot – only 64 available!**
