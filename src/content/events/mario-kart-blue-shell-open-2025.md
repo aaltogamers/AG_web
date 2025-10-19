@@ -34,13 +34,13 @@ Ready to grab the wheel and prove you’re the fastest racer on campus? Join the
 
 **Schedule:**
 
-12–14: Free “warmup” – come test the game and get into the mood
-14–17: Qualifiers – 3 rounds of Swiss format
-17–18: Final – Top 16 battle it out in a 12-track marathon
+- 12–14: Free “warmup” – come test the game and get into the mood
+- 14–17: Qualifiers – 3 rounds of Swiss format
+- 17–18: Final – Top 16 battle it out in a 12-track marathon
 
 **Prizes:**
-🥇 Blue Shell trophy for the winner
-🥈–🥉 Super Bario game time for 2nd–4th place
+- 🥇 Blue Shell trophy for the winner
+- 🥈–🥉 Super Bario game time for 2nd–4th place
 
 And the best part – **free Red Bull for all participants! 🕹️✨**
 
