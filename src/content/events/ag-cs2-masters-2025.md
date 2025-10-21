@@ -2,7 +2,9 @@
 name: AG CS2 Masters 2025
 time: 22.11.2025
 image: /images/cs2_masters_final_compressed.jpg
-description: TBA
+description: Gather a team of friends and get ready to compete against the best
+  teams in the Finnish student *Counter Strike* scene for your share of the
+  **800€ prize pool! 🏆**
 tldr: >-
   ### WHEN?
 
