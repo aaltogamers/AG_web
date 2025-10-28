@@ -24,6 +24,13 @@ tldr: >-
 
   DL. 17.11. or when 32 teams have signed up
 ---
+### Prizes 
+- 1st place 400€
+- 2nd place 200€
+- 3rd & 4th place 100€
+
+Also additional prizes for the MVP and viewers!
+
 ### Format
 #### Qualifiers
 Max 32 teams → Swiss best of 1 (3 games) →  
