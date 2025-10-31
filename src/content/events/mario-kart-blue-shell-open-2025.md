@@ -1,7 +1,7 @@
 ---
 name: Mario Kart Blue Shell Open 2025
 time: 08.11.2025
-image: /images/blue_shell_open.jpg
+image: /images/blue_shell_open.png
 description: Ready to grab the wheel and prove you’re the fastest racer on
   campus? Join the Mario Kart Tournament where honor, prizes, and the legendary
   Blue Shell Cup are at stake! 🎮
