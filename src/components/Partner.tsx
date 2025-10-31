@@ -1,5 +1,4 @@
 import AGImage from './AGImage'
-import Markdown from './Markdown'
 import { AGPartner } from '../types/types'
 
 type Props = {
