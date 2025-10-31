@@ -19,7 +19,7 @@ collections:
         file: 'src/content/partners.md'
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
-          - { label: 'Body', name: 'body', widget: 'markdown' }
+          - { label: 'Body', name: 'body', widget: 'markdown', required: false }
       - label: 'About'
         name: 'about'
         file: 'src/content/about.md'
