@@ -7,12 +7,9 @@ type Props = {
 
 const Partner = ({ partner }: Props) => {
   return (
-    <div
-      key={partner.name}
-      className="flex flex-col items-center px-8 max-w-xl text-center mb-24 md:mb-0 md:w-2/5"
-    >
-      <AGImage src={partner.image} alt={partner.name} />
-      <h3 className="pt-12">{partner.name}</h3>
+    <div key={partner.name} className="flex flex-col items-center text-center md:mb-24 mb-12">
+      <AGImage src={partner.image} alt={partner.name} className="h-70 w-100 object-contain" />
+      <h3 className="pt-12 mb-6">{partner.name}</h3>
       {[partner.finnishLink, partner.englishLink]
         .filter((link) => link)
         .map((link) => (
