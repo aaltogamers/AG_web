@@ -6,7 +6,7 @@ backend:
   base_url: https://ag-website-hbgde7hkbwbscse9.northeurope-01.azurewebsites.net
   auth_endpoint: /api/auth
   squash_merges: true
-publish_mode: editorial_workflow
+publish_mode: simple
 media_folder: public/images
 public_folder: /images
 local_backend: true
