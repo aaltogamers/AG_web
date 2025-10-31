@@ -13,11 +13,13 @@ const Partner = ({ partner }: Props) => {
     >
       <AGImage src={partner.image} alt={partner.name} />
       <h3 className="pt-12">{partner.name}</h3>
-      {[partner.finnishLink, partner.englishLink].map((link) => (
-        <a href={link} className="link text-xl" key={link}>
-          {link}
-        </a>
-      ))}
+      {[partner.finnishLink, partner.englishLink]
+        .filter((link) => link)
+        .map((link) => (
+          <a href={link} className="link text-xl" key={link}>
+            {link}
+          </a>
+        ))}
     </div>
   )
 }

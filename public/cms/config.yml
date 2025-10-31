@@ -19,7 +19,7 @@ collections:
         file: 'src/content/partners.md'
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
-          - { label: 'Body', name: 'body', widget: 'markdown', required: false }
+          - { label: 'Body', name: 'body', widget: 'markdown' }
       - label: 'About'
         name: 'about'
         file: 'src/content/about.md'
@@ -83,9 +83,9 @@ collections:
     fields:
       - { label: 'Name', name: 'name', widget: 'string' }
       - { label: 'Image', name: 'image', widget: 'image' }
-      - { label: 'Finnish Link', name: 'finnishLink', widget: 'string' }
-      - { label: 'English Link', name: 'englishLink', widget: 'string' }
-      - { label: 'Body', name: 'body', widget: 'markdown' }
+      - { label: 'Finnish Link', name: 'finnishLink', widget: 'string', required: false }
+      - { label: 'English Link', name: 'englishLink', widget: 'string', required: false }
+      - { label: 'Body', name: 'body', widget: 'markdown', required: false }
   - label: 'Event'
     name: 'event'
     folder: 'src/content/events'
