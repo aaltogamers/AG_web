@@ -43,4 +43,7 @@ redirects:
   - url: https://kide.app/events/91035be1-49cd-46df-838b-5d85c6a9dc53
     slug: mario_kart_kide
     name: Mario Kart Tournament 2025 Kide App
+  - name: AG Actives Discord
+    slug: actives_discord
+    url: https://discord.gg/UWzgvQJATN
 ---
