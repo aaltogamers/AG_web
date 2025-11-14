@@ -24,7 +24,7 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  const isDev = urlObj.host.includes('localhost')
+  //const isDev = urlObj.host.includes('localhost')
   const timeNow = Date.now()
   const secondsSinceLastAuth = (timeNow - lastAuthTime) / 1000
 
