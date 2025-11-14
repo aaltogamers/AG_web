@@ -76,51 +76,71 @@ const BetManagement = ({ app }: Props) => {
   const buttonFields: ButtonField[] = ['isVisible', 'isVotable']
 
   return (
-    <div className="flex gap-8 flex-wrap">
-      {polls
-        .sort((a, b) => a.creationTimeStamp - b.creationTimeStamp)
-        .map((poll) => (
-          <div className="p-4 border-2 relative" key={poll.id}>
-            <h4>{poll.question}</h4>
-            <div className="flex flex-col gap-2 items-start mt-4">
-              {poll.options.map((option) => (
-                <div key={option}>
-                  <button
-                    className={`borderbutton ${
-                      poll.correctOption === option && 'bg-green-600'
-                    } mr-4`}
-                    onClick={() => setAsCorrectOption(poll, option)}
-                  >
-                    {option}
-                  </button>
-                  <span className="text-xl">
-                    {poll.pointsForWin && poll.correctOption === option
-                      ? `${poll.pointsForWin} points`
-                      : ''}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-4 m-4">
-              {buttonFields.map((field) => (
-                <button
-                  className={`mainbutton ${poll[field] && 'bg-green-600'}`}
-                  key={field}
-                  onClick={() => changeState(field, poll, !poll[field])}
-                >
-                  {field.slice(2)}
-                </button>
-              ))}
-            </div>
-            {poll.additionalMessage && <p className="text-md">{poll.additionalMessage}</p>}
+    <div>
+      <div className="mb-8 text-lg">
+        <p>
+          Bet results can be seen at{' '}
+          <a href="/bet" className="text-red">
+            {window.location.host}/bet
+          </a>
+        </p>
 
-            <button className="absolute top-0 right-1 text-xl p-2" onClick={() => deletePoll(poll)}>
-              ✖
-            </button>
-          </div>
-        ))}
-      <div>
-        <BetCreateForm app={app} />
+        <p>
+          Bet scoreboard can be seen at{' '}
+          <a href="/betboard" className="text-red">
+            {window.location.host}/betboard
+          </a>
+        </p>
+      </div>
+      <div className="flex gap-8 flex-wrap">
+        {polls
+          .sort((a, b) => a.creationTimeStamp - b.creationTimeStamp)
+          .map((poll) => (
+            <div className="p-4 border-2 relative" key={poll.id}>
+              <h4>{poll.question}</h4>
+              <div className="flex flex-col gap-2 items-start mt-4">
+                {poll.options.map((option) => (
+                  <div key={option}>
+                    <button
+                      className={`borderbutton ${
+                        poll.correctOption === option && 'bg-green-600'
+                      } mr-4`}
+                      onClick={() => setAsCorrectOption(poll, option)}
+                    >
+                      {option}
+                    </button>
+                    <span className="text-xl">
+                      {poll.pointsForWin && poll.correctOption === option
+                        ? `${poll.pointsForWin} points`
+                        : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-4 m-4">
+                {buttonFields.map((field) => (
+                  <button
+                    className={`mainbutton ${poll[field] && 'bg-green-600'}`}
+                    key={field}
+                    onClick={() => changeState(field, poll, !poll[field])}
+                  >
+                    {field.slice(2)}
+                  </button>
+                ))}
+              </div>
+              {poll.additionalMessage && <p className="text-md">{poll.additionalMessage}</p>}
+
+              <button
+                className="absolute top-0 right-1 text-xl p-2"
+                onClick={() => deletePoll(poll)}
+              >
+                ✖
+              </button>
+            </div>
+          ))}
+        <div>
+          <BetCreateForm app={app} />
+        </div>
       </div>
     </div>
   )

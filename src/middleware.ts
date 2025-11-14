@@ -49,6 +49,8 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
+  // Stopped collecting statistics, because filled out entire Firestore quota.
+  /*
   if (authData?.idToken) {
     const newId: string =
       new Date().getTime().toString() + Math.random().toString(36).substring(4).toString()
@@ -73,6 +75,7 @@ export default async function middleware(req: NextRequest) {
       console.error(e)
     }
   }
+    */
 
   return NextResponse.next()
 }
