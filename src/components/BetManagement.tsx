@@ -10,6 +10,7 @@ import {
 import { Poll } from '../types/types'
 import { getVotesForPoll, useFirestore } from '../utils/db'
 import BetCreateForm from './BetCreateForm'
+import Link from 'react-scroll/modules/components/Link'
 
 type Props = {
   app: FirebaseApp
@@ -80,16 +81,16 @@ const BetManagement = ({ app }: Props) => {
       <div className="mb-8 text-lg">
         <p>
           Bet results can be seen at{' '}
-          <a href="/bet" className="text-red">
+          <Link to="/bet" className="text-red">
             {window.location.host}/bet
-          </a>
+          </Link>
         </p>
 
         <p>
           Bet scoreboard can be seen at{' '}
-          <a href="/betboard" className="text-red">
+          <Link to="/betboard" className="text-red">
             {window.location.host}/betboard
-          </a>
+          </Link>
         </p>
       </div>
       <div className="flex gap-8 flex-wrap">
