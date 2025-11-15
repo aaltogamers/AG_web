@@ -20,11 +20,20 @@ export default async function middleware(req: NextRequest) {
     path += `?${key}=${value}`
   })
 
-  if (req.headers.get('purpose') === 'prefetch' || req.headers.get('next-url')) {
+  const userAgent = req.headers.get('User-Agent')?.toLowerCase() || ''
+
+  if (
+    req.headers.get('purpose') === 'prefetch' ||
+    req.headers.get('next-url') ||
+    userAgent.includes('bot') ||
+    userAgent.includes('spider') ||
+    userAgent.includes('crawl') ||
+    userAgent.includes('slurp')
+  ) {
     return NextResponse.next()
   }
 
-  //const isDev = urlObj.host.includes('localhost')
+  const isDev = urlObj.host.includes('localhost')
   const timeNow = Date.now()
   const secondsSinceLastAuth = (timeNow - lastAuthTime) / 1000
 
@@ -49,8 +58,6 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // Stopped collecting statistics, because filled out entire Firestore quota.
-  /*
   if (authData?.idToken) {
     const newId: string =
       new Date().getTime().toString() + Math.random().toString(36).substring(4).toString()
@@ -75,7 +82,6 @@ export default async function middleware(req: NextRequest) {
       console.error(e)
     }
   }
-    */
 
   return NextResponse.next()
 }
