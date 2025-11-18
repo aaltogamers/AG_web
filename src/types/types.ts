@@ -107,12 +107,12 @@ export type ScoreBoardEntry = {
 
 export const CS_ACTIVE_DUTY_MAPS = [
   'Ancient',
-  'Anubis',
   'Dust II',
   'Inferno',
   'Mirage',
   'Nuke',
-  'Vertigo',
+  "Overpass",
+  'Train',
 ] as const
 
 export const VALORANT_ACTIVE_DUTY_MAPS = [
