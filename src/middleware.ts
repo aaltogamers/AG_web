@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-
+import { /*NextRequest, */ NextResponse } from 'next/server'
+/*
 let authData: {
   kind: string
   localId: string
@@ -10,10 +10,10 @@ let authData: {
   refreshToken: string
   expiresIn: string
 } | null = null
-let lastAuthTime = 0
+let lastAuthTime = 0*/
 
-export default async function middleware(req: NextRequest) {
-  const url = req.url || ''
+export default async function middleware(/*req: NextRequest*/) {
+  /*const url = req.url || ''
   const urlObj = new URL(url)
   let path = urlObj.pathname
   urlObj.searchParams.forEach((value, key) => {
@@ -81,7 +81,7 @@ export default async function middleware(req: NextRequest) {
     } catch (e) {
       console.error(e)
     }
-  }
+  }*/
 
   return NextResponse.next()
 }
