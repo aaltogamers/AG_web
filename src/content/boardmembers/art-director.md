@@ -1,9 +1,9 @@
 ---
-name: Janni Lätti
-title: Head of Visual Communications
-status: Aalto University School of Arts, Design, and Architecture
-game: League of Legends
-orderNumber: 7
-image: /images/_dsf3147_janni.jpg
+name: Topias Seilonen
+title: Head of Clubroom
+status: Aalto University School of Science
+game: Geometry Dash
+orderNumber: 9
+image: ""
 contactInformation: "janni@aaltogamers.fi, TG: @lattijanni, DC: janniml"
 ---
