@@ -1,8 +1,8 @@
 ---
-name: Kaisa Koivunen
-title: Head of Internal Operations
-status: Aalto University School of Chemical Engineering
-game: Beat Saber
-orderNumber: 5
-image: /images/_dsf3121_kaisa.jpg
+name: Imre Polik
+title: Head of Internal Communications
+status: " School of Electrical Engineering"
+game: Counter-Strike 2
+orderNumber: 8
+image: ""
 ---
