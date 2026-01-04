@@ -1,8 +1,8 @@
 ---
-name: Lenni Toikkanen
+name: Sanzhar Zhakabayev
 title: Head Of Marketing
-status: Aalto University School of Electrical Engineering
-game: League of Legends
-orderNumber: 6
-image: /images/_dsf3062_lenni.jpg
+status: Aalto University School of Business
+game: "The Witcher 3: Wild Hunt"
+orderNumber: 7
+image: ""
 ---
