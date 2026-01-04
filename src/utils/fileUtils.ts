@@ -1,5 +1,6 @@
 import matter from 'gray-matter'
 import fs from 'fs'
+import imageSize from 'image-size'
 
 export const getFolder = (folder: string) => {
   const filesInFolder = fs.readdirSync(`./src/content/${folder}`)
@@ -26,5 +27,21 @@ export const getFile = (fileName: string, folder: string = './src/content/') => 
   return {
     ...fields,
     content,
+    slug: fileName,
   }
+}
+
+export const getAlbumImages = (albumSlug: string) => {
+  const images = fs.readdirSync(`./public/images/albums/${albumSlug}`)
+
+  return images.map((filename) => {
+    const buffer = fs.readFileSync(`./public/images/albums/${albumSlug}/${filename}`)
+    const dimensions = imageSize(buffer)
+
+    return {
+      filename,
+      width: dimensions.width,
+      height: dimensions.height,
+    }
+  })
 }
