@@ -4,6 +4,5 @@ title: Head of Clubroom
 status: Aalto University School of Science
 game: Geometry Dash
 orderNumber: 9
-image: ""
-contactInformation: "janni@aaltogamers.fi, TG: @lattijanni, DC: janniml"
+image: ''
 ---

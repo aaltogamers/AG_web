@@ -5,4 +5,5 @@ status: Aalto University School of Science
 game: Ratz Instagib
 orderNumber: 6
 image: /images/_dsf3129_otto.jpg
+contactInformation: 'otto.s@aaltogamers.fi, TG: @Otju11, DC: otju'
 ---
