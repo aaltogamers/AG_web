@@ -2,7 +2,7 @@
 name: Max Aksela
 title: Vice-Chair of the Board
 status: Aalto University School of Engineering
-game: "-"
+game: 'Total War: Warhammer III'
 orderNumber: 2
-image: ""
+image: ''
 ---
