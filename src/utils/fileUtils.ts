@@ -26,5 +26,10 @@ export const getFile = (fileName: string, folder: string = './src/content/') => 
   return {
     ...fields,
     content,
+    slug: fileName,
   }
+}
+
+export const getAlbumImages = (albumSlug: string) => {
+  return fs.readdirSync(`./public/images/albums/${albumSlug}`)
 }

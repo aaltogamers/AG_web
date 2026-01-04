@@ -45,7 +45,9 @@ export type AGAlbum = {
   link: string
   image: string
   orderNumber: number
+  slug: string
 }
+
 export type LandingInfo = {
   title: string
   subtitle: string
@@ -111,7 +113,7 @@ export const CS_ACTIVE_DUTY_MAPS = [
   'Inferno',
   'Mirage',
   'Nuke',
-  "Overpass",
+  'Overpass',
   'Train',
 ] as const
 
