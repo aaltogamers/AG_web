@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { AGEvent } from '../types/types'
 import AGImage from './AGImage'
 import Markdown from './Markdown'
@@ -15,9 +16,16 @@ const Event = ({ event }: Props) => {
         <div className="flex flex-col md:p-10 items-center md:items-start">
           <h3 className="mt-8 md:mt-0">{event.name}</h3>
           <Markdown>{event.description}</Markdown>
-          <a href={`/events/${event.slug}`} className="mainbutton">
-            Learn more
-          </a>
+          <div className="flex flex-col gap-8 md:gap-16 md:flex-row">
+            <Link href={`/events/${event.slug}`} className="mainbutton">
+              Learn more
+            </Link>
+            {event.albumSlug && (
+              <Link href={`/gallery/${event.albumSlug}`} className="borderbutton">
+                View Photos
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

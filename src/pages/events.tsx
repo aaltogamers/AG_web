@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import EventList from '../components/EventList'
 import PageWrapper from '../components/PageWrapper'
-import { AGEvent } from '../types/types'
+import { AGAlbum, AGEvent } from '../types/types'
 import { getFolder } from '../utils/fileUtils'
 import { parseEvents } from '../utils/parseEvents'
 
@@ -28,6 +28,18 @@ const Events = ({ events }: Props) => {
 
 export default Events
 
-export const getStaticProps = () => ({
-  props: { events: getFolder('events') },
-})
+export const getStaticProps = () => {
+  const events = getFolder('events') as AGEvent[]
+  const albums = getFolder('albums') as unknown as AGAlbum[]
+
+  events.forEach((event) => {
+    const linkedAlbum = albums.filter((album) => album.event === event.name)[0]
+    if (linkedAlbum) {
+      event.albumSlug = linkedAlbum.slug
+    }
+  })
+
+  return {
+    props: { events: events },
+  }
+}
