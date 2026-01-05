@@ -2,6 +2,10 @@
   font-size: 1.25rem;
 }
 
+.calendarWrapper :global(.rbc-toolbar-label) {
+  margin-right: 180px;
+}
+
 .calendarWrapper :global(.rbc-header) {
   background-color: #23242d;
 
