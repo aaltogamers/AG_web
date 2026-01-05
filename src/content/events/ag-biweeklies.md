@@ -1,11 +1,14 @@
 ---
 name: AG Biweeklies
-time: ''
+time: ""
+otherTimes:
+  - name: AG Offline Biweeklies
+    time: 2025-12-12T18:00:00.000Z
 durationHours: 5
+image: /images/biweekly.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: AG Discord server
-image: /images/biweekly.png
 isRecurring: true
 description: >-
   Biweeklies are relaxed gaming nights organised every other Friday at 18:00
