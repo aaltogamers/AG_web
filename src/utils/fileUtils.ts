@@ -1,6 +1,7 @@
 import matter from 'gray-matter'
 import fs from 'fs'
 import imageSize from 'image-size'
+import jsYaml from 'js-yaml'
 
 export const getFolder = (folder: string) => {
   const filesInFolder = fs.readdirSync(`./src/content/${folder}`)
@@ -8,8 +9,7 @@ export const getFolder = (folder: string) => {
     const file = fs.readFileSync(`./src/content/${folder}/${filename}`, 'utf8')
     const matterData = matter(file, {
       engines: {
-        yaml: (s) =>
-          require('js-yaml').load(s, { schema: require('js-yaml').JSON_SCHEMA }) as object,
+        yaml: (s) => jsYaml.load(s, { schema: jsYaml.JSON_SCHEMA }) as object,
       },
     })
     const fields = matterData.data
@@ -28,7 +28,7 @@ export const getFile = (fileName: string, folder: string = './src/content/') => 
   const file = fs.readFileSync(`${folder}${fileName}.md`, 'utf8')
   const matterData = matter(file, {
     engines: {
-      yaml: (s) => require('js-yaml').load(s, { schema: require('js-yaml').JSON_SCHEMA }) as object,
+      yaml: (s) => jsYaml.load(s, { schema: jsYaml.JSON_SCHEMA }) as object,
     },
   })
   const fields = matterData.data

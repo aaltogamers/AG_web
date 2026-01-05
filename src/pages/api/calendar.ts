@@ -2,25 +2,36 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { EventAttributes, createEvents } from 'ics'
 import { getFolder } from '../../utils/fileUtils'
 import { AGEvent } from '../../types/types'
+import { convertEventsToCalendarFormat } from '../../utils/eventUtils'
 
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   try {
     const events = getFolder('events') as AGEvent[]
+    const calendarEvents = convertEventsToCalendarFormat(events)
 
-    const icsEvents: EventAttributes[] = events
-      .filter((event) => event.time)
-      .map((event) => {
-        return {
-          uid: event.slug,
-          start: event.time!,
-          title: event.name,
-          description: event.description,
-          url: `https://aaltogamers.fi/events/${event.slug}`,
-          status: 'CONFIRMED',
-          organizer: { name: 'Aalto Gamers', email: 'board@aaltogamers.fi' },
-          duration: { hours: event.duration },
-        }
-      })
+    const icsEvents: EventAttributes[] = calendarEvents.map((event) => {
+      const startDate = event.start
+      const start: [number, number, number, number, number] = [
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        startDate.getDate(),
+        startDate.getHours(),
+        startDate.getMinutes(),
+      ]
+
+      const duration = Math.round((event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60))
+
+      return {
+        uid: event.id,
+        start,
+        title: event.title,
+        description: event.description,
+        url: event.url,
+        status: 'CONFIRMED',
+        organizer: { name: 'Aalto Gamers', email: 'board@aaltogamers.fi' },
+        duration: { hours: duration },
+      }
+    })
 
     createEvents(icsEvents, (error, value) => {
       if (error) {

@@ -5,6 +5,7 @@ import SideInfoBox from '../components/SideInfoBox'
 import { AGEvent, LandingInfo } from '../types/types'
 import EventShowCase from '../components/EventShowCase'
 import ImageShowCase from '../components/ImageShowCase'
+import Calendar from '../components/Calendar'
 
 type Props = {
   landingInfos: LandingInfo[]
@@ -35,6 +36,7 @@ const Home = ({ landingInfos, events, imageShowCase }: Props) => {
           <ImageShowCase images={imageShowCase.images} />
           <hr className="bg-gray w-full md:my-16" />
           <EventShowCase events={events} />
+          <Calendar events={events} />
         </main>
       </div>
     </>
