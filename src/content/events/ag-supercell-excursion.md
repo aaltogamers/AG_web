@@ -1,6 +1,10 @@
 ---
 name: AG Supercell Excursion
-time: 23.10.2025
+time: 2025-10-23T16:00:00
+durationHours: 2
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Supercell, Jätkäsaarenlaituri 1, Helsinki
 image: /images/ag_supercell.jpg
 description: >-
   Supercell is the Finnish gaming company behind Hay Day 🐓, Clash of Clans ⚔️,
@@ -27,25 +31,16 @@ tldr: >-
    Open from 2.10 to 16.10
    Participants will be selected randomly!
 ---
+
 **AG goes Supercell 🏢**
-
-
 
 Supercell is the Finnish gaming company behind **Hay Day** 🐓, **Clash of Clans** ⚔️, **Clash Royale** 👑, and much more!
 
-
-
 Come **meet** the **amazing people** making your favorite **mobile games** 💥 discuss the recent developments of the **Finnish gaming industry**, and take part in a surprise activity! 😉
 
+👉 [Sign-up here](https://forms.gle/K4naXAh6thBdpG8A8) (Before 16.10) 👈
 
-
-👉 [Sign-up here](https://forms.gle/K4naXAh6thBdpG8A8) (Before 16.10) 👈 
-
-
-
-⚡️ Only **20 spots** available, participants will be selected randomly. *Some spots are reserved for AG actives.*
-
-
+⚡️ Only **20 spots** available, participants will be selected randomly. _Some spots are reserved for AG actives._
 
 **📍Supercell, Jätkäsaarenlaituri 1, Helsinki**
 

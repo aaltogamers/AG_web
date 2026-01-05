@@ -1,6 +1,10 @@
 ---
 name: AG Biweeklies
-time: ""
+time: ''
+durationHours: 5
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/biweekly.png
 isRecurring: true
 description: >-
@@ -30,9 +34,10 @@ tldr: >-
 
   Having fun and getting to know new people with similar interests!
 ---
-Aalto Gamers Biweeklies are fun events happening every other Friday, where ANYONE can join to play some light games with friends. All gamers are warmly welcome to our Biweeklies and to suggest games to play together. Every other Biweekly is held online in the Aalto Gamers Discord server and every other one live at the Aalto Gamers Clubroom at Otakaari 20. 
 
-For the online biweeklies, we have a "warmup game" that is played for the first hour or so of the biweeklies. It can be anything from Skribbl.io to Minecraft Hunger Games. After that, everybody can play whatever they want. Popular games include: League of Legends, Overwatch 2, Valorant, CS 2, Fall Guys, Among Us, Geoguessr and Minecraft. 
+Aalto Gamers Biweeklies are fun events happening every other Friday, where ANYONE can join to play some light games with friends. All gamers are warmly welcome to our Biweeklies and to suggest games to play together. Every other Biweekly is held online in the Aalto Gamers Discord server and every other one live at the Aalto Gamers Clubroom at Otakaari 20.
+
+For the online biweeklies, we have a "warmup game" that is played for the first hour or so of the biweeklies. It can be anything from Skribbl.io to Minecraft Hunger Games. After that, everybody can play whatever they want. Popular games include: League of Legends, Overwatch 2, Valorant, CS 2, Fall Guys, Among Us, Geoguessr and Minecraft.
 
 For the live biweeklies, we have some console gaming as well as some board games.
 

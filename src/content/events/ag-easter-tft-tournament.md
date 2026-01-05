@@ -1,6 +1,10 @@
 ---
 name: AG Easter TFT Tournament
-time: 01.04.2023
+time: 2023-04-01T11:00:00
+durationHours: 6
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/tft321341225346364.jpg
 isRecurring: false
 description: >-

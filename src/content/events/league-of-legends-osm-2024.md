@@ -1,6 +1,10 @@
 ---
 name: League of Legends OSM 2024
-time: 26.05.2024
+time: 2024-05-26T12:00:00
+durationHours: 8
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Design Factory, Puumiehenkuja 5a, Espoo
 image: /images/ag-osm-2024-main-post.png
 description: >-
   ⚔️ The hunting season is upon us! Aalto Gamers proudly presents League of
@@ -38,7 +42,8 @@ tldr: >-
 
   [Kide.app](<T﻿ickets for sale on [Kide.app](https://kide.app/events/52662ade-10d0-4863-af06-578036125f7b)!>)
 ---
-*English below!*
+
+_English below!_
 
 ⚔️ Jahti alkakoon! Aalto Gamers ylpeänä esittää: League of Legends OSM 2024 ⚔️
 

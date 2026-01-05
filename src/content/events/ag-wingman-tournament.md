@@ -1,6 +1,10 @@
 ---
 name: AG Wingman Tournament
-time: 23.03.2023
+time: 2023-03-23T18:00:00
+durationHours: 4
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Heimo Esports Tribe Gamebase, Otahalli
 image: /images/wingman-tournament-2023.jpg
 isRecurring: false
 description: >-
