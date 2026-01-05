@@ -4,7 +4,7 @@ export type AGEvent = {
   name: string
   image?: string
   time?: string
-  duration: number
+  durationHours: number
   otherTimes: { name?: string; time: string }[]
   location?: string
   visibleOnCalendar: boolean
