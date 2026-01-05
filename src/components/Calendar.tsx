@@ -64,27 +64,46 @@ type Props = {
 
 const Calendar = ({ events }: Props) => {
   const router = useRouter()
+  const [copySuccess, setCopySuccess] = useState(false)
   const calendarEvents = convertEventsToCalendarFormat(events)
 
   const handleSelectEvent = (event: { url: string }) => {
     router.push(event.url)
   }
 
+  const copyCalendarUrl = async () => {
+    const calendarUrl = `${window.location.origin}/api/calendar`
+
+    await navigator.clipboard.writeText(calendarUrl)
+    setCopySuccess(true)
+    setTimeout(() => setCopySuccess(false), 10_000)
+  }
+
   return (
-    <div className={`w-full ${styles.calendarWrapper} mt-8`} style={{ height: 600 }}>
-      <BigCalendar
-        localizer={localizer}
-        events={calendarEvents}
-        startAccessor="start"
-        endAccessor="end"
-        onSelectEvent={handleSelectEvent}
-        views={['month']}
-        defaultView="month"
-        components={{
-          event: CustomEvent,
-        }}
-        popup
-      />
+    <div className="w-full mt-16 relative">
+      <div className="flex justify-center mb-4 md:mb-0">
+        <button
+          onClick={copyCalendarUrl}
+          className="mainbutton md:absolute top-[-16px] right-0 flex items-center "
+        >
+          {copySuccess ? 'Copied calendar URL to clipboard!' : 'Subscribe to the calendar'}
+        </button>
+      </div>
+
+      <div className={`w-full ${styles.calendarWrapper}`} style={{ height: 600 }}>
+        <BigCalendar
+          localizer={localizer}
+          events={calendarEvents}
+          startAccessor="start"
+          endAccessor="end"
+          onSelectEvent={handleSelectEvent}
+          views={['month']}
+          defaultView="month"
+          components={{
+            event: CustomEvent,
+          }}
+        />
+      </div>
     </div>
   )
 }
