@@ -4,7 +4,8 @@ import Header from '../../components/Header'
 import PageWrapper from '../../components/PageWrapper'
 
 import { getAlbumImages, getFile, getFolder } from '../../utils/fileUtils'
-//import AGImage from '../../components/AGImage'
+import { RenderImageContext, RenderImageProps } from 'react-photo-album'
+import AGImage from '../../components/AGImage'
 import { AGAlbum } from '../../types/types'
 
 import PhotoAlbum from 'react-photo-album'
@@ -22,6 +23,23 @@ type Props = {
   album: AGAlbum
 }
 
+const renderNextImage = (
+  { alt = '' }: RenderImageProps,
+  { photo, width, height }: RenderImageContext
+) => {
+  return (
+    <div
+      style={{
+        width: '100%',
+        position: 'relative',
+        aspectRatio: `${width} / ${height}`,
+      }}
+    >
+      <AGImage src={photo.src} alt={alt} />
+    </div>
+  )
+}
+
 const Album = ({ images, album }: Props) => {
   const photos = images.map((image) => ({
     src: `/images/${album.slug}/${image.filename}`,
@@ -36,7 +54,12 @@ const Album = ({ images, album }: Props) => {
       </Head>
       <Header>{album.name}</Header>
       <div className="my-16">
-        <PhotoAlbum layout="rows" photos={photos} targetRowHeight={600} />
+        <PhotoAlbum
+          layout="rows"
+          photos={photos}
+          render={{ image: renderNextImage }}
+          targetRowHeight={600}
+        />
       </div>
     </PageWrapper>
   )
