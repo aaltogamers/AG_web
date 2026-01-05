@@ -1,6 +1,10 @@
 ---
 name: AG TFT Tournament
-time: 25.02.2024
+time: 2024-02-25T14:00:00
+durationHours: 6
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/tft-2024.png
 description: >-
   Ready up your champions, prepare your cheese pocket strats and show them off

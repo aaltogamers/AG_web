@@ -1,6 +1,10 @@
 ---
 name: AG CS2 Masters
-time: 25.11.2023
+time: 2023-11-25T12:00:00
+durationHours: 8
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/cs2_ag.jpg
 description: >-
   ⚪️AG CS2 Masters🟠

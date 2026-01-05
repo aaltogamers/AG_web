@@ -91,18 +91,32 @@ collections:
     folder: 'src/content/events'
     create: true
     identifier_field: name
+    sortable_fields: ['time', 'name']
     fields:
       - { label: 'Name', name: 'name', widget: 'string' }
+      - { label: 'Time', name: 'time', widget: 'datetime', required: false }
       - {
-          label: 'Time',
-          name: 'time',
-          widget: 'datetime',
-          format: 'DD.MM.YYYY',
-          date_format: 'DD.MM.YYYY',
-          time_format: false,
-          required: false,
+          label: 'Duration (hours)',
+          name: 'durationHours',
+          widget: 'number',
+          value_type: 'int',
+          min: 0,
+          default: 8,
         }
       - { label: 'Image', name: 'image', widget: 'image' }
+      - {
+          label: 'Visible on calendar',
+          name: 'visibleOnCalendar',
+          widget: 'boolean',
+          default: true,
+        }
+      - {
+          label: 'Visible on events page',
+          name: 'visibleOnEventsPage',
+          widget: 'boolean',
+          default: true,
+        }
+      - { label: 'Location', name: 'location', widget: 'string', required: false }
       - { label: 'Recurring', name: 'isRecurring', widget: 'boolean', 'required': false }
       - { label: 'Description', name: 'description', widget: 'markdown' }
       - { label: 'TLDR', name: 'tldr', widget: 'markdown', default: "

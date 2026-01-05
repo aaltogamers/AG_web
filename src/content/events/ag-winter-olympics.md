@@ -1,6 +1,10 @@
 ---
 name: AG Winter Olympics
-time: 25-02-2023
+time: 2023-02-25T16:00:00
+durationHours: 6
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/winter-olympics-2023.jpg
 isRecurring: false
 description: >-

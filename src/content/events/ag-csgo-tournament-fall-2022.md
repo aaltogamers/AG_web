@@ -1,6 +1,10 @@
 ---
 name: AG CS:GO Tournament Fall 2022
-time: 03-11-2022
+time: 2022-11-03T12:00:00
+durationHours: 8
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Design Factory, Puumiehenkuja 5a, Espoo
 image: /images/csgo-fall-2022.jpg
 isRecurring: false
 description: >-

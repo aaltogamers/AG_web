@@ -1,6 +1,10 @@
 ---
 name: League of Legends OSM 2023
-time: 27.05.2023
+time: 2023-05-27T12:00:00
+durationHours: 8
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Design Factory, Otaniemi
 image: /images/lol-osm-2023.jpg
 isRecurring: false
 description: >-
