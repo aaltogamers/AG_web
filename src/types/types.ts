@@ -42,7 +42,6 @@ export type AGBoardMember = {
 
 export type AGAlbum = {
   name: string
-  link: string
   image: string
   orderNumber: number
   slug: string

@@ -18,7 +18,6 @@ const Gallery = ({ albums }: Props) => {
         <div className="flex flex-wrap">
           {[
             albums
-              // If b > a, Easier to add if you can just increment instead of offset every old album
               .sort((a, b) => b.orderNumber - a.orderNumber)
               .map((album) => <Album album={album} key={album.name} />),
           ]}
