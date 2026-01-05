@@ -4,6 +4,8 @@ import PageWrapper from '../components/PageWrapper'
 import { AGAlbum, AGEvent } from '../types/types'
 import { getFolder } from '../utils/fileUtils'
 import { parseEvents } from '../utils/parseEvents'
+import Calendar from '../components/Calendar'
+import Header from '../components/Header'
 
 type Props = {
   events: AGEvent[]
@@ -17,6 +19,8 @@ const Events = ({ events }: Props) => {
         <title>Events - Aalto Gamers</title>
       </Head>
       <div>
+        <Header>Event Calendar</Header>
+        <Calendar events={events} />
         <EventList name="Events right now" events={todayEvents} />
         <EventList name="Upcoming events" events={upcomingEvents} />
         <EventList name="Recurring events" events={recurringEvents} />
