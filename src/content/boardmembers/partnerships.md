@@ -2,7 +2,7 @@
 name: Veikka Innanen
 title: Head of Partnerships
 status: Aalto University School of Engineering
-game: '-'
+game: 'Heroes of the Storm'
 orderNumber: 5
 image: ''
 ---
