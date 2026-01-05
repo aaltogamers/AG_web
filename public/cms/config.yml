@@ -168,6 +168,16 @@ collections:
           min: 1,
           hint: 'The order in which the albums are displayed. Smallest first.',
         }
+      - {
+          label: 'Event',
+          name: 'event',
+          widget: 'relation',
+          collection: 'event',
+          value_field: 'name',
+          search_fields: ['name'],
+          required: true,
+        }
+
   - label: 'Redirect Links'
     name: 'links'
     files:
