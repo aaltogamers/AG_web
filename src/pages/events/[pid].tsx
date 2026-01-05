@@ -3,10 +3,11 @@ import Head from 'next/head'
 import Header from '../../components/Header'
 import Markdown from '../../components/Markdown'
 import PageWrapper from '../../components/PageWrapper'
-import { AGEvent } from '../../types/types'
+import { AGAlbum, AGEvent } from '../../types/types'
 import { getFile, getFolder } from '../../utils/fileUtils'
 import AGImage from '../../components/AGImage'
 import SignUpForm from '../../components/SignupForm'
+import Link from 'next/link'
 
 type Props = {
   event: AGEvent
@@ -31,6 +32,13 @@ const Event = ({ event }: Props) => {
               <Markdown>{event.tldr}</Markdown>
             </div>
           </div>
+          {event.albumSlug && (
+            <div className="mb-8 flex justify-center w-full">
+              <Link href={`/gallery/${event.albumSlug}`} className="borderbutton ">
+                View photos from this event
+              </Link>
+            </div>
+          )}
           <Markdown>{event.content}</Markdown>
           <Markdown>All AG events follow the [AG Safer Space Policy](/safespace).</Markdown>
           <SignUpForm eventName={event.name} />
@@ -52,7 +60,15 @@ export async function getStaticPaths() {
 }
 
 export const getStaticProps = (context: GetStaticPropsContext) => {
+  const event = getFile(`events/${context?.params?.pid}`) as unknown as AGEvent
+
+  const albums = getFolder('albums') as unknown as AGAlbum[]
+
+  const linkedAlbum = albums.filter((album) => album.event === event.name)[0]
+
+  event.albumSlug = linkedAlbum?.slug
+
   return {
-    props: { event: getFile(`events/${context?.params?.pid}`) },
+    props: { event: event },
   }
 }
