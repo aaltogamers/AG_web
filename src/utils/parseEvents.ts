@@ -9,15 +9,15 @@ export const parseEvents = (events: AGEvent[]) => {
   const nowMoment = moment()
   events
     .sort((event1, event2) => {
-      const event1Moment = moment(event1.time, 'DD-MM-YYYY')
-      const event2Moment = moment(event2.time, 'DD-MM-YYYY')
+      const event1Moment = moment(event1.time)
+      const event2Moment = moment(event2.time)
       return Math.abs(nowMoment.diff(event1Moment)) > Math.abs(nowMoment.diff(event2Moment))
         ? 1
         : -1
     })
     .forEach((event) => {
       const { isRecurring } = event
-      const eventMoment = isRecurring ? nowMoment : moment(event.time, 'DD-MM-YYYY')
+      const eventMoment = isRecurring ? nowMoment : moment(event.time)
       const isToday = eventMoment.isSame(nowMoment, 'day')
       const isInFuture = eventMoment.isAfter(nowMoment)
       if (isRecurring) {

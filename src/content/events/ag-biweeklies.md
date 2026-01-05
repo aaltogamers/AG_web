@@ -1,6 +1,5 @@
 ---
 name: AG Biweeklies
-time: ''
 otherTimes:
   - name: AG Live Biweeklies
     time: 2025-12-19T16:00:00.000Z

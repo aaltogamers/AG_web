@@ -2,8 +2,13 @@ import { Timestamp } from 'firebase/firestore'
 
 export type AGEvent = {
   name: string
-  image: string
+  image?: string
   time?: string
+  duration: number
+  otherTimes: { name?: string; time: string }[]
+  location?: string
+  visibleOnCalendar: boolean
+  visibleOnEventsPage: boolean
   content: string
   description: string
   isRecurring?: boolean

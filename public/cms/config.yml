@@ -103,7 +103,7 @@ collections:
         add_to_top: true
         collapsed: true
         fields:
-          - { label: 'Time', name: 'time', widget: 'datetime', required: false }
+          - { label: 'Time', name: 'time', widget: 'datetime', required: true }
           - { label: Name, name: name, widget: string, required: false }
 
       - {
