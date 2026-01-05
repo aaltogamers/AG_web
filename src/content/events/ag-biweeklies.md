@@ -1,9 +1,97 @@
 ---
 name: AG Biweeklies
-time: ""
+time: ''
 otherTimes:
+  - name: AG Live Biweeklies
+    time: 2025-12-19T16:00:00.000Z
   - name: AG Offline Biweeklies
-    time: 2025-12-12T18:00:00.000Z
+    time: 2025-12-12T16:00:00.000Z
+  - name: AG Live Biweeklies
+    time: 2025-11-21T16:00:00.000Z
+  - name: AG Live Biweeklies
+    time: 2025-10-31T16:00:00.000Z
+  - name: AG Live Biweeklies
+    time: 2025-10-03T15:00:00.000Z
+  - name: AG Online Biweeklies
+    time: 2025-09-19T15:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2025-04-25T15:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2025-03-28T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2025-02-21T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2025-02-07T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2025-01-24T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2025-01-10T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2024-12-20T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2024-12-06T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2024-12-05T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2024-11-22T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2024-10-18T16:00:00.000Z
+  - name: AG LIVE Biweekly Gaming Night
+    time: 2024-10-04T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2024-09-20T16:00:00.000Z
+  - name: AG Live Biweekly Gaming Night
+    time: 2024-04-26T15:30:00.000Z
+  - name: AG Live Biweekly Gaming Night
+    time: 2024-04-12T15:30:00.000Z
+  - name: AG Live Biweekly Gaming Night
+    time: 2024-03-15T16:30:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2024-03-01T16:30:00.000Z
+  - name: AG Live Biweekly Gaming Night
+    time: 2024-02-02T16:30:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2024-02-16T16:30:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2024-01-19T16:30:00.000Z
+  - name: AG Live Biweekly Gaming Night
+    time: 2023-11-10T16:30:00.000Z
+  - name: AG Live Biweekly Gaming Night
+    time: 2023-10-13T16:30:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2023-10-27T16:00:00.000Z
+  - name: AG Biweekly Gaming Night
+    time: 2023-09-29T16:00:00.000Z
+  - name: AG Live Biweekly Gaming Night
+    time: 2023-09-22T15:30:00.000Z
+  - name: AG Biweekly gaming night
+    time: 2023-05-19T16:00:00.000Z
+  - name: AG Biweekly gaming night
+    time: 2023-05-05T16:00:00.000Z
+  - name: AG Biweekly gaming night Live
+    time: 2023-04-28T16:00:00.000Z
+  - name: AG Biweekly gaming night
+    time: 2023-04-21T16:00:00.000Z
+  - name: AG Biweekly gaming night
+    time: 2023-04-07T16:00:00.000Z
+  - name: AG Biweekly gaming night Live
+    time: 2023-03-31T16:00:00.000Z
+  - name: AG Biweekly gaming night Live
+    time: 2023-03-17T16:00:00.000Z
+  - name: AG Biweekly gaming night
+    time: 2023-03-10T16:00:00.000Z
+  - name: AG Biweekly gaming night Live
+    time: 2023-03-03T16:00:00.000Z
+  - name: AG Biweekly gaming night Live
+    time: 2023-02-17T16:00:00.000Z
+  - name: AG Biweekly gaming night Live
+    time: 2023-02-02T16:00:00.000Z
+  - name: AG Biweekly gaming night
+    time: 2023-02-24T16:00:00.000Z
+  - name: AG Biweekly gaming night
+    time: 2023-02-10T16:00:00.000Z
+  - name: AG Biweekly gaming night
+    time: 2023-01-20T16:00:00.000Z
 durationHours: 5
 image: /images/biweekly.png
 visibleOnCalendar: true
