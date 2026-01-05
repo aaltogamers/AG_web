@@ -68,6 +68,10 @@ export const getStaticProps = (context: GetStaticPropsContext) => {
 
   event.albumSlug = linkedAlbum?.slug
 
+  if (!event.albumSlug) {
+    delete event.albumSlug
+  }
+
   return {
     props: { event: event },
   }
