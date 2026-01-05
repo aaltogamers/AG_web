@@ -13,6 +13,7 @@
 .calendarWrapper :global(.rbc-month-view) {
   background-color: #1c1d26;
   border-color: #aaabad;
+  overflow: visible !important;
 }
 
 .calendarWrapper :global(.rbc-day-bg) {
@@ -43,8 +44,22 @@
 /* Event slots */
 .calendarWrapper :global(.rbc-event) {
   background-color: #f32929;
+  overflow: visible !important;
 }
 
 .calendarWrapper :global(.rbc-event:hover) {
   filter: brightness(0.75);
+}
+
+.calendarWrapper :global(.rbc-month-row) {
+  overflow: visible !important;
+}
+
+.calendarWrapper :global(.rbc-row) {
+  overflow: visible !important;
+}
+
+.customTooltip {
+  white-space: normal;
+  word-wrap: break-word;
 }
