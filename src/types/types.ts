@@ -9,6 +9,7 @@ export type AGEvent = {
   isRecurring?: boolean
   tldr: string
   slug: string
+  albumSlug?: string
 }
 
 export type Option = {
@@ -45,6 +46,7 @@ export type AGAlbum = {
   image: string
   orderNumber: number
   slug: string
+  event?: string
 }
 
 export type LandingInfo = {
