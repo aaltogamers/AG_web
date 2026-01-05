@@ -11,6 +11,7 @@ interface AProps extends ComponentProps {
 
 interface MarkdownProps {
   children: string
+  className?: string
 }
 
 const P = ({ children }: ComponentProps) => <p className="mt-4 mb-8">{children}</p>
@@ -33,7 +34,7 @@ const Ol = ({ children }: ComponentProps) => (
 )
 const Li = ({ children }: ComponentProps) => <li className="mb-2">{children}</li>
 
-const Markdown = ({ children }: MarkdownProps) => {
+const Markdown = ({ children, className }: MarkdownProps) => {
   const components: Components = {
     p: P,
     h1: H1,
@@ -49,7 +50,7 @@ const Markdown = ({ children }: MarkdownProps) => {
   }
 
   return (
-    <ReactMarkdown components={components} className="text-xl text-lightgray">
+    <ReactMarkdown components={components} className={` ${className || 'text-xl'}  text-lightgray`}>
       {children}
     </ReactMarkdown>
   )
