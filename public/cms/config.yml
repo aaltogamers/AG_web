@@ -95,6 +95,17 @@ collections:
     fields:
       - { label: 'Name', name: 'name', widget: 'string' }
       - { label: 'Time', name: 'time', widget: 'datetime', required: false }
+      - label: 'Other times for calendar'
+        name: 'otherTimes'
+        widget: 'list'
+        summary: '{{fields.time}} {{fields.name}}'
+        required: false
+        add_to_top: true
+        collapsed: true
+        fields:
+          - { label: 'Time', name: 'time', widget: 'datetime' }
+          - { label: Name, name: name, widget: string, required: false }
+
       - {
           label: 'Duration (hours)',
           name: 'durationHours',
