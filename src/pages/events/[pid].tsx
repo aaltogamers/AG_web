@@ -24,7 +24,7 @@ const Event = ({ event }: Props) => {
         <div className="py-16 md:w-3/4">
           <div className="flex flex-col md:flex-row justify-center">
             <AGImage
-              src={event.image}
+              src={event.image || '/images/ag-white.png'}
               alt={event.name}
               className="max-h-[500px] object-scale-down md:max-w-[50%] pb-8"
             />
