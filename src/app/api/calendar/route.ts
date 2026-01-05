@@ -1,4 +1,5 @@
 import { createEvents } from 'ics'
+import moment from 'moment-timezone' // Import moment-timezone
 import { getFolder } from '../../../utils/fileUtils'
 import { AGEvent } from '../../../types/types'
 import { convertEventsToCalendarFormat } from '../../../utils/eventUtils'
@@ -12,26 +13,29 @@ export async function GET() {
     const calendarEvents = convertEventsToCalendarFormat(events)
 
     const icsEvents = calendarEvents.map((event) => {
-      const startDate = event.start
-      const start: [number, number, number, number, number] = [
-        startDate.getFullYear(),
-        startDate.getMonth() + 1,
-        startDate.getDate(),
-        startDate.getHours(),
-        startDate.getMinutes(),
-      ]
+      const startMoment = moment.tz(event.start, 'Europe/Helsinki')
 
-      const duration = Math.round((event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60))
+      const utcStart = startMoment.clone().utc()
+
+      const start: [number, number, number, number, number] = [
+        utcStart.year(),
+        utcStart.month() + 1,
+        utcStart.date(),
+        utcStart.hour(),
+        utcStart.minute(),
+      ]
 
       return {
         uid: event.id,
         start,
+        startInputType: 'utc' as const, // IMPORTANT: Set input to UTC
+        startOutputType: 'utc' as const, // IMPORTANT: Set output to UTC
         title: event.title,
         description: event.description,
         url: event.url,
         status: 'CONFIRMED' as const,
         organizer: { name: 'Aalto Gamers', email: 'board@aaltogamers.fi' },
-        duration: { hours: duration },
+        duration: { hours: event.duration },
       }
     })
 

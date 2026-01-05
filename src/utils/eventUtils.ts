@@ -1,3 +1,4 @@
+import moment from 'moment'
 import { AGEvent } from '../types/types'
 
 export interface CalendarEvent {
@@ -5,6 +6,7 @@ export interface CalendarEvent {
   title: string
   start: Date
   end: Date
+  duration: number
   description: string
   url: string
 }
@@ -18,14 +20,13 @@ export const convertEventsToCalendarFormat = (events: AGEvent[]): CalendarEvent[
     .filter((event) => event.time && event.visibleOnCalendar)
     .map((event) => {
       const startDate = new Date(event.time!)
-      const endDate = new Date(startDate)
-      endDate.setHours(endDate.getHours() + event.durationHours)
 
       return {
         id: event.slug,
         title: event.name,
         start: startDate,
-        end: endDate,
+        end: moment(startDate).add(event.durationHours, 'hours').toDate(),
+        duration: event.durationHours,
         description: event.description,
         url: `https://aaltogamers.fi/events/${event.slug}`,
       }
