@@ -175,7 +175,7 @@ collections:
           collection: 'event',
           value_field: 'name',
           search_fields: ['name'],
-          required: true,
+          required: false,
         }
 
   - label: 'Redirect Links'
