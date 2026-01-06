@@ -37,6 +37,11 @@ tldr: |-
   ### FINALS TICKETS
 
   [Kide.app](https://kide.app/events/bebd5407-6832-4493-9068-c1066d0da262)
+recordings:
+  - name: Finals recording
+    url: https://www.youtube.com/watch?v=oCJ6HurIwD8
+  - name: Qualifiers recording
+    url: https://youtu.be/Yxo8lM2qyss
 ---
 
 **_English below:_**

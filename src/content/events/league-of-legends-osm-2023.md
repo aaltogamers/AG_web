@@ -34,6 +34,13 @@ tldr: |-
   ### More?
 
   Read more at [osm.aaltogamers.fi](https://osm.aaltogamers.fi/)
+recordings:
+  - name: Finals recording
+    url: https://www.youtube.com/watch?v=QoqA48XjxXE
+  - name: Qualifiers recording (Part 2)
+    url: https://www.youtube.com/watch?v=2EqErIv9PsQ
+  - name: Qualifiers recording (Part 1)
+    url: https://www.youtube.com/watch?v=LN4WCXTxWtM
 ---
 
 For more information visit the tournament website: [osm.aaltogamers.fi](https://osm.aaltogamers.fi/)

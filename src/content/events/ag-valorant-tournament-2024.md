@@ -36,6 +36,9 @@ tldr: |-
   [Full team](https://forms.gle/qjcaCzxp4aWzsike9) 👈\
   [Flex team](https://forms.gle/6SWrhMX6mky6kzgC8) (1-4 players) 👈\
   Sign-up closes on 07.03.
+recordings:
+  - name: Recording
+    url: https://www.youtube.com/watch?v=u5UVM2mpUIg
 ---
 
 🔥 Warm up your guns, dust off the surprise strat book and get ready for the AG Valorant Tournament! 🔥

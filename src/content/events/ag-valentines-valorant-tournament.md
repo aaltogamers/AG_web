@@ -33,6 +33,9 @@ tldr: >-
 
 
   Read the rules [HERE](https://docs.google.com/document/d/1Q2MDzny9B5SuxQd4m78XdV8Fi69tRhspbd1_pf_THPs/edit?usp=sharing)
+recordings:
+  - name: Recording
+    url: https://www.youtube.com/watch?v=w8Rl8yuusS0
 ---
 
 Aalto Gamers
