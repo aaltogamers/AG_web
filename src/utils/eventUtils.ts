@@ -18,6 +18,21 @@ export interface CalendarEvent {
  */
 export const convertEventsToCalendarFormat = (events: AGEvent[]): CalendarEvent[] => {
   return events
+    .flatMap((event) => {
+      if (!event.otherTimes?.length) {
+        return [event]
+      }
+
+      const otherEvents = event.otherTimes.map(({ time, name }) => {
+        return {
+          ...event,
+          name: name || event.name,
+          time,
+        }
+      })
+
+      return [event, ...otherEvents]
+    })
     .filter((event) => event.time && event.visibleOnCalendar)
     .map((event) => {
       // Parse time as Helsinki timezone, then convert to Date object
