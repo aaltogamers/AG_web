@@ -35,7 +35,6 @@ export const convertEventsToCalendarFormat = (events: AGEvent[]): CalendarEvent[
     })
     .filter((event) => event.time && event.visibleOnCalendar)
     .map((event) => {
-      // Parse time as Helsinki timezone, then convert to Date object
       const startDate = moment.tz(event.time!, 'Europe/Helsinki').toDate()
 
       const url = `https://aaltogamers.fi/events/${event.slug}`
