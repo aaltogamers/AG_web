@@ -41,6 +41,11 @@ tldr: >-
 
 
   [Kide.app](<T﻿ickets for sale on [Kide.app](https://kide.app/events/52662ade-10d0-4863-af06-578036125f7b)!>)
+recordings:
+  - name: Finals recording
+    url: https://www.youtube.com/watch?v=LzEMDHARbx0
+  - name: Qualifiers recording
+    url: https://www.youtube.com/watch?v=E1YKf-6dqbY
 ---
 
 _English below!_

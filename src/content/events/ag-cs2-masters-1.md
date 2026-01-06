@@ -24,6 +24,11 @@ tldr: |-
   ### SIGN-UP
 
   Register with your full team [here](https://forms.gle/3y7boQ3qUyFf6avP7) 👈
+recordings:
+  - name: Finals recording
+    url: https://www.youtube.com/watch?v=zCHCYKFaHO0
+  - name: Qualifiers recording
+    url: https://www.youtube.com/watch?v=mzUBNDPAY7s
 ---
 
 ✏️ Rules and more info on the [Challengermode](https://www.challengermode.com/tournaments/bfa9d40b-c41e-4e82-9c13-08dcdb51c8a4?UTM_Campaign=SharedTournamenthttps://www.challengermode.com/tournaments/bfa9d40b-c41e-4e82-9c13-08dcdb51c8a4?UTM_Campaign=SharedTournament) page. All skill levels welcome, but please note that 3 out of 5 players on the team **must be university students** or **recent graduates**. ❗
