@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { AGEvent } from '../types/types'
 import AGImage from './AGImage'
 import Markdown from './Markdown'
+import RecordingsDropdown from './RecordingsDropdown'
 
 interface Props {
   event: AGEvent
@@ -29,6 +30,7 @@ const Event = ({ event }: Props) => {
                 View Photos
               </Link>
             )}
+            {event.recordings?.length && <RecordingsDropdown recordings={event.recordings} />}
           </div>
         </div>
       </div>

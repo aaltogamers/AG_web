@@ -26,6 +26,9 @@ tldr: |-
   ### SIGN-UP
 
    [HERE](https://forms.gle/z8JUiocLzrnVuvet9)
+recordings:
+  - name: Recording
+    url: https://www.youtube.com/watch?v=c36JgtbW3xs
 ---
 
 **⛏️ AG Minecraft March ⛏️**
