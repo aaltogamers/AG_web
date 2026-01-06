@@ -34,7 +34,7 @@ const CustomEvent = ({ event }: { event: CalendarEvent }) => {
 
       {showTooltip && (
         <div
-          className="fixed bg-gray-900 text-white p-4 pb-0 rounded-lg shadow-2xl border border-gray-700 min-w-[250px] max-w-[350px]"
+          className="fixed bg-gray-900 text-white p-4 pb-0 rounded-lg shadow-2xl border border-gray-700 w-[500px]"
           style={{
             zIndex: 9999,
             left: '50%',
