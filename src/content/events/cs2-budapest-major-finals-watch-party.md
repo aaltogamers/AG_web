@@ -1,7 +1,7 @@
 ---
 name: CS2 Budapest Major Finals Watch Party
 time: 2025-12-14T19:00:00
-durationHours: 5
+durationHours: 4
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: Design Factory, Puumiehenkuja 5, Espoo

@@ -1,7 +1,7 @@
 ---
 name: AG Mario Kart Sauna
 time: 2024-04-07T18:00:00
-durationHours: 8
+durationHours: 5
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: Rantasauna

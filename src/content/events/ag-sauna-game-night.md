@@ -1,7 +1,7 @@
 ---
 name: AG Sauna Game Night
 time: 2025-04-05T19:00:00
-durationHours: 6
+durationHours: 4
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: Game Cave Otaniemi, Kivimiehentie 2, Espoo

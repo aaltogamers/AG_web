@@ -1,7 +1,7 @@
 ---
 name: AG Minecraft Server
 time: 2024-03-28T18:00:00
-durationHours: 8
+durationHours: 5
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: AG Discord server
