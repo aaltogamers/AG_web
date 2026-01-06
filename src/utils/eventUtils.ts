@@ -20,18 +20,19 @@ export const convertEventsToCalendarFormat = (events: AGEvent[]): CalendarEvent[
   return events
     .flatMap((event) => {
       if (!event.otherTimes?.length) {
-        return [event]
+        return [{ ...event, id: event.slug }]
       }
 
       const otherEvents = event.otherTimes.map(({ time, name }) => {
         return {
           ...event,
+          id: `${event.slug}-${moment(time).format('YYYYMMDDHHmm')}`,
           name: name || event.name,
           time,
         }
       })
 
-      return [event, ...otherEvents]
+      return [{ ...event, id: event.slug }, ...otherEvents]
     })
     .filter((event) => event.time && event.visibleOnCalendar)
     .map((event) => {
@@ -40,7 +41,7 @@ export const convertEventsToCalendarFormat = (events: AGEvent[]): CalendarEvent[
       const url = `https://aaltogamers.fi/events/${event.slug}`
 
       return {
-        id: event.slug,
+        id: event.id,
         title: event.name,
         start: startDate,
         end: moment(startDate).add(event.durationHours, 'hours').toDate(),
