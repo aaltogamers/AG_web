@@ -153,6 +153,14 @@ collections:
             LINK\n
             Open from XX to XX
             " }
+      - label: 'Recordings (e.g. Youtube link)'
+        name: 'recordings'
+        widget: 'list'
+        required: false
+        summary: '{{fields.name}}'
+        fields:
+          - { label: 'Name', name: 'name', widget: 'string', required: true, default: 'Recording' }
+          - { label: 'URL', name: 'url', widget: 'string', required: true }
       - { label: 'Body', name: 'body', widget: 'markdown' }
   - label: 'Landing info'
     name: 'landinginfo'
