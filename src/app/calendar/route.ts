@@ -1,8 +1,8 @@
 import { createEvents } from 'ics'
 import moment from 'moment-timezone' // Import moment-timezone
-import { getFolder } from '../../../utils/fileUtils'
-import { AGEvent } from '../../../types/types'
-import { convertEventsToCalendarFormat } from '../../../utils/eventUtils'
+import { getFolder } from '../../utils/fileUtils'
+import { AGEvent } from '../../types/types'
+import { convertEventsToCalendarFormat } from '../../utils/eventUtils'
 
 export const dynamic = 'force-static'
 export const revalidate = false
