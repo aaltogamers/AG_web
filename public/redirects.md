@@ -46,4 +46,7 @@ redirects:
   - name: AG Actives Discord
     slug: actives_discord
     url: https://discord.gg/UWzgvQJATN
+  - name: AG Youtube Channel
+    url: https://www.youtube.com/@aaltogamers/videos
+    slug: youtube
 ---
