@@ -1,6 +1,8 @@
 ---
 name: AG Biweeklies
 otherTimes:
+  - time: 2026-01-16T18:00:00.000Z
+    name: AG Online Biweeklies
   - name: AG Live Biweeklies
     time: 2025-12-19T16:00:00.000Z
   - name: AG Offline Biweeklies
