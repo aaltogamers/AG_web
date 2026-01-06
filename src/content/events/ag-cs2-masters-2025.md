@@ -2,10 +2,10 @@
 name: AG CS2 Masters 2025
 time: 2025-11-22T12:00:00
 durationHours: 8
+image: /images/cs2_masters_final_compressed.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: AG Discord server
-image: /images/cs2_masters_final_compressed.jpg
 description: Gather a team of friends and get ready to compete against the best
   teams in the Finnish student *Counter Strike* scene for your share of the
   **800€ prize pool! 🏆**
@@ -27,6 +27,11 @@ tldr: >-
   Team signup: [https://forms.gle/nQZNzpxS3u2vjiWs9](https://forms.gle/nQZNzpxS3u2vjiWs9)  
 
   DL. 17.11. or when 32 teams have signed up
+recordings:
+  - name: Finals recording
+    url: https://www.youtube.com/watch?v=MJnrpGrQQTY
+  - name: Qualifiers recording
+    url: https://www.youtube.com/watch?v=IKoz3agl8xk&t=14689s
 ---
 
 ### Prizes
