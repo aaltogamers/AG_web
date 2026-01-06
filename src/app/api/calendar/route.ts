@@ -13,9 +13,7 @@ export async function GET() {
     const calendarEvents = convertEventsToCalendarFormat(events)
 
     const icsEvents = calendarEvents.map((event) => {
-      const startMoment = moment.tz(event.start, 'Europe/Helsinki')
-
-      const utcStart = startMoment.clone().utc()
+      const utcStart = moment.utc(event.start)
 
       const start: [number, number, number, number, number] = [
         utcStart.year(),
@@ -28,11 +26,12 @@ export async function GET() {
       return {
         uid: event.id,
         start,
-        startInputType: 'utc' as const, // IMPORTANT: Set input to UTC
-        startOutputType: 'utc' as const, // IMPORTANT: Set output to UTC
+        startInputType: 'utc' as const,
+        startOutputType: 'utc' as const,
         title: event.title,
         description: event.description,
         url: event.url,
+        location: event.location,
         status: 'CONFIRMED' as const,
         organizer: { name: 'Aalto Gamers', email: 'board@aaltogamers.fi' },
         duration: { hours: event.duration },

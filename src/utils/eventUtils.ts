@@ -1,4 +1,4 @@
-import moment from 'moment'
+import moment from 'moment-timezone'
 import { AGEvent } from '../types/types'
 
 export interface CalendarEvent {
@@ -8,6 +8,7 @@ export interface CalendarEvent {
   end: Date
   duration: number
   description: string
+  location?: string
   url: string
 }
 
@@ -19,7 +20,8 @@ export const convertEventsToCalendarFormat = (events: AGEvent[]): CalendarEvent[
   return events
     .filter((event) => event.time && event.visibleOnCalendar)
     .map((event) => {
-      const startDate = new Date(event.time!)
+      // Parse time as Helsinki timezone, then convert to Date object
+      const startDate = moment.tz(event.time!, 'Europe/Helsinki').toDate()
 
       return {
         id: event.slug,
@@ -28,6 +30,7 @@ export const convertEventsToCalendarFormat = (events: AGEvent[]): CalendarEvent[
         end: moment(startDate).add(event.durationHours, 'hours').toDate(),
         duration: event.durationHours,
         description: event.description,
+        location: event.location,
         url: `https://aaltogamers.fi/events/${event.slug}`,
       }
     })
