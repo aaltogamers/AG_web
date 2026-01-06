@@ -72,7 +72,7 @@ const Calendar = ({ events }: Props) => {
   }
 
   const copyCalendarUrl = async () => {
-    const calendarUrl = `${window.location.origin}/api/calendar`
+    const calendarUrl = `${window.location.origin}/calendar`
 
     await navigator.clipboard.writeText(calendarUrl)
     setCopySuccess(true)
