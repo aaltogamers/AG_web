@@ -15,6 +15,7 @@ export type AGEvent = {
   tldr: string
   slug: string
   albumSlug?: string
+  recordings?: { name: string; url: string }[]
 }
 
 export type Option = {
