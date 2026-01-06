@@ -1,6 +1,6 @@
 ---
 name: CS2 Budapest Major Finals Watch Party
-time: 2025-12-14T19:00:00.000Z
+time: 2025-12-14T19:00:00.000
 durationHours: 4
 image: /images/cs2-budapest-major-finals-watchparty-2025.jpg
 visibleOnCalendar: true
@@ -16,7 +16,7 @@ tldr: >-
 
    Sunday 14.12 starting from 19:00.
 
-  ### WHERE?
+  ### WHERE?I
 
    [Aalto Design Factory](https://maps.app.goo.gl/VFHB6vnW1HDraMR57), Puumiehenkuja 5
 

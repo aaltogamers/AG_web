@@ -94,7 +94,13 @@ collections:
     sortable_fields: ['time', 'name']
     fields:
       - { label: 'Name', name: 'name', widget: 'string' }
-      - { label: 'Time', name: 'time', widget: 'datetime', required: false }
+      - {
+          label: 'Time',
+          name: 'time',
+          widget: 'datetime',
+          format: 'YYYY-MM-DDTHH:mm:ss',
+          required: false,
+        }
       - label: 'Other times for calendar'
         name: 'otherTimes'
         widget: 'list'
@@ -103,7 +109,13 @@ collections:
         add_to_top: true
         collapsed: true
         fields:
-          - { label: 'Time', name: 'time', widget: 'datetime', required: true }
+          - {
+              label: 'Time',
+              name: 'time',
+              widget: 'datetime',
+              format: 'YYYY-MM-DDTHH:mm:ss',
+              required: true,
+            }
           - { label: Name, name: name, widget: string, required: false }
 
       - {
