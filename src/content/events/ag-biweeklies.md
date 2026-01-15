@@ -1,6 +1,20 @@
 ---
 name: AG Biweeklies
 otherTimes:
+  - time: 2026-05-08T18:00:00
+    name: AG Biweeklies
+  - time: 2026-04-17T18:00:00
+    name: AG Biweeklies
+  - time: 2026-04-03T18:00:00
+    name: AG Biweeklies
+  - time: 2026-03-20T18:00:00
+    name: AG Biweeklies
+  - time: 2026-03-06T18:00:00
+    name: AG Biweeklies
+  - time: 2026-02-20T18:00:00
+    name: AG Biweeklies
+  - name: AG Biweeklies
+    time: 2026-01-23T18:00:00
   - time: 2026-01-16T18:00:00.000
     name: AG Online Biweeklies
   - name: AG Live Biweeklies
