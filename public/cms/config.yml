@@ -213,6 +213,7 @@ collections:
           min: 1,
           hint: 'The order in which the albums are displayed. Smallest first.',
         }
+      - { label: 'Album URL', name: 'url', widget: 'string' }
       - {
           label: 'Event',
           name: 'event',
