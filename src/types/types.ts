@@ -51,7 +51,7 @@ export type AGAlbum = {
   name: string
   image: string
   orderNumber: number
-  slug: string
+  url: string
   event?: string
 }
 
