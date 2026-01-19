@@ -25,8 +25,8 @@ const Event = ({ event }: Props) => {
             <Link href={`/events/${event.slug}`} className="mainbutton">
               Learn more
             </Link>
-            {event.albumSlug && (
-              <Link href={`/gallery/${event.albumSlug}`} className="borderbutton">
+            {event.albumURL && (
+              <Link href={event.albumURL} className="borderbutton">
                 View Photos
               </Link>
             )}

@@ -14,7 +14,7 @@ export type AGEvent = {
   isRecurring?: boolean
   tldr: string
   slug: string
-  albumSlug?: string
+  albumURL?: string
   recordings?: { name: string; url: string }[]
 }
 

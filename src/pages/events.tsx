@@ -39,7 +39,7 @@ export const getStaticProps = () => {
   events.forEach((event) => {
     const linkedAlbum = albums.filter((album) => album.event === event.name)[0]
     if (linkedAlbum) {
-      event.albumSlug = linkedAlbum.slug
+      event.albumURL = linkedAlbum.url
     }
   })
 
