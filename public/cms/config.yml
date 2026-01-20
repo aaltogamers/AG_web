@@ -192,38 +192,6 @@ collections:
           hint: 'The order in which the board members are displayed. Smallest first.',
         }
       - { label: 'Image', name: 'image', widget: 'image', required: false }
-  - label: 'Album'
-    name: 'album'
-    folder: 'src/content/albums'
-    create: true
-    identifier_field: name
-    fields:
-      - {
-          label: 'Name',
-          name: 'name',
-          widget: 'string',
-          hint: 'WARNING: When creating an album, you need to manually make a folder in /public/images/albums/ and store the images there. ',
-        }
-      - { label: 'Image', name: 'image', widget: 'image' }
-      - {
-          label: 'Order number',
-          name: 'orderNumber',
-          widget: 'number',
-          value_type: 'int',
-          min: 1,
-          hint: 'The order in which the albums are displayed. Smallest first.',
-        }
-      - { label: 'Album URL', name: 'url', widget: 'string' }
-      - {
-          label: 'Event',
-          name: 'event',
-          widget: 'relation',
-          collection: 'event',
-          value_field: 'name',
-          search_fields: ['name'],
-          required: false,
-        }
-
   - label: 'Redirect Links'
     name: 'links'
     files:
