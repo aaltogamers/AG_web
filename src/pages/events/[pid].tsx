@@ -3,11 +3,13 @@ import Head from 'next/head'
 import Header from '../../components/Header'
 import Markdown from '../../components/Markdown'
 import PageWrapper from '../../components/PageWrapper'
-import { AGAlbum, AGEvent } from '../../types/types'
+import { AGEvent } from '../../types/types'
 import { getFile, getFolder } from '../../utils/fileUtils'
 import AGImage from '../../components/AGImage'
 import SignUpForm from '../../components/SignupForm'
 import Link from 'next/link'
+import { getRelevantAlbumsForEvents } from '../../utils/getAlbumRelevantToEvent'
+import { getLycheeAlbums } from '../../utils/lychee'
 
 type Props = {
   event: AGEvent
@@ -59,14 +61,11 @@ export async function getStaticPaths() {
   }
 }
 
-export const getStaticProps = (context: GetStaticPropsContext) => {
+export const getStaticProps = async (context: GetStaticPropsContext) => {
   const event = getFile(`events/${context?.params?.pid}`) as unknown as AGEvent
+  const albums = await getLycheeAlbums()
 
-  const albums = getFolder('albums') as unknown as AGAlbum[]
-
-  const linkedAlbum = albums.filter((album) => album.event === event.name)[0]
-
-  event.albumID = linkedAlbum?.url
+  getRelevantAlbumsForEvents([event], albums)
 
   if (!event.albumID) {
     delete event.albumID
