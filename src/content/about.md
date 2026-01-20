@@ -1,6 +1,5 @@
 ---
 title: About us
-boardTitle: Aalto Gamers Board of 2026
 ---
 
 ## Aalto Gamers ry

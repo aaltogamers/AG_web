@@ -4,7 +4,7 @@ import Header from '../components/Header'
 import History from '../components/History'
 import Markdown from '../components/Markdown'
 import PageWrapper from '../components/PageWrapper'
-import { AGBoardMember } from '../types/types'
+import { AGBoardMember, HistoryEntry } from '../types/types'
 import { getFolder, getFile } from '../utils/fileUtils'
 
 interface Props {
@@ -28,11 +28,9 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
           </div>
           <h2>{boardTitle}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-lg">
-            {boardMembers
-              .sort((member1, member2) => member1.orderNumber - member2.orderNumber)
-              .map((boardMember) => (
-                <BoardMember boardMember={boardMember} key={boardMember.name} />
-              ))}
+            {boardMembers.map((boardMember) => (
+              <BoardMember boardMember={boardMember} key={boardMember.name} />
+            ))}
           </div>
           <History />
         </div>
@@ -43,6 +41,16 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
 
 export default About
 
-export const getStaticProps = () => ({
-  props: { boardMembers: getFolder('boardmembers'), ...getFile('about') },
-})
+export const getStaticProps = () => {
+  const historyEntries = getFolder('history') as HistoryEntry[]
+  const latestHistory = historyEntries.sort((a, b) => parseInt(b.year) - parseInt(a.year))[0]
+  const boardMembers = latestHistory?.boardMembers ?? []
+
+  return {
+    props: {
+      boardTitle: `Aalto Gamers Board of ${latestHistory.year}`,
+      boardMembers,
+      ...getFile('about'),
+    },
+  }
+}

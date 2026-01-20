@@ -82,6 +82,14 @@ export type LandingInfo = {
   isSmallImage?: boolean
 }
 
+export type HistoryEntry = {
+  year: string
+  title?: string
+  boardMembers: AGBoardMember[]
+  content?: string
+  slug: string
+}
+
 export type EditableInputType = 'text' | 'select' | 'info'
 
 export type EditableInputObj = {

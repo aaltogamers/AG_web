@@ -25,7 +25,6 @@ collections:
         file: 'src/content/about.md'
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
-          - { label: 'Board Title', name: 'boardTitle', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
       - label: 'Safer Space Policy'
         name: 'safespace'
@@ -172,26 +171,28 @@ collections:
       - { label: 'Subtitle', name: 'subtitle', widget: 'string' }
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
-  - label: 'Board member'
-    name: 'boardmember'
-    folder: 'src/content/boardmembers'
+  - label: 'History'
+    name: 'history'
+    folder: 'src/content/history'
     create: true
-    identifier_field: Name
+    identifier_field: year
+    sortable_fields: ['year']
     fields:
-      - { label: 'Name', name: 'name', widget: 'string' }
-      - { label: 'Title', name: 'title', widget: 'string' }
-      - { label: 'Status', name: 'status', widget: 'string' }
-      - { label: 'Game', name: 'game', widget: 'string' }
-      - {
-          label: 'Order number',
-          name: 'orderNumber',
-          widget: 'number',
-          value_type: 'int',
-          min: 1,
-          max: 20,
-          hint: 'The order in which the board members are displayed. Smallest first.',
-        }
-      - { label: 'Image', name: 'image', widget: 'image', required: false }
+      - { label: 'Year', name: 'year', widget: 'string' }
+      - { label: 'Title', name: 'title', widget: 'string', required: false }
+      - label: 'Board Members'
+        name: 'boardMembers'
+        label_singular: 'Board Member'
+        widget: 'list'
+        allow_add: true
+        summary: '{{fields.name}}'
+        fields:
+          - { label: 'Name', name: 'name', widget: 'string' }
+          - { label: 'Title', name: 'title', widget: 'string', required: false }
+          - { label: 'Image', name: 'image', widget: 'image', required: false }
+          - { label: 'Status', name: 'status', widget: 'string', required: false }
+          - { label: 'Game', name: 'game', widget: 'string', required: false }
+      - { label: 'Body', name: 'body', widget: 'markdown', required: false }
   - label: 'Redirect Links'
     name: 'links'
     files:
