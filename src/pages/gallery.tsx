@@ -32,7 +32,7 @@ export const getStaticProps = async () => {
 
   return {
     props: { albums },
-    revalidate: 10, // TODO: adjust as needed
+    revalidate: 600, // Revalidate every 10 minutes
   }
 }
 
