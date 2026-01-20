@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import BoardMember from '../components/BoardMember'
 import Header from '../components/Header'
+import History from '../components/History'
 import Markdown from '../components/Markdown'
 import PageWrapper from '../components/PageWrapper'
 import { AGBoardMember } from '../types/types'
@@ -33,6 +34,7 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
                 <BoardMember boardMember={boardMember} key={boardMember.name} />
               ))}
           </div>
+          <History />
         </div>
       </div>
     </PageWrapper>
