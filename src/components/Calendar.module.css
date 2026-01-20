@@ -63,6 +63,18 @@
   overflow: visible !important;
 }
 
+.calendarWrapper :global(.rbc-row-content) {
+  overflow: visible !important;
+}
+
+.calendarWrapper :global(.rbc-row-segment) {
+  overflow: visible !important;
+}
+
+.calendarWrapper :global(.rbc-event-content) {
+  overflow: visible !important;
+}
+
 .customTooltip {
   white-space: normal;
   word-wrap: break-word;

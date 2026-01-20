@@ -14,10 +14,6 @@ export const getLycheeAlbums = async () => {
       'X-XSRF-TOKEN': xsrfToken,
       Cookie: formatCookies(initCookies),
     },
-    body: JSON.stringify({
-      username: process.env.LYCHEE_USERNAME,
-      password: process.env.LYCHEE_PASSWORD,
-    }),
   })
 
   const loginCookies = parseSetCookieHeaders(loginResponse)

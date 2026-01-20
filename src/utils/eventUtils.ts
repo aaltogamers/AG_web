@@ -16,7 +16,10 @@ export interface CalendarEvent {
  * Converts AGEvent objects to a calendar-compatible format
  * Used by both the ICS export and the calendar UI component
  */
-export const convertEventsToCalendarFormat = (events: AGEvent[]): CalendarEvent[] => {
+export const convertEventsToCalendarFormat = (
+  events: AGEvent[],
+  addUrl: boolean = true
+): CalendarEvent[] => {
   return events
     .flatMap((event) => {
       if (!event.otherTimes?.length) {
@@ -46,7 +49,7 @@ export const convertEventsToCalendarFormat = (events: AGEvent[]): CalendarEvent[
         start: startDate,
         end: moment(startDate).add(event.durationHours, 'hours').toDate(),
         duration: event.durationHours,
-        description: event.description + `\n\n${url}`,
+        description: event.description + (addUrl ? `\n\n${url}` : ''),
         location: event.location,
         url,
       }
