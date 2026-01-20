@@ -1,5 +1,5 @@
 ---
-name: AG Valorant Tournament
+name: AG Valorant Tournament 2024
 time: 2024-03-09T13:00:00
 durationHours: 6
 visibleOnCalendar: true

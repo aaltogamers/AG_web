@@ -1,5 +1,5 @@
 ---
-name: AG Valorant Tournament
+name: AG Valorant Tournament 2023
 time: 2023-10-22T13:00:00
 durationHours: 6
 visibleOnCalendar: true
