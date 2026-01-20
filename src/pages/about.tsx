@@ -12,9 +12,10 @@ interface Props {
   content: string
   boardTitle: string
   boardMembers: AGBoardMember[]
+  historyItems: HistoryEntry[]
 }
 
-const About = ({ title, content, boardMembers, boardTitle }: Props) => {
+const About = ({ title, content, boardMembers, boardTitle, historyItems }: Props) => {
   return (
     <PageWrapper>
       <Head>
@@ -27,12 +28,12 @@ const About = ({ title, content, boardMembers, boardTitle }: Props) => {
             <Markdown>{content}</Markdown>
           </div>
           <h2>{boardTitle}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-lg gap-8 md:gap-16">
             {boardMembers.map((boardMember) => (
               <BoardMember boardMember={boardMember} key={boardMember.name} />
             ))}
           </div>
-          <History />
+          <History historyItems={historyItems} />
         </div>
       </div>
     </PageWrapper>
@@ -43,13 +44,15 @@ export default About
 
 export const getStaticProps = () => {
   const historyEntries = getFolder('history') as HistoryEntry[]
-  const latestHistory = historyEntries.sort((a, b) => parseInt(b.year) - parseInt(a.year))[0]
+  const sortedHistory = historyEntries.sort((a, b) => parseInt(a.year) - parseInt(b.year))
+  const latestHistory = sortedHistory[sortedHistory.length - 1]
   const boardMembers = latestHistory?.boardMembers ?? []
 
   return {
     props: {
       boardTitle: `Aalto Gamers Board of ${latestHistory.year}`,
       boardMembers,
+      historyItems: sortedHistory,
       ...getFile('about'),
     },
   }

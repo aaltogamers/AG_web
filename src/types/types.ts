@@ -44,7 +44,6 @@ export type AGBoardMember = {
   game?: string
   image?: string
   contactInformation?: string
-  orderNumber: number
 }
 
 export type LycheeAlbumThumb = {
