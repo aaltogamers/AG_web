@@ -4,7 +4,7 @@ time: ""
 otherTimes:
   - name: AG League of Legends OSM Finals
     time: 2026-05-23T12:00:00
-  - time: 2026-05-15T12:00:00
+  - time: 2026-05-16T12:00:00
     name: AG League of Legends OSM Qualifiers
 durationHours: 8
 image: /images/ag-white.png
