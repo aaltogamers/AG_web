@@ -10,6 +10,7 @@ import SignUpForm from '../../components/SignupForm'
 import Link from 'next/link'
 import { getRelevantAlbumsForEvents } from '../../utils/getAlbumRelevantToEvent'
 import { getLycheeAlbums } from '../../utils/lychee'
+import { LYCHEE_BASE_URL } from '../../utils/constants'
 
 type Props = {
   event: AGEvent
@@ -36,7 +37,7 @@ const Event = ({ event }: Props) => {
           </div>
           {event.albumID && (
             <div className="mb-8 flex justify-center w-full">
-              <Link href={event.albumID} className="borderbutton ">
+              <Link href={`${LYCHEE_BASE_URL}/gallery/${event.albumID}`} className="borderbutton ">
                 View photos from this event
               </Link>
             </div>
