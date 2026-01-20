@@ -16,7 +16,11 @@ export const parseEvents = (events: AGEvent[]) => {
         : -1
     })
     .forEach((event) => {
-      const { isRecurring } = event
+      const { isRecurring, visibleOnEventsPage } = event
+      if (!visibleOnEventsPage) {
+        return
+      }
+
       const eventMoment = isRecurring ? nowMoment : moment(event.time)
       const isToday = eventMoment.isSame(nowMoment, 'day')
       const isInFuture = eventMoment.isAfter(nowMoment)

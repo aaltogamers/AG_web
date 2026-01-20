@@ -32,9 +32,9 @@ const Event = ({ event }: Props) => {
               <Markdown>{event.tldr}</Markdown>
             </div>
           </div>
-          {event.albumURL && (
+          {event.albumID && (
             <div className="mb-8 flex justify-center w-full">
-              <Link href={event.albumURL} className="borderbutton ">
+              <Link href={event.albumID} className="borderbutton ">
                 View photos from this event
               </Link>
             </div>
@@ -66,10 +66,10 @@ export const getStaticProps = (context: GetStaticPropsContext) => {
 
   const linkedAlbum = albums.filter((album) => album.event === event.name)[0]
 
-  event.albumURL = linkedAlbum?.url
+  event.albumID = linkedAlbum?.url
 
-  if (!event.albumURL) {
-    delete event.albumURL
+  if (!event.albumID) {
+    delete event.albumID
   }
 
   return {

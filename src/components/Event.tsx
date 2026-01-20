@@ -3,6 +3,7 @@ import { AGEvent } from '../types/types'
 import AGImage from './AGImage'
 import Markdown from './Markdown'
 import RecordingsDropdown from './RecordingsDropdown'
+import { LYCHEE_BASE_URL } from '../utils/constants'
 
 interface Props {
   event: AGEvent
@@ -25,8 +26,8 @@ const Event = ({ event }: Props) => {
             <Link href={`/events/${event.slug}`} className="mainbutton">
               Learn more
             </Link>
-            {event.albumURL && (
-              <Link href={event.albumURL} className="borderbutton">
+            {event.albumID && (
+              <Link href={`${LYCHEE_BASE_URL}/gallery/${event.albumID}`} className="borderbutton">
                 View Photos
               </Link>
             )}

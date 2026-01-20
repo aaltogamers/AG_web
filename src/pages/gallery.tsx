@@ -1,11 +1,11 @@
 import Head from 'next/head'
 import PageWrapper from '../components/PageWrapper'
-import { getFolder } from '../utils/fileUtils'
 import Album from '../components/Album'
-import { AGAlbum } from '../types/types'
+import { LycheeAlbum } from '../types/types'
+import { getLycheeAlbums } from '../utils/lychee'
 
 interface Props {
-  albums: AGAlbum[]
+  albums: LycheeAlbum[]
 }
 
 const Gallery = ({ albums }: Props) => {
@@ -16,19 +16,24 @@ const Gallery = ({ albums }: Props) => {
       </Head>
       <div className="flex justify-center mt-16 ">
         <div className="flex flex-wrap">
-          {[
-            albums
-              .sort((a, b) => b.orderNumber - a.orderNumber)
-              .map((album) => <Album album={album} key={album.name} />),
-          ]}
+          {albums.map((album) => (
+            <Album album={album} key={album.id} />
+          ))}
         </div>
       </div>
     </PageWrapper>
   )
 }
 
-export const getStaticProps = () => ({
-  props: { albums: getFolder('albums') },
-})
+export const getStaticProps = async () => {
+  const albums = await getLycheeAlbums()
+
+  albums.reverse()
+
+  return {
+    props: { albums },
+    revalidate: 10, // TODO: adjust as needed
+  }
+}
 
 export default Gallery

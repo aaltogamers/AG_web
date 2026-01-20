@@ -14,7 +14,7 @@ export type AGEvent = {
   isRecurring?: boolean
   tldr: string
   slug: string
-  albumURL?: string
+  albumID?: string
   recordings?: { name: string; url: string }[]
 }
 
@@ -47,12 +47,31 @@ export type AGBoardMember = {
   orderNumber: number
 }
 
-export type AGAlbum = {
-  name: string
-  image: string
-  orderNumber: number
-  url: string
-  event?: string
+export type LycheeAlbumThumb = {
+  id: string
+  type: string
+  thumb: string
+  thumb2x: string
+  placeholder: string
+}
+
+export type LycheeAlbum = {
+  id: string
+  title: string
+  description: string | null
+  thumb: LycheeAlbumThumb | null
+  is_nsfw: boolean
+  is_public: boolean
+  has_subalbum: boolean
+  num_subalbums: number
+  num_photos: number
+  created_at: string
+  formatted_min_max: string | null
+  owner: string | null
+  timeline: {
+    time_date: string
+    format: string
+  }
 }
 
 export type LandingInfo = {

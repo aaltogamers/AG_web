@@ -1,11 +1,13 @@
 import Head from 'next/head'
 import EventList from '../components/EventList'
 import PageWrapper from '../components/PageWrapper'
-import { AGAlbum, AGEvent } from '../types/types'
+import { AGEvent } from '../types/types'
 import { getFolder } from '../utils/fileUtils'
 import { parseEvents } from '../utils/parseEvents'
 import Calendar from '../components/Calendar'
 import Header from '../components/Header'
+import { getLycheeAlbums } from '../utils/lychee'
+import { getRelevantAlbumsForEvents } from '../utils/getAlbumRelevantToEvent'
 
 type Props = {
   events: AGEvent[]
@@ -32,16 +34,11 @@ const Events = ({ events }: Props) => {
 
 export default Events
 
-export const getStaticProps = () => {
+export const getStaticProps = async () => {
   const events = getFolder('events') as AGEvent[]
-  const albums = getFolder('albums') as unknown as AGAlbum[]
+  const albums = await getLycheeAlbums()
 
-  events.forEach((event) => {
-    const linkedAlbum = albums.filter((album) => album.event === event.name)[0]
-    if (linkedAlbum) {
-      event.albumURL = linkedAlbum.url
-    }
-  })
+  getRelevantAlbumsForEvents(events, albums)
 
   return {
     props: { events: events },
