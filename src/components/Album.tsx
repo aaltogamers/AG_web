@@ -1,6 +1,5 @@
 import Link from 'next/link'
 
-import AGImage from './AGImage'
 import { LycheeAlbum } from '../types/types'
 import { LYCHEE_BASE_URL } from '../utils/constants'
 
@@ -17,7 +16,7 @@ const Album = ({ album }: Props) => {
       <div className="darkenedBackground absolute l-0 t-0 w-60 h-60 p-8 flex flex-col justify-end z-10">
         <h4>{album.title}</h4>
       </div>
-      <AGImage
+      <img
         src={album.thumb?.thumb || ''}
         alt={album.title}
         className="object-cover w-full h-full"
