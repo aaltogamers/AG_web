@@ -11,9 +11,11 @@ const EventList = ({ events, name }: Props) => {
   return events.length > 0 ? (
     <div className="flex flex-col w-full items-center">
       <Header>{name}</Header>
-      {events.map((event) => (
-        <Event event={event} key={event.name} />
-      ))}
+      {events
+        .filter((event) => event.visibleOnEventsPage)
+        .map((event) => (
+          <Event event={event} key={event.name} />
+        ))}
     </div>
   ) : null
 }
