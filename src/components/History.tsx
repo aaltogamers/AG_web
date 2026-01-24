@@ -36,9 +36,9 @@ const History = ({ historyItems }: Props) => {
                 </span>
               )}
               <h5 className="text-white">Board of {item.year}</h5>
-              <div className="flex flex-row flex-wrap gap-4">
+              <div className="grid grid-cols-3 md:grid-cols-5 w-fit gap-6">
                 {item.boardMembers.map(({ title, name, image }) => (
-                  <div key={name} className="w-40" style={{ zoom: '0.5' }}>
+                  <div key={name} className="w-45" style={{ zoom: '0.7' }}>
                     <BoardMember
                       boardMember={{
                         title: title?.replace('of the Board', '').replace('Head of', ''),

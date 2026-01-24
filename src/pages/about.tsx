@@ -44,8 +44,8 @@ export default About
 
 export const getStaticProps = () => {
   const historyEntries = getFolder('history') as HistoryEntry[]
-  const sortedHistory = historyEntries.sort((a, b) => parseInt(a.year) - parseInt(b.year))
-  const latestHistory = sortedHistory[sortedHistory.length - 1]
+  const sortedHistory = historyEntries.sort((a, b) => parseInt(b.year) - parseInt(a.year))
+  const latestHistory = sortedHistory[0]
   const boardMembers = latestHistory?.boardMembers ?? []
 
   return {
