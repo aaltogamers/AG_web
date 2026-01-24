@@ -9,6 +9,12 @@ interface AProps extends ComponentProps {
   href?: string
 }
 
+interface ImgProps extends ComponentProps {
+  title?: string
+  src?: string
+  alt?: string
+}
+
 interface MarkdownProps {
   children: string
   className?: string
@@ -32,7 +38,17 @@ const Ul = ({ children }: ComponentProps) => (
 const Ol = ({ children }: ComponentProps) => (
   <ol className="list-decimal list-inside mt-4 mb-8">{children}</ol>
 )
+
 const Li = ({ children }: ComponentProps) => <li className="mb-2">{children}</li>
+
+const Img = ({ children, title, ...props }: ImgProps) => (
+  <>
+    <img {...props} className="max-h-80">
+      {children}
+    </img>
+    <i>{title}</i>
+  </>
+)
 
 const Markdown = ({ children, className }: MarkdownProps) => {
   const components: Components = {
@@ -47,6 +63,7 @@ const Markdown = ({ children, className }: MarkdownProps) => {
     ul: Ul,
     ol: Ol,
     li: Li,
+    img: Img,
   }
 
   return (
