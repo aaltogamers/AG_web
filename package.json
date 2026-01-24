@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "next",
+    "type-check": "tsc --noEmit",
     "build": "next build && cp -r .next/static .next/standalone/.next/ && node copyPublicAndCompressImages.js",
     "build-win": "next build && xcopy .next\\static .next\\standalone\\.next\\static\\ /E /Y && node copyPublicAndCompressImages.js",
     "start": "node .next/standalone/server.js",
