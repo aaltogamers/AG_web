@@ -43,10 +43,10 @@ const Ol = ({ children }: ComponentProps) => (
 const Li = ({ children }: ComponentProps) => <li className="mb-2">{children}</li>
 
 const Img = ({ title, src, alt }: ImgProps) => (
-  <>
+  <span className="block w-fit">
     <AGImage className="max-h-80 object-contain w-fit" src={src || ''} alt={alt || ''} />
-    <i className="w-full text-center block">{title}</i>
-  </>
+    <i className="block">{title}</i>
+  </span>
 )
 
 const Markdown = ({ children, className }: MarkdownProps) => {
