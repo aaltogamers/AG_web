@@ -16,11 +16,10 @@ interface Props {
 const SafeSpace = ({ title, content, boardMembers, contactPeopleNames }: Props) => {
   const contactPersons = boardMembers
     .filter((person) => contactPeopleNames.includes(person.name))
-    .map(({ image, name, orderNumber, contactInformation }) => ({
+    .map(({ image, name, contactInformation }) => ({
       image,
       name,
       title: 'Harassment contact person',
-      orderNumber,
       contactInformation,
     }))
   return (
@@ -35,11 +34,9 @@ const SafeSpace = ({ title, content, boardMembers, contactPeopleNames }: Props) 
             <Markdown>{content}</Markdown>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 text-lg md:w-2/3 justify-center">
-            {contactPersons
-              .sort((member1, member2) => member1.orderNumber - member2.orderNumber)
-              .map((boardMember) => (
-                <BoardMember boardMember={boardMember} key={boardMember.name} showContactInfo />
-              ))}
+            {contactPersons.map((boardMember) => (
+              <BoardMember boardMember={boardMember} key={boardMember.name} showContactInfo />
+            ))}
           </div>
         </div>
       </div>
