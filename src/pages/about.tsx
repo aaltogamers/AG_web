@@ -27,8 +27,8 @@ const About = ({ title, content, boardMembers, boardTitle, historyItems }: Props
           <div className="my-20">
             <Markdown>{content}</Markdown>
           </div>
-          <h2>{boardTitle}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-lg gap-8 md:gap-16">
+          <Header>{boardTitle}</Header>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-lg gap-8 md:gap-16 mt-16">
             {boardMembers.map((boardMember) => (
               <BoardMember boardMember={boardMember} key={boardMember.name} />
             ))}
