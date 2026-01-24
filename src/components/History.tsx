@@ -12,7 +12,7 @@ const History = ({ historyItems }: Props) => {
     <div className="flex flex-col">
       <Header>AG - Over The Years</Header>
 
-      <div className="grid" style={{ gridTemplateColumns: '100px 50px 1fr' }}>
+      <div className="grid grid-cols-[60px_40px_1fr] md:grid-cols-[100px_50px_1fr]">
         {historyItems.map((item, i) => (
           <>
             <div className="flex items-center">
@@ -36,9 +36,9 @@ const History = ({ historyItems }: Props) => {
                 </span>
               )}
               <h5 className="text-white">Board of {item.year}</h5>
-              <div className="grid grid-cols-3 md:grid-cols-5 w-fit gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 w-fit gap-4 md:gap-6">
                 {item.boardMembers.map(({ title, name, image }) => (
-                  <div key={name} className="w-45" style={{ zoom: '0.7' }}>
+                  <div key={name} className="w-45 zoom-60 md:zoom-70">
                     <BoardMember
                       boardMember={{
                         title: title?.replace('of the Board', '').replace('Head of', ''),
