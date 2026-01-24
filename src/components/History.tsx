@@ -10,7 +10,7 @@ interface Props {
 const History = ({ historyItems }: Props) => {
   return (
     <div className="flex flex-col">
-      <Header>History</Header>
+      <Header>AG Over the Years</Header>
 
       <div className="grid" style={{ gridTemplateColumns: '100px 50px 1fr' }}>
         {historyItems.map((item, i) => (
