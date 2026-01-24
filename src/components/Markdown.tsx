@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
 import ReactMarkdown, { Components } from 'react-markdown'
+import AGImage from './AGImage'
 
 interface ComponentProps {
   children?: ReactNode
@@ -10,8 +11,8 @@ interface AProps extends ComponentProps {
 }
 
 interface ImgProps extends ComponentProps {
-  title?: string
   src?: string
+  title?: string
   alt?: string
 }
 
@@ -41,12 +42,10 @@ const Ol = ({ children }: ComponentProps) => (
 
 const Li = ({ children }: ComponentProps) => <li className="mb-2">{children}</li>
 
-const Img = ({ children, title, ...props }: ImgProps) => (
+const Img = ({ title, src, alt }: ImgProps) => (
   <>
-    <img {...props} className="max-h-80">
-      {children}
-    </img>
-    <i>{title}</i>
+    <AGImage className="max-h-80 object-contain w-fit" src={src || ''} alt={alt || ''} />
+    <i className="w-full text-center block">{title}</i>
   </>
 )
 
