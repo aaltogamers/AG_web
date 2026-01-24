@@ -2,7 +2,7 @@
 name: AG TFT Riot Games Week Tournament 2021
 time: 2021-10-04T18:00:00
 durationHours: 4
-image: /images/tft-riot-week-2021.jpg
+image: /images/tft_2021.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: Online (Discord)

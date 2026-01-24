@@ -1,5 +1,5 @@
 ---
-name: League of Legends Finnish Student Championships 2021
+name: League of Legends OSM 2021
 time: 2021-05-15T12:00:00
 durationHours: 7
 image: /images/lol-osm-2021.png

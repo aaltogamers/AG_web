@@ -1,5 +1,5 @@
 ---
-name: League of Legends Finnish Student Championships 2022
+name: League of Legends OSM 2022
 time: 2022-05-14T12:00:00
 durationHours: 8
 image: /images/lol-osm-2022.png

@@ -2,7 +2,7 @@
 name: AG Rocket League Tournament 2021
 time: 2021-11-13T12:00:00
 durationHours: 3
-image: /images/rocket-league-2021.jpg
+image: /images/rocket-league-2021.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: Online (Discord)
