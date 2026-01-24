@@ -22,7 +22,7 @@ const EventShowCase = ({ events }: Props) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-4/5">
         {shownEvents.map((event) => (
           <Link href={`/events/${event.slug}`} className="hover:brightness-75" key={event.slug}>
-            <AGImage src={event.image} alt={event.name} />
+            <AGImage src={event.image} alt={event.name} className="aspect-square" />
           </Link>
         ))}
       </div>

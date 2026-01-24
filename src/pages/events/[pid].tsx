@@ -29,7 +29,7 @@ const Event = ({ event }: Props) => {
             <AGImage
               src={event.image || '/images/ag-white.png'}
               alt={event.name}
-              className="max-h-[500px] object-scale-down md:max-w-[50%] pb-8"
+              className="max-h-[500px] object-scale-down md:max-w-[50%] pb-8 aspect-square"
             />
             <div className="mt-8 md:mt-0 md:pl-8 text-lightgray text-xl text-center md:text-left">
               <Markdown>{event.tldr}</Markdown>

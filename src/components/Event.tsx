@@ -17,7 +17,7 @@ const Event = ({ event }: Props) => {
         <AGImage
           src={event.image || '/images/ag-white.png'}
           alt={event.name}
-          className="max-h-96 object-contain"
+          className="max-h-96 object-contain aspect-square"
         />
         <div className="flex flex-col md:p-10 items-center md:items-start">
           <h3 className="mt-8 md:mt-0">{event.name}</h3>
