@@ -1,6 +1,6 @@
 ---
 name: AG Valentines Valorant 2026
-time: 2026-02-15T13:00:00
+time: 2026-02-22T13:00:00
 durationHours: 7
 image: /images/ag-white.png
 visibleOnCalendar: true
