@@ -3,6 +3,7 @@
 import { HTMLInputTypeAttribute } from 'react'
 import { UseFormRegister, Controller, Control } from 'react-hook-form'
 import Select from 'react-select'
+import slug from 'slug'
 
 type Props = {
   name: string
@@ -39,12 +40,13 @@ const TextInput = ({
   control,
   isMulti,
 }: Props) => {
-  const lowerCaseName = name.toLowerCase()
+  const inputSlug = slug(name)
   const commonMargins = 'mt-2 mb-8 md:m-4'
   const optionsWithLabel: OptionWithLabel[] = options?.map((o) => ({ value: o, label: o })) || []
+
   return (
     <>
-      <label className="flex items-center" htmlFor={lowerCaseName}>
+      <label className="flex items-center" htmlFor={inputSlug}>
         {displayName + (isPublic ? ' (public)' : '')}
         <span className="text-red">{required && '*'}</span>
       </label>
@@ -52,7 +54,7 @@ const TextInput = ({
         <Controller
           control={control}
           defaultValue={isMulti ? [] : [options[0]]}
-          name={name}
+          name={inputSlug}
           render={({ field: { onChange, value, ref } }) => (
             <Select
               ref={ref}
@@ -89,9 +91,9 @@ const TextInput = ({
           step={1}
           min={0}
           required={required}
-          {...register(name)}
+          {...register(inputSlug)}
           className={`p-2 rounded-md ${commonMargins} w-full bg-white`}
-          id={lowerCaseName}
+          id={inputSlug}
           onChange={(e) => {
             if (onChangeDo) {
               onChangeDo(e?.target.value)
