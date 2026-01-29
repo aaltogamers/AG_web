@@ -4,7 +4,7 @@ time: 2026-02-06T17:00:00
 durationHours: 6
 image: /images/ag-white.png
 visibleOnCalendar: true
-visibleOnEventsPage: false
+visibleOnEventsPage: true
 location: ""
 description: >-
   
