@@ -5,21 +5,34 @@ durationHours: 6
 image: /images/ag-white.png
 visibleOnCalendar: true
 visibleOnEventsPage: false
-location: Kylän Olohuone, Otaniemi
-description: TBD
-tldr: |-2
-   ### WHEN?
-   XX-XX on XX
+location: ""
+description: >-
+  
 
-   ### WHERE?
-   XX
 
-   ### WHY?
-   To Win XX, to have fun with friends, etc.
+  Join us for a relaxed night of Jackbox, Nintendo Switch, and board games. 🎮 
 
-   ### SIGN-UP
-   LINK
-   Open from XX to XX 
+
+  Whether you’re a seasoned board game veteran or just curious to try something new, there’s something for everyone. 💫 Come hang out, meet new people, and enjoy good games and company! Guaranteed good times for everyone!
+tldr: >-
+  ### WHEN?
+
+
+  6.2, 17:00 onwards 
+
+
+  ### WHERE?
+
+   Kylän Olohuone/Living room of the Teekkari Village, Jämeräntaival 5A, Otaniemi
+
+  ### WHY?
+
+   To hang out and play games with old and new friends!
 recordings: []
 ---
-TBD
+Join us for a relaxed night of Jackbox, Nintendo Switch, and board games. 🎮 
+
+Whether you’re a seasoned board game veteran or just curious to try something new, there’s something for everyone. 💫 Come hang out, meet new people, and enjoy good games and company! Guaranteed good times for everyone! 💥We'll have some free snacks and drinks available too!
+
+
+Sign-up is not required, you can just pop by! However, signing up helps us plan attendance and lets you find games and company even before the event! 🔥
