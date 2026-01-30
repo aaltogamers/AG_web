@@ -2,7 +2,7 @@
 name: AG Chill Game Night
 time: 2026-02-06T17:00:00
 durationHours: 6
-image: /images/ag-white.png
+image: /images/ag_board_game_night_2026.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: ""
