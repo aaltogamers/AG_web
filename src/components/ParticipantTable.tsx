@@ -26,8 +26,8 @@ const ParticipantTable = ({
     })
     .sort(
       (a, b) =>
-        (signupData?.inputs.findIndex((item) => item.title === a) || 0) -
-        (signupData?.inputs.findIndex((item) => item.title === b) || 0)
+        (signupData?.inputs.findIndex((item) => slug(item.title) === a) || 0) -
+        (signupData?.inputs.findIndex((item) => slug(item.title) === b) || 0)
     )
 
   const parseParticipantData = (dataValue: DataValue, header: string) => {
