@@ -31,7 +31,7 @@ const Event = ({ event }: Props) => {
                 View Photos
               </Link>
             )}
-            {event.recordings?.length && <RecordingsDropdown recordings={event.recordings} />}
+            {event.recordings?.length ? <RecordingsDropdown recordings={event.recordings} /> : null}
           </div>
         </div>
       </div>
