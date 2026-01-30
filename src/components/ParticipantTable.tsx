@@ -1,5 +1,6 @@
 import { deleteDoc, doc, Firestore, Timestamp } from 'firebase/firestore'
 import { Data, DataValue, SignUpData } from '../types/types'
+import slug from 'slug'
 
 type Props = {
   participants: Data[]
@@ -18,16 +19,17 @@ const ParticipantTable = ({
   db,
   getNewParticipants,
 }: Props) => {
-  const participantHeaders = Object.keys(participants[0] || [])
+  const participantHeaders = Object.keys(participants[0] || {})
     .filter((key) => {
-      const isPublic = signupData?.inputs.find((item) => item.title === key)?.public
-      return (showPrivateData || isPublic) && key !== 'event' && key !== 'id'
+      const input = signupData?.inputs.find((item) => slug(item.title) === key)
+      return (showPrivateData || input?.public) && key !== 'event' && key !== 'id'
     })
     .sort(
       (a, b) =>
         (signupData?.inputs.findIndex((item) => item.title === a) || 0) -
         (signupData?.inputs.findIndex((item) => item.title === b) || 0)
     )
+
   const parseParticipantData = (dataValue: DataValue, header: string) => {
     switch (header) {
       case 'creationTime': {
@@ -96,7 +98,10 @@ const ParticipantTable = ({
     if (header === 'creationTime') {
       return 'Signed up at'
     }
-    return header
+
+    const title = signupData?.inputs.find((item) => slug(item.title) === header)?.title
+
+    return title
   }
 
   return (
@@ -104,6 +109,7 @@ const ParticipantTable = ({
       <h3 className="mt-4">
         Signed up ({participantsThatMadeIt.length} / {signupData.maxParticipants})
       </h3>
+
       <div className="overflow-x-auto max-w-[90vw]">
         <table className="table-auto">
           <thead>
@@ -115,6 +121,7 @@ const ParticipantTable = ({
               ))}
             </tr>
           </thead>
+
           <tbody>
             {participantsThatMadeIt.map((participant) => participantToRow(participant))}
             {participantsThatDidntMakeIt.length > 0 && (
