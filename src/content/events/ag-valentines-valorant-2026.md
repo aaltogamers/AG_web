@@ -26,25 +26,28 @@ description: >-
 
 
   🪄Secret prize for the best duo of the whole tournament!
-tldr: >-
-  ### WHEN?
 
+
+  Tournament [rules](https://docs.google.com/document/d/1pSpg_LO0dvIQA7axwufIoTWiMz_HnJF4HgWjh4v2pac/edit?usp=sharing) here![](https://docs.google.com/document/d/1pSpg_LO0dvIQA7axwufIoTWiMz_HnJF4HgWjh4v2pac/edit?usp=sharing)
+
+
+  Signup using the form link below!
+tldr: |-
+  ### WHEN?
 
   Sunday, February 22nd @ 13:00 
 
-
   ### WHERE?
-
 
   Online, Aalto Gamers Discord 
 
+  ### WHY?
 
-
+  Because Valentine's day ❤️
 
   ### SIGN-UP
 
-
-  <https://docs.google.com/forms/d/e/1FAIpQLSfJUGgl_ZGjQV6VnI1_51TNak0_PLJgfZJTND-0XLUt6Ns_bQ/viewform?usp=dialog>
+  [Signup here!](https://forms.gle/5JX29orG5AhfD2Vg6)
 recordings: []
 ---
-TBD
+AG Valentines Valorant tournament on Sunday, February 22nd @ 13:00!
