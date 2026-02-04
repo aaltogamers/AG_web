@@ -4,7 +4,7 @@ time: 2026-02-22T13:00:00
 durationHours: 7
 image: /images/valentinesvalorantag.png
 visibleOnCalendar: true
-visibleOnEventsPage: false
+visibleOnEventsPage: true
 location: Aalto Gamers Discord & Twitch
 description: AG Valentines Valorant tournament on Sunday, February 22nd @ 13:00!
 tldr: |-
