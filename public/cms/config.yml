@@ -140,8 +140,18 @@ collections:
         }
       - { label: 'Location', name: 'location', widget: 'string', required: false }
       - { label: 'Recurring', name: 'isRecurring', widget: 'boolean', 'required': false }
-      - { label: 'Description', name: 'description', widget: 'markdown' }
-      - { label: 'TLDR', name: 'tldr', widget: 'markdown', default: "
+      - {
+          label: 'Short Description',
+          name: 'description',
+          widget: 'markdown',
+          hint: 'This will be shown in the event list',
+        }
+      - {
+          label: 'TLDR',
+          name: 'tldr',
+          widget: 'markdown',
+          hint: 'This will be shown at the top of the event page',
+          default: "
             ### WHEN?\n
             XX-XX on XX\n\n
             ### WHERE?\n
@@ -151,7 +161,8 @@ collections:
             ### SIGN-UP\n
             LINK\n
             Open from XX to XX
-            " }
+            ",
+        }
       - label: 'Recordings (e.g. Youtube link)'
         name: 'recordings'
         widget: 'list'
@@ -160,7 +171,12 @@ collections:
         fields:
           - { label: 'Name', name: 'name', widget: 'string', required: true, default: 'Recording' }
           - { label: 'URL', name: 'url', widget: 'string', required: true }
-      - { label: 'Body', name: 'body', widget: 'markdown' }
+      - {
+          label: 'Long Description',
+          name: 'body',
+          widget: 'markdown',
+          hint: 'This will be shown at the bottom of the event page. ',
+        }
   - label: 'Landing info'
     name: 'landinginfo'
     folder: 'src/content/landinginfos'
