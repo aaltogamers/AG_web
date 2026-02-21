@@ -1,6 +1,10 @@
 ---
 name: AG Edgerunners Watchalong
-time: 11.10.2023
+time: 2023-10-11T17:00:00
+durationHours: 5
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Kinopoli, Otakaari 20A
 image: /images/edgerunners-watchalong.png
 description: >
   Watchalong of the hit series Cyberpunk: Edgerunners with fellow AG peeps.
@@ -29,4 +33,5 @@ tldr: >-
 
   NOTHING! Bring your own snacks and stuff if you want to, but we’ll have something for everyone.
 ---
+
 The theater has 18 seats, but the sign up below only has 13 spots because some are reserved for AG members that are organizing the whole sitch.

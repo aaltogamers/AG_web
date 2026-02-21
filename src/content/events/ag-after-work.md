@@ -1,6 +1,10 @@
 ---
 name: AG After Work
-time: 16.08.2023
+time: 2023-08-16T18:00:00
+durationHours: 5
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Heimo Esports Tribe Gamebase, Otahalli, Otaranta 6
 image: /images/afterwork-2023.jpg
 description: >-
   Aalto Gamers is organizing a chill afterwork event with our partner
@@ -30,6 +34,7 @@ tldr: |-
   #### FREE? 
   Free.
 ---
+
 Aalto Gamers is organizing a chill afterwork event with our partner association: Heimo Esports. Join us LIVE at their Tribe Gamebase in Otahalli, Otaranta 6 (starting at 18) on Wednesday August 16, for a prime chance to get to play your favorite games, hang out with friends and even grill some food together!
 
 There will also be some free snacks and small prices for the winners of our in-house games.

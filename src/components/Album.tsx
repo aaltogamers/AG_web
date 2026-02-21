@@ -1,18 +1,27 @@
-import { AGAlbum } from '../types/types'
-import AGImage from './AGImage'
+import Link from 'next/link'
+
+import { LycheeAlbum } from '../types/types'
+import { LYCHEE_BASE_URL } from '../utils/constants'
 
 interface Props {
-  album: AGAlbum
+  album: LycheeAlbum
 }
 
 const Album = ({ album }: Props) => {
   return (
-    <a href={album.link} className="w-60 h-60 bg-cover m-8 relative">
+    <Link
+      href={`${LYCHEE_BASE_URL}/gallery/${album.id}`}
+      className="w-60 h-60 bg-cover m-8 relative"
+    >
       <div className="darkenedBackground absolute l-0 t-0 w-60 h-60 p-8 flex flex-col justify-end z-10">
-        <h4>{album.name}</h4>
+        <h4>{album.title}</h4>
       </div>
-      <AGImage src={album.image} alt={album.name} className="object-cover w-full h-full" />
-    </a>
+      <img
+        src={album.thumb?.thumb || ''}
+        alt={album.title}
+        className="object-cover w-full h-full"
+      />
+    </Link>
   )
 }
 

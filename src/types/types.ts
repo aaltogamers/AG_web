@@ -2,13 +2,20 @@ import { Timestamp } from 'firebase/firestore'
 
 export type AGEvent = {
   name: string
-  image: string
+  image?: string
   time?: string
+  durationHours: number
+  otherTimes: { name?: string; time: string }[]
+  location?: string
+  visibleOnCalendar: boolean
+  visibleOnEventsPage: boolean
   content: string
   description: string
   isRecurring?: boolean
   tldr: string
   slug: string
+  albumID?: string
+  recordings?: { name: string; url: string }[]
 }
 
 export type Option = {
@@ -37,21 +44,49 @@ export type AGBoardMember = {
   game?: string
   image?: string
   contactInformation?: string
-  orderNumber: number
 }
 
-export type AGAlbum = {
-  name: string
-  link: string
-  image: string
-  orderNumber: number
+export type LycheeAlbumThumb = {
+  id: string
+  type: string
+  thumb: string
+  thumb2x: string
+  placeholder: string
 }
+
+export type LycheeAlbum = {
+  id: string
+  title: string
+  description: string | null
+  thumb: LycheeAlbumThumb | null
+  is_nsfw: boolean
+  is_public: boolean
+  has_subalbum: boolean
+  num_subalbums: number
+  num_photos: number
+  created_at: string
+  formatted_min_max: string | null
+  owner: string | null
+  timeline: {
+    time_date: string
+    format: string
+  }
+}
+
 export type LandingInfo = {
   title: string
   subtitle: string
   content: string
   image: string
   isSmallImage?: boolean
+}
+
+export type HistoryEntry = {
+  year: string
+  title?: string
+  boardMembers: AGBoardMember[]
+  content?: string
+  slug: string
 }
 
 export type EditableInputType = 'text' | 'select' | 'info'
@@ -111,7 +146,7 @@ export const CS_ACTIVE_DUTY_MAPS = [
   'Inferno',
   'Mirage',
   'Nuke',
-  "Overpass",
+  'Overpass',
   'Train',
 ] as const
 

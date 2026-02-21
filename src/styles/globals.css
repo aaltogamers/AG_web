@@ -1,11 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&display=swap');
 @import url('https://fonts.cdnfonts.com/css/blockletter');
 @import 'tailwindcss';
-@tailwind base;
-@tailwind components;
 @tailwind utilities;
 
 @config '../../tailwind.config.js';
+
+@theme {
+  --zoom-10: 0.1;
+  --zoom-20: 0.2;
+  --zoom-30: 0.3;
+  --zoom-40: 0.4;
+  --zoom-50: 0.5;
+  --zoom-60: 0.6;
+  --zoom-70: 0.7;
+  --zoom-75: 0.75;
+  --zoom-90: 0.9;
+  --zoom-95: 0.95;
+}
+
+@utility zoom-* {
+  zoom: --value(--zoom- *);
+}
 
 @layer base {
   html,

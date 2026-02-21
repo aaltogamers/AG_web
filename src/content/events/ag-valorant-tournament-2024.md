@@ -1,6 +1,10 @@
 ---
-name: AG Valorant Tournament
-time: 09.03.2024
+name: AG Valorant Tournament 2024
+time: 2024-03-09T13:00:00
+durationHours: 6
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/ag-valorant-tournament.png
 description: >-
   🔥 Warm up your guns, dust off the surprise strat book and get ready for the
@@ -32,7 +36,11 @@ tldr: |-
   [Full team](https://forms.gle/qjcaCzxp4aWzsike9) 👈\
   [Flex team](https://forms.gle/6SWrhMX6mky6kzgC8) (1-4 players) 👈\
   Sign-up closes on 07.03.
+recordings:
+  - name: Recording
+    url: https://www.youtube.com/watch?v=u5UVM2mpUIg
 ---
+
 🔥 Warm up your guns, dust off the surprise strat book and get ready for the AG Valorant Tournament! 🔥
 
 Read the rules [here](https://docs.google.com/document/d/1Ql_953dFIrkGZtxFYWoA5bKwAukT0Or_9AvLhcNiGN4/edit#heading=h.h20ft39ht236) 👈 and sign-up ASAP to secure your spot and your chance to win some great prizes!

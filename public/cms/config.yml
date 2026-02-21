@@ -25,7 +25,6 @@ collections:
         file: 'src/content/about.md'
         fields:
           - { label: 'Title', name: 'title', widget: 'string' }
-          - { label: 'Board Title', name: 'boardTitle', widget: 'string' }
           - { label: 'Body', name: 'body', widget: 'markdown' }
       - label: 'Safer Space Policy'
         name: 'safespace'
@@ -91,21 +90,68 @@ collections:
     folder: 'src/content/events'
     create: true
     identifier_field: name
+    sortable_fields: ['time', 'name']
     fields:
       - { label: 'Name', name: 'name', widget: 'string' }
       - {
           label: 'Time',
           name: 'time',
           widget: 'datetime',
-          format: 'DD.MM.YYYY',
-          date_format: 'DD.MM.YYYY',
-          time_format: false,
+          format: 'YYYY-MM-DDTHH:mm:ss',
           required: false,
         }
+      - label: 'Other times for calendar'
+        name: 'otherTimes'
+        widget: 'list'
+        summary: '{{fields.time}} {{fields.name}}'
+        required: false
+        add_to_top: true
+        collapsed: true
+        fields:
+          - {
+              label: 'Time',
+              name: 'time',
+              widget: 'datetime',
+              format: 'YYYY-MM-DDTHH:mm:ss',
+              required: true,
+            }
+          - { label: Name, name: name, widget: string, required: false }
+
+      - {
+          label: 'Duration (hours)',
+          name: 'durationHours',
+          widget: 'number',
+          value_type: 'int',
+          min: 0,
+          default: 8,
+        }
       - { label: 'Image', name: 'image', widget: 'image' }
+      - {
+          label: 'Visible on calendar',
+          name: 'visibleOnCalendar',
+          widget: 'boolean',
+          default: true,
+        }
+      - {
+          label: 'Visible on events page',
+          name: 'visibleOnEventsPage',
+          widget: 'boolean',
+          default: true,
+        }
+      - { label: 'Location', name: 'location', widget: 'string', required: false }
       - { label: 'Recurring', name: 'isRecurring', widget: 'boolean', 'required': false }
-      - { label: 'Description', name: 'description', widget: 'markdown' }
-      - { label: 'TLDR', name: 'tldr', widget: 'markdown', default: "
+      - {
+          label: 'Short Description',
+          name: 'description',
+          widget: 'markdown',
+          hint: 'This will be shown in the event list',
+        }
+      - {
+          label: 'TLDR',
+          name: 'tldr',
+          widget: 'markdown',
+          hint: 'This will be shown at the top of the event page',
+          default: "
             ### WHEN?\n
             XX-XX on XX\n\n
             ### WHERE?\n
@@ -115,8 +161,22 @@ collections:
             ### SIGN-UP\n
             LINK\n
             Open from XX to XX
-            " }
-      - { label: 'Body', name: 'body', widget: 'markdown' }
+            ",
+        }
+      - label: 'Recordings (e.g. Youtube link)'
+        name: 'recordings'
+        widget: 'list'
+        required: false
+        summary: '{{fields.name}}'
+        fields:
+          - { label: 'Name', name: 'name', widget: 'string', required: true, default: 'Recording' }
+          - { label: 'URL', name: 'url', widget: 'string', required: true }
+      - {
+          label: 'Long Description',
+          name: 'body',
+          widget: 'markdown',
+          hint: 'This will be shown at the bottom of the event page. ',
+        }
   - label: 'Landing info'
     name: 'landinginfo'
     folder: 'src/content/landinginfos'
@@ -127,43 +187,28 @@ collections:
       - { label: 'Subtitle', name: 'subtitle', widget: 'string' }
       - { label: 'Image', name: 'image', widget: 'image' }
       - { label: 'Body', name: 'body', widget: 'markdown' }
-  - label: 'Board member'
-    name: 'boardmember'
-    folder: 'src/content/boardmembers'
+  - label: 'History'
+    name: 'history'
+    folder: 'src/content/history'
     create: true
-    identifier_field: Name
+    identifier_field: year
+    sortable_fields: ['year']
     fields:
-      - { label: 'Name', name: 'name', widget: 'string' }
-      - { label: 'Title', name: 'title', widget: 'string' }
-      - { label: 'Status', name: 'status', widget: 'string' }
-      - { label: 'Game', name: 'game', widget: 'string' }
-      - {
-          label: 'Order number',
-          name: 'orderNumber',
-          widget: 'number',
-          value_type: 'int',
-          min: 1,
-          max: 20,
-          hint: 'The order in which the board members are displayed. Smallest first.',
-        }
-      - { label: 'Image', name: 'image', widget: 'image', required: false }
-  - label: 'Album'
-    name: 'album'
-    folder: 'src/content/albums'
-    create: true
-    identifier_field: name
-    fields:
-      - { label: 'Name', name: 'name', widget: 'string' }
-      - { label: 'Link', name: 'link', widget: 'string', hint: 'Flickr etc. link to album' }
-      - { label: 'Image', name: 'image', widget: 'image' }
-      - {
-          label: 'Order number',
-          name: 'orderNumber',
-          widget: 'number',
-          value_type: 'int',
-          min: 1,
-          hint: 'The order in which the albums are displayed. Smallest first.',
-        }
+      - { label: 'Year', name: 'year', widget: 'string' }
+      - { label: 'Title', name: 'title', widget: 'string', required: false }
+      - label: 'Board Members'
+        name: 'boardMembers'
+        label_singular: 'Board Member'
+        widget: 'list'
+        allow_add: true
+        summary: '{{fields.name}}'
+        fields:
+          - { label: 'Name', name: 'name', widget: 'string' }
+          - { label: 'Title', name: 'title', widget: 'string', required: false }
+          - { label: 'Image', name: 'image', widget: 'image', required: false }
+          - { label: 'Status', name: 'status', widget: 'string', required: false }
+          - { label: 'Game', name: 'game', widget: 'string', required: false }
+      - { label: 'Body', name: 'body', widget: 'markdown', required: false }
   - label: 'Redirect Links'
     name: 'links'
     files:

@@ -1,6 +1,10 @@
 ---
 name: AG League of Legends Worlds Finals Watch Party 2023
-time: 19.11.2023
+time: 2023-11-19T10:00:00
+durationHours: 6
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Design Factory, Puumiehenkuja 5A, Espoo
 image: /images/watch_party.jpg
 description: >-
   Our traditional League of Legends Worlds Finals Watch Party is here again❗️

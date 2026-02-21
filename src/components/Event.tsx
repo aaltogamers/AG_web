@@ -1,6 +1,9 @@
+import Link from 'next/link'
 import { AGEvent } from '../types/types'
 import AGImage from './AGImage'
 import Markdown from './Markdown'
+import RecordingsDropdown from './RecordingsDropdown'
+import { LYCHEE_BASE_URL } from '../utils/constants'
 
 interface Props {
   event: AGEvent
@@ -11,13 +14,25 @@ const Event = ({ event }: Props) => {
     <div className="flex flex-col md:w-3/4 " key={event.name}>
       <hr className="bg-gray w-full my-16" />
       <div className="md:grid md:grid-cols-event md:flex-row text-center md:text-left items-center">
-        <AGImage src={event.image} alt={event.name} className="max-h-96 object-contain" />
+        <AGImage
+          src={event.image || '/images/ag-white.png'}
+          alt={event.name}
+          className="max-h-96 object-contain aspect-square"
+        />
         <div className="flex flex-col md:p-10 items-center md:items-start">
           <h3 className="mt-8 md:mt-0">{event.name}</h3>
           <Markdown>{event.description}</Markdown>
-          <a href={`/events/${event.slug}`} className="mainbutton">
-            Learn more
-          </a>
+          <div className="flex flex-col gap-8 md:gap-16 md:flex-row">
+            <Link href={`/events/${event.slug}`} className="mainbutton">
+              Learn more
+            </Link>
+            {event.albumID && (
+              <Link href={`${LYCHEE_BASE_URL}/gallery/${event.albumID}`} className="borderbutton">
+                View Photos
+              </Link>
+            )}
+            {event.recordings?.length ? <RecordingsDropdown recordings={event.recordings} /> : null}
+          </div>
         </div>
       </div>
     </div>

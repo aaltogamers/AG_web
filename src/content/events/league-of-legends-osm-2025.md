@@ -1,6 +1,10 @@
 ---
 name: League of Legends OSM 2025
-time: 24.05.2025
+time: 2025-05-24T12:00:00
+durationHours: 8
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Design Factory, Puumiehenkuja 5, Espoo
 image: /images/img_20250422_115109_393.jpg
 description: >-
   **⚔️ Prove your strength! Aalto Gamers proudly presents League of Legends OSM
@@ -33,18 +37,24 @@ tldr: |-
   ### FINALS TICKETS
 
   [Kide.app](https://kide.app/events/bebd5407-6832-4493-9068-c1066d0da262)
+recordings:
+  - name: Finals recording
+    url: https://www.youtube.com/watch?v=oCJ6HurIwD8
+  - name: Qualifiers recording
+    url: https://youtu.be/Yxo8lM2qyss
 ---
-***English below:***
+
+**_English below:_**
 
 **⚔️ Todista voimasi! League of Legends OSM 2025 on täällä! ⚔️**
 
 Osallistu Suomen suurimpaan League of Legends -opiskelijaturnaukseen ja ansaitse osuutesi **1000€ palkintopotista**! 🏆
 
-[ILMOITA JOUKKUEESI MUKAAN](<>)
+[ILMOITA JOUKKUEESI MUKAAN]()
 
-*🎓Kaikkien joukkueen jäsenten tulee olla korkeakouluopiskelijoita tai vastavalmistuneita (valmistunut 1.1.2024 jälkeen).*
+_🎓Kaikkien joukkueen jäsenten tulee olla korkeakouluopiskelijoita tai vastavalmistuneita (valmistunut 1.1.2024 jälkeen)._
 
-🔗 **Lue lisää**: [osm.aaltogamers.fi](<>)
+🔗 **Lue lisää**: [osm.aaltogamers.fi]()
 
 🚩🚩🚩
 
@@ -52,8 +62,8 @@ Osallistu Suomen suurimpaan League of Legends -opiskelijaturnaukseen ja ansaitse
 
 Compete in Finland's largest League of Legends student tournament and earn your cut of the **1000€ prize pool**! 🏆
 
-[SIGN YOUR TEAM UP HERE](<>)
+[SIGN YOUR TEAM UP HERE]()
 
-*🎓All team members are required to be university/AMK students or recent graduates (graduated after 1.1.2024).*
+_🎓All team members are required to be university/AMK students or recent graduates (graduated after 1.1.2024)._
 
-🔗 **Read more**: [osm.aaltogamers.fi](<>)
+🔗 **Read more**: [osm.aaltogamers.fi]()

@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
 import ReactMarkdown, { Components } from 'react-markdown'
+import AGImage from './AGImage'
 
 interface ComponentProps {
   children?: ReactNode
@@ -9,8 +10,15 @@ interface AProps extends ComponentProps {
   href?: string
 }
 
+interface ImgProps extends ComponentProps {
+  src?: string
+  title?: string
+  alt?: string
+}
+
 interface MarkdownProps {
   children: string
+  className?: string
 }
 
 const P = ({ children }: ComponentProps) => <p className="mt-4 mb-8">{children}</p>
@@ -31,9 +39,17 @@ const Ul = ({ children }: ComponentProps) => (
 const Ol = ({ children }: ComponentProps) => (
   <ol className="list-decimal list-inside mt-4 mb-8">{children}</ol>
 )
+
 const Li = ({ children }: ComponentProps) => <li className="mb-2">{children}</li>
 
-const Markdown = ({ children }: MarkdownProps) => {
+const Img = ({ title, src, alt }: ImgProps) => (
+  <span className="block w-fit">
+    <AGImage className="max-h-80 object-contain w-fit" src={src || ''} alt={alt || ''} />
+    <i className="block">{title}</i>
+  </span>
+)
+
+const Markdown = ({ children, className }: MarkdownProps) => {
   const components: Components = {
     p: P,
     h1: H1,
@@ -46,10 +62,11 @@ const Markdown = ({ children }: MarkdownProps) => {
     ul: Ul,
     ol: Ol,
     li: Li,
+    img: Img,
   }
 
   return (
-    <ReactMarkdown components={components} className="text-xl text-lightgray">
+    <ReactMarkdown components={components} className={` ${className || 'text-xl'}  text-lightgray`}>
       {children}
     </ReactMarkdown>
   )
