@@ -119,8 +119,8 @@ export const VALORANT_ACTIVE_DUTY_MAPS = [
   'Abyss',
   'Bind',
   'Haven',
-  'Fracture',
-  'Lotus',
+  'Breeze',
+  'Corrode',
   'Pearl',
   'Split',
 ] as const
