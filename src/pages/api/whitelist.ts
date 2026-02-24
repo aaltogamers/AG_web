@@ -32,12 +32,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const response = await rcon.send(`whitelist add ${username}`)
     await rcon.end()
     return res.status(200).json({ message: response })
-  } catch (err: any) {
-    if (err.code === 'ECONNREFUSED') {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string }
+
+    if (error?.code === 'ECONNREFUSED') {
       return res.status(502).json({
         error: 'Failed to connect to the Minecraft server. Is it running and is RCON enabled?',
       })
     }
-    return res.status(500).json({ error: `An error occurred: ${err.message || err}` })
+    return res.status(500).json({ error: `An error occurred: ${error.message || error}` })
   }
 }
