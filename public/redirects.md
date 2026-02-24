@@ -49,4 +49,7 @@ redirects:
   - name: AG Youtube Channel
     url: https://www.youtube.com/@aaltogamers/videos
     slug: youtube
+  - name: Minecraft Server Whitelist
+    slug: whitelist
+    url: https://aaltogamers.fi/whitelist
 ---
