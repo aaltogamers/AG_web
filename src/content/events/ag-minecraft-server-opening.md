@@ -34,13 +34,23 @@ Aalto Gamers is opening a brand new Minecraft server this March! We are excited 
 
 🔨 Let’s get crafting! 🎮✨
 
+\-------------------------------------
+
+**The server requires whitelist to access, available [HERE](<>).** 
+
+\-------------------------------------[](<>)
+
+
+
+
+
 The server will open on Sunday, March 1st @ 13:00, kicking with a speedrunning bingo! 🏁
 
 The clock starts a moment after we launch! ⏰ Race to complete the board, outclass everyone else and claim the rewards waiting for you🏆
 
 Get ready. It's go time.
 
-\--------------------------------------
+\-------------------------------------
 
 The End is sealed, but not for long... We need **YOU** to gear up and rally your allies in a fight to help us free the end. ⚔
 
@@ -48,6 +58,6 @@ The battle is coming soon, stay tuned 🐉
 
 \-------------------------------------
 
-The server requires whitelist to access, available [HERE](https://aaltogamers.fi/whitelist)
+[](https://aaltogamers.fi/whitelist)
 
 Rules and information for the server available [HERE](https://docs.google.com/document/d/1c7kTQeKfuzL8ykyE-mr8_x-axHwI8reMSP2jPdVJglM/edit?usp=sharing)
