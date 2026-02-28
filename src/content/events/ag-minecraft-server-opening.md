@@ -14,29 +14,22 @@ description: >-
 
 
   A brand-new world awaits! Come build your own home around a shared spawn area, creating a cozy village vibe that grows over time, or chill and explore at your own pace, you decide! 🏡✨
-tldr: >-
+tldr: |-
   ### WHEN?
-
 
   ⏰ Sunday, March 1st @ 13:00
 
-
   ### WHERE?
-
 
   📍Online, Aalto Gamers [Discord](discord.gg/aaltogamers)
 
-
   ### WHY?
-
 
   ⚒️ Bring friends, build dumb bases, and fall into lava.
 
-
   ### SIGN-UP
 
-
-  Sign up for a whitelist [HERE](aaltogamers.fi/whitelist)[](aaltogamers.fi/whitelist)
+  Sign up for a whitelist [HERE](aaltogamers.fi/whitelist)
 recordings: []
 ---
 **If you’ve been thinking, “Maybe I’ll play MC again someday” this is that day.** 
@@ -54,7 +47,7 @@ The battle is coming soon, stay tuned 🐉
 
 The server will run on the latest Java release (1.21.11) with some Quality-of-Life plugins, and no additional downloads are required. It will launch on Sunday, 1.3. at 13⏳. 
 
-The server requires being whitelisted to access. The whitelist is only for bot prevention, and everyone gets whitelisted automatically through [here](aaltogamers.fi/whitelist)[](aaltogamers.fi/whitelist) or through our Discord channel: discord.gg/aaltogamers
+**The server requires being whitelisted to access.** The whitelist is only for bot prevention, and everyone gets whitelisted automatically through [here](aaltogamers.fi/whitelist) or through our Discord channel: discord.gg/aaltogamers
 
 Rules: 
 
