@@ -21,7 +21,7 @@ tldr: |-
 
   ### WHERE?
 
-  📍Online, Aalto Gamers [Discord](discord.gg/aaltogamers)
+  📍Online, Aalto Gamers [Discord](https://discord.gg/aaltogamers)
 
   ### WHY?
 
@@ -29,7 +29,7 @@ tldr: |-
 
   ### SIGN-UP
 
-  Sign up for a whitelist [HERE](aaltogamers.fi/whitelist)
+  Sign up for a whitelist [HERE](https://aaltogamers.fi/whitelist)
 recordings: []
 ---
 **If you’ve been thinking, “Maybe I’ll play MC again someday” this is that day.** 
@@ -47,7 +47,7 @@ The battle is coming soon, stay tuned 🐉
 
 The server will run on the latest Java release (1.21.11) with some Quality-of-Life plugins, and no additional downloads are required. It will launch on Sunday, 1.3. at 13⏳. 
 
-**The server requires being whitelisted to access.** The whitelist is only for bot prevention, and everyone gets whitelisted automatically through [here](aaltogamers.fi/whitelist) or through our Discord channel: discord.gg/aaltogamers
+**The server requires being whitelisted to access.** The whitelist is only for bot prevention, and everyone gets whitelisted automatically through [here](https://aaltogamers.fi/whitelist) or through our [Discord channel ](https://discord.gg/aaltogamers)
 
 Rules: 
 
