@@ -1,6 +1,9 @@
 ---
 name: AG Sims Event
 time: 2026-04-11T14:00:00
+otherTimes:
+  - time: 2026-03-07T14:00:00
+    name: AG Minecraft Server End Opening
 durationHours: 6
 image: /images/ag-white.png
 visibleOnCalendar: true
