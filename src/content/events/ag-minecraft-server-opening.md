@@ -2,7 +2,7 @@
 name: AG Minecraft Server Opening
 time: 2026-03-01T13:00:00
 otherTimes:
-  - time: 2026-03-22T14:00:00
+  - time: 2026-03-21T14:00:00
     name: AG Minecraft Server PVP Tournament
   - time: 2026-03-07T14:00:00
     name: AG Minecraft Server End Dimension Opening
