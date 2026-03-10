@@ -1,7 +1,7 @@
 ---
 name: AG King of the Castle
 time: 2026-03-28T18:00:00
-durationHours: 7
+durationHours: 5
 image: /images/king_of_the_castle.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
