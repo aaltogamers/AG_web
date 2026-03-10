@@ -18,7 +18,7 @@ description: >-
 tldr: |-
   ### WHEN?
 
-  18:00-23:00 on 23.03.
+  18:00-23:00 on 28.03.
 
   ### WHERE?
 
