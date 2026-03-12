@@ -148,6 +148,7 @@ const MatchResultRow = (
   return (
     <div
       className={`flex flex-row justify-between border-1 ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm border-t-0'}`}
+      style={{ height: styles.teamHeight }}
     >
       <div
         style={{ height: styles.teamHeight, lineHeight: `${styles.teamHeight}px` }}
@@ -157,11 +158,10 @@ const MatchResultRow = (
       </div>
 
       <div
-        className={`text-center aspect-square ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm'}`}
+        className={`text-center aspect-square ${participant === 'opponent1' ? 'rounded-tr-sm' : 'rounded-br-sm'}`}
         style={{
-          width: styles.teamHeight,
-          height: styles.teamHeight,
-          lineHeight: `${styles.teamHeight}px`,
+          width: styles.teamHeight - 1,
+          lineHeight: `${styles.teamHeight - 1}px`,
           backgroundColor: isWin ? styles.winColor : styles.lightColor,
         }}
       >
@@ -188,10 +188,25 @@ const GroupSection = ({
   return (
     <div className="flex flex-row" style={{ color: styles.textColor }}>
       {roundsByGroup[groupLabel]?.map((round, i) => {
+        const roundMatches = matchesByRound[round.id] ?? []
+
         const roundDepth = groupLabel === 'Lower' ? Math.floor(i / 2) : i
         const roundMultiplier = 2 ** roundDepth
         const roundGap = baseGap * roundMultiplier + matchHeight * (roundMultiplier - 1)
         const roundOffset = roundGap / 2
+
+        const nextRound = roundsByGroup[groupLabel]?.[i + 1]
+        const nextRoundMatches = nextRound ? (matchesByRound[nextRound.id] ?? []) : []
+        const hasNextRound = nextRound != null
+        const shouldMergePairs = hasNextRound && roundMatches.length === nextRoundMatches.length * 2
+
+        const connectorColor = styles.darkColor
+        const connectorThickness = 2
+        const connectorHalfGap = styles.teamGapX / 2
+        const connectorFullGap = styles.teamGapX
+
+        const matchCenter = matchHeight / 2
+        const nextMatchCenterDistance = matchHeight + roundGap
 
         return (
           <div key={round.id} className="flex flex-col">
@@ -215,14 +230,68 @@ const GroupSection = ({
                 marginRight: styles.teamGapX,
               }}
             >
-              {matchesByRound[round.id]?.map((match) => (
+              {roundMatches.map((match, matchIndex) => (
                 <div
                   key={match.id}
-                  className="flex flex-col rounded-sm"
+                  className="relative flex flex-col rounded-sm"
                   style={{ backgroundColor: styles.mediumColor, width: styles.teamWidth }}
                 >
                   {MatchResultRow(match, 'opponent1', participantsById)}
                   {MatchResultRow(match, 'opponent2', participantsById)}
+
+                  {hasNextRound && shouldMergePairs && (
+                    <>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: styles.teamWidth,
+                          top: matchCenter - connectorThickness / 2,
+                          width: connectorHalfGap,
+                          height: connectorThickness,
+                          backgroundColor: connectorColor,
+                        }}
+                      />
+
+                      {matchIndex % 2 === 0 && matchIndex + 1 < roundMatches.length && (
+                        <>
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: styles.teamWidth + connectorHalfGap - connectorThickness / 2,
+                              top: matchCenter,
+                              width: connectorThickness,
+                              height: nextMatchCenterDistance,
+                              backgroundColor: connectorColor,
+                            }}
+                          />
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: styles.teamWidth + connectorHalfGap,
+                              top:
+                                matchCenter + nextMatchCenterDistance / 2 - connectorThickness / 2,
+                              width: connectorHalfGap,
+                              height: connectorThickness,
+                              backgroundColor: connectorColor,
+                            }}
+                          />
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {hasNextRound && !shouldMergePairs && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: styles.teamWidth,
+                        top: matchCenter - connectorThickness / 2,
+                        width: connectorFullGap,
+                        height: connectorThickness,
+                        backgroundColor: connectorColor,
+                      }}
+                    />
+                  )}
                 </div>
               ))}
             </div>
