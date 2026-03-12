@@ -16,6 +16,8 @@
   "license": "ISC",
   "dependencies": {
     "@tailwindcss/postcss": "^4.0.3",
+    "brackets-manager": "^1.9.0",
+    "brackets-memory-db": "^1.0.5",
     "decap-cms-app": "^3.6.1",
     "fastest-levenshtein": "^1.0.16",
     "firebase": "^11.2.0",
