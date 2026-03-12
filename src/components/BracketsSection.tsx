@@ -182,42 +182,53 @@ const GroupSection = ({
   matchesByRound: Record<Id, Match[]>
   participantsById: Record<Id, Participant>
 }) => {
+  const matchHeight = styles.teamHeight * 2
+  const baseGap = styles.teamGapY
+
   return (
     <div className="flex flex-row" style={{ color: styles.textColor }}>
-      {roundsByGroup[groupLabel]?.map((round, i) => (
-        <div key={round.id} className="flex flex-col">
-          <h3
-            className="mb-4 text-xl font-bold text-center px-1 rounded-sm"
-            style={{
-              backgroundColor: styles.darkColor,
-              marginRight: 1,
-              marginLeft: 1,
-              width: styles.teamWidth,
-            }}
-          >
-            {roundToLabel(round)}
-          </h3>
-          <div
-            className="flex flex-col gap-4 flex-auto justify-between"
-            style={{
-              marginTop: i * styles.teamHeight * 2,
-              marginBottom: i * styles.teamHeight * 2,
-              marginRight: styles.teamGapX,
-            }}
-          >
-            {matchesByRound[round.id]?.map((match) => (
-              <div
-                key={match.id}
-                className="flex flex-col rounded-sm"
-                style={{ backgroundColor: styles.mediumColor, width: styles.teamWidth }}
-              >
-                {MatchResultRow(match, 'opponent1', participantsById)}
-                {MatchResultRow(match, 'opponent2', participantsById)}
-              </div>
-            ))}
+      {roundsByGroup[groupLabel]?.map((round, i) => {
+        const roundDepth = groupLabel === 'Lower' ? Math.floor(i / 2) : i
+        const roundMultiplier = 2 ** roundDepth
+        const roundGap = baseGap * roundMultiplier + matchHeight * (roundMultiplier - 1)
+        const roundOffset = roundGap / 2
+
+        return (
+          <div key={round.id} className="flex flex-col">
+            <h3
+              className="mb-4 text-xl font-bold text-center px-1 rounded-sm"
+              style={{
+                backgroundColor: styles.darkColor,
+                marginRight: 1,
+                marginLeft: 1,
+                width: styles.teamWidth,
+              }}
+            >
+              {roundToLabel(round)}
+            </h3>
+            <div
+              className="flex flex-col"
+              style={{
+                gap: roundGap,
+                marginTop: roundOffset,
+                marginBottom: roundOffset,
+                marginRight: styles.teamGapX,
+              }}
+            >
+              {matchesByRound[round.id]?.map((match) => (
+                <div
+                  key={match.id}
+                  className="flex flex-col rounded-sm"
+                  style={{ backgroundColor: styles.mediumColor, width: styles.teamWidth }}
+                >
+                  {MatchResultRow(match, 'opponent1', participantsById)}
+                  {MatchResultRow(match, 'opponent2', participantsById)}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
