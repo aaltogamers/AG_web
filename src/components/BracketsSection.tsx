@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { BracketsManager } from 'brackets-manager'
 import { InMemoryDatabase } from 'brackets-memory-db'
 import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
@@ -42,6 +42,93 @@ type MatchView = Match & {
   matchLabel: string
 }
 
+type RoundView = {
+  roundNumber: number
+  roundLabel: string
+  matches: MatchView[]
+}
+
+type BracketStyleVars = CSSProperties & Record<`--${string}`, string>
+
+const BRACKET_STYLE = {
+  colors: {
+    accent: '#F32929',
+    accentSoft: 'rgba(243, 41, 41, 0.16)',
+    accentSubtle: 'rgba(243, 41, 41, 0.1)',
+    panelTop: 'rgba(35, 36, 45, 0.98)',
+    panelBottom: 'rgba(28, 29, 38, 0.98)',
+    cardTop: 'rgba(35, 36, 45, 0.96)',
+    cardBottom: 'rgba(28, 29, 38, 0.96)',
+    borderMuted: 'rgba(255, 255, 255, 0.1)',
+    borderStrong: 'rgba(243, 41, 41, 0.35)',
+    chipBackground: 'rgba(0, 0, 0, 0.35)',
+    textPrimary: '#FFFFFF',
+    textMuted: '#AAABAD',
+  },
+  spacing: {
+    shellPadding: '1rem',
+    shellPaddingDesktop: '1.5rem',
+    sectionPadding: '1.25rem',
+    cardPadding: '1rem',
+    roundHeaderY: '0.75rem',
+    roundHeaderX: '1rem',
+    chipPaddingY: '0.5rem',
+    chipPaddingX: '0.75rem',
+    detailCardPadding: '1rem',
+    panelGap: '1.5rem',
+  },
+  sizing: {
+    bracketMinHeight: '34rem',
+    detailsPanelWidth: '22rem',
+    cardWidth: '18rem',
+    panelRadius: '1.5rem',
+    cardRadius: '1rem',
+  },
+  effects: {
+    shellShadow: '0 24px 60px rgba(0, 0, 0, 0.35)',
+    cardShadow: '0 12px 30px rgba(0, 0, 0, 0.22)',
+    selectedCardShadow: '0 16px 36px rgba(243, 41, 41, 0.18)',
+  },
+  rounds: {
+    minGapPx: 12,
+    stepGapPx: 20,
+    maxGapPx: 170,
+  },
+}
+
+const bracketVars: BracketStyleVars = {
+  '--br-accent': BRACKET_STYLE.colors.accent,
+  '--br-accent-soft': BRACKET_STYLE.colors.accentSoft,
+  '--br-accent-subtle': BRACKET_STYLE.colors.accentSubtle,
+  '--br-panel-top': BRACKET_STYLE.colors.panelTop,
+  '--br-panel-bottom': BRACKET_STYLE.colors.panelBottom,
+  '--br-card-top': BRACKET_STYLE.colors.cardTop,
+  '--br-card-bottom': BRACKET_STYLE.colors.cardBottom,
+  '--br-border-muted': BRACKET_STYLE.colors.borderMuted,
+  '--br-border-strong': BRACKET_STYLE.colors.borderStrong,
+  '--br-chip-bg': BRACKET_STYLE.colors.chipBackground,
+  '--br-text-primary': BRACKET_STYLE.colors.textPrimary,
+  '--br-text-muted': BRACKET_STYLE.colors.textMuted,
+  '--br-shell-pad': BRACKET_STYLE.spacing.shellPadding,
+  '--br-shell-pad-desktop': BRACKET_STYLE.spacing.shellPaddingDesktop,
+  '--br-section-pad': BRACKET_STYLE.spacing.sectionPadding,
+  '--br-card-pad': BRACKET_STYLE.spacing.cardPadding,
+  '--br-round-header-y': BRACKET_STYLE.spacing.roundHeaderY,
+  '--br-round-header-x': BRACKET_STYLE.spacing.roundHeaderX,
+  '--br-chip-pad-y': BRACKET_STYLE.spacing.chipPaddingY,
+  '--br-chip-pad-x': BRACKET_STYLE.spacing.chipPaddingX,
+  '--br-detail-card-pad': BRACKET_STYLE.spacing.detailCardPadding,
+  '--br-panel-gap': BRACKET_STYLE.spacing.panelGap,
+  '--br-shell-min-height': BRACKET_STYLE.sizing.bracketMinHeight,
+  '--br-details-width': BRACKET_STYLE.sizing.detailsPanelWidth,
+  '--br-card-width': BRACKET_STYLE.sizing.cardWidth,
+  '--br-panel-radius': BRACKET_STYLE.sizing.panelRadius,
+  '--br-card-radius': BRACKET_STYLE.sizing.cardRadius,
+  '--br-shell-shadow': BRACKET_STYLE.effects.shellShadow,
+  '--br-card-shadow': BRACKET_STYLE.effects.cardShadow,
+  '--br-card-selected-shadow': BRACKET_STYLE.effects.selectedCardShadow,
+}
+
 const statusLabels: Record<Status, string> = {
   [Status.Locked]: 'Locked',
   [Status.Waiting]: 'Waiting',
@@ -50,10 +137,6 @@ const statusLabels: Record<Status, string> = {
   [Status.Completed]: 'Final',
   [Status.Archived]: 'Archived',
 }
-
-const upperRoundGapClasses = ['gap-4', 'gap-16', 'gap-28', 'gap-36']
-const lowerRoundGapClasses = ['gap-4', 'gap-8', 'gap-12', 'gap-16', 'gap-20', 'gap-24']
-const finalRoundGapClasses = ['gap-6', 'gap-10']
 
 const createBracketData = async (): Promise<BracketData> => {
   const storage = new InMemoryDatabase()
@@ -156,21 +239,25 @@ const getRoundLabel = (groupNumber: number, roundNumber: number, roundCount: num
   return roundNumber === 1 ? 'Grand final' : `Grand final reset ${roundNumber}`
 }
 
-const getRoundGapClass = (groupNumber: number, roundIndex: number) => {
-  if (groupNumber === 1) return upperRoundGapClasses[roundIndex] ?? 'gap-36'
-  if (groupNumber === 2) return lowerRoundGapClasses[roundIndex] ?? 'gap-24'
-  return finalRoundGapClasses[roundIndex] ?? 'gap-10'
+const getRoundGapPx = (matchesInRound: number, maxMatchesInGroup: number) => {
+  const delta = Math.max(0, maxMatchesInGroup - matchesInRound)
+  const computedGap = BRACKET_STYLE.rounds.minGapPx + delta * BRACKET_STYLE.rounds.stepGapPx
+
+  return Math.min(BRACKET_STYLE.rounds.maxGapPx, computedGap)
 }
 
 const getStatusTone = (status: Status) => {
-  if (status === Status.Completed) return 'border-red/40 bg-red/10 text-red'
-  if (status === Status.Running) return 'border-red/40 bg-red/15 text-white'
-  if (status === Status.Ready) return 'border-white/15 bg-white/5 text-white'
-  return 'border-white/10 bg-black/40 text-lightgray'
+  if (status === Status.Completed)
+    return 'border-[var(--br-accent)]/40 bg-[var(--br-accent)]/10 text-[var(--br-accent)]'
+  if (status === Status.Running)
+    return 'border-[var(--br-accent)]/40 bg-[var(--br-accent)]/15 text-[var(--br-text-primary)]'
+  if (status === Status.Ready)
+    return 'border-[var(--br-border-muted)] bg-white/5 text-[var(--br-text-primary)]'
+  return 'border-[var(--br-border-muted)] bg-black/40 text-[var(--br-text-muted)]'
 }
 
 const getParticipantTone = (result?: string) => {
-  if (result === 'win') return 'bg-red/10 text-white'
+  if (result === 'win') return 'bg-[var(--br-accent)]/10 text-[var(--br-text-primary)]'
   if (result === 'loss') return 'opacity-75'
   return ''
 }
@@ -208,7 +295,7 @@ const buildMatchViews = (data: BracketData) => {
     .filter((match): match is MatchView => match !== null)
 }
 
-const groupMatchesByRound = (matches: MatchView[], groupNumber: number) => {
+const groupMatchesByRound = (matches: MatchView[], groupNumber: number): RoundView[] => {
   const rounds = new Map<number, MatchView[]>()
 
   matches
@@ -242,14 +329,14 @@ const MatchCard = ({
     type="button"
     onClick={() => onSelect(match)}
     className={[
-      'w-72 rounded-2xl border p-4 text-left transition duration-150 ease-in-out',
-      'bg-[linear-gradient(180deg,rgba(35,36,45,0.96),rgba(28,29,38,0.96))] shadow-[0_12px_30px_rgba(0,0,0,0.22)]',
+      'w-[var(--br-card-width)] rounded-[var(--br-card-radius)] border p-[var(--br-card-pad)] text-left transition duration-150 ease-in-out',
+      'bg-[linear-gradient(180deg,var(--br-card-top),var(--br-card-bottom))] shadow-[var(--br-card-shadow)]',
       isSelected
-        ? 'border-red shadow-[0_16px_36px_rgba(243,41,41,0.18)]'
-        : 'border-white/10 hover:border-red/60 hover:-translate-y-0.5',
+        ? 'border-[var(--br-accent)] shadow-[var(--br-card-selected-shadow)]'
+        : 'border-[var(--br-border-muted)] hover:border-[var(--br-accent)] hover:-translate-y-0.5',
     ].join(' ')}
   >
-    <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.22em] text-lightgray">
+    <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.22em] text-[var(--br-text-muted)]">
       <span>{match.matchLabel}</span>
       <span
         className={[
@@ -263,27 +350,27 @@ const MatchCard = ({
     <div className="mt-4 space-y-2">
       <div
         className={[
-          'flex items-center justify-between gap-3 rounded-xl border border-white/8 px-3 py-3',
+          'flex items-center justify-between gap-3 rounded-xl border border-[var(--br-border-muted)] px-3 py-3',
           getParticipantTone(match.opponent1?.result),
         ].join(' ')}
       >
         <span className="truncate pr-3 text-base">
           {formatOpponentName(match, 'opponent1', data)}
         </span>
-        <span className="text-xl font-semibold text-red">
+        <span className="text-xl font-semibold text-[var(--br-accent)]">
           {formatScore(match.opponent1?.score)}
         </span>
       </div>
       <div
         className={[
-          'flex items-center justify-between gap-3 rounded-xl border border-white/8 px-3 py-3',
+          'flex items-center justify-between gap-3 rounded-xl border border-[var(--br-border-muted)] px-3 py-3',
           getParticipantTone(match.opponent2?.result),
         ].join(' ')}
       >
         <span className="truncate pr-3 text-base">
           {formatOpponentName(match, 'opponent2', data)}
         </span>
-        <span className="text-xl font-semibold text-red">
+        <span className="text-xl font-semibold text-[var(--br-accent)]">
           {formatScore(match.opponent2?.score)}
         </span>
       </div>
@@ -299,49 +386,69 @@ const RoundColumns = ({
   onSelect,
 }: {
   title: string
-  rounds: Array<{ roundNumber: number; roundLabel: string; matches: MatchView[] }>
+  rounds: RoundView[]
   data: BracketData | null
   selectedMatchId?: Id
   onSelect: (match: MatchView) => void
-}) => (
-  <section className="rounded-3xl border border-white/10 bg-darkgray/70 p-5 backdrop-blur-sm">
-    <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
-      <h3 className="font-blockletter text-xl uppercase tracking-[0.16em] text-white">{title}</h3>
-      <span className="text-xs uppercase tracking-[0.22em] text-lightgray">
-        {rounds.length} rounds
-      </span>
-    </div>
-    <div className="mt-6 overflow-x-auto pb-2">
-      <div className="flex min-w-max items-start gap-6 pr-2">
-        {rounds.map((round, roundIndex) => (
-          <div key={`${title}-${round.roundNumber}`} className="w-72 shrink-0">
-            <div className="mb-4 rounded-2xl border border-red/25 bg-red/10 px-4 py-3 text-center">
-              <p className="font-blockletter text-sm uppercase tracking-[0.22em] text-red">
-                {round.roundLabel}
-              </p>
-            </div>
-            <div
-              className={[
-                'flex flex-col',
-                getRoundGapClass(round.matches[0].groupNumber, roundIndex),
-              ].join(' ')}
-            >
-              {round.matches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  data={data}
-                  isSelected={selectedMatchId === match.id}
-                  onSelect={onSelect}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+}) => {
+  const maxMatchesInGroup = Math.max(1, ...rounds.map((round) => round.matches.length))
+
+  return (
+    <section className="rounded-[var(--br-panel-radius)] border border-[var(--br-border-muted)] bg-darkgray/70 p-[var(--br-section-pad)] backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-4 border-b border-[var(--br-border-muted)] pb-4">
+        <h3 className="font-blockletter text-xl uppercase tracking-[0.16em] text-[var(--br-text-primary)]">
+          {title}
+        </h3>
+        <span className="text-xs uppercase tracking-[0.22em] text-[var(--br-text-muted)]">
+          {rounds.length} rounds
+        </span>
       </div>
-    </div>
-  </section>
-)
+      <div className="mt-6 overflow-x-auto pb-2">
+        {rounds.length === 0 ? (
+          <div className="rounded-[var(--br-card-radius)] border border-dashed border-[var(--br-border-muted)] p-8 text-center text-[var(--br-text-muted)]">
+            No matches in this section yet.
+          </div>
+        ) : (
+          <div className="flex min-w-max items-start gap-6 pr-2">
+            {rounds.map((round) => (
+              <div
+                key={`${title}-${round.roundNumber}`}
+                className="w-[var(--br-card-width)] shrink-0"
+              >
+                <div
+                  className="mb-4 rounded-[var(--br-card-radius)] border border-[var(--br-border-strong)] bg-[var(--br-accent-subtle)] text-center"
+                  style={{
+                    padding: `var(--br-round-header-y) var(--br-round-header-x)`,
+                  }}
+                >
+                  <p className="font-blockletter text-sm uppercase tracking-[0.22em] text-[var(--br-accent)]">
+                    {round.roundLabel}
+                  </p>
+                </div>
+                <div
+                  className="flex flex-col"
+                  style={{
+                    rowGap: `${getRoundGapPx(round.matches.length, maxMatchesInGroup)}px`,
+                  }}
+                >
+                  {round.matches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      data={data}
+                      isSelected={selectedMatchId === match.id}
+                      onSelect={onSelect}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
 
 const BracketsSection = () => {
   const [data, setData] = useState<BracketData | null>(null)
@@ -391,39 +498,51 @@ const BracketsSection = () => {
 
   const matchTitle = selectedMatch?.matchLabel ?? 'Select a match'
   const matchSubtitle = selectedMatch
-    ? `${selectedMatch.groupLabel} • ${selectedMatch.roundLabel}`
+    ? `${selectedMatch.groupLabel} � ${selectedMatch.roundLabel}`
     : 'Click any match in the bracket to inspect the scoreline.'
 
   return (
-    <section className="mt-14 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
-      <div className="relative overflow-hidden rounded-3xl border border-red/30 bg-[radial-gradient(circle_at_top_left,rgba(243,41,41,0.16),transparent_30%),linear-gradient(180deg,rgba(35,36,45,0.98),rgba(28,29,38,0.98))] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] md:p-6">
+    <section
+      className="mt-14 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_var(--br-details-width)] xl:items-start"
+      style={bracketVars}
+    >
+      <div className="relative overflow-hidden rounded-[var(--br-panel-radius)] border border-[var(--br-border-strong)] bg-[radial-gradient(circle_at_top_left,var(--br-accent-soft),transparent_30%),linear-gradient(180deg,var(--br-panel-top),var(--br-panel-bottom))] p-[var(--br-shell-pad)] shadow-[var(--br-shell-shadow)] md:p-[var(--br-shell-pad-desktop)]">
         {isLoading ? (
-          <div className="flex min-h-[34rem] items-center justify-center text-center font-blockletter uppercase tracking-[0.22em] text-white">
+          <div className="flex min-h-[var(--br-shell-min-height)] items-center justify-center text-center font-blockletter uppercase tracking-[0.22em] text-[var(--br-text-primary)]">
             Loading bracket
           </div>
         ) : errorMessage ? (
-          <div className="flex min-h-[34rem] items-center justify-center p-8 text-center text-white">
+          <div className="flex min-h-[var(--br-shell-min-height)] items-center justify-center p-8 text-center text-[var(--br-text-primary)]">
             {errorMessage}
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="flex flex-col gap-3 border-b border-white/10 px-2 pb-5 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-[var(--br-panel-gap)]">
+            <div className="flex flex-col gap-3 border-b border-[var(--br-border-muted)] px-2 pb-5 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="font-blockletter text-sm uppercase tracking-[0.28em] text-red">
+                <p className="font-blockletter text-sm uppercase tracking-[0.28em] text-[var(--br-accent)]">
                   Custom bracket
                 </p>
-                <h2 className="mt-3 text-3xl text-white">
+                <h2 className="mt-3 text-3xl text-[var(--br-text-primary)]">
                   {data?.stages[0]?.name ?? 'AG Spring Championship'}
                 </h2>
               </div>
-              <div className="flex flex-wrap gap-3 text-sm text-lightgray">
-                <span className="rounded-full border border-white/10 bg-black/35 px-3 py-2">
+              <div className="flex flex-wrap gap-3 text-sm text-[var(--br-text-muted)]">
+                <span
+                  className="rounded-full border border-[var(--br-border-muted)] bg-[var(--br-chip-bg)]"
+                  style={{ padding: `var(--br-chip-pad-y) var(--br-chip-pad-x)` }}
+                >
                   {data?.participants.length ?? teams.length} teams
                 </span>
-                <span className="rounded-full border border-white/10 bg-black/35 px-3 py-2">
+                <span
+                  className="rounded-full border border-[var(--br-border-muted)] bg-[var(--br-chip-bg)]"
+                  style={{ padding: `var(--br-chip-pad-y) var(--br-chip-pad-x)` }}
+                >
                   Double elimination
                 </span>
-                <span className="rounded-full border border-white/10 bg-black/35 px-3 py-2">
+                <span
+                  className="rounded-full border border-[var(--br-border-muted)] bg-[var(--br-chip-bg)]"
+                  style={{ padding: `var(--br-chip-pad-y) var(--br-chip-pad-x)` }}
+                >
                   {matchViews.length} matches
                 </span>
               </div>
@@ -458,32 +577,40 @@ const BracketsSection = () => {
         )}
       </div>
 
-      <aside className="rounded-2xl border border-[rgba(243,41,41,0.35)] bg-darkgray/90 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
-        <p className="font-blockletter text-sm uppercase tracking-[0.3em] text-red">Match focus</p>
-        <h2 className="mt-4 text-3xl leading-tight">{matchTitle}</h2>
-        <p className="mt-3 text-lightgray">{matchSubtitle}</p>
+      <aside className="rounded-[var(--br-panel-radius)] border border-[var(--br-border-strong)] bg-darkgray/90 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
+        <p className="font-blockletter text-sm uppercase tracking-[0.3em] text-[var(--br-accent)]">
+          Match focus
+        </p>
+        <h2 className="mt-4 text-3xl leading-tight text-[var(--br-text-primary)]">{matchTitle}</h2>
+        <p className="mt-3 text-[var(--br-text-muted)]">{matchSubtitle}</p>
 
-        <div className="mt-8 space-y-4">
-          <div className="rounded-xl border border-white/10 bg-black/50 px-4 py-4">
+        <div className="mt-8 space-y-[var(--br-panel-gap)]">
+          <div
+            className="rounded-xl border border-[var(--br-border-muted)] bg-black/50"
+            style={{ padding: 'var(--br-detail-card-pad)' }}
+          >
             <div className="flex items-center justify-between gap-4 text-lg">
               <span>{formatOpponentName(selectedMatch, 'opponent1', data)}</span>
-              <span className="text-2xl text-red">
+              <span className="text-2xl text-[var(--br-accent)]">
                 {formatScore(selectedMatch?.opponent1?.score)}
               </span>
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-black/50 px-4 py-4">
+          <div
+            className="rounded-xl border border-[var(--br-border-muted)] bg-black/50"
+            style={{ padding: 'var(--br-detail-card-pad)' }}
+          >
             <div className="flex items-center justify-between gap-4 text-lg">
               <span>{formatOpponentName(selectedMatch, 'opponent2', data)}</span>
-              <span className="text-2xl text-red">
+              <span className="text-2xl text-[var(--br-accent)]">
                 {formatScore(selectedMatch?.opponent2?.score)}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="mt-8 space-y-3 text-sm text-lightgray">
+        <div className="mt-8 space-y-3 text-sm text-[var(--br-text-muted)]">
           <p>Bracket: {selectedMatch?.groupLabel ?? 'Double elimination'}</p>
           <p>Round: {selectedMatch?.roundLabel ?? 'Upcoming'}</p>
           <p>
