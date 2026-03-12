@@ -22,6 +22,17 @@ const teams = [
   'Turquoise',
 ]
 
+const styles = {
+  textColor: '#ffffff',
+  lightColor: '#4a90e2',
+  mediumColor: '#4a90e2',
+  darkColor: '#4a90e2',
+  resultHeight: 24,
+  resultWidth: 48,
+  resultGapX: 4,
+  resultGapY: 4,
+}
+
 const completedResults: { index: number; opponent1: number; opponent2: number }[] = [
   /*{ index: 0, opponent1: 2, opponent2: 0 },
   { index: 1, opponent1: 2, opponent2: 1 },
