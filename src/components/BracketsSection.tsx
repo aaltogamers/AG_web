@@ -29,6 +29,8 @@ const styles = {
   winScoreColor: 'gold',
   roundColor: 'darkblue',
   connectorColor: 'black',
+  titleFontSize: 24,
+  basicFontSize: 16,
   teamHeight: 24,
   teamWidth: 140,
   teamGapX: 20,
@@ -218,6 +220,7 @@ const GroupSection = ({
                 marginRight: 1,
                 marginLeft: 1,
                 width: styles.teamWidth,
+                fontSize: styles.titleFontSize,
               }}
             >
               {roundToLabel(round)}
@@ -353,7 +356,10 @@ const BracketsSection = () => {
   }
 
   return (
-    <div style={{ boxSizing: 'border-box', gap: styles.bracketGap }} className="flex flex-col">
+    <div
+      style={{ boxSizing: 'border-box', gap: styles.bracketGap, fontSize: styles.basicFontSize }}
+      className="flex flex-col"
+    >
       <GroupSection
         groupLabel="Upper"
         roundsByGroup={roundsByGroup}
