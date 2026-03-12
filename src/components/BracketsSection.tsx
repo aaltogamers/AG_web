@@ -24,14 +24,15 @@ const teams = [
 
 const styles = {
   textColor: 'red',
-  lightColor: 'lightblue',
-  mediumColor: '#4178c0',
-  darkColor: 'darkblue',
-  winColor: 'gold',
+  teamNameColor: '#4178c0',
+  loseScoreColor: 'lightblue',
+  winScoreColor: 'gold',
+  roundColor: 'darkblue',
+  connectorColor: 'black',
   teamHeight: 24,
   teamWidth: 140,
   teamGapX: 20,
-  teamGapY: 20,
+  teamGapY: 10,
   bracketGap: 20,
 }
 
@@ -156,17 +157,18 @@ const MatchResultRow = (
       >
         {participantData?.id != null ? participantsById[participantData.id]?.name : 'TBD'}
       </div>
-
-      <div
-        className="text-center aspect-square"
-        style={{
-          width: styles.teamHeight - 1,
-          lineHeight: `${styles.teamHeight}px`,
-          backgroundColor: isWin ? styles.winColor : styles.lightColor,
-        }}
-      >
-        {participantData?.score != null ? participantData.score : ''}
-      </div>
+      {participantData?.result && (
+        <div
+          className="text-center aspect-square"
+          style={{
+            width: styles.teamHeight - 1,
+            lineHeight: `${styles.teamHeight}px`,
+            backgroundColor: isWin ? styles.winScoreColor : styles.loseScoreColor,
+          }}
+        >
+          {participantData?.score != null ? participantData.score : ''}
+        </div>
+      )}
     </div>
   )
 }
@@ -200,7 +202,6 @@ const GroupSection = ({
         const hasNextRound = nextRound != null
         const shouldMergePairs = hasNextRound && roundMatches.length === nextRoundMatches.length * 2
 
-        const connectorColor = styles.darkColor
         const connectorThickness = 2
         const connectorHalfGap = styles.teamGapX / 2
         const connectorFullGap = styles.teamGapX
@@ -213,7 +214,7 @@ const GroupSection = ({
             <h3
               className="mb-4 text-xl font-bold text-center px-1 rounded-sm"
               style={{
-                backgroundColor: styles.darkColor,
+                backgroundColor: styles.roundColor,
                 marginRight: 1,
                 marginLeft: 1,
                 width: styles.teamWidth,
@@ -234,7 +235,7 @@ const GroupSection = ({
                 <div
                   key={match.id}
                   className="relative flex flex-col rounded-sm"
-                  style={{ backgroundColor: styles.mediumColor, width: styles.teamWidth }}
+                  style={{ backgroundColor: styles.teamNameColor, width: styles.teamWidth }}
                 >
                   {MatchResultRow(match, 'opponent1', participantsById)}
                   {MatchResultRow(match, 'opponent2', participantsById)}
@@ -248,7 +249,7 @@ const GroupSection = ({
                           top: matchCenter - connectorThickness / 2,
                           width: connectorHalfGap,
                           height: connectorThickness,
-                          backgroundColor: connectorColor,
+                          backgroundColor: styles.connectorColor,
                         }}
                       />
 
@@ -261,7 +262,7 @@ const GroupSection = ({
                               top: matchCenter,
                               width: connectorThickness,
                               height: nextMatchCenterDistance,
-                              backgroundColor: connectorColor,
+                              backgroundColor: styles.connectorColor,
                             }}
                           />
                           <div
@@ -272,7 +273,7 @@ const GroupSection = ({
                                 matchCenter + nextMatchCenterDistance / 2 - connectorThickness / 2,
                               width: connectorHalfGap,
                               height: connectorThickness,
-                              backgroundColor: connectorColor,
+                              backgroundColor: styles.connectorColor,
                             }}
                           />
                         </>
@@ -288,7 +289,7 @@ const GroupSection = ({
                         top: matchCenter - connectorThickness / 2,
                         width: connectorFullGap,
                         height: connectorThickness,
-                        backgroundColor: connectorColor,
+                        backgroundColor: styles.connectorColor,
                       }}
                     />
                   )}
