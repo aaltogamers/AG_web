@@ -1,7 +1,5 @@
 import Head from 'next/head'
 import BracketsSection from '../components/BracketsSection'
-import Header from '../components/Header'
-import PageWrapper from '../components/PageWrapper'
 
 const Brackets = () => {
   return (
@@ -9,13 +7,10 @@ const Brackets = () => {
       <Head>
         <title>Brackets - Aalto Gamers</title>
       </Head>
-      <PageWrapper>
-        <section className="pb-24">
-          <Header>Brackets</Header>
 
-          <BracketsSection />
-        </section>
-      </PageWrapper>
+      <div className="p-8">
+        <BracketsSection />
+      </div>
     </>
   )
 }
