@@ -147,7 +147,7 @@ const MatchResultRow = (
 
   return (
     <div
-      className={`flex flex-row justify-between border-1 ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm border-t-0'}`}
+      className={`flex flex-row justify-between border-1 overflow-hidden ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm border-t-0'}`}
       style={{ height: styles.teamHeight }}
     >
       <div
@@ -158,10 +158,10 @@ const MatchResultRow = (
       </div>
 
       <div
-        className={`text-center aspect-square ${participant === 'opponent1' ? 'rounded-tr-sm' : 'rounded-br-sm'}`}
+        className="text-center aspect-square"
         style={{
           width: styles.teamHeight - 1,
-          lineHeight: `${styles.teamHeight - 1}px`,
+          lineHeight: `${styles.teamHeight}px`,
           backgroundColor: isWin ? styles.winColor : styles.lightColor,
         }}
       >
