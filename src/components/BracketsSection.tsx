@@ -13,7 +13,7 @@ const teams = [
   'Light Blue',
   'Violet',
   'Black',
-  'White',
+  'Very Very Light Blueish Color',
   'Grey',
   'Aquamarine',
   'Brown',
@@ -23,24 +23,26 @@ const teams = [
 ]
 
 const styles = {
-  textColor: '#ffffff',
-  lightColor: '#4a90e2',
-  mediumColor: '#4a90e2',
-  darkColor: '#4a90e2',
-  resultHeight: 24,
-  resultWidth: 48,
-  resultGapX: 4,
-  resultGapY: 4,
+  textColor: 'red',
+  lightColor: 'lightblue',
+  mediumColor: '#4178c0',
+  darkColor: 'darkblue',
+  winColor: 'gold',
+  teamHeight: 24,
+  teamWidth: 140,
+  teamGapX: 20,
+  teamGapY: 20,
+  bracketGap: 20,
 }
 
 const completedResults: { index: number; opponent1: number; opponent2: number }[] = [
-  /*{ index: 0, opponent1: 2, opponent2: 0 },
+  { index: 0, opponent1: 2, opponent2: 0 },
   { index: 1, opponent1: 2, opponent2: 1 },
   { index: 2, opponent1: 2, opponent2: 0 },
   { index: 3, opponent1: 1, opponent2: 2 },
   { index: 4, opponent1: 2, opponent2: 1 },
   { index: 5, opponent1: 0, opponent2: 2 },
-  { index: 8, opponent1: 2, opponent2: 1 },*/
+  { index: 8, opponent1: 2, opponent2: 1 },
 ]
 
 type BracketData = {
@@ -134,6 +136,41 @@ const roundToLabel = (round: Round) => {
   return `${groupLabel} Round ${round.number}`
 }
 
+const MatchResultRow = (
+  match: Match,
+  participant: 'opponent1' | 'opponent2',
+  participantsById: Record<Id, Participant>
+) => {
+  const participantData = match[participant]
+
+  const isWin = participantData?.result === 'win'
+
+  return (
+    <div
+      className={`flex flex-row justify-between border-1 ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm border-t-0'}`}
+    >
+      <div
+        style={{ height: styles.teamHeight, lineHeight: `${styles.teamHeight}px` }}
+        className="truncate px-1"
+      >
+        {participantData?.id != null ? participantsById[participantData.id]?.name : 'TBD'}
+      </div>
+
+      <div
+        className={`text-center aspect-square ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm'}`}
+        style={{
+          width: styles.teamHeight,
+          height: styles.teamHeight,
+          lineHeight: `${styles.teamHeight}px`,
+          backgroundColor: isWin ? styles.winColor : styles.lightColor,
+        }}
+      >
+        {participantData?.score != null ? participantData.score : ''}
+      </div>
+    </div>
+  )
+}
+
 const GroupSection = ({
   groupLabel,
   roundsByGroup,
@@ -146,29 +183,36 @@ const GroupSection = ({
   participantsById: Record<Id, Participant>
 }) => {
   return (
-    <div className="flex flex-row gap-8">
+    <div className="flex flex-row" style={{ color: styles.textColor }}>
       {roundsByGroup[groupLabel]?.map((round, i) => (
         <div key={round.id} className="flex flex-col">
-          <h3 className="mb-4 text-xl font-bold">{roundToLabel(round)}</h3>
+          <h3
+            className="mb-4 text-xl font-bold text-center px-1 rounded-sm"
+            style={{
+              backgroundColor: styles.darkColor,
+              marginRight: 1,
+              marginLeft: 1,
+              width: styles.teamWidth,
+            }}
+          >
+            {roundToLabel(round)}
+          </h3>
           <div
             className="flex flex-col gap-4 flex-auto justify-between"
-            style={{ marginTop: i * 32, marginBottom: i * 32 }}
+            style={{
+              marginTop: i * styles.teamHeight * 2,
+              marginBottom: i * styles.teamHeight * 2,
+              marginRight: styles.teamGapX,
+            }}
           >
             {matchesByRound[round.id]?.map((match) => (
-              <div key={match.id} className="border p-4 rounded flex flex-col ">
-                <div className="flex gap-1 items-center">
-                  <span>
-                    {match.opponent1?.id != null
-                      ? participantsById[match.opponent1.id]?.name
-                      : 'TBD'}
-                  </span>
-                  <span>vs</span>
-                  <span>
-                    {match.opponent2?.id != null
-                      ? participantsById[match.opponent2.id]?.name
-                      : 'TBD'}
-                  </span>
-                </div>
+              <div
+                key={match.id}
+                className="flex flex-col rounded-sm"
+                style={{ backgroundColor: styles.mediumColor, width: styles.teamWidth }}
+              >
+                {MatchResultRow(match, 'opponent1', participantsById)}
+                {MatchResultRow(match, 'opponent2', participantsById)}
               </div>
             ))}
           </div>
@@ -228,7 +272,7 @@ const BracketsSection = () => {
   }
 
   return (
-    <div>
+    <div style={{ boxSizing: 'border-box', gap: styles.bracketGap }} className="flex flex-col">
       <GroupSection
         groupLabel="Upper"
         roundsByGroup={roundsByGroup}
