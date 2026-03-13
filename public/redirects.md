@@ -52,4 +52,7 @@ redirects:
   - name: Minecraft Server Whitelist
     slug: whitelist
     url: https://aaltogamers.fi/whitelist
+  - name: Sims Build-Off 2026 Sign-Up
+    slug: https://forms.gle/Vmq7SHmvKjvhU8nw5
+    url: sims-2026
 ---
