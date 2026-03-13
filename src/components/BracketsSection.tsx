@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import type { Id, Match, Participant, Round } from 'brackets-model'
-
-import { BracketData, BracketStyles } from '../types/types'
-import { groupToLabel } from '../utils/brackets'
+import type { BracketData, BracketStyles } from '../types/types'
+import { getMatchesByRound, getParticipantsById, getRoundsByGroup } from '../utils/brackets'
 import { createMockBracketData } from '../utils/createMockBracketData'
 import GroupSection from './BracketGroupSection'
 
@@ -28,33 +26,9 @@ const BracketsSection = ({ bracketStyles }: Props) => {
     return <div>Loading...</div>
   }
 
-  const roundsByGroup: Record<Id, Round[]> = {}
-
-  for (const round of data.rounds) {
-    const groupLabel = groupToLabel(round.group_id)
-
-    if (!roundsByGroup[groupLabel]) {
-      roundsByGroup[groupLabel] = []
-    }
-
-    roundsByGroup[groupLabel].push(round)
-  }
-
-  const matchesByRound: Record<Id, Match[]> = {}
-
-  for (const match of data.matches) {
-    if (!matchesByRound[match.round_id]) {
-      matchesByRound[match.round_id] = []
-    }
-
-    matchesByRound[match.round_id].push(match)
-  }
-
-  const participantsById: Record<Id, Participant> = {}
-
-  for (const participant of data.participants) {
-    participantsById[participant.id] = participant
-  }
+  const roundsByGroup = getRoundsByGroup(data)
+  const matchesByRound = getMatchesByRound(data)
+  const participantsById = getParticipantsById(data)
 
   if (data.groups.length !== 3) {
     return <div>Only double elim with grand final is currently supported</div>
