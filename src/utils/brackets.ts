@@ -33,7 +33,21 @@ export const groupToLabel = (groupId: Id): RoundLabel => {
   }
 }
 
-export const roundToLabel = (round: Round) => {
+export const getGroupHasFinal = (
+  groupLabel: string,
+  roundsByGroup: Record<string, Round[]>,
+  matchesByRound: Record<Id, Match[]>
+) => {
+  const rounds = roundsByGroup[groupLabel]
+
+  return rounds?.some((round) => matchesByRound[round.id].length === 1)
+}
+
+export const roundToLabel = (
+  round: Round,
+  matchesByRound: Record<Id, Match[]>,
+  groupHasFinal: boolean
+) => {
   const groupLabel = groupToLabel(round.group_id)
 
   if (groupLabel === 'Final') {
@@ -41,6 +55,20 @@ export const roundToLabel = (round: Round) => {
   }
 
   if (groupLabel === 'Upper') {
+    const matchCount = matchesByRound[round.id].length
+
+    if (groupHasFinal && matchCount === 1) {
+      return 'Final'
+    }
+
+    if (groupHasFinal && matchCount === 2) {
+      return 'Semi-final'
+    }
+
+    if (groupHasFinal && matchCount === 4) {
+      return 'Quarter-final'
+    }
+
     return `Round ${round.number}`
   }
 

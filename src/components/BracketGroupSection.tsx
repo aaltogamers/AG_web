@@ -2,7 +2,7 @@ import type { Id, Match, Participant, Round } from 'brackets-model'
 
 import MatchResultRow from './BracketMatchResultRow'
 import { BracketStyles } from '../types/types'
-import { roundToLabel } from '../utils/brackets'
+import { getGroupHasFinal, roundToLabel } from '../utils/brackets'
 
 type Props = {
   groupLabel: string
@@ -21,6 +21,8 @@ const GroupSection = ({
 }: Props) => {
   const matchHeight = bracketStyles.teamHeight * 2
   const baseGap = bracketStyles.teamGapY
+
+  const groupHasFinal = getGroupHasFinal(groupLabel, roundsByGroup, matchesByRound)
 
   return (
     <div className="flex flex-row" style={{ color: bracketStyles.textColor }}>
@@ -57,7 +59,7 @@ const GroupSection = ({
                 fontSize: bracketStyles.titleFontSize,
               }}
             >
-              {roundToLabel(round)}
+              {roundToLabel(round, matchesByRound, groupHasFinal)}
             </h3>
             <div
               className="flex flex-col"
