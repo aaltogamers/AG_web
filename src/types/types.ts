@@ -1,4 +1,6 @@
 import { Timestamp } from 'firebase/firestore'
+import { IconType } from 'react-icons'
+import type { Id } from 'brackets-model'
 
 export type AGEvent = {
   name: string
@@ -182,4 +184,24 @@ export type MapBanInfo = {
 export type HeaderLink = {
   name: string
   link: string
+}
+
+export type BracketStyles = {
+  textColor: string
+  teamNameColor: string
+  loseScoreColor: string
+  winScoreColor: string
+  roundColor: string
+  connectorColor: string
+  titleFontSize: number
+  basicFontSize: number
+  teamHeight: number
+  teamWidth: number
+  teamGapX: number
+  teamGapY: number
+  bracketGap: number
+  matchIcons: Record<
+    Id,
+    { winner?: { icon: IconType; color: string }; loser?: { icon: IconType; color: string } }
+  >
 }

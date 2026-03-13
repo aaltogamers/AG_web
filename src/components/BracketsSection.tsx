@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { BracketsManager } from 'brackets-manager'
 import { InMemoryDatabase } from 'brackets-memory-db'
 import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
-import { IconType } from 'react-icons'
+
 import { FaCheck, FaMedal } from 'react-icons/fa'
+import { BracketStyles } from '../types/types'
+import MatchResultRow from './BracketMatchResultRow'
 
 const teams = [
   'Red',
@@ -24,7 +26,7 @@ const teams = [
   'Turquoise',
 ]
 
-const styles = {
+const bracketStyles: BracketStyles = {
   textColor: 'red',
   teamNameColor: '#4178c0',
   loseScoreColor: 'lightblue',
@@ -38,6 +40,12 @@ const styles = {
   teamGapX: 20,
   teamGapY: 10,
   bracketGap: 20,
+  matchIcons: {
+    12: { winner: { icon: FaMedal, color: 'green' } },
+    13: { winner: { icon: FaCheck, color: 'green' } },
+    25: { winner: { icon: FaCheck, color: 'green' } },
+    26: { winner: { icon: FaCheck, color: 'green' } },
+  },
 }
 
 const completedResults: { index: number; opponent1: number; opponent2: number }[] = [
@@ -167,68 +175,6 @@ const roundToLabel = (round: Round) => {
   return `${groupLabel} Round ${round.number}`
 }
 
-const matchIcons: Record<
-  Id,
-  { winner?: { icon: IconType; color: string }; loser?: { icon: IconType; color: string } }
-> = {
-  12: { winner: { icon: FaMedal, color: 'green' } },
-  13: { winner: { icon: FaCheck, color: 'green' } },
-  25: { winner: { icon: FaCheck, color: 'green' } },
-  26: { winner: { icon: FaCheck, color: 'green' } },
-}
-
-const MatchResultRow = (
-  match: Match,
-  participant: 'opponent1' | 'opponent2',
-  participantsById: Record<Id, Participant>
-) => {
-  const participantData = match[participant]
-
-  const isWin = participantData?.result === 'win'
-
-  return (
-    <div className="relative">
-      <div
-        className={`flex flex-row justify-between border-1 overflow-hidden  ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm border-t-0'}`}
-        style={{ height: styles.teamHeight }}
-      >
-        <div
-          style={{ height: styles.teamHeight, lineHeight: `${styles.teamHeight}px` }}
-          className="truncate px-1"
-        >
-          {participantData?.id != null ? participantsById[participantData.id]?.name : 'TBD'}
-        </div>
-        {participantData?.result && (
-          <div
-            className="text-center aspect-square "
-            style={{
-              width: styles.teamHeight - 1,
-              lineHeight: `${styles.teamHeight}px`,
-              backgroundColor: isWin ? styles.winScoreColor : styles.loseScoreColor,
-            }}
-          >
-            {participantData.score ?? ''}
-            <div
-              className="absolute flex items-center justify-center"
-              style={{
-                left: styles.teamWidth + 4,
-                top: 0,
-                height: styles.teamHeight,
-                lineHeight: `${styles.teamHeight}px`,
-              }}
-            >
-              {(() => {
-                const icon = matchIcons[match.id]?.[isWin ? 'winner' : 'loser']
-                return icon ? <icon.icon color={icon.color} /> : null
-              })()}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 const GroupSection = ({
   groupLabel,
   roundsByGroup,
@@ -240,11 +186,11 @@ const GroupSection = ({
   matchesByRound: Record<Id, Match[]>
   participantsById: Record<Id, Participant>
 }) => {
-  const matchHeight = styles.teamHeight * 2
-  const baseGap = styles.teamGapY
+  const matchHeight = bracketStyles.teamHeight * 2
+  const baseGap = bracketStyles.teamGapY
 
   return (
-    <div className="flex flex-row" style={{ color: styles.textColor }}>
+    <div className="flex flex-row" style={{ color: bracketStyles.textColor }}>
       {roundsByGroup[groupLabel]?.map((round, i) => {
         const roundMatches = matchesByRound[round.id] ?? []
 
@@ -259,8 +205,8 @@ const GroupSection = ({
         const shouldMergePairs = hasNextRound && roundMatches.length === nextRoundMatches.length * 2
 
         const connectorThickness = 2
-        const connectorHalfGap = styles.teamGapX / 2
-        const connectorFullGap = styles.teamGapX
+        const connectorHalfGap = bracketStyles.teamGapX / 2
+        const connectorFullGap = bracketStyles.teamGapX
 
         const matchCenter = matchHeight / 2
         const nextMatchCenterDistance = matchHeight + roundGap
@@ -272,10 +218,10 @@ const GroupSection = ({
             <h3
               className="mb-4 text-xl font-bold text-center px-1 rounded-sm"
               style={{
-                backgroundColor: styles.roundColor,
+                backgroundColor: bracketStyles.roundColor,
                 marginRight: 1,
                 marginLeft: 1,
-                fontSize: styles.titleFontSize,
+                fontSize: bracketStyles.titleFontSize,
               }}
             >
               {roundToLabel(round)}
@@ -286,7 +232,7 @@ const GroupSection = ({
                 gap: roundGap,
                 marginTop: roundOffset,
                 marginBottom: roundOffset,
-                marginRight: styles.teamGapX,
+                marginRight: bracketStyles.teamGapX,
               }}
             >
               {roundMatches.map((match, matchIndex) => (
@@ -294,21 +240,32 @@ const GroupSection = ({
                   key={match.id}
                   className="relative flex flex-col rounded-sm"
                   style={{
-                    backgroundColor: styles.teamNameColor,
-                    width: styles.teamWidth,
+                    backgroundColor: bracketStyles.teamNameColor,
+                    width: bracketStyles.teamWidth,
                     marginLeft: gameNumberTextSpace,
                   }}
                 >
-                  {MatchResultRow(match, 'opponent1', participantsById)}
-                  {MatchResultRow(match, 'opponent2', participantsById)}
+                  <MatchResultRow
+                    match={match}
+                    participant="opponent1"
+                    participantsById={participantsById}
+                    bracketStyles={bracketStyles}
+                  />
+
+                  <MatchResultRow
+                    match={match}
+                    participant="opponent2"
+                    participantsById={participantsById}
+                    bracketStyles={bracketStyles}
+                  />
 
                   <div
                     style={{
                       position: 'absolute',
-                      lineHeight: `${styles.basicFontSize}px`,
-                      fontSize: styles.basicFontSize * 0.75,
-                      color: styles.connectorColor,
-                      top: matchCenter - connectorThickness / 2 - styles.basicFontSize / 2,
+                      lineHeight: `${bracketStyles.basicFontSize}px`,
+                      fontSize: bracketStyles.basicFontSize * 0.75,
+                      color: bracketStyles.connectorColor,
+                      top: matchCenter - connectorThickness / 2 - bracketStyles.basicFontSize / 2,
                       textAlign: 'right',
                       left: '-22px',
                       width: '20px',
@@ -322,11 +279,11 @@ const GroupSection = ({
                       <div
                         style={{
                           position: 'absolute',
-                          left: styles.teamWidth,
+                          left: bracketStyles.teamWidth,
                           top: matchCenter - connectorThickness / 2,
                           width: connectorHalfGap,
                           height: connectorThickness,
-                          backgroundColor: styles.connectorColor,
+                          backgroundColor: bracketStyles.connectorColor,
                         }}
                       />
 
@@ -335,22 +292,23 @@ const GroupSection = ({
                           <div
                             style={{
                               position: 'absolute',
-                              left: styles.teamWidth + connectorHalfGap - connectorThickness / 2,
+                              left:
+                                bracketStyles.teamWidth + connectorHalfGap - connectorThickness / 2,
                               top: matchCenter,
                               width: connectorThickness,
                               height: nextMatchCenterDistance,
-                              backgroundColor: styles.connectorColor,
+                              backgroundColor: bracketStyles.connectorColor,
                             }}
                           />
                           <div
                             style={{
                               position: 'absolute',
-                              left: styles.teamWidth + connectorHalfGap,
+                              left: bracketStyles.teamWidth + connectorHalfGap,
                               top:
                                 matchCenter + nextMatchCenterDistance / 2 - connectorThickness / 2,
                               width: connectorHalfGap,
                               height: connectorThickness,
-                              backgroundColor: styles.connectorColor,
+                              backgroundColor: bracketStyles.connectorColor,
                             }}
                           />
                         </>
@@ -362,11 +320,11 @@ const GroupSection = ({
                     <div
                       style={{
                         position: 'absolute',
-                        left: styles.teamWidth,
+                        left: bracketStyles.teamWidth,
                         top: matchCenter - connectorThickness / 2,
                         width: connectorFullGap,
                         height: connectorThickness,
-                        backgroundColor: styles.connectorColor,
+                        backgroundColor: bracketStyles.connectorColor,
                       }}
                     />
                   )}
@@ -431,7 +389,11 @@ const BracketsSection = () => {
 
   return (
     <div
-      style={{ boxSizing: 'border-box', gap: styles.bracketGap, fontSize: styles.basicFontSize }}
+      style={{
+        boxSizing: 'border-box',
+        gap: bracketStyles.bracketGap,
+        fontSize: bracketStyles.basicFontSize,
+      }}
       className="flex flex-col"
     >
       <GroupSection
