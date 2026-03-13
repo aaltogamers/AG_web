@@ -5,7 +5,8 @@ import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'bra
 
 import { FaCheck, FaMedal } from 'react-icons/fa'
 import { BracketStyles } from '../types/types'
-import MatchResultRow from './BracketMatchResultRow'
+import { groupToLabel } from '../utils/brackets'
+import GroupSection from './BracketGroupSection'
 
 const teams = [
   'Red',
@@ -148,196 +149,6 @@ const createBracketData = async (): Promise<BracketData> => {
   }
 }
 
-const groupToLabel = (groupId: Id) => {
-  switch (groupId) {
-    case 0:
-      return 'Upper'
-    case 1:
-      return 'Lower'
-    case 2:
-      return `Final`
-    default:
-      return `Unknown`
-  }
-}
-
-const roundToLabel = (round: Round) => {
-  const groupLabel = groupToLabel(round.group_id)
-
-  if (groupLabel === 'Final') {
-    return groupLabel
-  }
-
-  if (groupLabel === 'Upper') {
-    return `Round ${round.number}`
-  }
-
-  return `${groupLabel} Round ${round.number}`
-}
-
-const GroupSection = ({
-  groupLabel,
-  roundsByGroup,
-  matchesByRound,
-  participantsById,
-}: {
-  groupLabel: string
-  roundsByGroup: Record<string, Round[]>
-  matchesByRound: Record<Id, Match[]>
-  participantsById: Record<Id, Participant>
-}) => {
-  const matchHeight = bracketStyles.teamHeight * 2
-  const baseGap = bracketStyles.teamGapY
-
-  return (
-    <div className="flex flex-row" style={{ color: bracketStyles.textColor }}>
-      {roundsByGroup[groupLabel]?.map((round, i) => {
-        const roundMatches = matchesByRound[round.id] ?? []
-
-        const roundDepth = groupLabel === 'Lower' ? Math.floor(i / 2) : i
-        const roundMultiplier = 2 ** roundDepth
-        const roundGap = baseGap * roundMultiplier + matchHeight * (roundMultiplier - 1)
-        const roundOffset = roundGap / 2
-
-        const nextRound = roundsByGroup[groupLabel]?.[i + 1]
-        const nextRoundMatches = nextRound ? (matchesByRound[nextRound.id] ?? []) : []
-        const hasNextRound = nextRound != null
-        const shouldMergePairs = hasNextRound && roundMatches.length === nextRoundMatches.length * 2
-
-        const connectorThickness = 2
-        const connectorHalfGap = bracketStyles.teamGapX / 2
-        const connectorFullGap = bracketStyles.teamGapX
-
-        const matchCenter = matchHeight / 2
-        const nextMatchCenterDistance = matchHeight + roundGap
-
-        const gameNumberTextSpace = 12
-
-        return (
-          <div key={round.id} className="flex flex-col">
-            <h3
-              className="mb-4 text-xl font-bold text-center px-1 rounded-sm"
-              style={{
-                backgroundColor: bracketStyles.roundColor,
-                marginRight: 1,
-                marginLeft: 1,
-                fontSize: bracketStyles.titleFontSize,
-              }}
-            >
-              {roundToLabel(round)}
-            </h3>
-            <div
-              className="flex flex-col"
-              style={{
-                gap: roundGap,
-                marginTop: roundOffset,
-                marginBottom: roundOffset,
-                marginRight: bracketStyles.teamGapX,
-              }}
-            >
-              {roundMatches.map((match, matchIndex) => (
-                <div
-                  key={match.id}
-                  className="relative flex flex-col rounded-sm"
-                  style={{
-                    backgroundColor: bracketStyles.teamNameColor,
-                    width: bracketStyles.teamWidth,
-                    marginLeft: gameNumberTextSpace,
-                  }}
-                >
-                  <MatchResultRow
-                    match={match}
-                    participant="opponent1"
-                    participantsById={participantsById}
-                    bracketStyles={bracketStyles}
-                  />
-
-                  <MatchResultRow
-                    match={match}
-                    participant="opponent2"
-                    participantsById={participantsById}
-                    bracketStyles={bracketStyles}
-                  />
-
-                  <div
-                    style={{
-                      position: 'absolute',
-                      lineHeight: `${bracketStyles.basicFontSize}px`,
-                      fontSize: bracketStyles.basicFontSize * 0.75,
-                      color: bracketStyles.connectorColor,
-                      top: matchCenter - connectorThickness / 2 - bracketStyles.basicFontSize / 2,
-                      textAlign: 'right',
-                      left: '-22px',
-                      width: '20px',
-                    }}
-                  >
-                    {match.id}
-                  </div>
-
-                  {hasNextRound && shouldMergePairs && (
-                    <>
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: bracketStyles.teamWidth,
-                          top: matchCenter - connectorThickness / 2,
-                          width: connectorHalfGap,
-                          height: connectorThickness,
-                          backgroundColor: bracketStyles.connectorColor,
-                        }}
-                      />
-
-                      {matchIndex % 2 === 0 && matchIndex + 1 < roundMatches.length && (
-                        <>
-                          <div
-                            style={{
-                              position: 'absolute',
-                              left:
-                                bracketStyles.teamWidth + connectorHalfGap - connectorThickness / 2,
-                              top: matchCenter,
-                              width: connectorThickness,
-                              height: nextMatchCenterDistance,
-                              backgroundColor: bracketStyles.connectorColor,
-                            }}
-                          />
-                          <div
-                            style={{
-                              position: 'absolute',
-                              left: bracketStyles.teamWidth + connectorHalfGap,
-                              top:
-                                matchCenter + nextMatchCenterDistance / 2 - connectorThickness / 2,
-                              width: connectorHalfGap,
-                              height: connectorThickness,
-                              backgroundColor: bracketStyles.connectorColor,
-                            }}
-                          />
-                        </>
-                      )}
-                    </>
-                  )}
-
-                  {hasNextRound && !shouldMergePairs && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        left: bracketStyles.teamWidth,
-                        top: matchCenter - connectorThickness / 2,
-                        width: connectorFullGap,
-                        height: connectorThickness,
-                        backgroundColor: bracketStyles.connectorColor,
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 const BracketsSection = () => {
   const [data, setData] = useState<BracketData | null>(null)
 
@@ -401,12 +212,14 @@ const BracketsSection = () => {
         roundsByGroup={roundsByGroup}
         matchesByRound={matchesByRound}
         participantsById={participantsById}
+        bracketStyles={bracketStyles}
       />
       <GroupSection
         groupLabel="Lower"
         roundsByGroup={roundsByGroup}
         matchesByRound={matchesByRound}
         participantsById={participantsById}
+        bracketStyles={bracketStyles}
       />
     </div>
   )
