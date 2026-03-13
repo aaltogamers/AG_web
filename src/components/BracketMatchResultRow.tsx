@@ -55,11 +55,15 @@ const MatchResultRow = ({
           }}
           className="truncate px-1"
         >
-          {participantData === null
-            ? '-'
-            : participantData?.id === null
-              ? tbdLabel
-              : participantsById[participantData.id]?.name}
+          {participantData === null ? (
+            <i className="opacity-75" style={{ fontSize: '0.8em' }}>
+              BYE
+            </i>
+          ) : participantData?.id === null ? (
+            tbdLabel
+          ) : (
+            participantsById[participantData.id]?.name
+          )}
         </div>
         {participantData?.result && !isBye && (
           <div
