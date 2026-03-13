@@ -67,6 +67,9 @@ const completedResults: { index: number; opponent1: number; opponent2: number }[
   { index: 26, opponent1: 0, opponent2: 2 },
 ]
 
+// Skip matches, so we get top 4 teams
+const matchIdsToSkip = new Set<Id>([14, 27, 28])
+
 type BracketData = {
   stages: Stage[]
   groups: Group[]
@@ -95,7 +98,7 @@ const createBracketData = async (): Promise<BracketData> => {
   for (const result of completedResults) {
     const match = matches[result.index]
 
-    if (!match) continue
+    if (!match || matchIdsToSkip.has(match.id)) continue
 
     const opponent1Won = result.opponent1 > result.opponent2
 
@@ -121,11 +124,15 @@ const createBracketData = async (): Promise<BracketData> => {
     storage.select<Participant>('participant'),
   ])
 
+  const filteredMatches = (updatedMatches ?? []).filter((match) => !matchIdsToSkip.has(match.id))
+  const filteredRoundIds = new Set(filteredMatches.map((match) => match.round_id))
+  const filteredRounds = (rounds ?? []).filter((round) => filteredRoundIds.has(round.id))
+
   return {
     stages: stages ?? [],
     groups: groups ?? [],
-    rounds: rounds ?? [],
-    matches: updatedMatches ?? [],
+    rounds: filteredRounds,
+    matches: filteredMatches,
     matchGames: matchGames ?? [],
     participants: participants ?? [],
   }
