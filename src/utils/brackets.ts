@@ -137,7 +137,7 @@ export const roundToLabel = (
   return `${groupLabel} Round ${round.number}`
 }
 
-// For now, only finds losers, and slot (opponent1 vs opponent2) might not be accurate
+// For now, only finds losers, and slot (opponent1 vs opponent2) is not accurate
 export const getPrevMatches = async (matches: Match[], manager: BracketsManager) => {
   const prevMatches: Record<
     Id,
@@ -154,17 +154,15 @@ export const getPrevMatches = async (matches: Match[], manager: BracketsManager)
         prevMatches[losersGame.id] = {}
       }
 
-      if (losersGame.number % 2 !== 0) {
-        prevMatches[losersGame.id] = {
-          ...prevMatches[losersGame.id],
-          opponent1From: { match, outcome: 'loser' },
-        }
-      }
-
-      if (losersGame.number % 2 === 0) {
+      if (prevMatches[losersGame.id].opponent1From) {
         prevMatches[losersGame.id] = {
           ...prevMatches[losersGame.id],
           opponent2From: { match, outcome: 'loser' },
+        }
+      } else {
+        prevMatches[losersGame.id] = {
+          ...prevMatches[losersGame.id],
+          opponent1From: { match, outcome: 'loser' },
         }
       }
     }
