@@ -1,5 +1,5 @@
 import type { Id, Match, Participant, Round } from 'brackets-model'
-import { BracketData, OpponentFroMatch, RoundLabel } from '../types/types'
+import { BracketData, BracketType, OpponentFroMatch, RoundLabel } from '../types/types'
 import { BracketsManager } from 'brackets-manager'
 
 export const getMatchesByRound = (data: BracketData): Record<Id, Match[]> => {
@@ -210,4 +210,49 @@ export const getBracketData = async (
     participants: participants,
     prevMatches,
   }
+}
+
+export const setupBracket = async (
+  manager: BracketsManager,
+  bracketType: BracketType,
+  teamCount: number,
+  teams: string[]
+) => {
+  if (bracketType !== 'double_elimination_to_top_4') {
+    throw Error('Only double_elimination_to_top_4 type supported currently')
+  }
+
+  if (teamCount !== 16) {
+    throw Error('Only 16 teams supported currently')
+  }
+
+  const qualifierStage = await manager.create.stage({
+    tournamentId: 1,
+    name: 'Qualifier stage',
+    type: 'double_elimination',
+    seeding: teams,
+    settings: { grandFinal: 'simple', balanceByes: true, size: teamCount },
+  })
+
+  // TODO: Make support other than 16 teams
+  const matchIdsToSkip = new Set([14, 27, 28])
+
+  const mainBracketData = await getBracketData(manager, qualifierStage.id, matchIdsToSkip)
+
+  const topFourTeams = getTopFourTeamsFromDoubleElimQualifiers(mainBracketData)
+
+  const finalsStage = await manager.create.stage({
+    tournamentId: 1,
+    name: 'Final stage',
+    type: 'single_elimination',
+    seeding:
+      topFourTeams.length === 4
+        ? topFourTeams.map((item) => item.name)
+        : [' ', '  ', '   ', '    '], // Very hacky
+    settings: { grandFinal: 'simple' },
+  })
+
+  const finalsBracketData = await getBracketData(manager, finalsStage.id, new Set())
+
+  return [mainBracketData, finalsBracketData]
 }

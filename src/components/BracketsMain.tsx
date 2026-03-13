@@ -1,81 +1,81 @@
 import { useEffect, useState } from 'react'
 
-import type { BracketData, BracketStyles } from '../types/types'
-import { getBracketData, getTopFourTeamsFromDoubleElimQualifiers } from '../utils/brackets'
+import type { BracketData, BracketStyles, BracketType } from '../types/types'
+import { setupBracket } from '../utils/brackets'
 
 import BracketsSection from './BracketsSection'
 import { InMemoryDatabase } from 'brackets-memory-db'
 import { BracketsManager } from 'brackets-manager'
+import { FaTrophy } from 'react-icons/fa'
 
-type Props = {
-  bracketStyles: BracketStyles
-  teams: string[]
-  teamCount: 4 | 8 | 16 | 32 | 64
-  bracketType: 'single_elimination' | 'double_elimination' | 'double_elimination_to_top_4'
+const storage = new InMemoryDatabase()
+const manager = new BracketsManager(storage)
+
+const defaultTeams = [
+  'Red',
+  'Green',
+  'Blue',
+  'Magenta',
+  'Yellow',
+  'Orange',
+  'Light Blue',
+  'Violet',
+  'Black',
+  'Very Very Light Blueish Color',
+  'Grey',
+  'Aquamarine',
+  'Brown',
+]
+
+const defaultBracketStyles: BracketStyles = {
+  textColor: '#ECFEE8',
+  teamNameColor: '#41337A',
+  loseScoreColor: '#6EA4BF',
+  winScoreColor: '#FAA916',
+  roundColor: '#331E36',
+  dividerColor: '#331E36',
+  connectorColor: '#FAA916',
+  titleFontSize: 24,
+  basicFontSize: 16,
+  teamHeight: 24,
+  teamWidth: 140,
+  teamGapX: 20,
+  teamGapY: 10,
+  bracketGap: 20,
+  matchIcons: {
+    12: { winner: { icon: FaTrophy, color: '#FAA916' } },
+    13: { winner: { icon: FaTrophy, color: '#FAA916' } },
+    25: { winner: { icon: FaTrophy, color: '#FAA916' } },
+    26: { winner: { icon: FaTrophy, color: '#FAA916' } },
+  },
 }
 
-const BracketsMain = ({ bracketStyles, teams, teamCount, bracketType }: Props) => {
-  const storage = new InMemoryDatabase()
-  const manager = new BracketsManager(storage)
-
-  const [mainBracketData, setMainData] = useState<BracketData | null>(null)
-  const [finalBracketData, setFinalData] = useState<BracketData | null>(null)
+const BracketsMain = () => {
+  const [data, setData] = useState<BracketData[]>([])
+  const [teams, _setTeams] = useState<string[]>([...defaultTeams])
+  const [teamCount, _setTeamCount] = useState<4 | 8 | 16 | 32 | 64>(16)
+  const [bracketStyles, _setBracketStyles] = useState<BracketStyles>({ ...defaultBracketStyles })
+  const [bracketType, _setBracketType] = useState<BracketType>('double_elimination_to_top_4')
 
   useEffect(() => {
     const loadBracket = async () => {
-      if (bracketType !== 'double_elimination_to_top_4') {
-        throw Error('Only double_elimination_to_top_4 type supported currently')
-      }
+      const newData = await setupBracket(manager, bracketType, teamCount, teams)
 
-      if (teamCount !== 16) {
-        throw Error('Only 16 teams supported currently')
-      }
-
-      const qualifierStage = await manager.create.stage({
-        tournamentId: 1,
-        name: 'Qualifier stage',
-        type: 'double_elimination',
-        seeding: teams,
-        settings: { grandFinal: 'simple', balanceByes: true, size: teamCount },
-      })
-
-      // TODO: Make support other than 16 teams
-      const matchIdsToSkip = new Set([14, 27, 28])
-
-      const mainBracketData = await getBracketData(manager, qualifierStage.id, matchIdsToSkip)
-
-      const topFourTeams = getTopFourTeamsFromDoubleElimQualifiers(mainBracketData)
-
-      const finalsStage = await manager.create.stage({
-        tournamentId: 1,
-        name: 'Final stage',
-        type: 'single_elimination',
-        seeding:
-          topFourTeams.length === 4
-            ? topFourTeams.map((item) => item.name)
-            : [' ', '  ', '   ', '    '], // Very hacky
-        settings: { grandFinal: 'simple' },
-      })
-
-      const finalsBracketData = await getBracketData(manager, finalsStage.id, new Set())
-
-      setMainData(mainBracketData)
-      setFinalData(finalsBracketData)
+      setData(newData)
     }
 
     loadBracket()
   }, [])
 
-  if (!mainBracketData) {
-    return <div>Loading...</div>
-  }
-
   return (
     <div className="flex flex-row">
-      <BracketsSection data={mainBracketData} bracketStyles={bracketStyles} />
-      {finalBracketData && (
-        <BracketsSection data={finalBracketData} bracketStyles={bracketStyles} />
-      )}
+      {data.map((bracketData) => (
+        <BracketsSection
+          key={bracketData.stages[0].id}
+          data={bracketData}
+          bracketStyles={bracketStyles}
+        />
+      ))}
     </div>
   )
 }

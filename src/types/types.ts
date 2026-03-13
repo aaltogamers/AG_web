@@ -228,3 +228,8 @@ export type BracketStyles = {
 export type RoundLabel = 'Upper' | 'Lower' | 'Final' | 'Unknown'
 
 export type OpponentFroMatch = { match: Match; outcome: 'winner' | 'loser' }
+
+export type BracketType =
+  | 'single_elimination'
+  | 'double_elimination'
+  | 'double_elimination_to_top_4'
