@@ -1,5 +1,6 @@
 name: Infrastructure (OpenTofu)
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -85,7 +86,6 @@ jobs:
     needs: plan
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: production
     defaults:
       run:
         working-directory: infra
