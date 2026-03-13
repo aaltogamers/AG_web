@@ -195,6 +195,13 @@ export type BracketData = {
   matches: Match[]
   matchGames: MatchGame[]
   participants: Participant[]
+  prevMatches: Record<
+    Id,
+    {
+      opponent1From?: OpponentFroMatch
+      opponent2From?: OpponentFroMatch
+    }
+  >
 }
 
 export type BracketStyles = {
@@ -218,3 +225,5 @@ export type BracketStyles = {
 }
 
 export type RoundLabel = 'Upper' | 'Lower' | 'Final' | 'Unknown'
+
+export type OpponentFroMatch = { match: Match; outcome: 'winner' | 'loser' }

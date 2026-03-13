@@ -1,5 +1,5 @@
 import { Id, Match, Participant } from 'brackets-model'
-import { BracketStyles } from '../types/types'
+import { BracketStyles, OpponentFroMatch } from '../types/types'
 
 type Props = {
   match: Match
@@ -8,6 +8,7 @@ type Props = {
   bracketStyles: BracketStyles
   waitingForMatchId?: Id | null
   waitingForMatchType?: 'winner' | 'loser'
+  feedInfo?: OpponentFroMatch
 }
 
 const MatchResultRow = ({
@@ -15,8 +16,7 @@ const MatchResultRow = ({
   participant,
   participantsById,
   bracketStyles,
-  waitingForMatchId,
-  waitingForMatchType = 'winner',
+  feedInfo,
 }: Props) => {
   const participantData = match[participant]
 
@@ -24,18 +24,17 @@ const MatchResultRow = ({
 
   const isWin = participantData?.result === 'win'
 
-  const tbdLabel =
-    waitingForMatchId != null ? (
-      waitingForMatchType === 'loser' ? (
-        <i className="opacity-75" style={{ fontSize: '0.9em' }}>
-          Loser of match {waitingForMatchId}
-        </i>
-      ) : (
-        ''
-      )
+  const tbdLabel = feedInfo ? (
+    feedInfo.outcome === 'loser' ? (
+      <i className="opacity-75" style={{ fontSize: '0.9em' }}>
+        Loser of match {feedInfo.match.id}
+      </i>
     ) : (
       ''
     )
+  ) : (
+    ''
+  )
 
   return (
     <div className="relative">

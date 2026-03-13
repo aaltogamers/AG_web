@@ -1,5 +1,6 @@
 import type { Id, Match, Participant, Round } from 'brackets-model'
-import { BracketData, RoundLabel } from '../types/types'
+import { BracketData, OpponentFroMatch, RoundLabel } from '../types/types'
+import { BracketsManager } from 'brackets-manager'
 
 export const getMatchesByRound = (data: BracketData): Record<Id, Match[]> => {
   const matchesByRound: Record<Id, Match[]> = {}
@@ -74,70 +75,40 @@ export const roundToLabel = (
 
   return `${groupLabel} Round ${round.number}`
 }
+// For now, only finds losers, and slot (opponent1 vs opponent2) might not be accurate
+export const getPrevMatches = async (matches: Match[], manager: BracketsManager) => {
+  const prevMatches: Record<
+    Id,
+    { opponent1From?: OpponentFroMatch; opponent2From?: OpponentFroMatch }
+  > = {}
 
-/** Result for a TBD slot: which match feeds it and whether it's the winner or loser. */
-export type FeederInfo =
-  | { feederMatchId: Id; feederType: 'winner' }
-  | { feederMatchId: Id; feederType: 'loser' }
-  | null
+  for (const match of matches) {
+    const nextMatches = await manager.find.nextMatches(match.id)
 
-/**
- * For double elimination: returns which match fills this slot (winner or loser) when the slot is TBD.
- * For Upper bracket, slots are always filled by the winner of a previous round match.
- * For Lower bracket: round 0 gets losers from Upper round 0; odd rounds get one winner from LB prev + one loser from UB; even rounds (≥2) get winners from LB prev.
- */
-export const getFeederForSlot = (
-  groupLabel: string,
-  roundIndex: number,
-  matchIndex: number,
-  participant: 'opponent1' | 'opponent2',
-  roundsByGroup: Record<string, Round[]>,
-  matchesByRound: Record<Id, Match[]>
-): FeederInfo => {
-  const sortedMatches = (roundId: Id) =>
-    (matchesByRound[roundId] ?? []).sort((a, b) => a.number - b.number)
+    const losersGame = nextMatches[1]
 
-  if (groupLabel === 'Upper') {
-    const prevRound = roundsByGroup[groupLabel]?.[roundIndex - 1]
-    if (!prevRound) return null
-    const prevMatches = sortedMatches(prevRound.id)
-    const feederIndex = participant === 'opponent1' ? matchIndex * 2 : matchIndex * 2 + 1
-    const feeder = prevMatches[feederIndex]
-    return feeder ? { feederMatchId: feeder.id, feederType: 'winner' } : null
-  }
-
-  if (groupLabel === 'Lower') {
-    if (roundIndex === 0) {
-      const upperRound0 = roundsByGroup['Upper']?.[0]
-      if (!upperRound0) return null
-      const upperMatches = sortedMatches(upperRound0.id)
-      const feederIndex = participant === 'opponent1' ? matchIndex * 2 : matchIndex * 2 + 1
-      const feeder = upperMatches[feederIndex]
-      return feeder ? { feederMatchId: feeder.id, feederType: 'loser' } : null
-    }
-    if (roundIndex % 2 === 1) {
-      const prevRound = roundsByGroup['Lower']?.[roundIndex - 1]
-      const upperRound = roundsByGroup['Upper']?.[(roundIndex + 1) / 2]
-      if (participant === 'opponent1') {
-        if (!prevRound) return null
-        const prevMatches = sortedMatches(prevRound.id)
-        const feeder = prevMatches[matchIndex * 2]
-        return feeder ? { feederMatchId: feeder.id, feederType: 'winner' } : null
+    if (losersGame) {
+      if (!prevMatches[losersGame.id]) {
+        prevMatches[losersGame.id] = {}
       }
-      if (!upperRound) return null
-      const upperMatches = sortedMatches(upperRound.id)
-      const feeder = upperMatches[matchIndex]
-      return feeder ? { feederMatchId: feeder.id, feederType: 'loser' } : null
+
+      if (losersGame.number % 2 !== 0) {
+        prevMatches[losersGame.id] = {
+          ...prevMatches[losersGame.id],
+          opponent1From: { match, outcome: 'loser' },
+        }
+      }
+
+      if (losersGame.number % 2 === 0) {
+        prevMatches[losersGame.id] = {
+          ...prevMatches[losersGame.id],
+          opponent2From: { match, outcome: 'loser' },
+        }
+      }
     }
-    const prevRound = roundsByGroup['Lower']?.[roundIndex - 1]
-    if (!prevRound) return null
-    const prevMatches = sortedMatches(prevRound.id)
-    const feederIndex = participant === 'opponent1' ? matchIndex * 2 : matchIndex * 2 + 1
-    const feeder = prevMatches[feederIndex]
-    return feeder ? { feederMatchId: feeder.id, feederType: 'winner' } : null
   }
 
-  return null
+  return prevMatches
 }
 
 export const getRoundsByGroup = (data: BracketData) => {

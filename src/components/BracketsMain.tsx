@@ -67,6 +67,7 @@ const BracketsMain = ({ bracketStyles }: Props) => {
         matches: matches ?? [],
         matchGames: matchGames ?? [],
         participants: participants ?? [],
+        prevMatches: {},
       }
 
       setFinalData(finalBracket)

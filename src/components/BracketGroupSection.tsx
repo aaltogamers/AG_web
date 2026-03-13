@@ -1,8 +1,8 @@
 import type { Id, Match, Participant, Round } from 'brackets-model'
 
 import MatchResultRow from './BracketMatchResultRow'
-import { BracketStyles } from '../types/types'
-import { getFeederForSlot, getGroupHasFinal, roundToLabel } from '../utils/brackets'
+import { BracketData, BracketStyles } from '../types/types'
+import { getGroupHasFinal, roundToLabel } from '../utils/brackets'
 
 type Props = {
   groupLabel: string
@@ -10,6 +10,7 @@ type Props = {
   matchesByRound: Record<Id, Match[]>
   participantsById: Record<Id, Participant>
   bracketStyles: BracketStyles
+  bracketData: BracketData
 }
 
 const GroupSection = ({
@@ -18,6 +19,7 @@ const GroupSection = ({
   matchesByRound,
   participantsById,
   bracketStyles,
+  bracketData,
 }: Props) => {
   const matchHeight = bracketStyles.teamHeight * 2
   const baseGap = bracketStyles.teamGapY
@@ -73,28 +75,9 @@ const GroupSection = ({
               {roundMatches.map((match, matchIndex) => {
                 const isBye = match.opponent1 === null || match.opponent2 === null
 
-                const feeder1 =
-                  match.opponent1?.id === null
-                    ? getFeederForSlot(
-                        groupLabel,
-                        i,
-                        matchIndex,
-                        'opponent1',
-                        roundsByGroup,
-                        matchesByRound
-                      )
-                    : null
-                const feeder2 =
-                  match.opponent2?.id === null
-                    ? getFeederForSlot(
-                        groupLabel,
-                        i,
-                        matchIndex,
-                        'opponent2',
-                        roundsByGroup,
-                        matchesByRound
-                      )
-                    : null
+                const prevMatches = bracketData.prevMatches[match.id]
+
+                console.log(match.id, prevMatches)
 
                 return (
                   <div
@@ -117,8 +100,7 @@ const GroupSection = ({
                         participant="opponent1"
                         participantsById={participantsById}
                         bracketStyles={bracketStyles}
-                        waitingForMatchId={feeder1?.feederMatchId}
-                        waitingForMatchType={feeder1?.feederType}
+                        feedInfo={prevMatches?.opponent1From}
                       />
 
                       <MatchResultRow
@@ -126,8 +108,7 @@ const GroupSection = ({
                         participant="opponent2"
                         participantsById={participantsById}
                         bracketStyles={bracketStyles}
-                        waitingForMatchId={feeder2?.feederMatchId}
-                        waitingForMatchType={feeder2?.feederType}
+                        feedInfo={prevMatches?.opponent2From}
                       />
                     </span>
 
