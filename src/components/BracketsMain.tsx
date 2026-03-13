@@ -29,11 +29,11 @@ const defaultTeams = [
 ]
 
 const defaultBracketStyles: BracketStyles = {
-  textColor: '#ECFEE8',
+  textColor: '#e8fefb',
   teamNameColor: '#41337A',
   loseScoreColor: '#6EA4BF',
   winScoreColor: '#FAA916',
-  roundColor: '#331E36',
+  roundColor: '#211e36',
   dividerColor: '#331E36',
   connectorColor: '#FAA916',
   titleFontSize: 24,

@@ -256,7 +256,7 @@ const GroupSection = ({
         return (
           <div key={round.id} className="flex flex-col">
             <h3
-              className="mb-4 text-xl font-bold text-center px-1 rounded-sm"
+              className="mb-4 text-xl text-center px-1 rounded-sm "
               style={{
                 backgroundColor: bracketStyles.roundColor,
                 marginRight: 1,
