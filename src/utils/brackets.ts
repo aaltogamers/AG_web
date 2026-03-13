@@ -1,4 +1,4 @@
-import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
+import type { Id, Match, Participant, Round } from 'brackets-model'
 import { BracketData, OpponentFroMatch, RoundLabel } from '../types/types'
 import { BracketsManager } from 'brackets-manager'
 
@@ -21,6 +21,7 @@ export const getParticipantsById = (data: BracketData): Record<Id, Participant> 
   return participantsById
 }
 
+// TODO: Make support more than double elim -> single elim
 export const groupToLabel = (groupId: Id): RoundLabel => {
   switch (groupId) {
     case 0:
@@ -29,6 +30,8 @@ export const groupToLabel = (groupId: Id): RoundLabel => {
       return 'Lower'
     case 2:
       return `Final`
+    case 3:
+      return 'Upper'
     default:
       return `Unknown`
   }
@@ -75,6 +78,7 @@ export const roundToLabel = (
 
   return `${groupLabel} Round ${round.number}`
 }
+
 // For now, only finds losers, and slot (opponent1 vs opponent2) might not be accurate
 export const getPrevMatches = async (matches: Match[], manager: BracketsManager) => {
   const prevMatches: Record<
@@ -178,18 +182,19 @@ export const getTopFourTeamsFromDoubleElimQualifiers = (data: BracketData): Part
 
 export const getBracketData = async (
   manager: BracketsManager,
+  stageId: Id,
   matchIdsToSkip: Set<Id>
 ): Promise<BracketData> => {
-  const [stages, groups, rounds, updatedMatches, matchGames, participants] = await Promise.all([
-    manager.storage.select('stage') as unknown as Stage[],
-    manager.storage.select('group') as unknown as Group[],
-    manager.storage.select('round') as unknown as Round[],
-    manager.storage.select('match') as unknown as Match[],
-    manager.storage.select('match_game') as unknown as MatchGame[],
-    manager.storage.select('participant') as unknown as Participant[],
-  ])
+  const {
+    group: groups,
+    match: matches,
+    match_game: matchGames,
+    participant: participants,
+    round: rounds,
+    stage: stages,
+  } = await manager.get.stageData(stageId)
 
-  const filteredMatches = (updatedMatches ?? []).filter((match) => !matchIdsToSkip.has(match.id))
+  const filteredMatches = (matches ?? []).filter((match) => !matchIdsToSkip.has(match.id))
   const filteredRoundIds = new Set(filteredMatches.map((match) => match.round_id))
   const filteredRounds = (rounds ?? []).filter((round) => filteredRoundIds.has(round.id))
 
@@ -197,12 +202,12 @@ export const getBracketData = async (
 
   return {
     manager: manager,
-    stages: stages ?? [],
-    groups: groups ?? [],
+    stages: stages,
+    groups: groups,
     rounds: filteredRounds,
     matches: filteredMatches,
-    matchGames: matchGames ?? [],
-    participants: participants ?? [],
+    matchGames: matchGames,
+    participants: participants,
     prevMatches,
   }
 }
