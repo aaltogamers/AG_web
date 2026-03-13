@@ -1,9 +1,9 @@
 import { BracketsManager } from 'brackets-manager'
 import { InMemoryDatabase } from 'brackets-memory-db'
 import { BracketData, BracketStyles } from '../types/types'
-import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
+import type { Id, Match } from 'brackets-model'
 import { FaTrophy } from 'react-icons/fa'
-import { getPrevMatches } from './brackets'
+import { getBracketData } from './brackets'
 
 const teams = [
   'Red',
@@ -117,29 +117,5 @@ export const createMockBracketData = async (): Promise<BracketData> => {
     })
   }
 
-  const [stages, groups, rounds, updatedMatches, matchGames, participants] = await Promise.all([
-    storage.select<Stage>('stage'),
-    storage.select<Group>('group'),
-    storage.select<Round>('round'),
-    storage.select<Match>('match'),
-    storage.select<MatchGame>('match_game'),
-    storage.select<Participant>('participant'),
-  ])
-
-  const filteredMatches = (updatedMatches ?? []).filter((match) => !matchIdsToSkip.has(match.id))
-  const filteredRoundIds = new Set(filteredMatches.map((match) => match.round_id))
-  const filteredRounds = (rounds ?? []).filter((round) => filteredRoundIds.has(round.id))
-
-  const prevMatches = await getPrevMatches(filteredMatches, manager)
-
-  return {
-    manager: manager,
-    stages: stages ?? [],
-    groups: groups ?? [],
-    rounds: filteredRounds,
-    matches: filteredMatches,
-    matchGames: matchGames ?? [],
-    participants: participants ?? [],
-    prevMatches,
-  }
+  return getBracketData(manager, matchIdsToSkip)
 }

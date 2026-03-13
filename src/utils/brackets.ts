@@ -1,4 +1,4 @@
-import type { Id, Match, Participant, Round } from 'brackets-model'
+import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
 import { BracketData, OpponentFroMatch, RoundLabel } from '../types/types'
 import { BracketsManager } from 'brackets-manager'
 
@@ -174,4 +174,35 @@ export const getTopFourTeamsFromDoubleElimQualifiers = (data: BracketData): Part
     }
   }
   return winners
+}
+
+export const getBracketData = async (
+  manager: BracketsManager,
+  matchIdsToSkip: Set<Id>
+): Promise<BracketData> => {
+  const [stages, groups, rounds, updatedMatches, matchGames, participants] = await Promise.all([
+    manager.storage.select('stage') as unknown as Stage[],
+    manager.storage.select('group') as unknown as Group[],
+    manager.storage.select('round') as unknown as Round[],
+    manager.storage.select('match') as unknown as Match[],
+    manager.storage.select('match_game') as unknown as MatchGame[],
+    manager.storage.select('participant') as unknown as Participant[],
+  ])
+
+  const filteredMatches = (updatedMatches ?? []).filter((match) => !matchIdsToSkip.has(match.id))
+  const filteredRoundIds = new Set(filteredMatches.map((match) => match.round_id))
+  const filteredRounds = (rounds ?? []).filter((round) => filteredRoundIds.has(round.id))
+
+  const prevMatches = await getPrevMatches(filteredMatches, manager)
+
+  return {
+    manager: manager,
+    stages: stages ?? [],
+    groups: groups ?? [],
+    rounds: filteredRounds,
+    matches: filteredMatches,
+    matchGames: matchGames ?? [],
+    participants: participants ?? [],
+    prevMatches,
+  }
 }
