@@ -45,7 +45,27 @@ const completedResults: { index: number; opponent1: number; opponent2: number }[
   { index: 3, opponent1: 1, opponent2: 2 },
   { index: 4, opponent1: 2, opponent2: 1 },
   { index: 5, opponent1: 0, opponent2: 2 },
+  { index: 6, opponent1: 2, opponent2: 0 },
+  { index: 7, opponent1: 2, opponent2: 0 },
   { index: 8, opponent1: 2, opponent2: 1 },
+  { index: 9, opponent1: 2, opponent2: 0 },
+  { index: 10, opponent1: 2, opponent2: 0 },
+  { index: 11, opponent1: 0, opponent2: 2 },
+  { index: 12, opponent1: 2, opponent2: 0 },
+  { index: 13, opponent1: 2, opponent2: 0 },
+  { index: 14, opponent1: 0, opponent2: 2 },
+  { index: 15, opponent1: 2, opponent2: 0 },
+  { index: 16, opponent1: 2, opponent2: 0 },
+  { index: 17, opponent1: 2, opponent2: 0 },
+  { index: 18, opponent1: 0, opponent2: 2 },
+  { index: 19, opponent1: 2, opponent2: 0 },
+  { index: 20, opponent1: 2, opponent2: 0 },
+  { index: 21, opponent1: 2, opponent2: 0 },
+  { index: 22, opponent1: 2, opponent2: 0 },
+  { index: 23, opponent1: 0, opponent2: 2 },
+  { index: 24, opponent1: 2, opponent2: 0 },
+  { index: 25, opponent1: 2, opponent2: 0 },
+  { index: 26, opponent1: 0, opponent2: 2 },
 ]
 
 type BracketData = {
@@ -211,6 +231,8 @@ const GroupSection = ({
         const matchCenter = matchHeight / 2
         const nextMatchCenterDistance = matchHeight + roundGap
 
+        const gameNumberTextSpace = 12
+
         return (
           <div key={round.id} className="flex flex-col">
             <h3
@@ -219,7 +241,6 @@ const GroupSection = ({
                 backgroundColor: styles.roundColor,
                 marginRight: 1,
                 marginLeft: 1,
-                width: styles.teamWidth,
                 fontSize: styles.titleFontSize,
               }}
             >
@@ -238,10 +259,29 @@ const GroupSection = ({
                 <div
                   key={match.id}
                   className="relative flex flex-col rounded-sm"
-                  style={{ backgroundColor: styles.teamNameColor, width: styles.teamWidth }}
+                  style={{
+                    backgroundColor: styles.teamNameColor,
+                    width: styles.teamWidth,
+                    marginLeft: gameNumberTextSpace,
+                  }}
                 >
                   {MatchResultRow(match, 'opponent1', participantsById)}
                   {MatchResultRow(match, 'opponent2', participantsById)}
+
+                  <div
+                    style={{
+                      position: 'absolute',
+                      lineHeight: `${styles.basicFontSize}px`,
+                      fontSize: styles.basicFontSize * 0.75,
+                      color: styles.connectorColor,
+                      top: matchCenter - connectorThickness / 2 - styles.basicFontSize / 2,
+                      textAlign: 'right',
+                      left: '-22px',
+                      width: '20px',
+                    }}
+                  >
+                    {match.id}
+                  </div>
 
                   {hasNextRound && shouldMergePairs && (
                     <>
