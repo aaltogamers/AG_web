@@ -1,14 +1,12 @@
 ---
 name: AG Sims Event
 time: 2026-04-11T14:00:00
-otherTimes:
-  - time: 2026-03-07T14:00:00
-    name: AG Minecraft Server End Opening
+otherTimes: []
 durationHours: 6
 image: /images/ag-white.png
 visibleOnCalendar: true
 visibleOnEventsPage: false
-location: Aalto Gamers Discord and Twitch?
+location: A Grid, Otakaari 5, Espoo
 description: TBD
 tldr: |-2
    ### WHEN?
