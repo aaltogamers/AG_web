@@ -39,11 +39,20 @@ const MatchResultRow = ({
   return (
     <div className="relative">
       <div
-        className={`flex flex-row justify-between border-1 overflow-hidden  ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm border-t-0'}`}
+        className={`flex flex-row justify-between  overflow-hidden`}
         style={{ height: bracketStyles.teamHeight }}
       >
+        {participant === 'opponent2' && (
+          <div
+            className="absolute w-full "
+            style={{ height: 1, backgroundColor: bracketStyles.dividerColor }}
+          />
+        )}
         <div
-          style={{ height: bracketStyles.teamHeight, lineHeight: `${bracketStyles.teamHeight}px` }}
+          style={{
+            height: bracketStyles.teamHeight,
+            lineHeight: `${bracketStyles.teamHeight}px`,
+          }}
           className="truncate px-1"
         >
           {participantData === null

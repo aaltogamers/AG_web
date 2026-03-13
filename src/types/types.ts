@@ -211,6 +211,7 @@ export type BracketStyles = {
   winScoreColor: string
   roundColor: string
   connectorColor: string
+  dividerColor: string
   titleFontSize: number
   basicFontSize: number
   teamHeight: number

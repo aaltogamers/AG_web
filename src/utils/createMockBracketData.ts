@@ -27,6 +27,7 @@ export const bracketStyles: BracketStyles = {
   loseScoreColor: '#6EA4BF',
   winScoreColor: '#FAA916',
   roundColor: '#331E36',
+  dividerColor: '#331E36',
   connectorColor: '#FAA916',
   titleFontSize: 24,
   basicFontSize: 16,
