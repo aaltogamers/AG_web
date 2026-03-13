@@ -3,9 +3,19 @@ import { getMatchesByRound, getParticipantsById, getRoundsByGroup } from '../uti
 
 import GroupSection from './BracketGroupSection'
 
-type Props = { bracketStyles: BracketStyles; data: BracketData; isEditingMode: boolean }
+type Props = {
+  bracketStyles: BracketStyles
+  data: BracketData
+  isEditingMode: boolean
+  onMatchResultSaved?: () => Promise<void>
+}
 
-const BracketsSection = ({ bracketStyles, data, isEditingMode }: Props) => {
+const BracketsSection = ({
+  bracketStyles,
+  data,
+  isEditingMode,
+  onMatchResultSaved,
+}: Props) => {
   const roundsByGroup = getRoundsByGroup(data)
   const matchesByRound = getMatchesByRound(data)
   const participantsById = getParticipantsById(data)
@@ -27,6 +37,7 @@ const BracketsSection = ({ bracketStyles, data, isEditingMode }: Props) => {
         bracketStyles={bracketStyles}
         bracketData={data}
         isEditingMode={isEditingMode}
+        onMatchResultSaved={onMatchResultSaved}
       />
       <GroupSection
         groupLabel="Lower"
@@ -36,6 +47,7 @@ const BracketsSection = ({ bracketStyles, data, isEditingMode }: Props) => {
         bracketStyles={bracketStyles}
         bracketData={data}
         isEditingMode={isEditingMode}
+        onMatchResultSaved={onMatchResultSaved}
       />
     </div>
   )

@@ -1,6 +1,61 @@
 import type { Id, Match, Participant, Round } from 'brackets-model'
+import { Status } from 'brackets-model'
 import { BracketData, BracketType, OpponentFroMatch, RoundLabel } from '../types/types'
 import { BracketsManager } from 'brackets-manager'
+
+/**
+ * Updates a match result via the brackets manager.
+ * When inProgress is true, only updates scores and sets status to Running (does not end the match).
+ * When inProgress is false, sets status to Completed and assigns scores and win/loss.
+ */
+export const updateMatchResult = async (
+  manager: BracketsManager,
+  {
+    matchId,
+    score1,
+    score2,
+    inProgress,
+  }: {
+    matchId: Id
+    score1: number
+    score2: number
+    inProgress: boolean
+  }
+) => {
+  if (inProgress) {
+    await manager.update.match({
+      id: matchId,
+      status: Status.Running,
+      opponent1: { score: score1 },
+      opponent2: { score: score2 },
+    })
+    return
+  }
+
+  const result1 =
+    score1 > score2 ? ('win' as const) : score1 < score2 ? ('loss' as const) : ('draw' as const)
+  const result2 =
+    score2 > score1 ? ('win' as const) : score2 < score1 ? ('loss' as const) : ('draw' as const)
+
+  await manager.update.match({
+    id: matchId,
+    status: Status.Completed,
+    opponent1: { score: score1, result: result1 },
+    opponent2: { score: score2, result: result2 },
+  })
+}
+
+/**
+ * Clears the match result (scores and win/loss) and sets status to Running.
+ */
+export const resetMatchResult = async (manager: BracketsManager, matchId: Id): Promise<void> => {
+  await manager.update.match({
+    id: matchId,
+    status: Status.Running,
+    opponent1: { score: undefined, result: undefined },
+    opponent2: { score: undefined, result: undefined },
+  })
+}
 
 export const getMatchesByRound = (data: BracketData): Record<Id, Match[]> => {
   const matchesByRound: Record<Id, Match[]> = {}
@@ -212,12 +267,18 @@ export const getBracketData = async (
   }
 }
 
-export const setupBracket = async (
+// TODO: Make support other than 16 teams
+const QUALIFIER_MATCH_IDS_TO_SKIP = new Set<Id>([14, 27, 28])
+
+/**
+ * First-time setup: creates qualifier and finals stages, then returns their data.
+ */
+export const createBracket = async (
   manager: BracketsManager,
   bracketType: BracketType,
   teamCount: number,
   teams: string[]
-) => {
+): Promise<[BracketData, BracketData]> => {
   if (bracketType !== 'double_elimination_to_top_4') {
     throw Error('Only double_elimination_to_top_4 type supported currently')
   }
@@ -234,10 +295,11 @@ export const setupBracket = async (
     settings: { grandFinal: 'simple', balanceByes: true, size: teamCount },
   })
 
-  // TODO: Make support other than 16 teams
-  const matchIdsToSkip = new Set([14, 27, 28])
-
-  const mainBracketData = await getBracketData(manager, qualifierStage.id, matchIdsToSkip)
+  const mainBracketData = await getBracketData(
+    manager,
+    qualifierStage.id,
+    QUALIFIER_MATCH_IDS_TO_SKIP
+  )
 
   const topFourTeams = getTopFourTeamsFromDoubleElimQualifiers(mainBracketData)
 
@@ -254,5 +316,20 @@ export const setupBracket = async (
 
   const finalsBracketData = await getBracketData(manager, finalsStage.id, new Set())
 
+  return [mainBracketData, finalsBracketData]
+}
+
+/**
+ * Fetches bracket data for existing qualifier and finals stages (no creation).
+ */
+export const getBracketsData = async (
+  manager: BracketsManager,
+  qualifierStageId: Id,
+  finalsStageId: Id
+): Promise<[BracketData, BracketData]> => {
+  const [mainBracketData, finalsBracketData] = await Promise.all([
+    getBracketData(manager, qualifierStageId, QUALIFIER_MATCH_IDS_TO_SKIP),
+    getBracketData(manager, finalsStageId, new Set()),
+  ])
   return [mainBracketData, finalsBracketData]
 }

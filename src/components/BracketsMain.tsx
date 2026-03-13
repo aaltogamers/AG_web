@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+'use client'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { BracketData, BracketStyles, BracketType } from '../types/types'
-import { setupBracket } from '../utils/brackets'
+import { createBracket, getBracketsData } from '../utils/brackets'
 
 import BracketsSection from './BracketsSection'
 import { InMemoryDatabase } from 'brackets-memory-db'
@@ -58,15 +59,24 @@ const BracketsMain = () => {
   const [bracketType, _setBracketType] = useState<BracketType>('double_elimination_to_top_4')
 
   const isEditingMode: boolean = true
+  const dataRef = useRef(data)
+  dataRef.current = data
 
-  useEffect(() => {
-    const loadBracket = async () => {
-      const newData = await setupBracket(manager, bracketType, teamCount, teams)
+  const refreshBrackets = useCallback(async () => {
+    const current = dataRef.current
 
+    if (current.length === 2) {
+      const [qualifier, finals] = current
+      const newData = await getBracketsData(manager, qualifier.stages[0].id, finals.stages[0].id)
+      setData(newData)
+    } else {
+      const newData = await createBracket(manager, bracketType, teamCount, teams)
       setData(newData)
     }
+  }, [bracketType, teamCount, teams])
 
-    loadBracket()
+  useEffect(() => {
+    refreshBrackets()
   }, [])
 
   return (
@@ -77,6 +87,7 @@ const BracketsMain = () => {
           data={bracketData}
           bracketStyles={bracketStyles}
           isEditingMode={isEditingMode}
+          onMatchResultSaved={refreshBrackets}
         />
       ))}
     </div>
