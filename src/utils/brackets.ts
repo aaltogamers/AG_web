@@ -23,6 +23,8 @@ export const updateMatchResult = async (
   }
 ) => {
   if (inProgress) {
+    // Reset result and clear propagated winner/loser in downstream matches, then set scores and status.
+    await manager.reset.matchResults(matchId)
     await manager.update.match({
       id: matchId,
       status: Status.Running,
@@ -46,14 +48,15 @@ export const updateMatchResult = async (
 }
 
 /**
- * Clears the match result (scores and win/loss) and sets status to Running.
+ * Clears the match result and scores, and updates related matches (downstream winner/loser slots become TBD again).
+ * Uses the manager's reset API for propagation, then clears scores on the current match.
  */
 export const resetMatchResult = async (manager: BracketsManager, matchId: Id): Promise<void> => {
+  await manager.reset.matchResults(matchId)
   await manager.update.match({
     id: matchId,
-    status: Status.Running,
-    opponent1: { score: undefined, result: undefined },
-    opponent2: { score: undefined, result: undefined },
+    opponent1: { score: undefined },
+    opponent2: { score: undefined },
   })
 }
 

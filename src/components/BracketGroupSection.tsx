@@ -206,7 +206,10 @@ const GroupSection = ({
                 >
                   Cancel
                 </button>
-                {selectedMatch.status === Status.Completed && (
+                {(selectedMatch.status === Status.Completed ||
+                  (selectedMatch.status === Status.Running &&
+                    (selectedMatch.opponent1?.score != null ||
+                      selectedMatch.opponent2?.score != null))) && (
                   <button
                     type="button"
                     onClick={handleReset}
