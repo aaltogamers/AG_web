@@ -53,6 +53,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
     if (querySnapshot.docs.length === 0) {
       resetForm()
       setValue('name', eventName)
+      setParticipants
     } else {
       const rawEvent = querySnapshot.docs[0]
       const signUpData = rawEvent.data() as SignUpData
