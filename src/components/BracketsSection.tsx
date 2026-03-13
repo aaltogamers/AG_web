@@ -53,7 +53,6 @@ const completedResults: { index: number; opponent1: number; opponent2: number }[
   { index: 11, opponent1: 0, opponent2: 2 },
   { index: 12, opponent1: 2, opponent2: 0 },
   { index: 13, opponent1: 2, opponent2: 0 },
-  { index: 14, opponent1: 0, opponent2: 2 },
   { index: 15, opponent1: 2, opponent2: 0 },
   { index: 16, opponent1: 2, opponent2: 0 },
   { index: 17, opponent1: 2, opponent2: 0 },
