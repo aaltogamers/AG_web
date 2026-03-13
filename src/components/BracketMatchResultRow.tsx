@@ -11,6 +11,8 @@ type Props = {
 const MatchResultRow = ({ match, participant, participantsById, bracketStyles }: Props) => {
   const participantData = match[participant]
 
+  const isBye = match.opponent1 === null || match.opponent2 === null
+
   const isWin = participantData?.result === 'win'
 
   return (
@@ -23,9 +25,13 @@ const MatchResultRow = ({ match, participant, participantsById, bracketStyles }:
           style={{ height: bracketStyles.teamHeight, lineHeight: `${bracketStyles.teamHeight}px` }}
           className="truncate px-1"
         >
-          {participantData?.id != null ? participantsById[participantData.id]?.name : 'TBD'}
+          {participantData === null
+            ? '-'
+            : participantData?.id === null
+              ? 'TBD'
+              : participantsById[participantData.id]?.name}
         </div>
-        {participantData?.result && (
+        {participantData?.result && !isBye && (
           <div
             className="text-center aspect-square "
             style={{

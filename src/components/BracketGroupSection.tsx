@@ -70,101 +70,116 @@ const GroupSection = ({
                 marginRight: bracketStyles.teamGapX,
               }}
             >
-              {roundMatches.map((match, matchIndex) => (
-                <div
-                  key={match.id}
-                  className="relative flex flex-col rounded-sm"
-                  style={{
-                    backgroundColor: bracketStyles.teamNameColor,
-                    width: bracketStyles.teamWidth,
-                    marginLeft: gameNumberTextSpace,
-                  }}
-                >
-                  <MatchResultRow
-                    match={match}
-                    participant="opponent1"
-                    participantsById={participantsById}
-                    bracketStyles={bracketStyles}
-                  />
+              {roundMatches.map((match, matchIndex) => {
+                const isBye = match.opponent1 === null || match.opponent2 === null
 
-                  <MatchResultRow
-                    match={match}
-                    participant="opponent2"
-                    participantsById={participantsById}
-                    bracketStyles={bracketStyles}
-                  />
-
+                return (
                   <div
+                    key={match.id}
+                    className="relative flex flex-col "
                     style={{
-                      position: 'absolute',
-                      lineHeight: `${bracketStyles.basicFontSize}px`,
-                      fontSize: bracketStyles.basicFontSize * 0.75,
-                      color: bracketStyles.connectorColor,
-                      top: matchCenter - connectorThickness / 2 - bracketStyles.basicFontSize / 2,
-                      textAlign: 'right',
-                      left: '-22px',
-                      width: '20px',
+                      width: bracketStyles.teamWidth,
+                      marginLeft: gameNumberTextSpace,
                     }}
                   >
-                    {match.id}
-                  </div>
+                    <span
+                      className="rounded-sm"
+                      style={{
+                        backgroundColor: bracketStyles.teamNameColor,
+                        opacity: isBye ? 0.75 : 1,
+                      }}
+                    >
+                      <MatchResultRow
+                        match={match}
+                        participant="opponent1"
+                        participantsById={participantsById}
+                        bracketStyles={bracketStyles}
+                      />
 
-                  {hasNextRound && shouldMergePairs && (
-                    <>
+                      <MatchResultRow
+                        match={match}
+                        participant="opponent2"
+                        participantsById={participantsById}
+                        bracketStyles={bracketStyles}
+                      />
+                    </span>
+
+                    <div
+                      style={{
+                        position: 'absolute',
+                        lineHeight: `${bracketStyles.basicFontSize}px`,
+                        fontSize: bracketStyles.basicFontSize * 0.75,
+                        color: bracketStyles.connectorColor,
+                        top: matchCenter - connectorThickness / 2 - bracketStyles.basicFontSize / 2,
+                        textAlign: 'right',
+                        left: '-22px',
+                        width: '20px',
+                      }}
+                    >
+                      {match.id}
+                    </div>
+
+                    {hasNextRound && shouldMergePairs && (
+                      <>
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: bracketStyles.teamWidth,
+                            top: matchCenter - connectorThickness / 2,
+                            width: connectorHalfGap,
+                            height: connectorThickness,
+                            backgroundColor: bracketStyles.connectorColor,
+                          }}
+                        />
+
+                        {matchIndex % 2 === 0 && matchIndex + 1 < roundMatches.length && (
+                          <>
+                            <div
+                              style={{
+                                position: 'absolute',
+                                left:
+                                  bracketStyles.teamWidth +
+                                  connectorHalfGap -
+                                  connectorThickness / 2,
+                                top: matchCenter,
+                                width: connectorThickness,
+                                height: nextMatchCenterDistance,
+                                backgroundColor: bracketStyles.connectorColor,
+                              }}
+                            />
+                            <div
+                              style={{
+                                position: 'absolute',
+                                left: bracketStyles.teamWidth + connectorHalfGap,
+                                top:
+                                  matchCenter +
+                                  nextMatchCenterDistance / 2 -
+                                  connectorThickness / 2,
+                                width: connectorHalfGap,
+                                height: connectorThickness,
+                                backgroundColor: bracketStyles.connectorColor,
+                              }}
+                            />
+                          </>
+                        )}
+                      </>
+                    )}
+
+                    {hasNextRound && !shouldMergePairs && (
                       <div
                         style={{
                           position: 'absolute',
                           left: bracketStyles.teamWidth,
                           top: matchCenter - connectorThickness / 2,
-                          width: connectorHalfGap,
+                          width: connectorFullGap,
                           height: connectorThickness,
                           backgroundColor: bracketStyles.connectorColor,
                         }}
                       />
-
-                      {matchIndex % 2 === 0 && matchIndex + 1 < roundMatches.length && (
-                        <>
-                          <div
-                            style={{
-                              position: 'absolute',
-                              left:
-                                bracketStyles.teamWidth + connectorHalfGap - connectorThickness / 2,
-                              top: matchCenter,
-                              width: connectorThickness,
-                              height: nextMatchCenterDistance,
-                              backgroundColor: bracketStyles.connectorColor,
-                            }}
-                          />
-                          <div
-                            style={{
-                              position: 'absolute',
-                              left: bracketStyles.teamWidth + connectorHalfGap,
-                              top:
-                                matchCenter + nextMatchCenterDistance / 2 - connectorThickness / 2,
-                              width: connectorHalfGap,
-                              height: connectorThickness,
-                              backgroundColor: bracketStyles.connectorColor,
-                            }}
-                          />
-                        </>
-                      )}
-                    </>
-                  )}
-
-                  {hasNextRound && !shouldMergePairs && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        left: bracketStyles.teamWidth,
-                        top: matchCenter - connectorThickness / 2,
-                        width: connectorFullGap,
-                        height: connectorThickness,
-                        backgroundColor: bracketStyles.connectorColor,
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         )

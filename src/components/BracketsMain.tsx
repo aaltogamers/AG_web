@@ -46,7 +46,7 @@ const BracketsMain = ({ bracketStyles }: Props) => {
         seeding:
           topFourTeams.length === 4
             ? topFourTeams.map((item) => item.name)
-            : [null, null, null, null],
+            : ['TBD', 'TBD ', 'TBD  ', 'TBD   '], // Very hacky
         settings: { grandFinal: 'simple' },
       })
 
