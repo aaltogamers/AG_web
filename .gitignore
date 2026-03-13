@@ -6,3 +6,18 @@ out/
 .vscode
 .env
 tsconfig.tsbuildinfo
+
+# OpenTofu / Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/*.tfplan
+infra/tfplan
+infra/.terraform.lock.hcl
+infra/bootstrap/.terraform/
+infra/bootstrap/*.tfstate
+infra/bootstrap/*.tfstate.backup
+infra/bootstrap/terraform.tfvars
+.bootstrap.tfstate.lock.info
+*.tfvars
+*.tfvars.json

@@ -1,0 +1,7 @@
+subscription_id = "your-azure-subscription-id"
+
+# Optional – defaults match the main stack's backend in ../versions.tf
+# location             = "swedencentral"
+# resource_group_name   = "ag-web-rg"
+# storage_account_name  = "agwebtfstate"
+# container_name        = "tfstate"
