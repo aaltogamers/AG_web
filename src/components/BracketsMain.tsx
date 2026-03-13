@@ -14,28 +14,39 @@ type Props = {
 }
 
 const BracketsMain = ({ bracketStyles }: Props) => {
-  const [data, setData] = useState<{
-    mainBracket: BracketData | null
-    finalBracket: BracketData | null
-  }>({
-    mainBracket: null,
-    finalBracket: null,
-  })
+  const [mainBracketData, setMainData] = useState<BracketData | null>(null)
+  const [finalBracketData, setFinalData] = useState<BracketData | null>(null)
 
   useEffect(() => {
     const loadBracket = async () => {
       const mainBracket = await createMockBracketData()
+      setMainData(mainBracket)
+    }
+
+    loadBracket()
+  }, [])
+
+  useEffect(() => {
+    const loadBracket = async () => {
+      if (!mainBracketData) {
+        return
+      }
 
       const storage = new InMemoryDatabase()
       const manager = new BracketsManager(storage)
 
-      const topFourTeams = getTopFourTeamsFromDoubleElimQualifiers(mainBracket)
+      const topFourTeams = getTopFourTeamsFromDoubleElimQualifiers(mainBracketData)
+
+      setMainData(mainBracketData)
 
       await manager.create.stage({
         tournamentId: 1,
         name: 'AG LoL Tournament',
         type: 'single_elimination',
-        seeding: topFourTeams.map((item) => item.name),
+        seeding:
+          topFourTeams.length === 4
+            ? topFourTeams.map((item) => item.name)
+            : [null, null, null, null],
         settings: { grandFinal: 'simple' },
       })
 
@@ -58,21 +69,21 @@ const BracketsMain = ({ bracketStyles }: Props) => {
         participants: participants ?? [],
       }
 
-      setData({ mainBracket, finalBracket })
+      setFinalData(finalBracket)
     }
 
     loadBracket()
-  }, [])
+  }, [mainBracketData])
 
-  if (!data.mainBracket) {
+  if (!mainBracketData) {
     return <div>Loading...</div>
   }
 
   return (
     <div className="flex flex-row">
-      <BracketsSection data={data.mainBracket} bracketStyles={bracketStyles} />
-      {data.finalBracket && (
-        <BracketsSection data={data.finalBracket} bracketStyles={bracketStyles} />
+      <BracketsSection data={mainBracketData} bracketStyles={bracketStyles} />
+      {finalBracketData && (
+        <BracketsSection data={finalBracketData} bracketStyles={bracketStyles} />
       )}
     </div>
   )
