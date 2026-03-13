@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { BracketsManager } from 'brackets-manager'
 import { InMemoryDatabase } from 'brackets-memory-db'
 import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
+import { IconType } from 'react-icons'
+import { FaCheck, FaMedal } from 'react-icons/fa'
 
 const teams = [
   'Red',
@@ -165,6 +167,16 @@ const roundToLabel = (round: Round) => {
   return `${groupLabel} Round ${round.number}`
 }
 
+const matchIcons: Record<
+  Id,
+  { winner?: { icon: IconType; color: string }; loser?: { icon: IconType; color: string } }
+> = {
+  12: { winner: { icon: FaMedal, color: 'green' } },
+  13: { winner: { icon: FaCheck, color: 'green' } },
+  25: { winner: { icon: FaCheck, color: 'green' } },
+  26: { winner: { icon: FaCheck, color: 'green' } },
+}
+
 const MatchResultRow = (
   match: Match,
   participant: 'opponent1' | 'opponent2',
@@ -175,28 +187,44 @@ const MatchResultRow = (
   const isWin = participantData?.result === 'win'
 
   return (
-    <div
-      className={`flex flex-row justify-between border-1 overflow-hidden ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm border-t-0'}`}
-      style={{ height: styles.teamHeight }}
-    >
+    <div className="relative">
       <div
-        style={{ height: styles.teamHeight, lineHeight: `${styles.teamHeight}px` }}
-        className="truncate px-1"
+        className={`flex flex-row justify-between border-1 overflow-hidden  ${participant === 'opponent1' ? 'rounded-t-sm' : 'rounded-b-sm border-t-0'}`}
+        style={{ height: styles.teamHeight }}
       >
-        {participantData?.id != null ? participantsById[participantData.id]?.name : 'TBD'}
-      </div>
-      {participantData?.result && (
         <div
-          className="text-center aspect-square"
-          style={{
-            width: styles.teamHeight - 1,
-            lineHeight: `${styles.teamHeight}px`,
-            backgroundColor: isWin ? styles.winScoreColor : styles.loseScoreColor,
-          }}
+          style={{ height: styles.teamHeight, lineHeight: `${styles.teamHeight}px` }}
+          className="truncate px-1"
         >
-          {participantData?.score != null ? participantData.score : ''}
+          {participantData?.id != null ? participantsById[participantData.id]?.name : 'TBD'}
         </div>
-      )}
+        {participantData?.result && (
+          <div
+            className="text-center aspect-square "
+            style={{
+              width: styles.teamHeight - 1,
+              lineHeight: `${styles.teamHeight}px`,
+              backgroundColor: isWin ? styles.winScoreColor : styles.loseScoreColor,
+            }}
+          >
+            {participantData.score ?? ''}
+            <div
+              className="absolute flex items-center justify-center"
+              style={{
+                left: styles.teamWidth + 4,
+                top: 0,
+                height: styles.teamHeight,
+                lineHeight: `${styles.teamHeight}px`,
+              }}
+            >
+              {(() => {
+                const icon = matchIcons[match.id]?.[isWin ? 'winner' : 'loser']
+                return icon ? <icon.icon color={icon.color} /> : null
+              })()}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
