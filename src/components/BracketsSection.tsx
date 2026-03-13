@@ -3,9 +3,9 @@ import { getMatchesByRound, getParticipantsById, getRoundsByGroup } from '../uti
 
 import GroupSection from './BracketGroupSection'
 
-type Props = { bracketStyles: BracketStyles; data: BracketData }
+type Props = { bracketStyles: BracketStyles; data: BracketData; isEditingMode: boolean }
 
-const BracketsSection = ({ bracketStyles, data }: Props) => {
+const BracketsSection = ({ bracketStyles, data, isEditingMode }: Props) => {
   const roundsByGroup = getRoundsByGroup(data)
   const matchesByRound = getMatchesByRound(data)
   const participantsById = getParticipantsById(data)
@@ -26,6 +26,7 @@ const BracketsSection = ({ bracketStyles, data }: Props) => {
         participantsById={participantsById}
         bracketStyles={bracketStyles}
         bracketData={data}
+        isEditingMode={isEditingMode}
       />
       <GroupSection
         groupLabel="Lower"
@@ -34,6 +35,7 @@ const BracketsSection = ({ bracketStyles, data }: Props) => {
         participantsById={participantsById}
         bracketStyles={bracketStyles}
         bracketData={data}
+        isEditingMode={isEditingMode}
       />
     </div>
   )

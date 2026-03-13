@@ -57,6 +57,8 @@ const BracketsMain = () => {
   const [bracketStyles, _setBracketStyles] = useState<BracketStyles>({ ...defaultBracketStyles })
   const [bracketType, _setBracketType] = useState<BracketType>('double_elimination_to_top_4')
 
+  const isEditingMode: boolean = true
+
   useEffect(() => {
     const loadBracket = async () => {
       const newData = await setupBracket(manager, bracketType, teamCount, teams)
@@ -74,6 +76,7 @@ const BracketsMain = () => {
           key={bracketData.stages[0].id}
           data={bracketData}
           bracketStyles={bracketStyles}
+          isEditingMode={isEditingMode}
         />
       ))}
     </div>

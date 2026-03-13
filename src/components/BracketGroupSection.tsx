@@ -3,6 +3,7 @@ import type { Id, Match, Participant, Round } from 'brackets-model'
 import MatchResultRow from './BracketMatchResultRow'
 import { BracketData, BracketStyles } from '../types/types'
 import { getGroupHasFinal, roundToLabel } from '../utils/brackets'
+import { FaPen } from 'react-icons/fa'
 
 type Props = {
   groupLabel: string
@@ -11,6 +12,7 @@ type Props = {
   participantsById: Record<Id, Participant>
   bracketStyles: BracketStyles
   bracketData: BracketData
+  isEditingMode: boolean
 }
 
 const GroupSection = ({
@@ -20,6 +22,7 @@ const GroupSection = ({
   participantsById,
   bracketStyles,
   bracketData,
+  isEditingMode,
 }: Props) => {
   const matchHeight = bracketStyles.teamHeight * 2
   const baseGap = bracketStyles.teamGapY
@@ -109,6 +112,10 @@ const GroupSection = ({
                         feedInfo={prevMatches?.opponent2From}
                       />
                     </span>
+
+                    <div className="absolute w-full h-full bg-darkgray opacity-0 hover:opacity-80 cursor-pointer rounded-sm flex justify-center items-center">
+                      <FaPen onClick={() => openEditDialog(match)} />
+                    </div>
 
                     <div
                       style={{
