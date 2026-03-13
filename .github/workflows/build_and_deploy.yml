@@ -1,5 +1,6 @@
 name: Build docker image and deploy to Azure App Service
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
