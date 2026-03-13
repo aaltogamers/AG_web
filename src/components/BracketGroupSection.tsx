@@ -60,11 +60,15 @@ const GroupSection = ({
   const openEditDialog = useCallback(
     (match: Match) => {
       setSelectedMatch(match)
+
       const hasScores = match.opponent1?.score != null || match.opponent2?.score != null
+
+      const isCompleted = match.status === Status.Completed || Status.Archived
+
       reset({
         score1: String(match.opponent1?.score ?? ''),
         score2: String(match.opponent2?.score ?? ''),
-        inProgress: hasScores ? match.status !== Status.Completed : false,
+        inProgress: hasScores ? !isCompleted : false,
       })
     },
     [reset]
@@ -277,7 +281,11 @@ const GroupSection = ({
             >
               {roundMatches.map((match, matchIndex) => {
                 const isBye = match.opponent1 === null || match.opponent2 === null
-                const isLocked = isBye || match.opponent1?.id == null || match.opponent2?.id == null
+                const isLocked =
+                  isBye ||
+                  match.opponent1?.id == null ||
+                  match.opponent2?.id == null ||
+                  match.status === Status.Archived
 
                 const prevMatches = bracketData.prevMatches[match.id]
 
@@ -316,7 +324,7 @@ const GroupSection = ({
 
                     {isEditingMode && !isLocked && (
                       <div
-                        className="absolute w-full h-full bg-darkgray opacity-0 hover:opacity-80 cursor-pointer rounded-sm flex justify-center items-center"
+                        className="absolute w-full h-full bg-darkgray opacity-10 hover:opacity-80 cursor-pointer rounded-sm flex justify-end items-center pr-8"
                         onClick={() => openEditDialog(match)}
                         onKeyDown={(e) => e.key === 'Enter' && openEditDialog(match)}
                         role="button"
