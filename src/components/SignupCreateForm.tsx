@@ -11,9 +11,9 @@ import { getParticipants } from '../utils/db'
 
 type Inputs = {
   name: string
-  maxParticipants: string
-  openFrom: string
-  openUntil: string
+  maxparticipants: string
+  openfrom: string
+  openuntil: string
   inputs: EditableInputObj[]
 }
 
@@ -59,9 +59,9 @@ const SignUpCreateForm = ({ events, app }: Props) => {
       const signUpData = rawEvent.data() as SignUpData
       resetForm()
       setValue('name', signUpData.name)
-      setValue('maxParticipants', signUpData.maxParticipants.toString())
-      setValue('openFrom', signUpData.openFrom)
-      setValue('openUntil', signUpData.openUntil)
+      setValue('maxparticipants', signUpData.maxparticipants.toString())
+      setValue('openfrom', signUpData.openfrom)
+      setValue('openuntil', signUpData.openuntil)
       signUpData.inputs.forEach(({ type, ...rest }, i) => {
         const number = i + 1
         addEditableInput(type, number)
@@ -138,10 +138,10 @@ const SignUpCreateForm = ({ events, app }: Props) => {
         delete finalData[key as keyof Inputs]
       }
     })
-    const maxParticipantsAsInt = parseInt(finalData.maxParticipants.toString(), 10) || 0
+    const maxparticipantsAsInt = parseInt(finalData.maxparticipants.toString(), 10) || 0
     setDoc(doc(db, 'events', finalData.name), {
       ...finalData,
-      maxParticipants: maxParticipantsAsInt,
+      maxparticipants: maxparticipantsAsInt,
     })
       .then(() => {
         setMessage('Saved!')
@@ -197,7 +197,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
           />
           <Input
             register={register}
-            name="maxParticipants"
+            name="maxparticipants"
             displayName="Maximum participants"
             placeHolder="ex. 24"
             type="number"
@@ -206,7 +206,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
           />
           <Input
             register={register}
-            name="openFrom"
+            name="openfrom"
             displayName="Sign-up open from"
             type="datetime-local"
             control={control}
@@ -214,7 +214,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
           />
           <Input
             register={register}
-            name="openUntil"
+            name="openuntil"
             displayName="Sign-up open until"
             type="datetime-local"
             control={control}

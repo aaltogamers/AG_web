@@ -109,12 +109,12 @@ export type SignupInput = {
   options?: string[]
   multi?: boolean
 }
-
+// Only use lowercase for keys
 export type SignUpData = {
   name: string
-  maxParticipants: number
-  openFrom: string
-  openUntil: string
+  maxparticipants: number
+  openfrom: string
+  openuntil: string
   inputs: SignupInput[]
 }
 

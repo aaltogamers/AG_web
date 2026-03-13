@@ -87,11 +87,11 @@ const ParticipantTable = ({
 
   const participantsThatMadeIt = participantsSortedByCreationTime.slice(
     0,
-    signupData.maxParticipants
+    signupData.maxparticipants
   )
 
   const participantsThatDidntMakeIt = participantsSortedByCreationTime.slice(
-    signupData.maxParticipants
+    signupData.maxparticipants
   )
 
   const parseHeader = (header: string) => {
@@ -107,7 +107,7 @@ const ParticipantTable = ({
   return (
     <div>
       <h3 className="mt-4">
-        Signed up ({participantsThatMadeIt.length} / {signupData.maxParticipants})
+        Signed up ({participantsThatMadeIt.length} / {signupData.maxparticipants})
       </h3>
 
       <div className="overflow-x-auto max-w-[90vw]">
