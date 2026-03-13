@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import type { BracketData, BracketStyles } from '../types/types'
-import { getTopFourTeamsFromDoubleElimQualifiers } from '../utils/brackets'
+import { getBracketData, getTopFourTeamsFromDoubleElimQualifiers } from '../utils/brackets'
 import { createMockBracketData } from '../utils/createMockBracketData'
 
 import BracketsSection from './BracketsSection'
@@ -50,27 +50,7 @@ const BracketsMain = ({ bracketStyles }: Props) => {
         settings: { grandFinal: 'simple' },
       })
 
-      const [stages, groups, rounds, matches, matchGames, participants] = await Promise.all([
-        storage.select<Stage>('stage'),
-        storage.select<Group>('group'),
-        storage.select<Round>('round'),
-        storage.select<Match>('match'),
-        storage.select<MatchGame>('match_game'),
-        storage.select<Participant>('participant'),
-      ])
-
-      const finalBracket = {
-        manager: manager,
-        stages: stages ?? [],
-        groups: groups ?? [],
-        rounds: rounds ?? [],
-        matches: matches ?? [],
-        matchGames: matchGames ?? [],
-        participants: participants ?? [],
-        prevMatches: {},
-      }
-
-      setFinalData(finalBracket)
+      setFinalData(await getBracketData(manager, new Set()))
     }
 
     loadBracket()
