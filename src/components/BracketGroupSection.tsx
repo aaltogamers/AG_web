@@ -77,8 +77,6 @@ const GroupSection = ({
 
                 const prevMatches = bracketData.prevMatches[match.id]
 
-                console.log(match.id, prevMatches)
-
                 return (
                   <div
                     key={match.id}
