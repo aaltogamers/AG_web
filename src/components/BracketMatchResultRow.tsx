@@ -6,14 +6,36 @@ type Props = {
   participant: 'opponent1' | 'opponent2'
   participantsById: Record<Id, Participant>
   bracketStyles: BracketStyles
+  waitingForMatchId?: Id | null
+  waitingForMatchType?: 'winner' | 'loser'
 }
 
-const MatchResultRow = ({ match, participant, participantsById, bracketStyles }: Props) => {
+const MatchResultRow = ({
+  match,
+  participant,
+  participantsById,
+  bracketStyles,
+  waitingForMatchId,
+  waitingForMatchType = 'winner',
+}: Props) => {
   const participantData = match[participant]
 
   const isBye = match.opponent1 === null || match.opponent2 === null
 
   const isWin = participantData?.result === 'win'
+
+  const tbdLabel =
+    waitingForMatchId != null ? (
+      waitingForMatchType === 'loser' ? (
+        <i className="opacity-75" style={{ fontSize: '0.9em' }}>
+          Loser of match {waitingForMatchId}
+        </i>
+      ) : (
+        ''
+      )
+    ) : (
+      ''
+    )
 
   return (
     <div className="relative">
@@ -28,7 +50,7 @@ const MatchResultRow = ({ match, participant, participantsById, bracketStyles }:
           {participantData === null
             ? '-'
             : participantData?.id === null
-              ? 'TBD'
+              ? tbdLabel
               : participantsById[participantData.id]?.name}
         </div>
         {participantData?.result && !isBye && (

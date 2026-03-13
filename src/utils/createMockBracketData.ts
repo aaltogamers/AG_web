@@ -46,7 +46,7 @@ const completedResults: { index: number; opponent1: number; opponent2: number }[
   { index: 0, opponent1: 2, opponent2: 0 },
   { index: 1, opponent1: 2, opponent2: 1 },
   { index: 2, opponent1: 2, opponent2: 0 },
-  { index: 3, opponent1: 1, opponent2: 2 },
+  /*   { index: 3, opponent1: 1, opponent2: 2 },
   { index: 4, opponent1: 2, opponent2: 1 },
   { index: 5, opponent1: 0, opponent2: 2 },
   { index: 6, opponent1: 2, opponent2: 0 },
@@ -68,7 +68,7 @@ const completedResults: { index: number; opponent1: number; opponent2: number }[
   { index: 23, opponent1: 0, opponent2: 2 },
   { index: 24, opponent1: 2, opponent2: 0 },
   { index: 25, opponent1: 2, opponent2: 0 },
-  { index: 26, opponent1: 0, opponent2: 2 },
+  { index: 26, opponent1: 0, opponent2: 2 },*/
 ]
 
 // Skip matches, so we get top 4 teams
