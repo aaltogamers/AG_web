@@ -2,7 +2,7 @@ import { BracketsManager } from 'brackets-manager'
 import { InMemoryDatabase } from 'brackets-memory-db'
 import { BracketData, BracketStyles } from '../types/types'
 import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
-import { FaCheck } from 'react-icons/fa'
+import { FaTrophy } from 'react-icons/fa'
 
 const teams = [
   'Red',
@@ -21,12 +21,12 @@ const teams = [
 ]
 
 export const bracketStyles: BracketStyles = {
-  textColor: 'red',
-  teamNameColor: '#4178c0',
-  loseScoreColor: 'lightblue',
-  winScoreColor: 'gold',
-  roundColor: 'darkblue',
-  connectorColor: 'black',
+  textColor: '#ECFEE8',
+  teamNameColor: '#41337A',
+  loseScoreColor: '#6EA4BF',
+  winScoreColor: '#FAA916',
+  roundColor: '#331E36',
+  connectorColor: '#FAA916',
   titleFontSize: 24,
   basicFontSize: 16,
   teamHeight: 24,
@@ -35,10 +35,10 @@ export const bracketStyles: BracketStyles = {
   teamGapY: 10,
   bracketGap: 20,
   matchIcons: {
-    12: { winner: { icon: FaCheck, color: 'green' } },
-    13: { winner: { icon: FaCheck, color: 'green' } },
-    25: { winner: { icon: FaCheck, color: 'green' } },
-    26: { winner: { icon: FaCheck, color: 'green' } },
+    12: { winner: { icon: FaTrophy, color: '#FAA916' } },
+    13: { winner: { icon: FaTrophy, color: '#FAA916' } },
+    25: { winner: { icon: FaTrophy, color: '#FAA916' } },
+    26: { winner: { icon: FaTrophy, color: '#FAA916' } },
   },
 }
 
