@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 
 import type { BracketData, BracketStyles } from '../types/types'
-import { getMatchesByRound, getParticipantsById, getRoundsByGroup } from '../utils/brackets'
+import {
+  getMatchesByRound,
+  getParticipantsById,
+  getRoundsByGroup,
+  getTopFourTeamsFromDoubleElimQualifiers,
+} from '../utils/brackets'
 import { createMockBracketData } from '../utils/createMockBracketData'
 import GroupSection from './BracketGroupSection'
 
@@ -17,6 +22,8 @@ const BracketsSection = ({ bracketStyles }: Props) => {
       const bracketData = await createMockBracketData()
 
       setData(bracketData)
+
+      console.log(getTopFourTeamsFromDoubleElimQualifiers(bracketData))
     }
 
     loadBracket()

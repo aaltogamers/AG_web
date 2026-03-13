@@ -216,3 +216,5 @@ export type BracketStyles = {
     { winner?: { icon: IconType; color: string }; loser?: { icon: IconType; color: string } }
   >
 }
+
+export type RoundLabel = 'Upper' | 'Lower' | 'Final' | 'Unknown'
