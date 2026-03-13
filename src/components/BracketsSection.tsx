@@ -30,10 +30,6 @@ const BracketsSection = ({ bracketStyles }: Props) => {
   const matchesByRound = getMatchesByRound(data)
   const participantsById = getParticipantsById(data)
 
-  if (data.groups.length !== 3) {
-    return <div>Only double elim with grand final is currently supported</div>
-  }
-
   return (
     <div
       style={{

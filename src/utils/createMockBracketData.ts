@@ -127,6 +127,7 @@ export const createMockBracketData = async (): Promise<BracketData> => {
   const filteredRounds = (rounds ?? []).filter((round) => filteredRoundIds.has(round.id))
 
   return {
+    manager: manager,
     stages: stages ?? [],
     groups: groups ?? [],
     rounds: filteredRounds,

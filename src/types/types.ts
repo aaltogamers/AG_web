@@ -1,6 +1,7 @@
 import { Timestamp } from 'firebase/firestore'
 import { IconType } from 'react-icons'
 import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
+import { BracketsManager } from 'brackets-manager'
 
 export type AGEvent = {
   name: string
@@ -187,6 +188,7 @@ export type HeaderLink = {
 }
 
 export type BracketData = {
+  manager: BracketsManager
   stages: Stage[]
   groups: Group[]
   rounds: Round[]
