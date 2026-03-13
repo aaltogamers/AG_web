@@ -42,8 +42,8 @@ const GroupSection = ({
         const shouldMergePairs = hasNextRound && roundMatches.length === nextRoundMatches.length * 2
 
         const connectorThickness = 2
-        const connectorHalfGap = bracketStyles.teamGapX / 2
-        const connectorFullGap = bracketStyles.teamGapX
+        const connectorFullGap = bracketStyles.teamGapX - bracketStyles.basicFontSize * 0.2
+        const connectorHalfGap = connectorFullGap / 2
 
         const matchCenter = matchHeight / 2
         const nextMatchCenterDistance = matchHeight + roundGap
@@ -117,9 +117,9 @@ const GroupSection = ({
                         fontSize: bracketStyles.basicFontSize * 0.75,
                         color: bracketStyles.connectorColor,
                         top: matchCenter - connectorThickness / 2 - bracketStyles.basicFontSize / 2,
-                        textAlign: 'right',
-                        left: '-22px',
-                        width: '20px',
+                        textAlign: 'center',
+                        left: -bracketStyles.basicFontSize * 0.75,
+                        width: bracketStyles.basicFontSize * 0.75,
                       }}
                     >
                       {match.id}
@@ -153,6 +153,7 @@ const GroupSection = ({
                                 backgroundColor: bracketStyles.connectorColor,
                               }}
                             />
+
                             <div
                               style={{
                                 position: 'absolute',
