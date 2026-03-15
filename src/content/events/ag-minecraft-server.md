@@ -1,6 +1,10 @@
 ---
 name: AG Minecraft Server
-time: 28.03.2024
+time: 2024-03-28T18:00:00
+durationHours: 5
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/ag-minecraft-server.png
 description: >-
   🌍 Are you an urban architect with mindblowing build ideas, a PhD in Redstone

@@ -123,9 +123,9 @@ const SignUp = ({ eventName }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const signUpStart = moment(signupData?.openFrom)
+  const signUpStart = moment(signupData?.openfrom)
   const signUpStartString = signUpStart.format('DD/MM/YYYY HH:mm')
-  const signUpEnd = moment(signupData?.openUntil)
+  const signUpEnd = moment(signupData?.openuntil)
   const signUpEndString = signUpEnd.format('DD/MM/YYYY HH:mm')
   const nowMoment = moment()
   const signUpNotYetOpen = nowMoment.isBefore(signUpStart)

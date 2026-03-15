@@ -1,7 +1,7 @@
 ---
 title: About us
-boardTitle: Aalto Gamers Board of 2025
 ---
+
 ## Aalto Gamers ry
 
 Aalto Gamers is a community of gamers from Aalto University. We organize both high-quality larger scale esports events as well as casual gaming nights for all university students. We bring together a diverse group of students from multiple different disciplines and schools. Above all, we aim to create a vibrant community for our players, universities and partners by building an environment where people can connect through gaming. Aalto Gamers is a non-profit organization founded in 2016 by a group of enthusiastic university students and has grown to become is the largest student esports organization in Finland.

@@ -20,7 +20,7 @@ const MobileNavBar = ({ links }: MobileProps) => {
         <div className="flex justify-center w-full">
           <Link href="/" className="flex" onClick={() => setIsOpen(false)}>
             <AGImage
-              src="/images/navbar/ag-text.svg"
+              src="/images/navbar/ag-text.png"
               alt="Aalto Gamers"
               className="h-14 object-contain w-fit"
             />

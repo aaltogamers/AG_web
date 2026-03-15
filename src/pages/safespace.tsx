@@ -3,7 +3,7 @@ import BoardMember from '../components/BoardMember'
 import Header from '../components/Header'
 import Markdown from '../components/Markdown'
 import PageWrapper from '../components/PageWrapper'
-import { AGBoardMember } from '../types/types'
+import { AGBoardMember, HistoryEntry } from '../types/types'
 import { getFolder, getFile } from '../utils/fileUtils'
 
 interface Props {
@@ -16,11 +16,10 @@ interface Props {
 const SafeSpace = ({ title, content, boardMembers, contactPeopleNames }: Props) => {
   const contactPersons = boardMembers
     .filter((person) => contactPeopleNames.includes(person.name))
-    .map(({ image, name, orderNumber, contactInformation }) => ({
+    .map(({ image, name, contactInformation }) => ({
       image,
       name,
       title: 'Harassment contact person',
-      orderNumber,
       contactInformation,
     }))
   return (
@@ -34,12 +33,10 @@ const SafeSpace = ({ title, content, boardMembers, contactPeopleNames }: Props) 
           <div className="my-20">
             <Markdown>{content}</Markdown>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 text-lg md:w-2/3 justify-center">
-            {contactPersons
-              .sort((member1, member2) => member1.orderNumber - member2.orderNumber)
-              .map((boardMember) => (
-                <BoardMember boardMember={boardMember} key={boardMember.name} showContactInfo />
-              ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 text-lg md:w-2/3 justify-center gap-8">
+            {contactPersons.map((boardMember) => (
+              <BoardMember boardMember={boardMember} key={boardMember.name} showContactInfo />
+            ))}
           </div>
         </div>
       </div>
@@ -49,6 +46,12 @@ const SafeSpace = ({ title, content, boardMembers, contactPeopleNames }: Props) 
 
 export default SafeSpace
 
-export const getStaticProps = () => ({
-  props: { boardMembers: getFolder('boardmembers'), ...getFile('safespace') },
-})
+export const getStaticProps = () => {
+  const historyEntries = getFolder('history') as HistoryEntry[]
+  const latestHistory = historyEntries.sort((a, b) => parseInt(b.year) - parseInt(a.year))[0]
+  const boardMembers = latestHistory?.boardMembers || []
+
+  return {
+    props: { boardMembers, ...getFile('safespace') },
+  }
+}

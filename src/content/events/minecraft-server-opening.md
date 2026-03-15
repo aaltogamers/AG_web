@@ -1,6 +1,10 @@
 ---
 name: Minecraft Server Opening
-time: 15.03.2025
+time: 2025-03-15T12:00:00
+durationHours: 8
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/minecraft_server_opening.jpg
 description: A brand-new world awaits! Come test your skills and prove your
   speedrun mastery (But not the usual way 😉), or chill and explore at your own
@@ -29,6 +33,7 @@ tldr: >-
 
   [mc.aaltogamers.fi](mc.aaltogamers.fi)
 ---
+
 **⛏️ AG Minecraft March ⛏️**
 
 💎 This March, Aalto Gamers has you covered with Minecraft activities! Whether you are a **chill Sunday crafter** or a **seasoned speedrunner**, there's something for everyone!
@@ -37,9 +42,9 @@ tldr: >-
 
 Fight your way to victory in the Hunger Games - only one can survive! 🏆🔥
 
-**🌏 15.3 - Minecraft Server Opening & Speedrun Bingo!** 
+**🌏 15.3 - Minecraft Server Opening & Speedrun Bingo!**
 
-A brand-new world awaits! Come test your skills and prove your speedrun mastery (But not the usual way 😉), or chill and explore at your own pace, you decide! 🏡✨  
+A brand-new world awaits! Come test your skills and prove your speedrun mastery (But not the usual way 😉), or chill and explore at your own pace, you decide! 🏡✨
 
 More info coming soon on our [socials](https://aaltogamers.fi/join), stay tuned!
 
@@ -67,13 +72,13 @@ For a more social experience, we use the [Simple Voice Chat](https://www.cursefo
 3. Select Client, MC version **1.21.4**, Loader version **0.16.10**, launcher location as is (...\Roaming\.minecraft), check "create profile" and click "Install"
 4. Download the [Simple Voice chat mod (Fabric v. 1.24.1.)](https://www.curseforge.com/minecraft/mc-mods/simple-voice-chat/files/6239774)
 5. Move the "voicechat-fabric-1.24.1-2.5.28.jar" to the Fabric mods folder
-   *How to find the mods folder*
-    Option 1 - From launcher:
-    Minecraft launcher -> select "Installations" -> Folder icon next to "Play" on the right, -> select "mods" folder)
+   _How to find the mods folder_
+   Option 1 - From launcher:
+   Minecraft launcher -> select "Installations" -> Folder icon next to "Play" on the right, -> select "mods" folder)
    Option 2 - Using file manager:
-    Windows: %AppData%/.minecraft/mods
-    Mac: \~/Library/Application Support/minecraft/mods
-    Linux: \~/.minecraft/mods
+   Windows: %AppData%/.minecraft/mods
+   Mac: \~/Library/Application Support/minecraft/mods
+   Linux: \~/.minecraft/mods
 6. Select "fabric-loader-1.24.1" in the Minecraft launcher and click "Play"
 
 #### Using the mod

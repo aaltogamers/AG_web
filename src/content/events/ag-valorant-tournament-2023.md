@@ -1,6 +1,10 @@
 ---
-name: AG Valorant Tournament
-time: 22.10.2023
+name: AG Valorant Tournament 2023
+time: 2023-10-22T13:00:00
+durationHours: 6
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/agvalo.png
 description: >-
   It’s time for the first real competition of the Fall semester and that’s of

@@ -24,4 +24,35 @@ redirects:
   - name: LoL OSM signup
     slug: osmsignup
     url: https://forms.gle/kUEEqGchkA1JepYd6
+  - name: Membership form
+    slug: join
+    url: https://forms.gle/HDT4ncn1X6UKMZFt8
+  - name: Become an Active
+    url: https://forms.gle/da1Kgy5KE17xRRTM8
+    slug: active
+  - name: AG Actives Telegram chat (should not be linked directly, only trough
+      "Become an active" form.
+    slug: actives_telegram
+    url: https://t.me/+a0catz8WPxRkMDA0
+  - name: AG Info presentation
+    url: https://docs.google.com/presentation/d/1MXpVwkKxKn2ctJwmILUvSMqlQ27AfDE5zFMJWCmsSXA
+    slug: info
+  - name: AG Actives Event Calendar
+    slug: actives_calendar
+    url: https://calendar.google.com/calendar/u/1?cid=Y185YjBhZjNjYWMwMDgxNDgxYzY4MWQ5Yjc3OWQxMjhiYzI5MjcwZTBlOTBhYjUxMjk1OWRjYzM4ZDZjY2JlZmYwQGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20
+  - url: https://kide.app/events/91035be1-49cd-46df-838b-5d85c6a9dc53
+    slug: mario_kart_kide
+    name: Mario Kart Tournament 2025 Kide App
+  - name: AG Actives Discord
+    slug: actives_discord
+    url: https://discord.gg/UWzgvQJATN
+  - name: AG Youtube Channel
+    url: https://www.youtube.com/@aaltogamers/videos
+    slug: youtube
+  - name: Minecraft Server Whitelist
+    slug: whitelist
+    url: https://aaltogamers.fi/whitelist
+  - name: Sims Build-Off 2026 Sign-Up
+    slug: sims-2026
+    url: https://forms.gle/Vmq7SHmvKjvhU8nw5
 ---

@@ -2,7 +2,7 @@
 title: AG Safer Space Policy
 contactPeopleNames:
   - Otto Söderman
-  - Janni Lätti
+  - Kalle Jokipaltio
 ---
 
 AG's events have zero tolerance for all forms of harassment, sexism, racism, bullying and

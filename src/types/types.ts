@@ -1,14 +1,24 @@
 import { Timestamp } from 'firebase/firestore'
+import { IconType } from 'react-icons'
+import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
+import { BracketsManager } from 'brackets-manager'
 
 export type AGEvent = {
   name: string
-  image: string
+  image?: string
   time?: string
+  durationHours: number
+  otherTimes: { name?: string; time: string }[]
+  location?: string
+  visibleOnCalendar: boolean
+  visibleOnEventsPage: boolean
   content: string
   description: string
   isRecurring?: boolean
   tldr: string
   slug: string
+  albumID?: string
+  recordings?: { name: string; url: string }[]
 }
 
 export type Option = {
@@ -37,21 +47,49 @@ export type AGBoardMember = {
   game?: string
   image?: string
   contactInformation?: string
-  orderNumber: number
 }
 
-export type AGAlbum = {
-  name: string
-  link: string
-  image: string
-  orderNumber: number
+export type LycheeAlbumThumb = {
+  id: string
+  type: string
+  thumb: string
+  thumb2x: string
+  placeholder: string
 }
+
+export type LycheeAlbum = {
+  id: string
+  title: string
+  description: string | null
+  thumb: LycheeAlbumThumb | null
+  is_nsfw: boolean
+  is_public: boolean
+  has_subalbum: boolean
+  num_subalbums: number
+  num_photos: number
+  created_at: string
+  formatted_min_max: string | null
+  owner: string | null
+  timeline: {
+    time_date: string
+    format: string
+  }
+}
+
 export type LandingInfo = {
   title: string
   subtitle: string
   content: string
   image: string
   isSmallImage?: boolean
+}
+
+export type HistoryEntry = {
+  year: string
+  title?: string
+  boardMembers: AGBoardMember[]
+  content?: string
+  slug: string
 }
 
 export type EditableInputType = 'text' | 'select' | 'info'
@@ -71,12 +109,12 @@ export type SignupInput = {
   options?: string[]
   multi?: boolean
 }
-
+// Only use lowercase for keys
 export type SignUpData = {
   name: string
-  maxParticipants: number
-  openFrom: string
-  openUntil: string
+  maxparticipants: number
+  openfrom: string
+  openuntil: string
   inputs: SignupInput[]
 }
 
@@ -107,20 +145,20 @@ export type ScoreBoardEntry = {
 
 export const CS_ACTIVE_DUTY_MAPS = [
   'Ancient',
-  'Anubis',
   'Dust II',
   'Inferno',
   'Mirage',
   'Nuke',
-  'Vertigo',
+  'Overpass',
+  'Train',
 ] as const
 
 export const VALORANT_ACTIVE_DUTY_MAPS = [
   'Abyss',
   'Bind',
   'Haven',
-  'Fracture',
-  'Lotus',
+  'Breeze',
+  'Corrode',
   'Pearl',
   'Split',
 ] as const
@@ -148,3 +186,50 @@ export type HeaderLink = {
   name: string
   link: string
 }
+
+export type BracketData = {
+  manager: BracketsManager
+  stages: Stage[]
+  groups: Group[]
+  rounds: Round[]
+  matches: Match[]
+  matchGames: MatchGame[]
+  participants: Participant[]
+  prevMatches: Record<
+    Id,
+    {
+      opponent1From?: OpponentFroMatch
+      opponent2From?: OpponentFroMatch
+    }
+  >
+}
+
+export type BracketStyles = {
+  textColor: string
+  teamNameColor: string
+  loseScoreColor: string
+  winScoreColor: string
+  roundColor: string
+  connectorColor: string
+  dividerColor: string
+  titleFontSize: number
+  basicFontSize: number
+  teamHeight: number
+  teamWidth: number
+  teamGapX: number
+  teamGapY: number
+  bracketGap: number
+  matchIcons: Record<
+    Id,
+    { winner?: { icon: IconType; color: string }; loser?: { icon: IconType; color: string } }
+  >
+}
+
+export type RoundLabel = 'Upper' | 'Lower' | 'Final' | 'Unknown'
+
+export type OpponentFroMatch = { match: Match; outcome: 'winner' | 'loser' }
+
+export type BracketType =
+  | 'single_elimination'
+  | 'double_elimination'
+  | 'double_elimination_to_top_4'

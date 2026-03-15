@@ -1,6 +1,10 @@
 ---
 name: AG Sauna Game Night
-time: 05.04.2025
+time: 2025-04-05T19:00:00
+durationHours: 4
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: Game Cave Otaniemi, Kivimiehentie 2, Espoo
 image: /images/img_20250323_093129_155.jpg
 description: Aalto Gamers is partnering with *Cave Entertainment* to bring you
   the best gaming sauna experience ever! Grab a towel and head to the *Cave* to
@@ -22,17 +26,18 @@ tldr: |-
 
   Opens Monday 24.03 at 12:00
 ---
-🔥🎮 Sauna Game Night 
-@ *Game Cave* Otaniemi 🎮🔥
 
-Aalto Gamers is partnering with *Cave Entertainment* to bring you the best gaming sauna experience ever!
+🔥🎮 Sauna Game Night
+@ _Game Cave_ Otaniemi 🎮🔥
 
-Grab a towel and head to the *Cave* to play your favorite games and relax in the sauna with the best company!  
+Aalto Gamers is partnering with _Cave Entertainment_ to bring you the best gaming sauna experience ever!
+
+Grab a towel and head to the _Cave_ to play your favorite games and relax in the sauna with the best company! 
 
 **Remember to**:
 
-* Sign up on Monday 24th of May @ 12:00
-* Bring Sauna Equipment and cash for refreshments
-* Board Games are also welcome!
+- Sign up on Monday 24th of May @ 12:00
+- Bring Sauna Equipment and cash for refreshments
+- Board Games are also welcome!
 
 Stay tuned! 🔥

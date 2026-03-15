@@ -1,6 +1,10 @@
 ---
 name: AG Among us Tournament
-time: 15.04.2023
+time: 2023-04-15T13:00:00
+durationHours: 5
+visibleOnCalendar: true
+visibleOnEventsPage: true
+location: AG Discord server
 image: /images/amogus.jpg
 isRecurring: false
 description: Aalto Gamers is proud to present our 🚀Among Us🚀 Tournament held
