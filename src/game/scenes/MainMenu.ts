@@ -21,10 +21,10 @@ const radToXY = (rad: number) => {
 
 export class MainMenu extends Scene {
   joystick: nipplejs.JoystickManager | undefined = undefined
+  playerStates: PlayerState[] = []
   players: {
     sprite: Phaser.GameObjects.Image
     state: PlayerState
-    joystick: nipplejs.JoystickManager
   }[] = []
 
   constructor() {
@@ -36,6 +36,8 @@ export class MainMenu extends Scene {
   }
 
   create() {
+    this.playerStates = this.registry.get('players')
+
     this.joystick.on('move', (_, data) => {
       const angle = radToXY(data.angle.radian)
       myPlayer().setState('joystick', { ...angle, force: data.force })
@@ -44,44 +46,42 @@ export class MainMenu extends Scene {
       myPlayer().setState('joystick', { x: 0, y: 0, force: 0 })
     })
 
-    onPlayerJoin((playerState) => {
-      this.addPlayer(playerState, this.joystick)
-    })
-
     if (!this.scene.systems.game.device.os.desktop) {
       this.add.rectangle(640, 460, 1280, 720, 0xd3d3d3)
     } else {
       this.add.image(640, 500, 'background').setScale(0.8)
     }
+
+    this.playerStates.forEach((playerState, index) => {
+      let character: string = playerState.getState('character')
+      const sprite = this.add.image(640, 360, character).setScale(0.1)
+      this.physics.add.existing(sprite, false)
+
+      const body = sprite.body as Phaser.Physics.Arcade.Body
+      body.setCollideWorldBounds(true)
+      this.physics.add.collider(
+        sprite,
+        this.players.map((a) => a.sprite)
+      )
+
+      this.add.text(100, 20 * index, playerState.getProfile().name)
+
+      this.players.push({
+        sprite,
+        state: playerState,
+      })
+      playerState.onQuit(() => {
+        sprite.destroy()
+        this.players = this.players.filter((p) => p.state !== playerState)
+      })
+    })
+
     EventBus.emit('current-scene-ready', this)
   }
 
-  addPlayer(playerState: PlayerState, joystick: nipplejs.JoystickManager) {
-    let character: string = playerState.getState('character')
-    const sprite = this.add.image(640, 360, character).setScale(0.1)
-    this.physics.add.existing(sprite, false)
-    const body = sprite.body as Phaser.Physics.Arcade.Body
-    body.setCollideWorldBounds(true)
-    this.physics.add.collider(
-      sprite,
-      this.players.map((a) => a.sprite)
-    )
-
-    this.players.push({
-      sprite,
-      state: playerState,
-      joystick: joystick,
-    })
-    playerState.onQuit(() => {
-      sprite.destroy()
-      this.players = this.players.filter((p) => p.state !== playerState)
-    })
-  }
-
   update(time: number) {
-    const alivePlayers: string[] = getState('alivePlayers')
-
     if (isHost()) {
+      const alivePlayers: string[] = this.registry.get('alivePlayers')
       if (time % 4 == 0) {
         let vector = new Phaser.Math.Vector2()
         Phaser.Math.RandomXY(vector)
@@ -105,10 +105,14 @@ export class MainMenu extends Scene {
             if (player.state.id == myPlayer().id) {
               this.add.text(500, 500, 'you died')
             }
-            setState(
+            this.registry.set(
               'alivePlayers',
-              alivePlayers.filter((alivePlayerID) => alivePlayerID != player.state.id)
+              this.registry
+                .get('alivePlayers')
+                .filter((alivePlayerID: string) => alivePlayerID != player.state.id)
             )
+            setState('alivePlayers', this.registry.get('alivePlayers'))
+            console.log(this.registry.get('alivePlayers'))
           })
         })
       }
@@ -124,6 +128,10 @@ export class MainMenu extends Scene {
             x: body.x,
             y: body.y,
           })
+        }
+        if (alivePlayers.length == 1) {
+          setState('gameWon', true)
+          setState('winner', alivePlayers[0])
         }
       }
     } else {
@@ -146,15 +154,19 @@ export class MainMenu extends Scene {
       }
     }
 
-    if (alivePlayers.length == 1) {
-      this.add.text(400, 400, alivePlayers[0] + ' won')
+    if (getState('gameWon')) {
+      this.add.text(
+        400,
+        400,
+        this.playerStates.find((player) => player.id == getState('winner'))?.getProfile().name +
+          ' won'
+      )
       this.time.delayedCall(5000, () => {
         if (isHost()) {
           resetPlayersStates()
           resetStates()
         }
         this.joystick?.destroy()
-
         this.scene.stop('MainMenu')
         this.scene.start('Preloader')
       })

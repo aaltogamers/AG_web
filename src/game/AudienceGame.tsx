@@ -22,8 +22,8 @@ const StartGame = async () => {
   }
   return insertCoin({
     maxPlayersPerRoom: 20,
-    defaultPlayerStates: { ready: false },
-    defaultStates: { alivePlayers: [] },
+    defaultPlayerStates: { ready: false, joystick: { x: 0, y: 0, force: 0 } },
+    defaultStates: { alivePlayers: [], picked: [], gameActive: false, gameWon: false, winner: '' },
   }).then(() => new Phaser.Game(config))
 }
 
