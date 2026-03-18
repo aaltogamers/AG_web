@@ -107,7 +107,7 @@ durationHours: 5
 image: /images/biweekly.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
+location: AG Discord server or Live at the Clubroom at OK20
 isRecurring: true
 description: >-
   Biweeklies are relaxed gaming nights organised every other Friday at 18:00
