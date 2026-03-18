@@ -12,14 +12,18 @@ export class Preloader extends Scene {
     super('Preloader')
   }
   init() {
-    this.add.image(0, 0, 'background').setOrigin(0, 0).setScale(1.2)
+    this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
     this.characterOutline = this.add.circle(200, 200, 100, myPlayer().getProfile().color.hex)
   }
   create() {
-    const nextButton = this.add.rectangle(600, 600, 100, 50, 0).setInteractive()
+    const nextButton = this.add.rectangle(950, 800, 100, 50, 0).setInteractive()
     characterNames.forEach((name, i) => {
       const button = this.add
-        .image(200 * (1 + i - 5 * Math.floor(i / 5)), 200 * (1 + Math.floor(i / 5)), name)
+        .image(
+          350 + 200 * (1 + i - 5 * Math.floor(i / 5)),
+          200 + 200 * (1 + Math.floor(i / 5)),
+          name
+        )
         .setScale(0.25)
         .setInteractive()
       button.on('pointerup', () => {
@@ -52,8 +56,8 @@ export class Preloader extends Scene {
     })
 
     this.characterOutline?.setPosition(
-      200 * (1 + this.selected - 5 * Math.floor(this.selected / 5)),
-      200 * (1 + Math.floor(this.selected / 5))
+      350 + 200 * (1 + this.selected - 5 * Math.floor(this.selected / 5)),
+      200 + 200 * (1 + Math.floor(this.selected / 5))
     )
 
     const picked: string[] = getState('picked')

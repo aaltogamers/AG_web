@@ -4,7 +4,6 @@ import {
   getState,
   isHost,
   myPlayer,
-  onPlayerJoin,
   PlayerState,
   resetPlayersStates,
   resetStates,
@@ -49,12 +48,12 @@ export class MainMenu extends Scene {
     if (!this.scene.systems.game.device.os.desktop) {
       this.add.rectangle(640, 460, 1280, 720, 0xd3d3d3)
     } else {
-      this.add.image(640, 500, 'background').setScale(0.8)
+      this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
     }
 
     this.playerStates.forEach((playerState, index) => {
       let character: string = playerState.getState('character')
-      const sprite = this.add.image(640, 360, character).setScale(0.1)
+      const sprite = this.add.image(960, 540, character).setScale(0.08)
       this.physics.add.existing(sprite, false)
 
       const body = sprite.body as Phaser.Physics.Arcade.Body

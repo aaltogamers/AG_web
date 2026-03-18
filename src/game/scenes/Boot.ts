@@ -8,7 +8,7 @@ export class Boot extends Scene {
     super('Boot')
   }
   preload() {
-    this.load.image('background', '/images/games/midlane2.png')
+    this.load.image('background', '/images/games/arena.png')
     characterNames.forEach((character) => {
       this.load.image(character, `/images/games/${character}.png`)
     })
