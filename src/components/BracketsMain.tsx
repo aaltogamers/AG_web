@@ -53,10 +53,10 @@ const defaultBracketStyles: BracketStyles = {
 
 const BracketsMain = () => {
   const [data, setData] = useState<BracketData[]>([])
-  const [teams, _setTeams] = useState<string[]>([...defaultTeams])
-  const [teamCount, _setTeamCount] = useState<4 | 8 | 16 | 32 | 64>(16)
-  const [bracketStyles, _setBracketStyles] = useState<BracketStyles>({ ...defaultBracketStyles })
-  const [bracketType, _setBracketType] = useState<BracketType>('double_elimination_to_top_4')
+  const [teams] = useState<string[]>([...defaultTeams])
+  const [teamCount] = useState<4 | 8 | 16 | 32 | 64>(16)
+  const [bracketStyles] = useState<BracketStyles>({ ...defaultBracketStyles })
+  const [bracketType] = useState<BracketType>('double_elimination_to_top_4')
 
   const isEditingMode: boolean = true
   const dataRef = useRef(data)
