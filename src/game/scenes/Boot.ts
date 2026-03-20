@@ -1,19 +1,35 @@
 import { Scene } from 'phaser'
 import { characterNames } from '../constants'
-import { getState, isHost, myPlayer, onPlayerJoin, PlayerState } from 'playroomkit'
+import {
+  getState,
+  isHost,
+  myPlayer,
+  onPlayerJoin,
+  PlayerState,
+  setState,
+  transferHost,
+} from 'playroomkit'
 
 export class Boot extends Scene {
-  currentHostID: string = ''
   constructor() {
     super('Boot')
   }
+  init() {
+    this.registry.set('players', [])
+    this.registry.set('spectators', [])
+  }
+
   preload() {
     this.load.image('background', '/images/games/arena.png')
     characterNames.forEach((character) => {
       this.load.image(character, `/images/games/${character}.png`)
     })
+    this.load.image('ezrealQ', '/images/games/ezrealq.png')
   }
   create() {
+    if (isHost()) {
+      setState('originalHostID', myPlayer().id)
+    }
     this.registry.set('players', [myPlayer()])
     onPlayerJoin((player) => {
       if (
@@ -22,28 +38,32 @@ export class Boot extends Scene {
           .find((storedPlayer: PlayerState) => storedPlayer.id == player.id)
       ) {
         this.registry.set('players', [...this.registry.get('players'), player])
+        if (isHost() && player.id == getState('originalHostID')) {
+          transferHost(player.id)
+        }
       }
       player.onQuit(() => {
-        this.registry.set(
-          'players',
-          this.registry
-            .get('players')
-            .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
-        )
-        if (isHost()) {
-          console.log(player.id)
+        if (player.getState('spectator')) {
           this.registry.set(
-            'alivePlayers',
-            this.registry
-              .get('alivePlayers')
-              .filter((alivePlayer: string) => alivePlayer != player.id)
+            'spectators',
+            this.registry.get('spectators').filter((storedPlayer) => storedPlayer.id != player.id)
           )
-          console.log(this.registry.get('alivePlayers'))
+        } else {
+          this.registry.set(
+            'players',
+            this.registry
+              .get('players')
+              .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
+          )
+          setState(
+            'alivePlayers',
+            getState('alivePlayers').filter((alivePlayerID: string) => alivePlayerID != player.id)
+          )
         }
       })
     })
-    if (getState('gameActive')) {
-      this.add.text(300, 300, 'game in progress ... \n please wait for the next round to start')
+    if (getState('gameActive') && myPlayer().id != getState('originalHostID')) {
+      this.add.text(750, 540, 'game in progress ... \n please wait for the next round to start')
     } else {
       this.scene.start('Preloader')
     }

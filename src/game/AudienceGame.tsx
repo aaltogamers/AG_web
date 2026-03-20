@@ -14,8 +14,8 @@ const StartGame = async () => {
     parent: 'game-container',
     scene: [Boot, Preloader, MainMenu],
     physics: {
-      default: 'arcade',
-      arcade: {
+      default: 'matter',
+      matter: {
         gravity: { x: 0, y: 0 },
       },
     },
@@ -23,7 +23,15 @@ const StartGame = async () => {
   return insertCoin({
     maxPlayersPerRoom: 20,
     defaultPlayerStates: { ready: false, joystick: { x: 0, y: 0, force: 0 } },
-    defaultStates: { alivePlayers: [], picked: [], gameActive: false, gameWon: false, winner: '' },
+    defaultStates: {
+      alivePlayers: [],
+      picked: [],
+      gameActive: false,
+      gameWon: false,
+      winner: '',
+      originalHostID: '',
+      spectators: [],
+    },
   }).then(() => new Phaser.Game(config))
 }
 

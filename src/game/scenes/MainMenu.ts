@@ -22,16 +22,32 @@ export class MainMenu extends Scene {
   joystick: nipplejs.JoystickManager | undefined = undefined
   playerStates: PlayerState[] = []
   players: {
-    sprite: Phaser.GameObjects.Image
+    sprite: Phaser.Physics.Matter.Image | Phaser.GameObjects.Image
     state: PlayerState
   }[] = []
-
+  hitboxes: Phaser.GameObjects.Rectangle[] = []
+  hitboxCords = [
+    { x: 660, y: 425, sx: 30, sy: 150, rot: 0.5 },
+    { x: 1143, y: 354, sx: 30, sy: 170, rot: -1 },
+    { x: 1238, y: 675, sx: 25, sy: 195, rot: 0.5 },
+    { x: 1168, y: 740, sx: 40, sy: 40, rot: -0.5 },
+    { x: 675, y: 710, sx: 30, sy: 160, rot: -0.6 },
+    { x: 845, y: 455, sx: 30, sy: 80, rot: 0.7 },
+    { x: 1040, y: 450, sx: 30, sy: 80, rot: -0.9 },
+    { x: 1040, y: 635, sx: 30, sy: 80, rot: 0.8 },
+    { x: 845, y: 635, sx: 30, sy: 80, rot: -0.8 },
+  ]
+  playerCollisionGroup: number = 0
+  projectileCollissionGroup: number = 0
   constructor() {
     super('MainMenu')
   }
+
   init() {
     this.joystick = nipplejs.create({})
     this.players = []
+    this.playerCollisionGroup = this.matter.world.nextCategory()
+    this.projectileCollissionGroup = this.matter.world.nextCategory()
   }
 
   create() {
@@ -48,27 +64,42 @@ export class MainMenu extends Scene {
     if (!this.scene.systems.game.device.os.desktop) {
       this.add.rectangle(640, 460, 1280, 720, 0xd3d3d3)
     } else {
+      this.hitboxes = this.hitboxCords.map((cords) => {
+        const rect = this.add
+          .rectangle(cords.x, cords.y, cords.sx, cords.sy, 0xff0000)
+          .setRotation(cords.rot)
+          .setOrigin(0, 0)
+          .setScale(1.25)
+        this.matter.add.gameObject(rect, {
+          isStatic: true,
+          angle: cords.rot,
+        })
+
+        return rect
+      })
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
     }
 
     this.playerStates.forEach((playerState, index) => {
-      let character: string = playerState.getState('character')
-      const sprite = this.add.image(960, 540, character).setScale(0.08)
-      this.physics.add.existing(sprite, false)
+      const character: string = playerState.getState('character')
 
-      const body = sprite.body as Phaser.Physics.Arcade.Body
-      body.setCollideWorldBounds(true)
-      this.physics.add.collider(
-        sprite,
-        this.players.map((a) => a.sprite)
-      )
+      const sprite = this.matter.add
+        .image(960, 540, character)
+        .setScale(0.08)
+        .setBounce(0)
+        .setFixedRotation()
+        .setCollisionCategory(this.playerCollisionGroup)
+        .setName(playerState.id)
+
+      sprite.setInteractive({
+        pixelPerfect: true,
+        alphaTolerance: 1,
+      })
 
       this.add.text(100, 20 * index, playerState.getProfile().name)
 
-      this.players.push({
-        sprite,
-        state: playerState,
-      })
+      this.players.push({ sprite, state: playerState })
+
       playerState.onQuit(() => {
         sprite.destroy()
         this.players = this.players.filter((p) => p.state !== playerState)
@@ -80,54 +111,69 @@ export class MainMenu extends Scene {
 
   update(time: number) {
     if (isHost()) {
-      const alivePlayers: string[] = this.registry.get('alivePlayers')
+      const alivePlayers: string[] = getState('alivePlayers')
+
       if (time % 4 == 0) {
         let vector = new Phaser.Math.Vector2()
         Phaser.Math.RandomXY(vector)
         let x, y
+
         if (vector.x > vector.y) {
           x = 0
-          y = Math.abs(vector.y) * 720
+          y = Math.abs(vector.y) * 1080
         } else {
-          x = Math.abs(vector.x) * 1280
+          x = Math.abs(vector.x) * 1920
           y = 0
         }
 
-        const rect = this.add.rectangle(x, y, 50, 50, 0)
-        this.physics.add.existing(rect, false)
-        rect.body.setVelocity(vector.x * 100, vector.y * 100)
+        const rect = this.matter.add
+          .image(x, y, 'ezrealQ')
+          .setRotation(vector.angle())
+          .setScale(0.5)
+          .setVelocity(vector.x * 3, vector.y * 3)
+          .setFixedRotation()
+          .setFriction(0)
+          .setFrictionAir(0)
+          .setCollisionCategory(this.projectileCollissionGroup)
+          .setCollidesWith([this.playerCollisionGroup])
+          .setSensor(true)
+          .setOnCollide((event) => {
+            const playerBody = event.bodyA.gameObject
+            const player = this.players.find((p) => p.sprite.name === playerBody.name)
 
-        this.players.forEach((player) => {
-          this.physics.add.overlap(rect, player.sprite, (_, playerSprite) => {
-            playerSprite.destroy()
+            if (!player) return
+
+            playerBody.destroy()
             player.state.setState('active', false)
+
             if (player.state.id == myPlayer().id) {
-              this.add.text(500, 500, 'you died')
+              this.add.text(750, 540, 'you died')
             }
-            this.registry.set(
+
+            setState(
               'alivePlayers',
-              this.registry
-                .get('alivePlayers')
-                .filter((alivePlayerID: string) => alivePlayerID != player.state.id)
+              getState('alivePlayers').filter(
+                (alivePlayerID: string) => alivePlayerID != player.state.id
+              )
             )
-            setState('alivePlayers', this.registry.get('alivePlayers'))
-            console.log(this.registry.get('alivePlayers'))
           })
-        })
       }
 
       for (const player of this.players) {
         if (player.sprite.active) {
-          const body = player.sprite.body as Phaser.Physics.Arcade.Body
-
           const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
-          body.setVelocity(200 * joystick.x * joystick.force, -200 * joystick.y * joystick.force)
+
+          player.sprite.setVelocity(
+            2 * joystick.x * joystick.force,
+            -2 * joystick.y * joystick.force
+          )
 
           player.state.setState('pos', {
-            x: body.x,
-            y: body.y,
+            x: player.sprite.x,
+            y: player.sprite.y,
           })
         }
+
         if (alivePlayers.length == 1) {
           setState('gameWon', true)
           setState('winner', alivePlayers[0])
@@ -144,11 +190,9 @@ export class MainMenu extends Scene {
         }
 
         const pos = player.state.getState('pos')
-        const body = player.sprite.body as Phaser.Physics.Arcade.Body
 
-        if (pos && body) {
-          body.x = pos.x
-          body.y = pos.y
+        if (pos && player.sprite.body) {
+          player.sprite.setPosition(pos.x, pos.y)
         }
       }
     }
@@ -157,9 +201,9 @@ export class MainMenu extends Scene {
       this.add.text(
         400,
         400,
-        this.playerStates.find((player) => player.id == getState('winner'))?.getProfile().name +
-          ' won'
+        this.playerStates.find((p) => p.id == getState('winner'))?.getProfile().name + ' won'
       )
+
       this.time.delayedCall(5000, () => {
         if (isHost()) {
           resetPlayersStates()
