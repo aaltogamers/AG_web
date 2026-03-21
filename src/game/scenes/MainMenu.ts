@@ -217,9 +217,11 @@ export class MainMenu extends Scene {
       this.projectiles.forEach((projectile, i) => {
         projectile.setPosition(projectilesPos[i].x, projectilesPos[i].y)
       })
-
+      const activePlayerIDs = getState('alivePlayers')
       for (const player of this.players) {
-        if (player.state.getState('active') == false) {
+        if (!activePlayerIDs.includes(player.state.id)) {
+          player.sprite.destroy()
+        } else if (player.state.getState('active') == false) {
           player.sprite.destroy(true)
           if (player.state.id == myPlayer().id) {
             this.joystick?.destroy()
@@ -242,10 +244,16 @@ export class MainMenu extends Scene {
         this.playerStates.find((p) => p.id == getState('winner'))?.getProfile().name + ' won'
       )
 
+      if (isHost()) {
+        this.time.delayedCall(4900, () => {
+          setState('gameActive', false)
+        })
+      }
+
       this.time.delayedCall(5000, () => {
         if (isHost()) {
-          resetPlayersStates()
-          resetStates()
+          resetPlayersStates(['spectator'])
+          resetStates(['originalHostID', 'spectators'])
         }
         this.joystick?.destroy()
         this.scene.stop('MainMenu')

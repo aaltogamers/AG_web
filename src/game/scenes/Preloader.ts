@@ -1,6 +1,14 @@
 import { Scene } from 'phaser'
 import { characterNames } from '../constants'
-import { getState, isHost, myPlayer, PlayerState, setState } from 'playroomkit'
+import {
+  getState,
+  isHost,
+  myPlayer,
+  PlayerState,
+  resetPlayersStates,
+  resetStates,
+  setState,
+} from 'playroomkit'
 
 export class Preloader extends Scene {
   selected: number = 1
@@ -21,6 +29,7 @@ export class Preloader extends Scene {
 
   init() {
     this.playerNames = []
+    this.spectatorNames = []
     this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
     this.characterOutline = this.add.circle(200, 200, 100, myPlayer().getProfile().color.hex)
   }
@@ -50,6 +59,11 @@ export class Preloader extends Scene {
       setState('picked', [...getState('picked'), characterNames[this.selected]])
       nextButton.setFillStyle(0x00ff00)
     })
+    if (myPlayer().getState('spectator')) {
+      nextButton.setVisible(false)
+      this.characterOutline?.setVisible(false)
+    }
+
     const specButton = this.add.container(1700, 100)
     specButton.add(
       this.add
