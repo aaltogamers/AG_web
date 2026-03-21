@@ -164,6 +164,7 @@ export class Preloader extends Scene {
         setState('gameWon', false)
         setState('gameActive', true)
         setState('picked', [])
+        setState('projectiles', [])
       }
     }
     if (getState('gameActive')) {

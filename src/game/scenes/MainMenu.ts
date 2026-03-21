@@ -37,8 +37,10 @@ export class MainMenu extends Scene {
     { x: 1040, y: 635, sx: 30, sy: 80, rot: 0.8 },
     { x: 845, y: 635, sx: 30, sy: 80, rot: -0.8 },
   ]
-  playerCollisionGroup: number = 0
-  projectileCollissionGroup: number = 0
+  outerEdgeHitBoxPoints: Phaser.Geom.Point[] = []
+  playerCollisionGroup: number = 2
+  projectileCollissionGroup: number = 4
+  projectiles: Phaser.Physics.Matter.Image[] = []
   constructor() {
     super('MainMenu')
   }
@@ -46,8 +48,7 @@ export class MainMenu extends Scene {
   init() {
     this.joystick = nipplejs.create({})
     this.players = []
-    this.playerCollisionGroup = this.matter.world.nextCategory()
-    this.projectileCollissionGroup = this.matter.world.nextCategory()
+    this.projectiles = []
   }
 
   create() {
@@ -76,6 +77,20 @@ export class MainMenu extends Scene {
         })
 
         return rect
+      })
+
+      new Phaser.Geom.Circle(930, 580, 500).getPoints(128, undefined, this.outerEdgeHitBoxPoints)
+      let lastPoint = this.outerEdgeHitBoxPoints[this.outerEdgeHitBoxPoints.length - 1]
+      this.outerEdgeHitBoxPoints.forEach((point) => {
+        const rot = Phaser.Math.Angle.Between(point.x, point.y, lastPoint.x, lastPoint.y)
+        const magnitude = Phaser.Math.Distance.Between(point.x, point.y, lastPoint.x, lastPoint.y)
+        const hitbox = this.add.rectangle(point.x, point.y, magnitude + 5, 60, 0).setRotation(rot)
+        this.matter.add.gameObject(hitbox, {
+          isStatic: true,
+          angle: rot,
+        })
+        this.hitboxes = [...this.hitboxes, hitbox]
+        lastPoint = point
       })
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
     }
@@ -157,17 +172,24 @@ export class MainMenu extends Scene {
               )
             )
           })
+
+        this.projectiles = [...this.projectiles, rect]
       }
+      setState(
+        'projectiles',
+        this.projectiles.map((projectile) => {
+          return { rot: projectile.rotation, x: projectile.x, y: projectile.y }
+        })
+      )
 
       for (const player of this.players) {
         if (player.sprite.active) {
           const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
 
           player.sprite.setVelocity(
-            2 * joystick.x * joystick.force,
-            -2 * joystick.y * joystick.force
+            Phaser.Math.Clamp(2 * joystick.x * joystick.force, -15, 15),
+            Phaser.Math.Clamp(-2 * joystick.y * joystick.force, -15, 15)
           )
-
           player.state.setState('pos', {
             x: player.sprite.x,
             y: player.sprite.y,
@@ -180,6 +202,22 @@ export class MainMenu extends Scene {
         }
       }
     } else {
+      const projectilesPos = getState('projectiles')
+
+      if (projectilesPos.length > this.projectiles.length) {
+        const projectile = projectilesPos[projectilesPos.length - 1]
+        const projectileObject = this.matter.add
+          .image(projectile.x, projectile.y, 'ezrealQ')
+          .setRotation(projectile.rot)
+          .setScale(0.5)
+          .setFixedRotation()
+        this.projectiles = [...this.projectiles, projectileObject]
+      }
+
+      this.projectiles.forEach((projectile, i) => {
+        projectile.setPosition(projectilesPos[i].x, projectilesPos[i].y)
+      })
+
       for (const player of this.players) {
         if (player.state.getState('active') == false) {
           player.sprite.destroy(true)

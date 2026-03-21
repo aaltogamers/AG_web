@@ -31,6 +31,7 @@ const StartGame = async () => {
       winner: '',
       originalHostID: '',
       spectators: [],
+      projectiles: [],
     },
   }).then(() => new Phaser.Game(config))
 }
