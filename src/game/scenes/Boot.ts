@@ -21,11 +21,11 @@ export class Boot extends Scene {
   }
 
   preload() {
-    this.load.image('background', '/images/games/arena.png')
+    this.load.image('background', '/images/games/arena.webp')
     characterNames.forEach((character) => {
-      this.load.image(character, `/images/games/${character}.png`)
+      this.load.image(character, `/images/games/${character}.webp`)
     })
-    this.load.image('ezrealQ', '/images/games/ezrealq.png')
+    this.load.image('ezrealQ', '/images/games/ezrealq.webp')
   }
   create() {
     if (isHost()) {
