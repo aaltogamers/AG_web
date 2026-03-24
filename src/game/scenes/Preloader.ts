@@ -182,7 +182,7 @@ export class Preloader extends Scene {
           const index = characterNames.findIndex((name) => name == champ)
           if (this.selected == index && !myPlayer().getState('ready')) {
             while (picked.includes(characterNames[this.selected])) {
-              this.selected >= 1 ? (this.selected -= 1) : (this.selected = 9)
+              this.selected = this.selected >= 1 ? this.selected - 1 : 9
             }
           }
           this.add.circle(this.getButtonX(index), this.getButtonY(index), 100, 0xff0000).setDepth(1)

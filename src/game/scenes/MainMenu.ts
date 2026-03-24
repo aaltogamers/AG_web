@@ -130,7 +130,7 @@ export class MainMenu extends Scene {
       const alivePlayers: string[] = getState('alivePlayers')
 
       if (time % 4 == 0) {
-        let vector = new Phaser.Math.Vector2()
+        const vector = new Phaser.Math.Vector2()
         Phaser.Math.RandomXY(vector)
         let x, y
         const angle = vector.angle()

@@ -6,7 +6,7 @@ const AudienceGame = dynamic(() => import('../game/AudienceGame'), { ssr: false 
 
 const OSMAudienceGame = () => {
   const phaserRef = useRef<IRefPhaserGame | null>(null)
-  const currentScene = (scene: Phaser.Scene) => {}
+  const currentScene = () => {}
 
   return (
     <div
