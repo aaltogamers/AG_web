@@ -9,6 +9,8 @@ import { insertCoin } from 'playroomkit'
 const StartGame = async () => {
   const config = {
     type: Phaser.AUTO,
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
     width: 1920,
     height: 1080,
     parent: 'game-container',

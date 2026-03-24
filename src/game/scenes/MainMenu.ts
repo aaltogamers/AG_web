@@ -22,7 +22,7 @@ export class MainMenu extends Scene {
   joystick: nipplejs.JoystickManager | undefined = undefined
   playerStates: PlayerState[] = []
   players: {
-    sprite: Phaser.Physics.Matter.Image | Phaser.GameObjects.Image
+    sprite: Phaser.Physics.Matter.Image
     state: PlayerState
   }[] = []
   hitboxes: Phaser.GameObjects.Rectangle[] = []
@@ -41,6 +41,7 @@ export class MainMenu extends Scene {
   playerCollisionGroup: number = 2
   projectileCollissionGroup: number = 4
   projectiles: Phaser.Physics.Matter.Image[] = []
+  edgeCircle: Phaser.Geom.Circle | undefined = undefined
   constructor() {
     super('MainMenu')
   }
@@ -54,16 +55,16 @@ export class MainMenu extends Scene {
   create() {
     this.playerStates = this.registry.get('players')
 
-    this.joystick.on('move', (_, data) => {
+    this.joystick?.on('move', (_, data) => {
       const angle = radToXY(data.angle.radian)
       myPlayer().setState('joystick', { ...angle, force: data.force })
     })
-    this.joystick.on('end', () => {
+    this.joystick?.on('end', () => {
       myPlayer().setState('joystick', { x: 0, y: 0, force: 0 })
     })
 
     if (!this.scene.systems.game.device.os.desktop) {
-      this.add.rectangle(640, 460, 1280, 720, 0xd3d3d3)
+      this.add.rectangle(0, 0, 1920, 1080, 0xd3d3d3).setOrigin(0, 0)
     } else {
       this.hitboxes = this.hitboxCords.map((cords) => {
         const rect = this.add
@@ -79,7 +80,8 @@ export class MainMenu extends Scene {
         return rect
       })
 
-      new Phaser.Geom.Circle(930, 580, 500).getPoints(128, undefined, this.outerEdgeHitBoxPoints)
+      this.edgeCircle = new Phaser.Geom.Circle(930, 580, 500)
+      this.edgeCircle.getPoints(128, undefined, this.outerEdgeHitBoxPoints)
       let lastPoint = this.outerEdgeHitBoxPoints[this.outerEdgeHitBoxPoints.length - 1]
       this.outerEdgeHitBoxPoints.forEach((point) => {
         const rot = Phaser.Math.Angle.Between(point.x, point.y, lastPoint.x, lastPoint.y)
@@ -93,34 +95,33 @@ export class MainMenu extends Scene {
         lastPoint = point
       })
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
+
+      this.playerStates.forEach((playerState, index) => {
+        const character: string = playerState.getState('character')
+
+        const sprite = this.matter.add
+          .image(960, 540, character)
+          .setScale(0.08)
+          .setBounce(0)
+          .setFixedRotation()
+          .setCollisionCategory(this.playerCollisionGroup)
+          .setName(playerState.id)
+
+        sprite.setInteractive({
+          pixelPerfect: true,
+          alphaTolerance: 1,
+        })
+
+        this.add.text(100, 20 * index, playerState.getProfile().name)
+
+        this.players.push({ sprite, state: playerState })
+
+        playerState.onQuit(() => {
+          sprite.destroy()
+          this.players = this.players.filter((p) => p.state !== playerState)
+        })
+      })
     }
-
-    this.playerStates.forEach((playerState, index) => {
-      const character: string = playerState.getState('character')
-
-      const sprite = this.matter.add
-        .image(960, 540, character)
-        .setScale(0.08)
-        .setBounce(0)
-        .setFixedRotation()
-        .setCollisionCategory(this.playerCollisionGroup)
-        .setName(playerState.id)
-
-      sprite.setInteractive({
-        pixelPerfect: true,
-        alphaTolerance: 1,
-      })
-
-      this.add.text(100, 20 * index, playerState.getProfile().name)
-
-      this.players.push({ sprite, state: playerState })
-
-      playerState.onQuit(() => {
-        sprite.destroy()
-        this.players = this.players.filter((p) => p.state !== playerState)
-      })
-    })
-
     EventBus.emit('current-scene-ready', this)
   }
 
@@ -132,15 +133,23 @@ export class MainMenu extends Scene {
         let vector = new Phaser.Math.Vector2()
         Phaser.Math.RandomXY(vector)
         let x, y
-
-        if (vector.x > vector.y) {
+        const angle = vector.angle()
+        if (angle < 1.57) {
           x = 0
+          y = 1080 - Math.abs(vector.y) * 1080
+        } else if (angle < 3.14) {
+          x = 400 + Math.abs(vector.x) * 1000
+          y = 0
+        } else if (angle < 4.712) {
+          x = 1920
           y = Math.abs(vector.y) * 1080
         } else {
-          x = Math.abs(vector.x) * 1920
-          y = 0
+          x = 1400 - Math.abs(vector.x) * 1000
+          y = 1080
         }
-
+        const closest = this.edgeCircle?.getPoint(vector.angle() / 6.2831)
+        if (!closest) return
+        vector.setAngle(Phaser.Math.Angle.Between(x, y, closest.x, closest.y))
         const rect = this.matter.add
           .image(x, y, 'ezrealQ')
           .setRotation(vector.angle())
@@ -152,8 +161,10 @@ export class MainMenu extends Scene {
           .setCollisionCategory(this.projectileCollissionGroup)
           .setCollidesWith([this.playerCollisionGroup])
           .setSensor(true)
-          .setOnCollide((event) => {
+          .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
             const playerBody = event.bodyA.gameObject
+            if (!playerBody) return
+
             const player = this.players.find((p) => p.sprite.name === playerBody.name)
 
             if (!player) return
@@ -201,7 +212,7 @@ export class MainMenu extends Scene {
           setState('winner', alivePlayers[0])
         }
       }
-    } else {
+    } else if (this.registry.get('isDesktop')) {
       const projectilesPos = getState('projectiles')
 
       if (projectilesPos.length > this.projectiles.length) {

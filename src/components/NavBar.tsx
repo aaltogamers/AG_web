@@ -31,7 +31,6 @@ const NavBar = () => {
     { name: 'Partners', link: '/partners' },
     { name: 'Gallery', link: '/gallery' },
     { name: 'Join', link: '/join' },
-    { name: 'game', link: '/osmaudiencegame' },
   ]
 
   return (
