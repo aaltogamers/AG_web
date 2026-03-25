@@ -40,7 +40,7 @@ export class MainMenu extends Scene {
   outerEdgeHitBoxPoints: Phaser.Geom.Point[] = []
   playerCollisionGroup: number = 2
   projectileCollissionGroup: number = 4
-  projectiles: Phaser.Physics.Matter.Image[] = []
+  projectiles: { gameObject: Phaser.Physics.Matter.Image; type: string }[] = []
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
   constructor() {
     super('MainMenu')
@@ -62,6 +62,20 @@ export class MainMenu extends Scene {
     this.joystick?.on('end', () => {
       myPlayer().setState('joystick', { x: 0, y: 0, force: 0 })
     })
+
+    if (isHost() && getState('ezSpawnTime') == 4) {
+      this.time.delayedCall(10000, () => {
+        setState('ezSpawnTime', 3)
+      })
+      this.time.delayedCall(20000, () => {
+        setState('ezSpawnTime', 2)
+        setState('ezUltSpawnTime', 6)
+      })
+      this.time.delayedCall(40000, () => {
+        setState('ezSpawnTime', 1)
+        setState('ezUltSpawnTime', 3)
+      })
+    }
 
     if (!this.scene.systems.game.device.os.desktop) {
       this.add.rectangle(0, 0, 1920, 1080, 0xd3d3d3).setOrigin(0, 0)
@@ -125,71 +139,85 @@ export class MainMenu extends Scene {
     EventBus.emit('current-scene-ready', this)
   }
 
+  spawnProjectile(type: string) {
+    const vector = new Phaser.Math.Vector2()
+    Phaser.Math.RandomXY(vector)
+    let x, y
+    const angle = vector.angle()
+    if (angle < 1.57) {
+      x = 0
+      y = Math.abs(vector.y) * 1080
+    } else if (angle < 3.14) {
+      x = Math.abs(vector.x) * 1000
+      y = 0
+    } else if (angle < 4.712) {
+      x = 1920
+      y = Math.abs(vector.y) * 1080
+    } else {
+      x = Math.abs(vector.x) * 1000
+      y = 1080
+    }
+    const randomPoint = this.edgeCircle?.getRandomPoint()
+    if (!randomPoint) return
+    vector.setAngle(Phaser.Math.Angle.Between(x, y, randomPoint.x, randomPoint.y))
+    const rect = this.matter.add
+      .image(x, y, type)
+      .setRotation(vector.angle())
+      .setScale(0.5)
+      .setVelocity(vector.x * 3, vector.y * 3)
+      .setFixedRotation()
+      .setFriction(0)
+      .setFrictionAir(0)
+      .setCollisionCategory(this.projectileCollissionGroup)
+      .setCollidesWith([this.playerCollisionGroup])
+      .setSensor(true)
+      .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
+        const playerBody = event.bodyA.gameObject
+        if (!playerBody) return
+
+        const player = this.players.find((p) => p.sprite.name === playerBody.name)
+
+        if (!player) return
+
+        playerBody.destroy()
+        player.state.setState('active', false)
+
+        if (player.state.id == myPlayer().id) {
+          this.add.text(750, 540, 'you died')
+        }
+
+        setState(
+          'alivePlayers',
+          getState('alivePlayers').filter(
+            (alivePlayerID: string) => alivePlayerID != player.state.id
+          )
+        )
+      })
+
+    this.projectiles = [...this.projectiles, { gameObject: rect, type: type }]
+    console.log(this.projectiles)
+  }
+
   update(time: number) {
     if (isHost()) {
       const alivePlayers: string[] = getState('alivePlayers')
-
-      if (time % 4 == 0) {
-        const vector = new Phaser.Math.Vector2()
-        Phaser.Math.RandomXY(vector)
-        let x, y
-        const angle = vector.angle()
-        if (angle < 1.57) {
-          x = 0
-          y = 1080 - Math.abs(vector.y) * 1080
-        } else if (angle < 3.14) {
-          x = 400 + Math.abs(vector.x) * 1000
-          y = 0
-        } else if (angle < 4.712) {
-          x = 1920
-          y = Math.abs(vector.y) * 1080
-        } else {
-          x = 1400 - Math.abs(vector.x) * 1000
-          y = 1080
-        }
-        const closest = this.edgeCircle?.getPoint(vector.angle() / 6.2831)
-        if (!closest) return
-        vector.setAngle(Phaser.Math.Angle.Between(x, y, closest.x, closest.y))
-        const rect = this.matter.add
-          .image(x, y, 'ezrealQ')
-          .setRotation(vector.angle())
-          .setScale(0.5)
-          .setVelocity(vector.x * 3, vector.y * 3)
-          .setFixedRotation()
-          .setFriction(0)
-          .setFrictionAir(0)
-          .setCollisionCategory(this.projectileCollissionGroup)
-          .setCollidesWith([this.playerCollisionGroup])
-          .setSensor(true)
-          .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
-            const playerBody = event.bodyA.gameObject
-            if (!playerBody) return
-
-            const player = this.players.find((p) => p.sprite.name === playerBody.name)
-
-            if (!player) return
-
-            playerBody.destroy()
-            player.state.setState('active', false)
-
-            if (player.state.id == myPlayer().id) {
-              this.add.text(750, 540, 'you died')
-            }
-
-            setState(
-              'alivePlayers',
-              getState('alivePlayers').filter(
-                (alivePlayerID: string) => alivePlayerID != player.state.id
-              )
-            )
-          })
-
-        this.projectiles = [...this.projectiles, rect]
+      const ezSpawnTime: number = getState('ezSpawnTime')
+      const ezUltSpawnTime = getState('ezUltSpawnTime')
+      if (time % ezSpawnTime == 0) {
+        this.spawnProjectile('ezrealQ')
+      }
+      if (time % ezUltSpawnTime == 0) {
+        this.spawnProjectile('ezrealUlt')
       }
       setState(
         'projectiles',
         this.projectiles.map((projectile) => {
-          return { rot: projectile.rotation, x: projectile.x, y: projectile.y }
+          return {
+            rot: projectile.gameObject.rotation,
+            x: projectile.gameObject.x,
+            y: projectile.gameObject.y,
+            type: projectile.type,
+          }
         })
       )
 
@@ -214,19 +242,24 @@ export class MainMenu extends Scene {
       }
     } else if (this.registry.get('isDesktop')) {
       const projectilesPos = getState('projectiles')
-
-      if (projectilesPos.length > this.projectiles.length) {
-        const projectile = projectilesPos[projectilesPos.length - 1]
-        const projectileObject = this.matter.add
-          .image(projectile.x, projectile.y, 'ezrealQ')
-          .setRotation(projectile.rot)
-          .setScale(0.5)
-          .setFixedRotation()
-        this.projectiles = [...this.projectiles, projectileObject]
+      const range = projectilesPos.length - this.projectiles.length
+      if (range > 0) {
+        const projectiles = projectilesPos.slice(projectilesPos.length - range)
+        projectiles.forEach((projectile: { rot: number; x: number; y: number; type: string }) => {
+          const projectileObject = this.matter.add
+            .image(projectile.x, projectile.y, projectile.type)
+            .setRotation(projectile.rot)
+            .setScale(0.5)
+            .setFixedRotation()
+          this.projectiles = [
+            ...this.projectiles,
+            { gameObject: projectileObject, type: projectile.type },
+          ]
+        })
       }
 
       this.projectiles.forEach((projectile, i) => {
-        projectile.setPosition(projectilesPos[i].x, projectilesPos[i].y)
+        projectile.gameObject.setPosition(projectilesPos[i].x, projectilesPos[i].y)
       })
       const activePlayerIDs = getState('alivePlayers')
       for (const player of this.players) {

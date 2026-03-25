@@ -26,6 +26,7 @@ export class Boot extends Scene {
       this.load.image(character, `/images/games/${character}.webp`)
     })
     this.load.image('ezrealQ', '/images/games/ezrealq.webp')
+    this.load.image('ezrealUlt', '/images/games/ezrealUlt.webp')
   }
   create() {
     if (isHost()) {

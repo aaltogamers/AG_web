@@ -34,6 +34,7 @@ const StartGame = async () => {
       originalHostID: '',
       spectators: [],
       projectiles: [],
+      ezSpawnTime: 4,
     },
   }).then(() => new Phaser.Game(config))
 }
