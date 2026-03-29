@@ -27,6 +27,10 @@ export class Boot extends Scene {
     })
     this.load.image('ezrealQ', '/images/games/ezrealq.webp')
     this.load.image('ezrealUlt', '/images/games/ezrealUlt.webp')
+    this.load.image('lockInButtonActive', '/images/games/LockInButtonActive.webp')
+    this.load.image('lockInButtonInactive', '/images/games/LockInButtonInactive.webp')
+    this.load.image('pickBackground', '/images/games/pickBackground.webp')
+    this.load.image('touchIcon', '/images/games/touchIcon.webp')
   }
   create() {
     if (isHost()) {

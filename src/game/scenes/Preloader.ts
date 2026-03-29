@@ -10,7 +10,7 @@ export class Preloader extends Scene {
   playerNames: Phaser.GameObjects.Text[] = []
   spectatorNames: Phaser.GameObjects.Text[] = []
   specButton: Phaser.GameObjects.Container | null = null
-  readyButton: Phaser.GameObjects.Rectangle | null = null
+  readyButton: Phaser.GameObjects.Image | null = null
 
   constructor() {
     super('Preloader')
@@ -33,8 +33,11 @@ export class Preloader extends Scene {
     this.spectatorNames = []
     if (this.registry.get('isDesktop')) {
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
+      this.add.image(0, 0, 'pickBackground').setOrigin(0, 0)
     } else {
       this.add.rectangle(0, 0, 1920, 1080, 0xd3d3d3).setOrigin(0, 0)
+      this.add.image(400, -50, 'background').setOrigin(0, 0).setScale(1.25)
+      this.add.image(640, 0, 'pickBackground').setOrigin(0, 0).setScale(0.7, 1)
     }
     this.characterOutline = this.add.circle(
       200,
@@ -61,22 +64,24 @@ export class Preloader extends Scene {
       this.characterButtons.push(button)
     })
     if (this.registry.get('isDesktop')) {
-      this.readyButton = this.add.rectangle(950, 800, 100, 50, 0).setInteractive()
+      this.add.image(950, 950, 'lockInButtonInactive')
+      this.readyButton = this.add.image(950, 950, 'lockInButtonActive').setInteractive()
     } else {
-      this.readyButton = this.add.rectangle(1300, 1000, 100, 50, 0).setInteractive()
+      this.add.image(1300, 1000, 'lockInButtonInactive')
+      this.readyButton = this.add.image(1300, 1000, 'lockInButtonActive').setInteractive()
     }
 
     this.readyButton.on('pointerup', () => {
       myPlayer().setState('character', characterNames[this.selected])
       myPlayer().setState('ready', true)
       setState('picked', [...getState('picked'), characterNames[this.selected]])
-      this.readyButton?.setFillStyle(0x00ff00)
+      this.readyButton?.setVisible(false)
     })
     if (myPlayer().getState('spectator')) {
       this.readyButton?.setVisible(false)
       this.characterOutline?.setVisible(false)
     }
-    this.specButton = this.add.container(1700, 100)
+    this.specButton = this.add.container(600, 20)
     this.specButton.add(
       this.add
         .rectangle(0, 0, 160, 30, 0)
@@ -98,73 +103,78 @@ export class Preloader extends Scene {
         .text(-70, -6, `${myPlayer().getState('spectator') ? 'leave' : 'join'} specators`)
         .setName('specButtonText')
     )
+
+    this.add.text(10, 0, 'Players: ')
+    this.add.text(200, 0, 'Spectators: ')
   }
 
   update() {
     const players: PlayerState[] = this.registry.get('players') || []
 
-    if (this.playerNames.length > players.length) {
-      this.playerNames.forEach((name) => name.destroy())
-      this.playerNames = []
-    }
-    let offset = 0
-
-    players.forEach((player, index) => {
-      const isSpectator = player.getState('spectator')
-      const playerName = player?.getProfile()?.name
-      const playerText = this.playerNames.find((name) => name.text == playerName)
-      if (isSpectator) {
-        this.registry.set('spectators', [...this.registry.get('spectators'), player])
-        this.registry.set(
-          'players',
-          this.registry
-            .get('players')
-            .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
-        )
+    if (this.registry.get('isDesktop')) {
+      if (this.playerNames.length > players.length) {
         this.playerNames.forEach((name) => name.destroy())
         this.playerNames = []
-        offset += 1
-      } else if (!playerText) {
-        {
-          this.specButton
-            ?.getByName<Phaser.GameObjects.Text>('specButtonText')
-            .setText(`${myPlayer().getState('spectator') ? 'leave' : 'join'} specators`)
-          const nameText = this.add.text(300, 20 * (index - offset), playerName)
-          this.playerNames = [...this.playerNames, nameText]
-        }
       }
-    })
-    offset = 0
-    const spectators: PlayerState[] = this.registry.get('spectators') || []
-    if (this.spectatorNames.length > spectators.length) {
-      this.spectatorNames.forEach((name) => name.destroy())
-      this.spectatorNames = []
-    }
-    spectators.forEach((player, index) => {
-      const isSpectator = player.getState('spectator')
-      const playerName = player?.getProfile()?.name
-      const spectatorText = this.spectatorNames.find((name) => name.text == playerName)
-      if (!isSpectator) {
-        this.registry.set('players', [...this.registry.get('players'), player])
-        this.registry.set(
-          'spectators',
-          this.registry
-            .get('spectators')
-            .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
-        )
+      let offset = 0
+
+      players.forEach((player, index) => {
+        const isSpectator = player.getState('spectator')
+        const playerName = player?.getProfile()?.name
+        const playerText = this.playerNames.find((name) => name.text == playerName)
+        if (isSpectator) {
+          this.registry.set('spectators', [...this.registry.get('spectators'), player])
+          this.registry.set(
+            'players',
+            this.registry
+              .get('players')
+              .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
+          )
+          this.playerNames.forEach((name) => name.destroy())
+          this.playerNames = []
+          offset += 1
+        } else if (!playerText) {
+          {
+            this.specButton
+              ?.getByName<Phaser.GameObjects.Text>('specButtonText')
+              .setText(`${myPlayer().getState('spectator') ? 'leave' : 'join'} specators`)
+            const nameText = this.add.text(100, 20 * (index - offset), playerName)
+            this.playerNames = [...this.playerNames, nameText]
+          }
+        }
+      })
+      offset = 0
+      const spectators: PlayerState[] = this.registry.get('spectators') || []
+      if (this.spectatorNames.length > spectators.length) {
         this.spectatorNames.forEach((name) => name.destroy())
         this.spectatorNames = []
-        offset += 1
-      } else if (!spectatorText) {
-        {
-          this.specButton
-            ?.getByName<Phaser.GameObjects.Text>('specButtonText')
-            .setText(`${myPlayer().getState('spectator') ? 'leave' : 'join'} specators`)
-          const nameText = this.add.text(1000, 20 * (index - offset), playerName)
-          this.spectatorNames = [...this.spectatorNames, nameText]
-        }
       }
-    })
+      spectators.forEach((player, index) => {
+        const isSpectator = player.getState('spectator')
+        const playerName = player?.getProfile()?.name
+        const spectatorText = this.spectatorNames.find((name) => name.text == playerName)
+        if (!isSpectator) {
+          this.registry.set('players', [...this.registry.get('players'), player])
+          this.registry.set(
+            'spectators',
+            this.registry
+              .get('spectators')
+              .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
+          )
+          this.spectatorNames.forEach((name) => name.destroy())
+          this.spectatorNames = []
+          offset += 1
+        } else if (!spectatorText) {
+          {
+            this.specButton
+              ?.getByName<Phaser.GameObjects.Text>('specButtonText')
+              .setText(`${myPlayer().getState('spectator') ? 'leave' : 'join'} specators`)
+            const nameText = this.add.text(320, 20 * (index - offset), playerName)
+            this.spectatorNames = [...this.spectatorNames, nameText]
+          }
+        }
+      })
+    }
 
     this.characterOutline?.setPosition(
       this.getButtonX(this.selected),
@@ -185,7 +195,14 @@ export class Preloader extends Scene {
               this.selected = this.selected >= 1 ? this.selected - 1 : 9
             }
           }
-          this.add.circle(this.getButtonX(index), this.getButtonY(index), 100, 0xff0000).setDepth(1)
+          this.add
+            .circle(
+              this.getButtonX(index),
+              this.getButtonY(index),
+              100,
+              this.selected == index ? 0x008000 : 0xff0000
+            )
+            .setDepth(1)
         }
       })
     }

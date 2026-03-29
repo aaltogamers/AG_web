@@ -78,7 +78,8 @@ export class MainMenu extends Scene {
     }
 
     if (!this.scene.systems.game.device.os.desktop) {
-      this.add.rectangle(0, 0, 1920, 1080, 0xd3d3d3).setOrigin(0, 0)
+      this.add.rectangle(0, 0, 1920, 1080, 0x2b2b2b).setOrigin(0, 0)
+      this.add.image(1300, 500, 'touchIcon').setScale(0.5)
     } else {
       this.hitboxes = this.hitboxCords.map((cords) => {
         const rect = this.add
@@ -110,7 +111,7 @@ export class MainMenu extends Scene {
       })
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
 
-      this.playerStates.forEach((playerState, index) => {
+      this.playerStates.forEach((playerState) => {
         const character: string = playerState.getState('character')
 
         const sprite = this.matter.add
@@ -125,8 +126,6 @@ export class MainMenu extends Scene {
           pixelPerfect: true,
           alphaTolerance: 1,
         })
-
-        this.add.text(100, 20 * index, playerState.getProfile().name)
 
         this.players.push({ sprite, state: playerState })
 
