@@ -9,12 +9,7 @@ image: /images/osm-2026.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: Aalto Gamers Discord & Twitch, Live Finals at Design Factory, Otaniemi
-description: >-
-  **⚔️ Prove your resolve! Aalto Gamers proudly presents: the League of Legends
-  Finnish Student Championship (OSM) 2026!  ⚔️**
-
-
-  Read More at [osm.aaltogamers.fi](osm.aaltogamers.fi)!
+description: "**Read More at [osm.aaltogamers.fi](osm.aaltogamers.fi)!**"
 tldr: >-
   ### WHEN?
 
