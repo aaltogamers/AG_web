@@ -5,7 +5,7 @@ otherTimes:
   - time: 2026-05-16T12:00:00
     name: AG League of Legends OSM Qualifiers
 durationHours: 8
-image: /images/ag-white.png
+image: /images/osm-2026.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: Aalto Gamers Discord & Twitch, Live Finals at Design Factory, Otaniemi
