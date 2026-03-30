@@ -9,37 +9,27 @@ image: /images/osm-2026.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
 location: Aalto Gamers Discord & Twitch, Live Finals at Design Factory, Otaniemi
-description: "**Read More at [osm.aaltogamers.fi](osm.aaltogamers.fi)!**"
-tldr: >-
+description: "**Read More at [osm.aaltogamers.fi](https://osm.aaltogamers.fi)!**"
+tldr: |-
   ### WHEN?
 
-
   Q﻿ualifiers - 16.05.
-
   Finals - 23.05.
-
 
   ### WHERE?
 
-
   Q﻿ualifiers Online[](https://m.twitch.tv/aaltogamers)
-
   F﻿inals LIVE @ Design Factory, Puumiehenkuja 5a, Espoo
 
-
-  (Both streamed @ [twitch.tv/aaltogamers)](https://aaltogamers.fi/events/league-of-legends-osm-2025)
-
+  (Both streamed @ [twitch.tv/aaltogamers)](https://twitch.tv/aaltogamers)
 
   ### TEAM SIGN-UP
 
-
   TBA[](https://m.twitch.tv/aaltogamers)
 
-
   ### FINALS TICKETS
-
 
   TBA[](https://m.twitch.tv/aaltogamers)
 recordings: []
 ---
-**All info & rules at: [osm.aaltogamers.fi](osm.aaltogamers.fi)**
+**All info & rules at: [osm.aaltogamers.fi](https://osm.aaltogamers.fi)**
