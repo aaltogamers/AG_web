@@ -35,7 +35,8 @@ export class Preloader extends Scene {
     const qrDataURL = await QRCode.toDataURL(url)
     this.textures.addBase64('qr', qrDataURL)
     this.textures.once('onload', () => {
-      this.qrCode = this.add.image(960, 500, 'qr').setVisible(false).setDepth(20).setScale(4)
+      const { x, y } = this.registry.get('isDesktop') ? { x: 960, y: 500 } : { x: 1300, y: 500 }
+      this.qrCode = this.add.image(x, y, 'qr').setVisible(false).setDepth(20).setScale(4)
     })
   }
 
