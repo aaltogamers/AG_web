@@ -213,7 +213,7 @@ export class MainMenu extends Scene {
     if (isHost()) {
       const alivePlayers: string[] = getState('alivePlayers')
       const roundedDelta = Math.round(delta)
-      let points = getState('points') + roundedDelta
+      const points = getState('points') + roundedDelta
 
       setState('points', points)
 
@@ -309,7 +309,7 @@ export class MainMenu extends Scene {
         }
       }
       const roundedDelta = Math.round(delta)
-      let points = getState('points') + roundedDelta
+      const points = getState('points') + roundedDelta
       this.pointText?.setText(`Points: ${points}`)
     }
 
