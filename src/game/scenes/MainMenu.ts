@@ -65,7 +65,7 @@ export class MainMenu extends Scene {
       myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
     })
 
-    if (!this.scene.systems.game.device.os.desktop) {
+    if (!this.registry.get('isDesktop')) {
       this.add.rectangle(0, 0, 1920, 1080, 0x2b2b2b).setOrigin(0, 0)
       this.add.image(1300, 500, 'touchIcon').setScale(0.5)
     } else {
