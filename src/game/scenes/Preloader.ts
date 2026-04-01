@@ -1,7 +1,6 @@
 import { Scene } from 'phaser'
 import { characterNames } from '../constants'
 import { getRoomCode, getState, isHost, myPlayer, PlayerState, setState } from 'playroomkit'
-import QRCode from 'qrcode'
 
 export class Preloader extends Scene {
   selected: number = 1
@@ -30,16 +29,6 @@ export class Preloader extends Scene {
     return 200 + 200 * (1 + Math.floor(index / 5))
   }
 
-  async createRoomQR() {
-    const url = window.location.href
-    const qrDataURL = await QRCode.toDataURL(url)
-    this.textures.addBase64('qr', qrDataURL)
-    this.textures.once('onload', () => {
-      const { x, y } = this.registry.get('isDesktop') ? { x: 960, y: 500 } : { x: 1300, y: 500 }
-      this.qrCode = this.add.image(x, y, 'qr').setVisible(false).setDepth(20).setScale(4)
-    })
-  }
-
   init() {
     this.playerNames = []
     this.spectatorNames = []
@@ -57,7 +46,9 @@ export class Preloader extends Scene {
       100,
       myPlayer()?.getState('profile')?.color?.hex || 0x9f2b68
     )
-    this.createRoomQR()
+    const { x, y } = this.registry.get('isDesktop') ? { x: 960, y: 500 } : { x: 1300, y: 500 }
+
+    this.qrCode = this.add.image(x, y, 'qr').setVisible(false).setDepth(20).setScale(4)
   }
   create() {
     characterNames.forEach((name, i) => {
@@ -206,15 +197,17 @@ export class Preloader extends Scene {
             this.specButton
               ?.getByName<Phaser.GameObjects.Text>('specButtonText')
               .setText(`${myPlayer()?.getState('spectator') ? 'leave' : 'join'} specators`)
-            const nameText = this.add.text(
-              10,
-              25 + 20 * (index - offset),
-              `${playerName} - ${player.getState('points')}`,
-              {
-                fontFamily: 'goldman',
-                fontSize: 18,
-              }
-            )
+            const nameText = this.add
+              .text(
+                10,
+                25 + 20 * (index - offset),
+                `${playerName} - ${player.getState('points')}`,
+                {
+                  fontFamily: 'goldman',
+                  fontSize: 18,
+                }
+              )
+              .setDepth(5)
             this.playerNames = [...this.playerNames, nameText]
           }
         }
@@ -245,10 +238,12 @@ export class Preloader extends Scene {
             this.specButton
               ?.getByName<Phaser.GameObjects.Text>('specButtonText')
               .setText(`${myPlayer()?.getState('spectator') ? 'leave' : 'join'} specators`)
-            const nameText = this.add.text(10, 525 + 20 * (index - offset), playerName, {
-              fontFamily: 'goldman',
-              fontSize: 18,
-            })
+            const nameText = this.add
+              .text(10, 525 + 20 * (index - offset), playerName, {
+                fontFamily: 'goldman',
+                fontSize: 18,
+              })
+              .setDepth(5)
             this.spectatorNames = [...this.spectatorNames, nameText]
           }
         }

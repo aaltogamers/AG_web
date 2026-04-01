@@ -10,10 +10,17 @@ import {
   transferHost,
   waitForPlayerState,
 } from 'playroomkit'
+import QRCode from 'qrcode'
 
 export class Boot extends Scene {
   myID = myPlayer().id
   i = 0
+  async createRoomQR() {
+    const url = window.location.href
+    const qrDataURL = await QRCode.toDataURL(url)
+    this.textures.addBase64('qr', qrDataURL)
+  }
+
   constructor() {
     super('Boot')
   }
@@ -50,6 +57,7 @@ export class Boot extends Scene {
 
     this.load.image(files.images)
     this.load.audio(files.audio)
+    this.createRoomQR()
   }
   create() {
     if (isHost()) {

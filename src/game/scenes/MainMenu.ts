@@ -40,9 +40,10 @@ export class MainMenu extends Scene {
   outerEdgeHitBoxPoints: Phaser.Geom.Point[] = []
   playerCollisionGroup: number = 2
   projectileCollissionGroup: number = 4
-  projectiles: { gameObject: Phaser.Physics.Matter.Image; type: string }[] = []
+  projectiles: Phaser.Physics.Matter.Image[] = []
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
   pointText: Phaser.GameObjects.Text | undefined = undefined
+  scaler: Phaser.Time.TimerEvent | undefined = undefined
   constructor() {
     super('MainMenu')
   }
@@ -131,7 +132,7 @@ export class MainMenu extends Scene {
       })
     }
     if (isHost()) {
-      this.time.addEvent({
+      this.scaler = this.time.addEvent({
         delay: 10000,
         callback: () => {
           const ezTime = Math.max(1, getState('ezSpawnTime') * 0.9)
@@ -205,8 +206,9 @@ export class MainMenu extends Scene {
           )
         )
       })
+      .setName(type)
 
-    this.projectiles = [...this.projectiles, { gameObject: rect, type: type }]
+    this.projectiles.push(rect)
   }
 
   update(_: number, delta: number) {
@@ -217,17 +219,7 @@ export class MainMenu extends Scene {
 
       setState('points', points)
 
-      setState(
-        'projectiles',
-        this.projectiles.map((projectile) => {
-          return {
-            rot: projectile.gameObject.rotation,
-            x: projectile.gameObject.x,
-            y: projectile.gameObject.y,
-            type: projectile.type,
-          }
-        })
-      )
+      setState('projectiles', this.projectiles)
       for (const player of this.players) {
         if (player.sprite.active) {
           const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
@@ -268,23 +260,21 @@ export class MainMenu extends Scene {
       const projectilesPos = getState('projectiles')
       const range = projectilesPos.length - this.projectiles.length
       if (projectilesPos.length > 0) {
-        this.projectiles.forEach((projectile, i) => {
-          projectile.gameObject.setPosition(projectilesPos[i].x, projectilesPos[i].y)
-        })
+        for (let i = 0; i < this.projectiles.length; i++) {
+          this.projectiles[i].setPosition(projectilesPos[i].x, projectilesPos[i].y)
+        }
       }
+
       if (range > 0) {
-        const projectiles = projectilesPos.slice(projectilesPos.length - range)
-        projectiles.forEach((projectile: { rot: number; x: number; y: number; type: string }) => {
+        const projectilesToBeAdded = projectilesPos.slice(projectilesPos.length - range)
+        for (const projectile of projectilesToBeAdded) {
           const projectileObject = this.matter.add
-            .image(projectile.x, projectile.y, projectile.type)
-            .setRotation(projectile.rot)
+            .image(projectile.x, projectile.y, projectile.name)
+            .setRotation(projectile.rotation)
             .setScale(0.5)
             .setFixedRotation()
-          this.projectiles = [
-            ...this.projectiles,
-            { gameObject: projectileObject, type: projectile.type },
-          ]
-        })
+          this.projectiles.push(projectileObject)
+        }
       }
 
       const activePlayerIDs = getState('alivePlayers')
@@ -308,8 +298,7 @@ export class MainMenu extends Scene {
           player.sprite.setPosition(pos.x, pos.y)
         }
       }
-      const roundedDelta = Math.round(delta)
-      const points = getState('points') + roundedDelta
+      const points = getState('points')
       this.pointText?.setText(`Points: ${points}`)
     }
 
@@ -337,12 +326,22 @@ export class MainMenu extends Scene {
       this.time.delayedCall(5000, () => {
         if (isHost()) {
           resetPlayersStates(['spectator', 'points', 'name'])
-          resetStates(['originalHostID', 'spectators'])
+          resetStates([
+            ...this.playerStates.map((p) => p.id),
+            ...this.registry.get('spectators').map((p: PlayerState) => p.id),
+            'originalHostID',
+            'spectators',
+          ])
+          this.scaler?.remove()
         }
         this.sound.stopAll()
         this.joystick?.destroy()
         this.scene.stop('MainMenu')
         this.scene.start('Preloader')
+        this.projectiles.forEach((p) => p.destroy(true))
+        this.hitboxes.forEach((p) => p.destroy(true))
+
+        this.projectiles = []
       })
     }
   }
