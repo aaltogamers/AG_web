@@ -1,30 +1,35 @@
 ---
 name: League of Legends OSM 2026
-time: ""
+time: 2026-05-23T12:00:00
 otherTimes:
-  - name: AG League of Legends OSM Finals
-    time: 2026-05-23T12:00:00
   - time: 2026-05-16T12:00:00
     name: AG League of Legends OSM Qualifiers
 durationHours: 8
-image: /images/ag-white.png
+image: /images/osm-2026.jpg
 visibleOnCalendar: true
-visibleOnEventsPage: false
+visibleOnEventsPage: true
 location: Aalto Gamers Discord & Twitch, Live Finals at Design Factory, Otaniemi
-description: TBD
-tldr: |-2
-   ### WHEN?
-   XX-XX on XX
+description: "**Read More at [osm.aaltogamers.fi](https://osm.aaltogamers.fi)!**"
+tldr: |-
+  ### WHEN?
 
-   ### WHERE?
-   XX
+  Q﻿ualifiers - 16.05.
+  Finals - 23.05.
 
-   ### WHY?
-   To Win XX, to have fun with friends, etc.
+  ### WHERE?
 
-   ### SIGN-UP
-   LINK
-   Open from XX to XX 
+  Q﻿ualifiers Online[](https://m.twitch.tv/aaltogamers)
+  F﻿inals LIVE @ Design Factory, Puumiehenkuja 5a, Espoo
+
+  (Both streamed @ [twitch.tv/aaltogamers)](https://twitch.tv/aaltogamers)
+
+  ### TEAM SIGN-UP
+
+  TBA[](https://m.twitch.tv/aaltogamers)
+
+  ### FINALS TICKETS
+
+  TBA[](https://m.twitch.tv/aaltogamers)
 recordings: []
 ---
-TBD
+**All info & rules at: [osm.aaltogamers.fi](https://osm.aaltogamers.fi)**
