@@ -42,6 +42,7 @@ export class MainMenu extends Scene {
   projectileCollissionGroup: number = 4
   projectiles: { gameObject: Phaser.Physics.Matter.Image; type: string }[] = []
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
+  pointText: Phaser.GameObjects.Text | undefined = undefined
   constructor() {
     super('MainMenu')
   }
@@ -57,30 +58,20 @@ export class MainMenu extends Scene {
 
     this.joystick?.on('move', (_, data) => {
       const angle = radToXY(data.angle.radian)
-      myPlayer().setState('joystick', { ...angle, force: data.force })
+      myPlayer()?.setState('joystick', { ...angle, force: data.force })
     })
     this.joystick?.on('end', () => {
-      myPlayer().setState('joystick', { x: 0, y: 0, force: 0 })
+      myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
     })
-
-    if (isHost() && getState('ezSpawnTime') == 4) {
-      this.time.delayedCall(10000, () => {
-        setState('ezSpawnTime', 3)
-      })
-      this.time.delayedCall(20000, () => {
-        setState('ezSpawnTime', 2)
-        setState('ezUltSpawnTime', 6)
-      })
-      this.time.delayedCall(40000, () => {
-        setState('ezSpawnTime', 1)
-        setState('ezUltSpawnTime', 3)
-      })
-    }
 
     if (!this.scene.systems.game.device.os.desktop) {
       this.add.rectangle(0, 0, 1920, 1080, 0x2b2b2b).setOrigin(0, 0)
       this.add.image(1300, 500, 'touchIcon').setScale(0.5)
     } else {
+      this.sound.play('inGame', {
+        loop: true,
+        volume: 0.05,
+      })
       this.hitboxes = this.hitboxCords.map((cords) => {
         const rect = this.add
           .rectangle(cords.x, cords.y, cords.sx, cords.sy, 0xff0000)
@@ -134,7 +125,25 @@ export class MainMenu extends Scene {
           this.players = this.players.filter((p) => p.state !== playerState)
         })
       })
+      this.pointText = this.add.text(1650, 10, 'Points: 0', {
+        fontFamily: 'goldman',
+        fontSize: 30,
+      })
     }
+    if (isHost()) {
+      this.time.addEvent({
+        delay: 10000,
+        callback: () => {
+          const ezTime = Math.max(1, getState('ezSpawnTime') * 0.9)
+          const ezUltTime = Math.max(1, getState('ezUltSpawnTime') * 0.9)
+
+          setState('ezSpawnTime', ezTime)
+          setState('ezUltSpawnTime', ezUltTime)
+        },
+        loop: true,
+      })
+    }
+
     EventBus.emit('current-scene-ready', this)
   }
 
@@ -180,9 +189,13 @@ export class MainMenu extends Scene {
 
         playerBody.destroy()
         player.state.setState('active', false)
+        player.state.setState('points', getState('points'))
 
-        if (player.state.id == myPlayer().id) {
-          this.add.text(750, 540, 'you died')
+        if (player.state.id == myPlayer()?.id) {
+          this.add.text(800, 200, `You Died with \n  ${myPlayer()?.getState('points')} points`, {
+            fontFamily: 'goldman',
+            fontSize: 40,
+          })
         }
 
         setState(
@@ -194,20 +207,16 @@ export class MainMenu extends Scene {
       })
 
     this.projectiles = [...this.projectiles, { gameObject: rect, type: type }]
-    console.log(this.projectiles)
   }
 
-  update(time: number) {
+  update(_: number, delta: number) {
     if (isHost()) {
       const alivePlayers: string[] = getState('alivePlayers')
-      const ezSpawnTime: number = getState('ezSpawnTime')
-      const ezUltSpawnTime = getState('ezUltSpawnTime')
-      if (time % ezSpawnTime == 0) {
-        this.spawnProjectile('ezrealQ')
-      }
-      if (time % ezUltSpawnTime == 0) {
-        this.spawnProjectile('ezrealUlt')
-      }
+      const roundedDelta = Math.round(delta)
+      let points = getState('points') + roundedDelta
+
+      setState('points', points)
+
       setState(
         'projectiles',
         this.projectiles.map((projectile) => {
@@ -219,7 +228,6 @@ export class MainMenu extends Scene {
           }
         })
       )
-
       for (const player of this.players) {
         if (player.sprite.active) {
           const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
@@ -234,14 +242,36 @@ export class MainMenu extends Scene {
           })
         }
 
-        if (alivePlayers.length == 1) {
-          setState('gameWon', true)
+        if (alivePlayers.length == 1 && !getState('gameWon')) {
           setState('winner', alivePlayers[0])
+        } else if (alivePlayers.length <= 0 && !getState('gameWon')) {
+          setState('gameWon', true)
         }
       }
+
+      const ezrealQAccumulator = getState('ezAccumulator')
+      const ezrealUltAccumulator = getState('ezUltAccumulator')
+      setState('ezAccumulator', ezrealQAccumulator - roundedDelta)
+      setState('ezUltAccumulator', ezrealUltAccumulator - roundedDelta)
+
+      if (ezrealQAccumulator <= 0) {
+        this.spawnProjectile('ezrealQ')
+        setState('ezAccumulator', getState('ezSpawnTime'))
+      }
+      if (ezrealUltAccumulator <= 0) {
+        this.spawnProjectile('ezrealUlt')
+        setState('ezUltAccumulator', getState('ezUltSpawnTime'))
+      }
+
+      this.pointText?.setText(`Points: ${points}`)
     } else if (this.registry.get('isDesktop')) {
       const projectilesPos = getState('projectiles')
       const range = projectilesPos.length - this.projectiles.length
+      if (projectilesPos.length > 0) {
+        this.projectiles.forEach((projectile, i) => {
+          projectile.gameObject.setPosition(projectilesPos[i].x, projectilesPos[i].y)
+        })
+      }
       if (range > 0) {
         const projectiles = projectilesPos.slice(projectilesPos.length - range)
         projectiles.forEach((projectile: { rot: number; x: number; y: number; type: string }) => {
@@ -257,18 +287,18 @@ export class MainMenu extends Scene {
         })
       }
 
-      this.projectiles.forEach((projectile, i) => {
-        projectile.gameObject.setPosition(projectilesPos[i].x, projectilesPos[i].y)
-      })
       const activePlayerIDs = getState('alivePlayers')
       for (const player of this.players) {
         if (!activePlayerIDs.includes(player.state.id)) {
           player.sprite.destroy()
         } else if (player.state.getState('active') == false) {
           player.sprite.destroy(true)
-          if (player.state.id == myPlayer().id) {
+          if (player.state.id == myPlayer()?.id) {
             this.joystick?.destroy()
-            this.add.text(500, 500, 'you died')
+            this.add.text(800, 200, `You Died with \n  ${myPlayer()?.getState('points')} points`, {
+              fontFamily: 'goldman',
+              fontSize: 40,
+            })
           }
         }
 
@@ -278,14 +308,25 @@ export class MainMenu extends Scene {
           player.sprite.setPosition(pos.x, pos.y)
         }
       }
+      const roundedDelta = Math.round(delta)
+      let points = getState('points') + roundedDelta
+      this.pointText?.setText(`Points: ${points}`)
     }
 
     if (getState('gameWon')) {
-      this.add.text(
-        400,
-        400,
-        this.playerStates.find((p) => p.id == getState('winner'))?.getProfile().name + ' won'
-      )
+      if (this.registry.get('isDesktop')) {
+        const id = getState('winner')
+        const winner = this.playerStates.find((p) => p.id == id)
+        this.add.text(
+          750,
+          480,
+          winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
+          {
+            fontFamily: 'goldman',
+            fontSize: 50,
+          }
+        )
+      }
 
       if (isHost()) {
         this.time.delayedCall(4900, () => {
@@ -295,9 +336,10 @@ export class MainMenu extends Scene {
 
       this.time.delayedCall(5000, () => {
         if (isHost()) {
-          resetPlayersStates(['spectator'])
+          resetPlayersStates(['spectator', 'points', 'name'])
           resetStates(['originalHostID', 'spectators'])
         }
+        this.sound.stopAll()
         this.joystick?.destroy()
         this.scene.stop('MainMenu')
         this.scene.start('Preloader')

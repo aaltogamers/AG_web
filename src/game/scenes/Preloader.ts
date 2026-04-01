@@ -1,6 +1,7 @@
 import { Scene } from 'phaser'
 import { characterNames } from '../constants'
-import { getState, isHost, myPlayer, PlayerState, setState } from 'playroomkit'
+import { getRoomCode, getState, isHost, myPlayer, PlayerState, setState } from 'playroomkit'
+import QRCode from 'qrcode'
 
 export class Preloader extends Scene {
   selected: number = 1
@@ -11,6 +12,7 @@ export class Preloader extends Scene {
   spectatorNames: Phaser.GameObjects.Text[] = []
   specButton: Phaser.GameObjects.Container | null = null
   readyButton: Phaser.GameObjects.Image | null = null
+  qrCode: Phaser.GameObjects.Image | null = null
 
   constructor() {
     super('Preloader')
@@ -26,6 +28,15 @@ export class Preloader extends Scene {
       return 50 + 200 * (1 + Math.floor(index / 3))
     }
     return 200 + 200 * (1 + Math.floor(index / 5))
+  }
+
+  async createRoomQR() {
+    const url = window.location.href
+    const qrDataURL = await QRCode.toDataURL(url)
+    this.textures.addBase64('qr', qrDataURL)
+    this.textures.once('onload', () => {
+      this.qrCode = this.add.image(960, 500, 'qr').setVisible(false).setDepth(20).setScale(4)
+    })
   }
 
   init() {
@@ -45,6 +56,7 @@ export class Preloader extends Scene {
       100,
       myPlayer()?.getState('profile')?.color?.hex || 0x9f2b68
     )
+    this.createRoomQR()
   }
   create() {
     characterNames.forEach((name, i) => {
@@ -54,7 +66,7 @@ export class Preloader extends Scene {
         .setInteractive()
       button.on('pointerup', () => {
         if (
-          !myPlayer().getState('ready') &&
+          !myPlayer()?.getState('ready') &&
           !getState('picked').find((pickedname: string) => pickedname == name)
         ) {
           this.selected = i
@@ -64,6 +76,10 @@ export class Preloader extends Scene {
       this.characterButtons.push(button)
     })
     if (this.registry.get('isDesktop')) {
+      this.sound.play('champSelect', {
+        loop: true,
+        volume: 0.3,
+      })
       this.add.image(950, 950, 'lockInButtonInactive')
       this.readyButton = this.add.image(950, 950, 'lockInButtonActive').setInteractive()
     } else {
@@ -71,28 +87,69 @@ export class Preloader extends Scene {
       this.readyButton = this.add.image(1300, 1000, 'lockInButtonActive').setInteractive()
     }
 
+    this.add.text(1700, 10, 'Room code: ' + getRoomCode(), {
+      fontFamily: 'goldman',
+      fontSize: 20,
+    })
+
+    this.add.container(1700, 40).add([
+      this.add
+        .rectangle(0, 0, 170, 30, 0)
+        .setOrigin(0, 0)
+        .setInteractive()
+        .on('pointerup', () => {
+          setState(myPlayer()?.id, undefined)
+          myPlayer()?.leaveRoom()
+          this.game.destroy(true)
+        }),
+      this.add.text(30, 5, 'leave room', {
+        fontFamily: 'goldman',
+        fontSize: 20,
+      }),
+    ])
+
+    const qrButton = this.add.container(1700, 80).add([
+      this.add
+        .rectangle(0, 0, 170, 30, 0)
+        .setOrigin(0, 0)
+        .setInteractive()
+        .on('pointerup', () => {
+          this.qrCode?.setVisible(!this.qrCode.visible)
+          qrButton
+            .getByName<Phaser.GameObjects.Text>('buttonText')
+            .setText(this.qrCode?.visible ? 'hide room qr' : 'show room qr')
+        }),
+      this.add
+        .text(85, 15, 'show room qr', {
+          fontFamily: 'goldman',
+          fontSize: 20,
+        })
+        .setName('buttonText')
+        .setOrigin(0.5, 0.5),
+    ])
+
     this.readyButton.on('pointerup', () => {
-      myPlayer().setState('character', characterNames[this.selected])
-      myPlayer().setState('ready', true)
+      myPlayer()?.setState('character', characterNames[this.selected])
+      myPlayer()?.setState('ready', true)
       setState('picked', [...getState('picked'), characterNames[this.selected]])
       this.readyButton?.setVisible(false)
     })
-    if (myPlayer().getState('spectator')) {
+    if (myPlayer()?.getState('spectator')) {
       this.readyButton?.setVisible(false)
       this.characterOutline?.setVisible(false)
     }
-    this.specButton = this.add.container(600, 20)
+    this.specButton = this.add.container(90, 470)
     this.specButton.add(
       this.add
         .rectangle(0, 0, 160, 30, 0)
         .setInteractive()
         .on('pointerup', () => {
-          if (!myPlayer().getState('spectator')) {
-            myPlayer().setState('spectator', true)
+          if (!myPlayer()?.getState('spectator')) {
+            myPlayer()?.setState('spectator', true)
             this.readyButton?.setVisible(false)
             this.characterOutline?.setVisible(false)
           } else {
-            myPlayer().setState('spectator', false)
+            myPlayer()?.setState('spectator', false)
             this.readyButton?.setVisible(true)
             this.characterOutline?.setVisible(true)
           }
@@ -100,12 +157,22 @@ export class Preloader extends Scene {
     )
     this.specButton.add(
       this.add
-        .text(-70, -6, `${myPlayer().getState('spectator') ? 'leave' : 'join'} specators`)
+        .text(0, 0, `${myPlayer()?.getState('spectator') ? 'leave' : 'join'} specators`, {
+          fontFamily: 'goldman',
+          fontSize: 18,
+        })
         .setName('specButtonText')
+        .setOrigin(0.5, 0.5)
     )
 
-    this.add.text(10, 0, 'Players: ')
-    this.add.text(200, 0, 'Spectators: ')
+    this.add.text(10, 0, 'Players: ', {
+      fontFamily: 'goldman',
+      fontSize: 20,
+    })
+    this.add.text(10, 500, 'Spectators: ', {
+      fontFamily: 'goldman',
+      fontSize: 20,
+    })
   }
 
   update() {
@@ -120,7 +187,7 @@ export class Preloader extends Scene {
 
       players.forEach((player, index) => {
         const isSpectator = player.getState('spectator')
-        const playerName = player?.getProfile()?.name
+        const playerName = player?.getState('name')
         const playerText = this.playerNames.find((name) => name.text == playerName)
         if (isSpectator) {
           this.registry.set('spectators', [...this.registry.get('spectators'), player])
@@ -137,8 +204,16 @@ export class Preloader extends Scene {
           {
             this.specButton
               ?.getByName<Phaser.GameObjects.Text>('specButtonText')
-              .setText(`${myPlayer().getState('spectator') ? 'leave' : 'join'} specators`)
-            const nameText = this.add.text(100, 20 * (index - offset), playerName)
+              .setText(`${myPlayer()?.getState('spectator') ? 'leave' : 'join'} specators`)
+            const nameText = this.add.text(
+              10,
+              25 + 20 * (index - offset),
+              `${playerName} - ${player.getState('points')}`,
+              {
+                fontFamily: 'goldman',
+                fontSize: 18,
+              }
+            )
             this.playerNames = [...this.playerNames, nameText]
           }
         }
@@ -151,7 +226,7 @@ export class Preloader extends Scene {
       }
       spectators.forEach((player, index) => {
         const isSpectator = player.getState('spectator')
-        const playerName = player?.getProfile()?.name
+        const playerName = player?.getState('name')
         const spectatorText = this.spectatorNames.find((name) => name.text == playerName)
         if (!isSpectator) {
           this.registry.set('players', [...this.registry.get('players'), player])
@@ -168,8 +243,11 @@ export class Preloader extends Scene {
           {
             this.specButton
               ?.getByName<Phaser.GameObjects.Text>('specButtonText')
-              .setText(`${myPlayer().getState('spectator') ? 'leave' : 'join'} specators`)
-            const nameText = this.add.text(320, 20 * (index - offset), playerName)
+              .setText(`${myPlayer()?.getState('spectator') ? 'leave' : 'join'} specators`)
+            const nameText = this.add.text(10, 525 + 20 * (index - offset), playerName, {
+              fontFamily: 'goldman',
+              fontSize: 18,
+            })
             this.spectatorNames = [...this.spectatorNames, nameText]
           }
         }
@@ -227,6 +305,7 @@ export class Preloader extends Scene {
       }
     }
     if (getState('gameActive')) {
+      this.sound.stopAll()
       this.scene.start('MainMenu')
     }
   }

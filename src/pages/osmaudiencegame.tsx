@@ -1,24 +1,13 @@
-import { IRefPhaserGame } from '../game/AudienceGame'
-import { useRef } from 'react'
+'use client'
+
 import dynamic from 'next/dynamic'
 
 const AudienceGame = dynamic(() => import('../game/AudienceGame'), { ssr: false })
 
 const OSMAudienceGame = () => {
-  const phaserRef = useRef<IRefPhaserGame | null>(null)
-  const currentScene = () => {}
-
   return (
-    <div
-      style={{
-        width: '100vw',
-        display: 'flex',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
-      <AudienceGame ref={phaserRef} currentActiveScene={currentScene} />
+    <div>
+      <AudienceGame />
     </div>
   )
 }
