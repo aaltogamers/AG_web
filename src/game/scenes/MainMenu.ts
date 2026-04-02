@@ -44,6 +44,8 @@ export class MainMenu extends Scene {
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
   pointText: Phaser.GameObjects.Text | undefined = undefined
   scaler: Phaser.Time.TimerEvent | undefined = undefined
+  smallAbilities: string[] = []
+  bigAbilities: string[] = []
   constructor() {
     super('MainMenu')
   }
@@ -52,19 +54,30 @@ export class MainMenu extends Scene {
     this.joystick = nipplejs.create({})
     this.players = []
     this.projectiles = []
+    this.smallAbilities = this.registry.get('smallAbilities')
+    this.bigAbilities = this.registry.get('bigAbilities')
   }
 
   create() {
     this.playerStates = this.registry.get('players')
 
-    this.joystick?.on('move', (_, data) => {
-      const angle = radToXY(data.angle.radian)
-      myPlayer()?.setState('joystick', { ...angle, force: data.force })
-    })
-    this.joystick?.on('end', () => {
-      myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
-    })
-
+    if (myPlayer().getState('spectator')) {
+      this.joystick?.destroy()
+      this.add
+        .text(10, 10, 'spectating', {
+          fontFamily: 'goldman',
+          fontSize: 30,
+        })
+        .setDepth(10)
+    } else {
+      this.joystick?.on('move', (_, data) => {
+        const angle = radToXY(data.angle.radian)
+        myPlayer()?.setState('joystick', { ...angle, force: data.force })
+      })
+      this.joystick?.on('end', () => {
+        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
+      })
+    }
     if (!this.registry.get('isDesktop')) {
       this.add.rectangle(0, 0, 1920, 1080, 0x2b2b2b).setOrigin(0, 0)
       this.add.image(1300, 500, 'touchIcon').setScale(0.5)
@@ -135,11 +148,11 @@ export class MainMenu extends Scene {
       this.scaler = this.time.addEvent({
         delay: 10000,
         callback: () => {
-          const ezTime = Math.max(1, getState('ezSpawnTime') * 0.9)
-          const ezUltTime = Math.max(1, getState('ezUltSpawnTime') * 0.9)
+          const smallTime = Math.max(1, getState('smallSpell') * 0.8)
+          const bigTime = Math.max(1, getState('bigSpell') * 0.8)
 
-          setState('ezSpawnTime', ezTime)
-          setState('ezUltSpawnTime', ezUltTime)
+          setState('smallSpell', smallTime)
+          setState('BigSpell', bigTime)
         },
         loop: true,
       })
@@ -207,7 +220,6 @@ export class MainMenu extends Scene {
         )
       })
       .setName(type)
-
     this.projectiles.push(rect)
   }
 
@@ -241,18 +253,20 @@ export class MainMenu extends Scene {
         }
       }
 
-      const ezrealQAccumulator = getState('ezAccumulator')
-      const ezrealUltAccumulator = getState('ezUltAccumulator')
-      setState('ezAccumulator', ezrealQAccumulator - roundedDelta)
-      setState('ezUltAccumulator', ezrealUltAccumulator - roundedDelta)
+      const smallAccumulator = getState('smallAccumulator')
+      const bigAccumulator = getState('bigAccumulator')
+      setState('smallAccumulator', smallAccumulator - roundedDelta)
+      setState('bigAccumulator', bigAccumulator - roundedDelta)
 
-      if (ezrealQAccumulator <= 0) {
-        this.spawnProjectile('ezrealQ')
-        setState('ezAccumulator', getState('ezSpawnTime'))
+      if (smallAccumulator <= 0) {
+        const i = Phaser.Math.RND.between(0, this.smallAbilities.length - 1)
+        this.spawnProjectile(this.smallAbilities[i])
+        setState('smallAccumulator', getState('smallSpell'))
       }
-      if (ezrealUltAccumulator <= 0) {
-        this.spawnProjectile('ezrealUlt')
-        setState('ezUltAccumulator', getState('ezUltSpawnTime'))
+      if (bigAccumulator <= 0) {
+        const i = Phaser.Math.RND.between(0, this.bigAbilities.length - 1)
+        this.spawnProjectile(this.bigAbilities[i])
+        setState('bigAccumulator', getState('bigSpell'))
       }
 
       this.pointText?.setText(`Points: ${points}`)
@@ -273,6 +287,9 @@ export class MainMenu extends Scene {
             .setRotation(projectile.rotation)
             .setScale(0.5)
             .setFixedRotation()
+            .setCollisionCategory(this.projectileCollissionGroup)
+            .setCollidesWith([this.playerCollisionGroup])
+            .setSensor(true)
           this.projectiles.push(projectileObject)
         }
       }
@@ -306,15 +323,18 @@ export class MainMenu extends Scene {
       if (this.registry.get('isDesktop')) {
         const id = getState('winner')
         const winner = this.playerStates.find((p) => p.id == id)
-        this.add.text(
-          750,
-          480,
-          winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
-          {
-            fontFamily: 'goldman',
-            fontSize: 50,
-          }
-        )
+        this.add
+          .text(
+            960,
+            540,
+            winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
+            {
+              fontFamily: 'goldman',
+              fontSize: 100,
+              align: 'center',
+            }
+          )
+          .setOrigin(0.5, 0.5)
       }
 
       if (isHost()) {

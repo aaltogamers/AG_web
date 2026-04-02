@@ -5,7 +5,15 @@ import { Boot } from './scenes/Boot'
 import { Preloader } from './scenes/Preloader'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { MainMenu } from './scenes/MainMenu'
-import { getRoomCode, getState, insertCoin, myPlayer, onDisconnect, setState } from 'playroomkit'
+import {
+  getRoomCode,
+  getState,
+  insertCoin,
+  myPlayer,
+  onDisconnect,
+  setState,
+  usePlayersList,
+} from 'playroomkit'
 import { useParams } from 'next/navigation'
 import Layout from '../components/Layout'
 
@@ -30,22 +38,24 @@ const startGame = () => {
 
 const AudienceGame = () => {
   const [roomcode, setRoomcode] = useState('')
+  const [connected, setConnected] = useState(false)
   const [name, setName] = useState('')
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const commonMargins = 'mt-1 mb-1'
 
+  const players = usePlayersList()
   const params = useParams()
 
   const tryJoin = async (skipCheck?: boolean) => {
     if (!skipCheck) {
-      if (getRoomCode() && getRoomCode() != roomcode) {
-        myPlayer().leaveRoom()
-      } else if (getRoomCode() && name != '') {
+      if (getRoomCode() == roomcode && name != '') {
         myPlayer().setState('name', name)
         setState(myPlayer().id, name)
         setReady(true)
         setError(null)
+        setConnected(false)
+
         return
       }
       if (name == '') {
@@ -73,10 +83,10 @@ const AudienceGame = () => {
         originalHostID: '',
         spectators: [],
         projectiles: [],
-        ezSpawnTime: 500,
-        ezUltSpawnTime: 2500,
-        ezAccumulator: 0,
-        ezUltAccumulator: 10000,
+        smallSpell: 500,
+        bigSpell: 2500,
+        smallAccumulator: 0,
+        bigAccumulator: 10000,
         points: 0,
         winPoints: 0,
       },
@@ -86,14 +96,19 @@ const AudienceGame = () => {
           myPlayer().setState('name', getState(myPlayer().id))
           setReady(true)
           setError(null)
+          setConnected(false)
         } else if (name != '') {
           myPlayer().setState('name', name)
           setState(myPlayer().id, name)
           setReady(true)
           setError(null)
+          setConnected(false)
+        } else {
+          setConnected(true)
         }
         onDisconnect(() => {
           setReady(false)
+          setConnected(false)
         })
       })
       .catch((e) => {
@@ -133,10 +148,23 @@ const AudienceGame = () => {
                 {error}
               </div>
             )}
-            <div className={`text-1xl font-medium  ${commonMargins}`}>Room code</div>
+            {connected ? (
+              <div className={`text-1xl font-medium text-green-600 ${commonMargins} flex flex-col`}>
+                Connected to room {getRoomCode()} ({players.length}/14 in room)
+                <button
+                  className={`text-1xl font-medium rounded-md bg-gray-700/70 px-1 mx-1 ${commonMargins} `}
+                  onClick={() => myPlayer().leaveRoom()}
+                >
+                  Disconnect
+                </button>
+              </div>
+            ) : (
+              <div className={`text-1xl font-medium  ${commonMargins}`}>Room code</div>
+            )}
             <input
+              disabled={connected}
               type="text"
-              className={`p-2 rounded-md ${commonMargins} w-70 bg-white`}
+              className={`p-2 rounded-md ${commonMargins} w-70 ${connected ? 'bg-gray-400' : 'bg-white '}`}
               value={roomcode}
               onChange={(e) => setRoomcode(e.target.value.toUpperCase())}
               placeholder="Room code"

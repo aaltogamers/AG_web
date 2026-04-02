@@ -43,6 +43,9 @@ export class Boot extends Scene {
         { key: 'lockInButtonInactive', url: '/images/games/LockInButtonInactive.webp' },
         { key: 'pickBackground', url: '/images/games/pickBackground.webp' },
         { key: 'touchIcon', url: '/images/games/touchIcon.webp' },
+        { key: 'corkiRocket', url: '/images/games/corkiRocket.webp' },
+        { key: 'jinxUlt', url: '/images/games/jinxUlt.webp' },
+        { key: 'luxQ', url: '/images/games/luxQ.webp' },
       ],
       audio: [
         { key: 'champSelect', url: '/music/champSelect.webm' },
@@ -58,6 +61,8 @@ export class Boot extends Scene {
     this.load.image(files.images)
     this.load.audio(files.audio)
     this.createRoomQR()
+    this.registry.set('smallAbilities', ['ezrealQ', 'corkiRocket', 'luxQ'])
+    this.registry.set('bigAbilities', ['ezrealUlt', 'jinxUlt'])
   }
   create() {
     if (isHost()) {
