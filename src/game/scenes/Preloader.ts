@@ -6,7 +6,7 @@ export class Preloader extends Scene {
   selected: number = 1
   pickedChamps: string[] = []
   characterButtons: Phaser.GameObjects.Image[] = []
-  characterOutline: Phaser.GameObjects.Arc | null = null
+  characterOutline: Phaser.GameObjects.Image | null = null
   playerNames: Phaser.GameObjects.Text[] = []
   spectatorNames: Phaser.GameObjects.Text[] = []
   specButton: Phaser.GameObjects.Container | null = null
@@ -30,6 +30,7 @@ export class Preloader extends Scene {
   }
 
   init() {
+    this.characterButtons = []
     this.playerNames = []
     this.spectatorNames = []
     if (this.registry.get('isDesktop')) {
@@ -40,12 +41,7 @@ export class Preloader extends Scene {
       this.add.image(400, -50, 'background').setOrigin(0, 0).setScale(1.25)
       this.add.image(640, 0, 'pickBackground').setOrigin(0, 0).setScale(0.7, 1)
     }
-    this.characterOutline = this.add.circle(
-      200,
-      200,
-      100,
-      myPlayer()?.getState('profile')?.color?.hex || 0x9f2b68
-    )
+    this.characterOutline = this.add.image(200, 200, 'pickBorder').setScale(0.8).setDepth(12)
     const { x, y } = this.registry.get('isDesktop') ? { x: 960, y: 500 } : { x: 1300, y: 500 }
 
     this.qrCode = this.add.image(x, y, 'qr').setVisible(false).setDepth(20).setScale(4)
@@ -56,11 +52,16 @@ export class Preloader extends Scene {
         .image(this.getButtonX(i), this.getButtonY(i), name)
         .setScale(0.25)
         .setInteractive()
+      if (i == this.selected && !myPlayer().getState('spectator')) {
+        button.setTint(0x999999)
+      }
       button.on('pointerup', () => {
         if (
           !myPlayer()?.getState('ready') &&
           !getState('picked').find((pickedname: string) => pickedname == name)
         ) {
+          this.characterButtons[this.selected].clearTint()
+          button.setTint(0x999999)
           this.selected = i
         }
       })
@@ -125,6 +126,7 @@ export class Preloader extends Scene {
       myPlayer()?.setState('ready', true)
       setState('picked', [...getState('picked'), characterNames[this.selected]])
       this.readyButton?.setVisible(false)
+      this.specButton?.setVisible(false)
     })
     if (myPlayer()?.getState('spectator')) {
       this.readyButton?.setVisible(false)
@@ -140,10 +142,14 @@ export class Preloader extends Scene {
             myPlayer()?.setState('spectator', true)
             this.readyButton?.setVisible(false)
             this.characterOutline?.setVisible(false)
+            this.characterButtons[this.selected].clearTint()
+            this.characterButtons.forEach((button) => button.disableInteractive())
           } else {
             myPlayer()?.setState('spectator', false)
             this.readyButton?.setVisible(true)
             this.characterOutline?.setVisible(true)
+            this.characterButtons[this.selected].setTint(0x999999)
+            this.characterButtons.forEach((button) => button.setInteractive())
           }
         })
     )
@@ -269,14 +275,7 @@ export class Preloader extends Scene {
               this.selected = this.selected >= 1 ? this.selected - 1 : 9
             }
           }
-          this.add
-            .circle(
-              this.getButtonX(index),
-              this.getButtonY(index),
-              100,
-              this.selected == index ? 0x008000 : 0xff0000
-            )
-            .setDepth(1)
+          this.characterButtons[index].setTint(index == this.selected ? 0x17a319 : 0x730000)
         }
       })
     }

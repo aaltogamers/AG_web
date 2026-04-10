@@ -49,6 +49,10 @@ const AudienceGame = () => {
 
   const tryJoin = async (skipCheck?: boolean) => {
     if (!skipCheck) {
+      if (roomcode == '') {
+        setError('Room code must be atleast 1 character')
+        return
+      }
       if (getRoomCode() == roomcode && name != '') {
         myPlayer().setState('name', name)
         setState(myPlayer().id, name)
@@ -115,7 +119,7 @@ const AudienceGame = () => {
         if (e.message === 'ROOM_LIMIT_EXCEEDED') {
           setError(`Room full`)
         } else if (e.message === 'PLAYER_LEAVED') {
-          setError('please wait 3 seconds before reconnecting')
+          setError('Please wait 3 seconds before reconnecting')
         }
       })
   }
@@ -149,10 +153,12 @@ const AudienceGame = () => {
               </div>
             )}
             {connected ? (
-              <div className={`text-1xl font-medium text-green-600 ${commonMargins} flex flex-col`}>
+              <div
+                className={`text-1xl font-medium text-green-600 ${commonMargins} flex flex-col `}
+              >
                 Connected to room {getRoomCode()} ({players.length}/14 in room)
                 <button
-                  className={`text-1xl font-medium rounded-md bg-gray-700/70 px-1 mx-1 ${commonMargins} `}
+                  className={`text-1xl font-medium rounded-md bg-gray-700/70 px-1 mx-1 ${commonMargins} hover:text-green-500 hover:cursor-pointer `}
                   onClick={() => myPlayer().leaveRoom()}
                 >
                   Disconnect
@@ -161,33 +167,38 @@ const AudienceGame = () => {
             ) : (
               <div className={`text-1xl font-medium  ${commonMargins}`}>Room code</div>
             )}
-            <input
-              disabled={connected}
-              type="text"
-              className={`p-2 rounded-md ${commonMargins} w-70 ${connected ? 'bg-gray-400' : 'bg-white '}`}
-              value={roomcode}
-              onChange={(e) => setRoomcode(e.target.value.toUpperCase())}
-              placeholder="Room code"
-            />
-            <div className={`text-1xl font-medium  ${commonMargins} rounded-md`}>Name (1-12)</div>
-            <input
-              type="text"
-              className={`p-2 rounded-md ${commonMargins} w-70 bg-white`}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Name"
-              value={name}
-              minLength={1}
-              maxLength={12}
-              required={true}
-            />
-            <button
-              className={`text-1xl font-medium rounded-md bg-gray-700/70 p-1 px-4 ${commonMargins} `}
-              onClick={() => {
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
                 tryJoin()
               }}
+              className="w-full flex justify-center flex-col items-center"
             >
-              Play
-            </button>
+              <input
+                disabled={connected}
+                type="text"
+                className={`p-2 rounded-md ${commonMargins} w-70 ${connected ? 'bg-gray-400' : 'bg-white '}`}
+                value={roomcode}
+                onChange={(e) => setRoomcode(e.target.value.toUpperCase())}
+                placeholder="Room code"
+              />
+              <div className={`text-1xl font-medium  ${commonMargins} rounded-md`}>Name (1-12)</div>
+              <input
+                type="text"
+                className={`p-2 rounded-md ${commonMargins} w-70 bg-white`}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Name"
+                value={name}
+                minLength={1}
+                maxLength={12}
+              />
+              <button
+                className={`text-1xl font-medium rounded-md bg-gray-700/70 p-1 px-4 ${commonMargins} hover:text-green-500 hover:cursor-pointer`}
+                type="submit"
+              >
+                Play
+              </button>
+            </form>
           </div>
         </Layout>
       ) : (

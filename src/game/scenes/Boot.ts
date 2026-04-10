@@ -46,6 +46,7 @@ export class Boot extends Scene {
         { key: 'corkiRocket', url: '/images/games/corkiRocket.webp' },
         { key: 'jinxUlt', url: '/images/games/jinxUlt.webp' },
         { key: 'luxQ', url: '/images/games/luxQ.webp' },
+        { key: 'pickBorder', url: '/images/games/pickBorder.webp' },
       ],
       audio: [
         { key: 'champSelect', url: '/music/champSelect.webm' },
