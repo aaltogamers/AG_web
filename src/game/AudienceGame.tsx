@@ -66,7 +66,9 @@ const AudienceGame = () => {
         setError('Name must be atleast 1 character')
       }
     }
-
+    if (!connected) {
+      setError('Connecting ...')
+    }
     await insertCoin({
       skipLobby: true,
       maxPlayersPerRoom: 14,
@@ -108,6 +110,7 @@ const AudienceGame = () => {
           setError(null)
           setConnected(false)
         } else {
+          setError(null)
           setConnected(true)
         }
         onDisconnect(() => {

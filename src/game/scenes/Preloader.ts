@@ -299,7 +299,7 @@ export class Preloader extends Scene {
         setState('projectiles', [])
       }
     }
-    if (getState('gameActive')) {
+    if (getState('gameActive') && !getState('gameWon')) {
       this.sound.stopAll()
       this.scene.start('MainMenu')
     }

@@ -8,6 +8,7 @@ import {
   resetPlayersStates,
   resetStates,
   setState,
+  waitForState,
 } from 'playroomkit'
 import nipplejs from 'nipplejs'
 
@@ -50,12 +51,62 @@ export class MainMenu extends Scene {
     super('MainMenu')
   }
 
+  waitForGameWon() {
+    waitForState('gameWon', () => {
+      if (this.registry.get('isDesktop')) {
+        const id = getState('winner')
+        const winner = this.playerStates.find((p) => p.id == id)
+        this.add
+          .text(
+            960,
+            540,
+            winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
+            {
+              fontFamily: 'goldman',
+              fontSize: 100,
+              align: 'center',
+            }
+          )
+          .setOrigin(0.5, 0.5)
+      }
+
+      if (isHost()) {
+        this.time.delayedCall(4900, () => {
+          setState('gameActive', false)
+        })
+      }
+
+      this.time.delayedCall(5000, () => {
+        if (isHost()) {
+          resetPlayersStates(['spectator', 'points', 'name'])
+          resetStates([
+            ...this.playerStates.map((p) => p.id),
+            ...this.registry.get('spectators').map((p: PlayerState) => p.id),
+            'originalHostID',
+            'spectators',
+            'projectiles',
+          ])
+          this.scaler?.remove()
+        }
+        this.sound.stopAll()
+        this.joystick?.destroy()
+        this.scene.stop('MainMenu')
+        this.scene.start('Preloader')
+        this.projectiles.forEach((p) => p.destroy(true))
+        this.hitboxes.forEach((p) => p.destroy(true))
+
+        this.projectiles = []
+      })
+    })
+  }
+
   init() {
     this.joystick = nipplejs.create({})
     this.players = []
     this.projectiles = []
     this.smallAbilities = this.registry.get('smallAbilities')
     this.bigAbilities = this.registry.get('bigAbilities')
+    this.waitForGameWon()
   }
 
   create() {
@@ -317,52 +368,6 @@ export class MainMenu extends Scene {
       }
       const points = getState('points')
       this.pointText?.setText(`Points: ${points}`)
-    }
-
-    if (getState('gameWon')) {
-      if (this.registry.get('isDesktop')) {
-        const id = getState('winner')
-        const winner = this.playerStates.find((p) => p.id == id)
-        this.add
-          .text(
-            960,
-            540,
-            winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
-            {
-              fontFamily: 'goldman',
-              fontSize: 100,
-              align: 'center',
-            }
-          )
-          .setOrigin(0.5, 0.5)
-      }
-
-      if (isHost()) {
-        this.time.delayedCall(4900, () => {
-          setState('gameActive', false)
-        })
-      }
-
-      this.time.delayedCall(5000, () => {
-        if (isHost()) {
-          resetPlayersStates(['spectator', 'points', 'name'])
-          resetStates([
-            ...this.playerStates.map((p) => p.id),
-            ...this.registry.get('spectators').map((p: PlayerState) => p.id),
-            'originalHostID',
-            'spectators',
-          ])
-          this.scaler?.remove()
-        }
-        this.sound.stopAll()
-        this.joystick?.destroy()
-        this.scene.stop('MainMenu')
-        this.scene.start('Preloader')
-        this.projectiles.forEach((p) => p.destroy(true))
-        this.hitboxes.forEach((p) => p.destroy(true))
-
-        this.projectiles = []
-      })
     }
   }
 }
