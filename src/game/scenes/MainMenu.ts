@@ -51,7 +51,7 @@ export class MainMenu extends Scene {
   deathMessagePos = {
     x: 800,
     y: 200,
-    message: `You Died with \n  ${myPlayer()?.getState('points')} points`,
+    message: () => `You Died with \n  ${myPlayer()?.getState('points')} points`,
     settings: {
       fontFamily: 'goldman',
       fontSize: 40,
@@ -176,6 +176,7 @@ export class MainMenu extends Scene {
         this.hitboxes = [...this.hitboxes, hitbox]
         lastPoint = point
       })
+
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
 
       this.playerStates.forEach((playerState) => {
@@ -271,7 +272,7 @@ export class MainMenu extends Scene {
           this.add.text(
             this.deathMessagePos.x,
             this.deathMessagePos.y,
-            this.deathMessagePos.message,
+            this.deathMessagePos.message(),
             this.deathMessagePos.settings
           )
         }
@@ -294,8 +295,8 @@ export class MainMenu extends Scene {
       const points = getState('points') + roundedDelta
 
       setState('points', points)
-
       setState('projectiles', this.projectiles)
+
       for (const player of this.players) {
         if (player.sprite.active) {
           const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
@@ -369,7 +370,7 @@ export class MainMenu extends Scene {
             this.add.text(
               this.deathMessagePos.x,
               this.deathMessagePos.y,
-              this.deathMessagePos.message,
+              this.deathMessagePos.message(),
               this.deathMessagePos.settings
             )
           }

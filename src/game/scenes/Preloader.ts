@@ -233,7 +233,7 @@ export class Preloader extends Scene {
                 }
               )
               .setDepth(5)
-            this.playerNames = [...this.playerNames, nameText]
+            this.playerNames.push(nameText)
           }
         }
       })
@@ -269,7 +269,7 @@ export class Preloader extends Scene {
                 fontSize: 18,
               })
               .setDepth(5)
-            this.spectatorNames = [...this.spectatorNames, nameText]
+            this.spectatorNames.push(nameText)
           }
         }
       })

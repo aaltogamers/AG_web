@@ -14,7 +14,6 @@ import QRCode from 'qrcode'
 
 export class Boot extends Scene {
   myID = myPlayer().id
-  i = 0
   async createRoomQR() {
     const url = window.location.href
     const qrDataURL = await QRCode.toDataURL(url)
