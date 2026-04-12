@@ -47,6 +47,18 @@ export class MainMenu extends Scene {
   scaler: Phaser.Time.TimerEvent | undefined = undefined
   smallAbilities: string[] = []
   bigAbilities: string[] = []
+  winMessagePos = { x: 960, y: 540 }
+  deathMessagePos = {
+    x: 800,
+    y: 200,
+    message: `You Died with \n  ${myPlayer()?.getState('points')} points`,
+    settings: {
+      fontFamily: 'goldman',
+      fontSize: 40,
+    },
+  }
+
+  projectileSpeed = 3
   constructor() {
     super('MainMenu')
   }
@@ -58,8 +70,8 @@ export class MainMenu extends Scene {
         const winner = this.playerStates.find((p) => p.id == id)
         this.add
           .text(
-            960,
-            540,
+            this.winMessagePos.x,
+            this.winMessagePos.y,
             winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
             {
               fontFamily: 'goldman',
@@ -106,7 +118,6 @@ export class MainMenu extends Scene {
     this.projectiles = []
     this.smallAbilities = this.registry.get('smallAbilities')
     this.bigAbilities = this.registry.get('bigAbilities')
-    this.waitForGameWon()
   }
 
   create() {
@@ -130,8 +141,8 @@ export class MainMenu extends Scene {
       })
     }
     if (!this.registry.get('isDesktop')) {
-      this.add.rectangle(0, 0, 1920, 1080, 0x2b2b2b).setOrigin(0, 0)
-      this.add.image(1300, 500, 'touchIcon').setScale(0.5)
+      this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0)
+      this.add.image(1300, window.innerHeight / 2, 'touchIcon').setScale(0.5)
     } else {
       this.sound.play('inGame', {
         loop: true,
@@ -208,6 +219,7 @@ export class MainMenu extends Scene {
         loop: true,
       })
     }
+    this.waitForGameWon()
 
     EventBus.emit('current-scene-ready', this)
   }
@@ -237,7 +249,7 @@ export class MainMenu extends Scene {
       .image(x, y, type)
       .setRotation(vector.angle())
       .setScale(0.5)
-      .setVelocity(vector.x * 3, vector.y * 3)
+      .setVelocity(vector.x * this.projectileSpeed, vector.y * this.projectileSpeed)
       .setFixedRotation()
       .setFriction(0)
       .setFrictionAir(0)
@@ -249,7 +261,6 @@ export class MainMenu extends Scene {
         if (!playerBody) return
 
         const player = this.players.find((p) => p.sprite.name === playerBody.name)
-
         if (!player) return
 
         playerBody.destroy()
@@ -257,10 +268,12 @@ export class MainMenu extends Scene {
         player.state.setState('points', getState('points'))
 
         if (player.state.id == myPlayer()?.id) {
-          this.add.text(800, 200, `You Died with \n  ${myPlayer()?.getState('points')} points`, {
-            fontFamily: 'goldman',
-            fontSize: 40,
-          })
+          this.add.text(
+            this.deathMessagePos.x,
+            this.deathMessagePos.y,
+            this.deathMessagePos.message,
+            this.deathMessagePos.settings
+          )
         }
 
         setState(
@@ -324,15 +337,11 @@ export class MainMenu extends Scene {
     } else if (this.registry.get('isDesktop')) {
       const projectilesPos = getState('projectiles')
       const range = projectilesPos.length - this.projectiles.length
-      if (projectilesPos.length > 0) {
-        for (let i = 0; i < this.projectiles.length; i++) {
-          this.projectiles[i].setPosition(projectilesPos[i].x, projectilesPos[i].y)
-        }
-      }
 
       if (range > 0) {
         const projectilesToBeAdded = projectilesPos.slice(projectilesPos.length - range)
         for (const projectile of projectilesToBeAdded) {
+          const { x, y } = radToXY(projectile.rotation)
           const projectileObject = this.matter.add
             .image(projectile.x, projectile.y, projectile.name)
             .setRotation(projectile.rotation)
@@ -341,6 +350,10 @@ export class MainMenu extends Scene {
             .setCollisionCategory(this.projectileCollissionGroup)
             .setCollidesWith([this.playerCollisionGroup])
             .setSensor(true)
+            .setVelocity(x * this.projectileSpeed, y * this.projectileSpeed)
+            .setFriction(0)
+            .setFrictionAir(0)
+
           this.projectiles.push(projectileObject)
         }
       }
@@ -353,10 +366,12 @@ export class MainMenu extends Scene {
           player.sprite.destroy(true)
           if (player.state.id == myPlayer()?.id) {
             this.joystick?.destroy()
-            this.add.text(800, 200, `You Died with \n  ${myPlayer()?.getState('points')} points`, {
-              fontFamily: 'goldman',
-              fontSize: 40,
-            })
+            this.add.text(
+              this.deathMessagePos.x,
+              this.deathMessagePos.y,
+              this.deathMessagePos.message,
+              this.deathMessagePos.settings
+            )
           }
         }
 

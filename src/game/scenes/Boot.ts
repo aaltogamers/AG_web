@@ -31,6 +31,9 @@ export class Boot extends Scene {
       'isDesktop',
       this.scene.systems.game.device.os.desktop || this.scene.systems.game.device.os.iPad
     )
+    if (!this.registry.get('isDesktop')) {
+      this.scale.resize(1920, window.innerHeight)
+    }
     this.add.text(850, 600, 'loading ...')
   }
 

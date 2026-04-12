@@ -1,6 +1,14 @@
 import { Scene } from 'phaser'
 import { characterNames } from '../constants'
-import { getRoomCode, getState, isHost, myPlayer, PlayerState, setState } from 'playroomkit'
+import {
+  getRoomCode,
+  getState,
+  isHost,
+  myPlayer,
+  PlayerState,
+  setState,
+  waitForState,
+} from 'playroomkit'
 
 export class Preloader extends Scene {
   selected: number = 1
@@ -29,6 +37,15 @@ export class Preloader extends Scene {
     return 200 + 200 * (1 + Math.floor(index / 5))
   }
 
+  waitForGameStart() {
+    waitForState('gameActive', () => {
+      if (getState('gameActive') && !getState('gameWon')) {
+        this.sound.stopAll()
+        this.scene.start('MainMenu')
+      }
+    })
+  }
+
   init() {
     this.characterButtons = []
     this.playerNames = []
@@ -37,9 +54,9 @@ export class Preloader extends Scene {
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
       this.add.image(0, 0, 'pickBackground').setOrigin(0, 0)
     } else {
-      this.add.rectangle(0, 0, 1920, 1080, 0xd3d3d3).setOrigin(0, 0)
       this.add.image(400, -50, 'background').setOrigin(0, 0).setScale(1.25)
       this.add.image(640, 0, 'pickBackground').setOrigin(0, 0).setScale(0.7, 1)
+      this.add.rectangle(0, 1070, 1920, window.innerHeight, 0).setOrigin(0, 0)
     }
     this.characterOutline = this.add.image(200, 200, 'pickBorder').setScale(0.8).setDepth(12)
     const { x, y } = this.registry.get('isDesktop') ? { x: 960, y: 500 } : { x: 1300, y: 500 }
@@ -171,6 +188,8 @@ export class Preloader extends Scene {
       fontFamily: 'goldman',
       fontSize: 20,
     })
+
+    this.waitForGameStart()
   }
 
   update() {
@@ -298,10 +317,6 @@ export class Preloader extends Scene {
         setState('picked', [])
         setState('projectiles', [])
       }
-    }
-    if (getState('gameActive') && !getState('gameWon')) {
-      this.sound.stopAll()
-      this.scene.start('MainMenu')
     }
   }
 }

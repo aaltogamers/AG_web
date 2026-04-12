@@ -54,6 +54,10 @@ const AudienceGame = () => {
         return
       }
       if (getRoomCode() == roomcode && name != '') {
+        if (players.find((a) => a.getState('name') == name)) {
+          setError('Name already taken')
+          return
+        }
         myPlayer().setState('name', name)
         setState(myPlayer().id, name)
         setReady(true)
@@ -104,6 +108,10 @@ const AudienceGame = () => {
           setError(null)
           setConnected(false)
         } else if (name != '') {
+          if (players.find((a) => a.getState('name') == name)) {
+            setError('Name already taken')
+            return
+          }
           myPlayer().setState('name', name)
           setState(myPlayer().id, name)
           setReady(true)
