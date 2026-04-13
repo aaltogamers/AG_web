@@ -141,14 +141,16 @@ export class MainMenu extends Scene {
     }
     if (!this.registry.get('isDesktop')) {
       this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0)
-      myPlayer().getState('spectator')
-        ? this.add
-            .text(1300, window.innerHeight / 2, 'spectating', {
-              fontFamily: 'goldman',
-              fontSize: 100,
-            })
-            .setOrigin(0.5, 0.5)
-        : this.add.image(1300, window.innerHeight / 2, 'touchIcon').setScale(0.5)
+      if (myPlayer().getState('spectator')) {
+        this.add
+          .text(1300, window.innerHeight / 2, 'spectating', {
+            fontFamily: 'goldman',
+            fontSize: 100,
+          })
+          .setOrigin(0.5, 0.5)
+      } else {
+        this.add.image(1300, window.innerHeight / 2, 'touchIcon').setScale(0.5)
+      }
     } else {
       this.sound.play('inGame', {
         loop: true,
