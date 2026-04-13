@@ -16,6 +16,7 @@ import {
 } from 'playroomkit'
 import { useParams } from 'next/navigation'
 import Layout from '../components/Layout'
+import { bigAccumulator, bigCooldown, smallAccumulator, smallCooldown } from './constants'
 
 const startGame = () => {
   const config = {
@@ -83,6 +84,7 @@ const AudienceGame = () => {
         joystick: { x: 0, y: 0, force: 0 },
         points: 0,
         name: '',
+        active: true,
       },
       defaultStates: {
         alivePlayers: [],
@@ -93,10 +95,10 @@ const AudienceGame = () => {
         originalHostID: '',
         spectators: [],
         projectiles: [],
-        smallSpell: 500,
-        bigSpell: 2500,
-        smallAccumulator: 0,
-        bigAccumulator: 10000,
+        smallSpell: smallCooldown[0],
+        bigSpell: bigCooldown[0],
+        smallAccumulator: smallAccumulator,
+        bigAccumulator: bigAccumulator,
         points: 0,
         winPoints: 0,
       },

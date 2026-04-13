@@ -64,8 +64,6 @@ export class Boot extends Scene {
     this.load.image(files.images)
     this.load.audio(files.audio)
     this.createRoomQR()
-    this.registry.set('smallAbilities', ['ezrealQ', 'corkiRocket', 'luxQ'])
-    this.registry.set('bigAbilities', ['ezrealUlt', 'jinxUlt'])
   }
   create() {
     if (isHost()) {
@@ -116,7 +114,7 @@ export class Boot extends Scene {
     }
   }
   update() {
-    if (!getState('gameActive')) {
+    if (!getState('gameActive') || getState('alivePlayers').includes(myPlayer().id)) {
       this.scene.start('Preloader')
     }
   }

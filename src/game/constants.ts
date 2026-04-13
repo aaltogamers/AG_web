@@ -10,3 +10,22 @@ export const characterNames: string[] = [
   'yasuo',
   'zilean',
 ]
+
+export const smallAbilities: { name: string; speed: number }[] = [
+  { name: 'ezrealQ', speed: 3 },
+  { name: 'corkiRocket', speed: 3.5 },
+  { name: 'luxQ', speed: 2 },
+]
+export const bigAbilities: { name: string; speed: number }[] = [
+  { name: 'ezrealUlt', speed: 3 },
+  { name: 'jinxUlt', speed: 4.5 },
+]
+
+export const bigAccumulator = 10000
+export const smallAccumulator = 500
+
+export const difficulties = ['easy', 'normal', 'hard']
+
+// easy, normal, hard
+export const bigCooldown = [3500, 3000, 2500]
+export const smallCooldown = [1500, 1000, 500]

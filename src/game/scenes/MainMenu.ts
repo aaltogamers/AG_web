@@ -1,5 +1,4 @@
 import { Scene } from 'phaser'
-import { EventBus } from '../EventBus'
 import {
   getState,
   isHost,
@@ -7,10 +6,12 @@ import {
   PlayerState,
   resetPlayersStates,
   resetStates,
+  RPC,
   setState,
   waitForState,
 } from 'playroomkit'
 import nipplejs from 'nipplejs'
+import { smallAbilities, bigAbilities } from '../constants'
 
 const radToXY = (rad: number) => {
   return {
@@ -42,11 +43,11 @@ export class MainMenu extends Scene {
   playerCollisionGroup: number = 2
   projectileCollissionGroup: number = 4
   projectiles: Phaser.Physics.Matter.Image[] = []
+  projectileSpeed = 3
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
   pointText: Phaser.GameObjects.Text | undefined = undefined
   scaler: Phaser.Time.TimerEvent | undefined = undefined
-  smallAbilities: string[] = []
-  bigAbilities: string[] = []
+
   winMessagePos = { x: 960, y: 540 }
   deathMessagePos = {
     x: 800,
@@ -57,8 +58,6 @@ export class MainMenu extends Scene {
       fontSize: 40,
     },
   }
-
-  projectileSpeed = 3
   constructor() {
     super('MainMenu')
   }
@@ -111,12 +110,104 @@ export class MainMenu extends Scene {
     })
   }
 
+  spawnProjectile(type: { name: string; speed: number }) {
+    const vector = new Phaser.Math.Vector2()
+    Phaser.Math.RandomXY(vector)
+    let x, y
+    const angle = vector.angle()
+    if (angle < 1.57) {
+      x = 0
+      y = Math.abs(vector.y) * 1080
+    } else if (angle < 3.14) {
+      x = Math.abs(vector.x) * 1000
+      y = 0
+    } else if (angle < 4.712) {
+      x = 1920
+      y = Math.abs(vector.y) * 1080
+    } else {
+      x = Math.abs(vector.x) * 1000
+      y = 1080
+    }
+    const randomPoint = this.edgeCircle?.getRandomPoint()
+    if (!randomPoint) return
+    vector.setAngle(Phaser.Math.Angle.Between(x, y, randomPoint.x, randomPoint.y))
+    const rect = this.matter.add
+      .image(x, y, type.name)
+      .setRotation(vector.angle())
+      .setScale(0.5)
+      .setVelocity(vector.x * type.speed, vector.y * type.speed)
+      .setFixedRotation()
+      .setFriction(0)
+      .setFrictionAir(0)
+      .setCollisionCategory(this.projectileCollissionGroup)
+      .setCollidesWith([this.playerCollisionGroup])
+      .setSensor(true)
+      .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
+        const playerBody = event.bodyA.gameObject
+        if (!playerBody) return
+
+        const player = this.players.find((p) => p.sprite.name === playerBody.name)
+        if (!player) return
+
+        playerBody.destroy()
+        player.state.setState('active', false)
+        player.state.setState('points', getState('points'))
+
+        if (player.state.id == myPlayer()?.id) {
+          this.add.text(
+            this.deathMessagePos.x,
+            this.deathMessagePos.y,
+            this.deathMessagePos.message(),
+            this.deathMessagePos.settings
+          )
+        }
+
+        setState(
+          'alivePlayers',
+          getState('alivePlayers').filter(
+            (alivePlayerID: string) => alivePlayerID != player.state.id
+          )
+        )
+      })
+      .setName(type.name)
+    this.projectiles.push(rect)
+    RPC.call(
+      'spawnClientProjectile',
+      {
+        x: rect.x,
+        y: rect.y,
+        rotation: rect.rotation,
+        speed: type.speed,
+        name: type.name,
+      },
+      RPC.Mode.OTHERS
+    )
+  }
+
   init() {
     this.joystick = nipplejs.create({})
     this.players = []
     this.projectiles = []
-    this.smallAbilities = this.registry.get('smallAbilities')
-    this.bigAbilities = this.registry.get('bigAbilities')
+    RPC.register('spawnClientProjectile', async (data) => {
+      if (this.registry.get('isDesktop')) {
+        const projectile = data
+        const { x, y } = radToXY(projectile.rotation)
+        const projectileObject = this.matter.add
+          .image(projectile.x, projectile.y, projectile.name)
+          .setRotation(projectile.rotation)
+          .setScale(0.5)
+          .setFixedRotation()
+          .setCollisionCategory(this.projectileCollissionGroup)
+          .setCollidesWith([this.playerCollisionGroup])
+          .setSensor(true)
+          .setVelocity(x * projectile.speed, y * projectile.speed)
+          .setFriction(0)
+          .setFrictionAir(0)
+
+        this.projectiles.push(projectileObject)
+      }
+      return 'ok'
+    })
   }
 
   create() {
@@ -188,27 +279,29 @@ export class MainMenu extends Scene {
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
 
       this.playerStates.forEach((playerState) => {
-        const character: string = playerState.getState('character')
+        if (playerState.getState('active')) {
+          const character: string = playerState.getState('character')
 
-        const sprite = this.matter.add
-          .image(960, 540, character, undefined, {
-            shape: {
-              type: 'circle',
-              radius: 340,
-            },
+          const sprite = this.matter.add
+            .image(960, 540, character, undefined, {
+              shape: {
+                type: 'circle',
+                radius: 340,
+              },
+            })
+            .setScale(0.08)
+            .setBounce(0)
+            .setFixedRotation()
+            .setCollisionCategory(this.playerCollisionGroup)
+            .setName(playerState.id)
+
+          this.players.push({ sprite, state: playerState })
+
+          playerState.onQuit(() => {
+            sprite.destroy()
+            this.players = this.players.filter((p) => p.state !== playerState)
           })
-          .setScale(0.08)
-          .setBounce(0)
-          .setFixedRotation()
-          .setCollisionCategory(this.playerCollisionGroup)
-          .setName(playerState.id)
-
-        this.players.push({ sprite, state: playerState })
-
-        playerState.onQuit(() => {
-          sprite.destroy()
-          this.players = this.players.filter((p) => p.state !== playerState)
-        })
+        }
       })
       this.pointText = this.add.text(1650, 10, 'Points: 0', {
         fontFamily: 'goldman',
@@ -229,71 +322,6 @@ export class MainMenu extends Scene {
       })
     }
     this.waitForGameWon()
-
-    EventBus.emit('current-scene-ready', this)
-  }
-
-  spawnProjectile(type: string) {
-    const vector = new Phaser.Math.Vector2()
-    Phaser.Math.RandomXY(vector)
-    let x, y
-    const angle = vector.angle()
-    if (angle < 1.57) {
-      x = 0
-      y = Math.abs(vector.y) * 1080
-    } else if (angle < 3.14) {
-      x = Math.abs(vector.x) * 1000
-      y = 0
-    } else if (angle < 4.712) {
-      x = 1920
-      y = Math.abs(vector.y) * 1080
-    } else {
-      x = Math.abs(vector.x) * 1000
-      y = 1080
-    }
-    const randomPoint = this.edgeCircle?.getRandomPoint()
-    if (!randomPoint) return
-    vector.setAngle(Phaser.Math.Angle.Between(x, y, randomPoint.x, randomPoint.y))
-    const rect = this.matter.add
-      .image(x, y, type)
-      .setRotation(vector.angle())
-      .setScale(0.5)
-      .setVelocity(vector.x * this.projectileSpeed, vector.y * this.projectileSpeed)
-      .setFixedRotation()
-      .setFriction(0)
-      .setFrictionAir(0)
-      .setCollisionCategory(this.projectileCollissionGroup)
-      .setCollidesWith([this.playerCollisionGroup])
-      .setSensor(true)
-      .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
-        const playerBody = event.bodyA.gameObject
-        if (!playerBody) return
-
-        const player = this.players.find((p) => p.sprite.name === playerBody.name)
-        if (!player) return
-
-        playerBody.destroy()
-        player.state.setState('active', false)
-        player.state.setState('points', getState('points'))
-
-        if (player.state.id == myPlayer()?.id) {
-          this.add.text(
-            this.deathMessagePos.x,
-            this.deathMessagePos.y,
-            this.deathMessagePos.message(),
-            this.deathMessagePos.settings
-          )
-        }
-
-        setState(
-          'alivePlayers',
-          getState('alivePlayers').filter(
-            (alivePlayerID: string) => alivePlayerID != player.state.id
-          )
-        )
-      })
-      .setName(type)
-    this.projectiles.push(rect)
   }
 
   update(_: number, delta: number) {
@@ -332,41 +360,18 @@ export class MainMenu extends Scene {
       setState('bigAccumulator', bigAccumulator - roundedDelta)
 
       if (smallAccumulator <= 0) {
-        const i = Phaser.Math.RND.between(0, this.smallAbilities.length - 1)
-        this.spawnProjectile(this.smallAbilities[i])
+        const i = Phaser.Math.RND.between(0, smallAbilities.length - 1)
+        this.spawnProjectile(smallAbilities[i])
         setState('smallAccumulator', getState('smallSpell'))
       }
       if (bigAccumulator <= 0) {
-        const i = Phaser.Math.RND.between(0, this.bigAbilities.length - 1)
-        this.spawnProjectile(this.bigAbilities[i])
+        const i = Phaser.Math.RND.between(0, bigAbilities.length - 1)
+        this.spawnProjectile(bigAbilities[i])
         setState('bigAccumulator', getState('bigSpell'))
       }
 
       this.pointText?.setText(`Points: ${points}`)
     } else if (this.registry.get('isDesktop')) {
-      const projectilesPos = getState('projectiles')
-      const range = projectilesPos.length - this.projectiles.length
-
-      if (range > 0) {
-        const projectilesToBeAdded = projectilesPos.slice(projectilesPos.length - range)
-        for (const projectile of projectilesToBeAdded) {
-          const { x, y } = radToXY(projectile.rotation)
-          const projectileObject = this.matter.add
-            .image(projectile.x, projectile.y, projectile.name)
-            .setRotation(projectile.rotation)
-            .setScale(0.5)
-            .setFixedRotation()
-            .setCollisionCategory(this.projectileCollissionGroup)
-            .setCollidesWith([this.playerCollisionGroup])
-            .setSensor(true)
-            .setVelocity(x * this.projectileSpeed, y * this.projectileSpeed)
-            .setFriction(0)
-            .setFrictionAir(0)
-
-          this.projectiles.push(projectileObject)
-        }
-      }
-
       const activePlayerIDs = getState('alivePlayers')
       for (const player of this.players) {
         if (!activePlayerIDs.includes(player.state.id)) {

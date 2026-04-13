@@ -1,5 +1,12 @@
 import { Scene } from 'phaser'
-import { characterNames } from '../constants'
+import {
+  bigAccumulator,
+  bigCooldown,
+  characterNames,
+  difficulties,
+  smallAccumulator,
+  smallCooldown,
+} from '../constants'
 import {
   getRoomCode,
   getState,
@@ -20,6 +27,7 @@ export class Preloader extends Scene {
   specButton: Phaser.GameObjects.Container | null = null
   readyButton: Phaser.GameObjects.Image | null = null
   qrCode: Phaser.GameObjects.Image | null = null
+  difficulty: number = 0
 
   constructor() {
     super('Preloader')
@@ -202,6 +210,34 @@ export class Preloader extends Scene {
       fontSize: 20,
     })
 
+    if (isHost()) {
+      const difficultyButton = this.add.container(1700, 130)
+      difficultyButton.add([
+        this.add
+          .text(85, 0, 'Difficulty', {
+            fontFamily: 'goldman',
+            fontSize: 18,
+          })
+          .setOrigin(0.5, 0.5),
+        this.add
+          .rectangle(85, 30, 170, 30, 0)
+          .setInteractive()
+          .on('pointerup', () => {
+            this.difficulty = (this.difficulty + 1) % 3
+            difficultyButton
+              .getByName<Phaser.GameObjects.Text>('btext')
+              .setText(difficulties[this.difficulty])
+          }),
+        this.add
+          .text(85, 30, difficulties[this.difficulty], {
+            fontFamily: 'goldman',
+            fontSize: 18,
+          })
+          .setOrigin(0.5, 0.5)
+          .setName('btext'),
+      ])
+    }
+
     this.waitForGameStart()
   }
 
@@ -327,6 +363,10 @@ export class Preloader extends Scene {
         setState('points', 0)
         setState('projectiles', [])
         setState('gameActive', true)
+        setState('smallAccumulator', smallAccumulator)
+        setState('bigAccumulator', bigAccumulator)
+        setState('smallSpell', smallCooldown[this.difficulty])
+        setState('bigSpell', bigCooldown[this.difficulty])
       }
     }
   }
