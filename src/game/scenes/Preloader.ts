@@ -46,6 +46,13 @@ export class Preloader extends Scene {
     })
   }
 
+  moveSelectedBorder() {
+    this.characterOutline?.setPosition(
+      this.getButtonX(this.selected),
+      this.getButtonY(this.selected)
+    )
+  }
+
   init() {
     this.characterButtons = []
     this.playerNames = []
@@ -58,7 +65,10 @@ export class Preloader extends Scene {
       this.add.image(640, 0, 'pickBackground').setOrigin(0, 0).setScale(0.7, 1)
       this.add.rectangle(0, 1070, 1920, window.innerHeight, 0).setOrigin(0, 0)
     }
-    this.characterOutline = this.add.image(200, 200, 'pickBorder').setScale(0.8).setDepth(12)
+    this.characterOutline = this.add
+      .image(this.getButtonX(this.selected), this.getButtonY(this.selected), 'pickBorder')
+      .setScale(0.8)
+      .setDepth(12)
     const { x, y } = this.registry.get('isDesktop') ? { x: 960, y: 500 } : { x: 1300, y: 500 }
 
     this.qrCode = this.add.image(x, y, 'qr').setVisible(false).setDepth(20).setScale(4)
@@ -81,6 +91,7 @@ export class Preloader extends Scene {
           button.setTint(0x999999)
           this.selected = i
         }
+        this.moveSelectedBorder()
       })
       button.setDepth(10)
       this.characterButtons.push(button)
@@ -149,7 +160,9 @@ export class Preloader extends Scene {
       this.readyButton?.setVisible(false)
       this.characterOutline?.setVisible(false)
     }
-    this.specButton = this.add.container(90, 470)
+
+    const specButtonLocation = this.registry.get('isDesktop') ? [90, 470] : [900, 30]
+    this.specButton = this.add.container(...specButtonLocation)
     this.specButton.add(
       this.add
         .rectangle(0, 0, 160, 30, 0)
@@ -194,6 +207,27 @@ export class Preloader extends Scene {
 
   update() {
     const players: PlayerState[] = this.registry.get('players') || []
+
+    const picked: string[] = getState('picked')
+    if (picked.length >= characterNames.length && !myPlayer().getState('ready')) {
+      myPlayer().setState('spectator', true)
+
+      this.readyButton?.setVisible(false)
+      this.characterOutline?.setVisible(false)
+    } else if (picked) {
+      picked.forEach((champ) => {
+        if (!this.pickedChamps.includes(champ)) {
+          const index = characterNames.findIndex((name) => name == champ)
+          if (this.selected == index && !myPlayer().getState('ready')) {
+            while (picked.includes(characterNames[this.selected])) {
+              this.selected = this.selected >= 1 ? this.selected - 1 : characterNames.length - 1
+              this.moveSelectedBorder()
+            }
+          }
+          this.characterButtons[index].setTint(index == this.selected ? 0x17a319 : 0x730000)
+        }
+      })
+    }
 
     if (this.registry.get('isDesktop')) {
       if (this.playerNames.length > players.length) {
@@ -275,30 +309,6 @@ export class Preloader extends Scene {
       })
     }
 
-    this.characterOutline?.setPosition(
-      this.getButtonX(this.selected),
-      this.getButtonY(this.selected)
-    )
-
-    const picked: string[] = getState('picked')
-    if (picked.length >= characterNames.length && !myPlayer().getState('ready')) {
-      myPlayer().setState('spectator', true)
-      this.readyButton?.setVisible(false)
-      this.characterOutline?.setVisible(false)
-    } else if (picked) {
-      picked.forEach((champ) => {
-        if (!this.pickedChamps.includes(champ)) {
-          const index = characterNames.findIndex((name) => name == champ)
-          if (this.selected == index && !myPlayer().getState('ready')) {
-            while (picked.includes(characterNames[this.selected])) {
-              this.selected = this.selected >= 1 ? this.selected - 1 : 9
-            }
-          }
-          this.characterButtons[index].setTint(index == this.selected ? 0x17a319 : 0x730000)
-        }
-      })
-    }
-
     if (isHost()) {
       if (
         players.filter((player) => player.getState('ready') == true).length == players.length &&
@@ -313,9 +323,10 @@ export class Preloader extends Scene {
           players.map((p) => p.id)
         )
         setState('gameWon', false)
-        setState('gameActive', true)
         setState('picked', [])
+        setState('points', 0)
         setState('projectiles', [])
+        setState('gameActive', true)
       }
     }
   }

@@ -83,29 +83,28 @@ export class MainMenu extends Scene {
       }
 
       if (isHost()) {
-        this.time.delayedCall(4900, () => {
-          setState('gameActive', false)
-        })
+        setState('gameActive', false)
+        resetPlayersStates(['spectator', 'points', 'name'])
+        resetStates([
+          ...this.playerStates.map((p) => p.id),
+          ...this.registry.get('spectators').map((p: PlayerState) => p.id),
+          'originalHostID',
+          'spectators',
+          'projectiles',
+          'winner',
+          'points',
+        ])
+        this.scaler?.remove()
       }
 
       this.time.delayedCall(5000, () => {
-        if (isHost()) {
-          resetPlayersStates(['spectator', 'points', 'name'])
-          resetStates([
-            ...this.playerStates.map((p) => p.id),
-            ...this.registry.get('spectators').map((p: PlayerState) => p.id),
-            'originalHostID',
-            'spectators',
-            'projectiles',
-          ])
-          this.scaler?.remove()
-        }
         this.sound.stopAll()
         this.joystick?.destroy()
         this.scene.stop('MainMenu')
         this.scene.start('Preloader')
         this.projectiles.forEach((p) => p.destroy(true))
         this.hitboxes.forEach((p) => p.destroy(true))
+        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
 
         this.projectiles = []
       })
@@ -142,7 +141,14 @@ export class MainMenu extends Scene {
     }
     if (!this.registry.get('isDesktop')) {
       this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0)
-      this.add.image(1300, window.innerHeight / 2, 'touchIcon').setScale(0.5)
+      myPlayer().getState('spectator')
+        ? this.add
+            .text(1300, window.innerHeight / 2, 'spectating', {
+              fontFamily: 'goldman',
+              fontSize: 100,
+            })
+            .setOrigin(0.5, 0.5)
+        : this.add.image(1300, window.innerHeight / 2, 'touchIcon').setScale(0.5)
     } else {
       this.sound.play('inGame', {
         loop: true,
@@ -183,17 +189,17 @@ export class MainMenu extends Scene {
         const character: string = playerState.getState('character')
 
         const sprite = this.matter.add
-          .image(960, 540, character)
+          .image(960, 540, character, undefined, {
+            shape: {
+              type: 'circle',
+              radius: 340,
+            },
+          })
           .setScale(0.08)
           .setBounce(0)
           .setFixedRotation()
           .setCollisionCategory(this.playerCollisionGroup)
           .setName(playerState.id)
-
-        sprite.setInteractive({
-          pixelPerfect: true,
-          alphaTolerance: 1,
-        })
 
         this.players.push({ sprite, state: playerState })
 
