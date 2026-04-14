@@ -8,10 +8,10 @@ import {
   resetStates,
   RPC,
   setState,
-  waitForState,
 } from 'playroomkit'
 import nipplejs from 'nipplejs'
 import { smallAbilities, bigAbilities } from '../constants'
+import { setMainMenuRef } from '../rpc'
 
 const radToXY = (rad: number) => {
   return {
@@ -42,12 +42,13 @@ export class MainMenu extends Scene {
   outerEdgeHitBoxPoints: Phaser.Geom.Point[] = []
   playerCollisionGroup: number = 2
   projectileCollissionGroup: number = 4
-  projectiles: Phaser.Physics.Matter.Image[] = []
   projectileSpeed = 3
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
   pointText: Phaser.GameObjects.Text | undefined = undefined
   scaler: Phaser.Time.TimerEvent | undefined = undefined
-
+  smallAccumulator = getState('smallAccumulator')
+  bigAccumulator = getState('bigAccumulator')
+  points = getState('points')
   winMessagePos = { x: 960, y: 540 }
   deathMessagePos = {
     x: 800,
@@ -58,56 +59,9 @@ export class MainMenu extends Scene {
       fontSize: 40,
     },
   }
+
   constructor() {
     super('MainMenu')
-  }
-
-  waitForGameWon() {
-    waitForState('gameWon', () => {
-      if (this.registry.get('isDesktop')) {
-        const id = getState('winner')
-        const winner = this.playerStates.find((p) => p.id == id)
-        this.add
-          .text(
-            this.winMessagePos.x,
-            this.winMessagePos.y,
-            winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
-            {
-              fontFamily: 'goldman',
-              fontSize: 100,
-              align: 'center',
-            }
-          )
-          .setOrigin(0.5, 0.5)
-      }
-
-      if (isHost()) {
-        setState('gameActive', false)
-        resetPlayersStates(['spectator', 'points', 'name'])
-        resetStates([
-          ...this.playerStates.map((p) => p.id),
-          ...this.registry.get('spectators').map((p: PlayerState) => p.id),
-          'originalHostID',
-          'spectators',
-          'projectiles',
-          'winner',
-          'points',
-        ])
-        this.scaler?.remove()
-      }
-
-      this.time.delayedCall(5000, () => {
-        this.sound.stopAll()
-        this.joystick?.destroy()
-        this.scene.stop('MainMenu')
-        this.scene.start('Preloader')
-        this.projectiles.forEach((p) => p.destroy(true))
-        this.hitboxes.forEach((p) => p.destroy(true))
-        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
-
-        this.projectiles = []
-      })
-    })
   }
 
   spawnProjectile(type: { name: string; speed: number }) {
@@ -149,28 +103,22 @@ export class MainMenu extends Scene {
         const player = this.players.find((p) => p.sprite.name === playerBody.name)
         if (!player) return
 
-        playerBody.destroy()
-        player.state.setState('active', false)
-        player.state.setState('points', getState('points'))
-
-        if (player.state.id == myPlayer()?.id) {
-          this.add.text(
-            this.deathMessagePos.x,
-            this.deathMessagePos.y,
-            this.deathMessagePos.message(),
-            this.deathMessagePos.settings
-          )
-        }
-
+        RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
+        player.state.setState('points', this.points)
         setState(
           'alivePlayers',
           getState('alivePlayers').filter(
             (alivePlayerID: string) => alivePlayerID != player.state.id
           )
         )
+        const alivePlayers = getState('alivePlayers')
+
+        if (alivePlayers.length <= 0) {
+          setState('winner', player.state.id)
+          RPC.call('gameWon', '', RPC.Mode.ALL)
+        }
       })
       .setName(type.name)
-    this.projectiles.push(rect)
     RPC.call(
       'spawnClientProjectile',
       {
@@ -183,38 +131,105 @@ export class MainMenu extends Scene {
       RPC.Mode.OTHERS
     )
   }
+  // called from rpc.ts
+  spawnClientProjectile(data: {
+    rotation: number
+    x: number
+    y: number
+    name: string
+    speed: number
+  }) {
+    const projectile = data
+    const { x, y } = radToXY(projectile.rotation)
+    this.matter.add
+      .image(projectile.x, projectile.y, projectile.name)
+      .setRotation(projectile.rotation)
+      .setScale(0.5)
+      .setFixedRotation()
+      .setCollisionCategory(this.projectileCollissionGroup)
+      .setCollidesWith([this.playerCollisionGroup])
+      .setSensor(true)
+      .setVelocity(x * projectile.speed, y * projectile.speed)
+      .setFriction(0)
+      .setFrictionAir(0)
+  }
+
+  // called from rpc.ts
+  gameWon() {
+    if (this.registry.get('isDesktop')) {
+      const id = getState('winner')
+      const winner = this.playerStates.find((p) => p.id == id)
+      this.add
+        .text(
+          this.winMessagePos.x,
+          this.winMessagePos.y,
+          winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
+          {
+            fontFamily: 'goldman',
+            fontSize: 100,
+            align: 'center',
+          }
+        )
+        .setOrigin(0.5, 0.5)
+    }
+
+    if (isHost()) {
+      setState('gameActive', false)
+      resetPlayersStates(['spectator', 'points', 'name'])
+      resetStates([
+        ...this.playerStates.map((p) => p.id),
+        ...this.registry.get('spectators').map((p: PlayerState) => p.id),
+        'originalHostID',
+        'spectators',
+        'winner',
+        'points',
+      ])
+      this.scaler?.remove()
+    }
+
+    this.time.delayedCall(5000, () => {
+      this.sound.stopAll()
+      this.joystick?.destroy()
+
+      this.scene.stop()
+      this.scene.start('Preloader')
+      this.hitboxes.forEach((p) => p.destroy(true))
+      myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
+    })
+  }
+
+  // called from rpc.ts
+  killPlayer(data: string) {
+    const playerToKill = this.players.find((p) => p.state.id == data)
+    playerToKill?.sprite?.destroy()
+    if (data == myPlayer().id) {
+      this.joystick?.destroy()
+      this.add.text(
+        this.deathMessagePos.x,
+        this.deathMessagePos.y,
+        this.deathMessagePos.message(),
+        this.deathMessagePos.settings
+      )
+    }
+  }
 
   init() {
-    this.joystick = nipplejs.create({})
+    setMainMenuRef(this)
+    if (!myPlayer().getState('spectator')) {
+      this.joystick?.destroy()
+      this.joystick = nipplejs.create({})
+    }
     this.players = []
-    this.projectiles = []
-    RPC.register('spawnClientProjectile', async (data) => {
-      if (this.registry.get('isDesktop')) {
-        const projectile = data
-        const { x, y } = radToXY(projectile.rotation)
-        const projectileObject = this.matter.add
-          .image(projectile.x, projectile.y, projectile.name)
-          .setRotation(projectile.rotation)
-          .setScale(0.5)
-          .setFixedRotation()
-          .setCollisionCategory(this.projectileCollissionGroup)
-          .setCollidesWith([this.playerCollisionGroup])
-          .setSensor(true)
-          .setVelocity(x * projectile.speed, y * projectile.speed)
-          .setFriction(0)
-          .setFrictionAir(0)
 
-        this.projectiles.push(projectileObject)
-      }
-      return 'ok'
-    })
+    this.smallAccumulator = getState('smallAccumulator')
+    this.bigAccumulator = getState('bigAccumulator')
+    this.points = getState('points')
   }
 
   create() {
     this.playerStates = this.registry.get('players')
 
     if (myPlayer().getState('spectator')) {
-      this.joystick?.destroy()
       this.add
         .text(10, 10, 'spectating', {
           fontFamily: 'goldman',
@@ -230,7 +245,7 @@ export class MainMenu extends Scene {
         myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
       })
     }
-    if (!this.registry.get('isDesktop')) {
+    if (!this.registry.get('isDesktop') && !isHost()) {
       this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0)
       if (myPlayer().getState('spectator')) {
         this.add
@@ -307,6 +322,23 @@ export class MainMenu extends Scene {
         fontFamily: 'goldman',
         fontSize: 30,
       })
+      if (!this.registry.get('isDesktop')) {
+        this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0).setDepth(100)
+        if (myPlayer().getState('spectator')) {
+          this.add
+            .text(1300, window.innerHeight / 2, 'spectating', {
+              fontFamily: 'goldman',
+              fontSize: 100,
+            })
+            .setOrigin(0.5, 0.5)
+            .setDepth(100)
+        } else {
+          this.add
+            .image(1300, window.innerHeight / 2, 'touchIcon')
+            .setScale(0.5)
+            .setDepth(100)
+        }
+      }
     }
     if (isHost()) {
       this.scaler = this.time.addEvent({
@@ -321,74 +353,55 @@ export class MainMenu extends Scene {
         loop: true,
       })
     }
-    this.waitForGameWon()
   }
 
   update(_: number, delta: number) {
     if (isHost()) {
-      const alivePlayers: string[] = getState('alivePlayers')
-      const roundedDelta = Math.round(delta)
-      const points = getState('points') + roundedDelta
+      const roundedDelta = Math.round(delta / 5)
+      this.points += roundedDelta
 
-      setState('points', points)
-      setState('projectiles', this.projectiles)
+      setState('points', this.points)
 
       for (const player of this.players) {
         if (player.sprite.active) {
           const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
 
           player.sprite.setVelocity(
-            Phaser.Math.Clamp(2 * joystick.x * joystick.force, -15, 15),
-            Phaser.Math.Clamp(-2 * joystick.y * joystick.force, -15, 15)
+            Phaser.Math.Clamp(2 * joystick.x * joystick.force, -10, 10),
+            Phaser.Math.Clamp(-2 * joystick.y * joystick.force, -10, 10)
           )
           player.state.setState('pos', {
             x: player.sprite.x,
             y: player.sprite.y,
           })
         }
+      }
 
-        if (alivePlayers.length == 1 && !getState('gameWon')) {
-          setState('winner', alivePlayers[0])
-        } else if (alivePlayers.length <= 0 && !getState('gameWon')) {
-          setState('gameWon', true)
+      this.smallAccumulator -= roundedDelta
+      this.bigAccumulator -= roundedDelta
+
+      if (this.smallAccumulator <= 0) {
+        for (let a = 0; a < Phaser.Math.RND.between(1, 3); a++) {
+          const i = Phaser.Math.RND.between(0, smallAbilities.length - 1)
+          this.spawnProjectile(smallAbilities[i])
         }
+        const cooldown = getState('smallSpell')
+        this.smallAccumulator = cooldown
+        setState('smallAccumulator', cooldown)
+      }
+      if (this.bigAccumulator <= 0) {
+        for (let a = 0; a < Phaser.Math.RND.between(1, 3); a++) {
+          const i = Phaser.Math.RND.between(0, bigAbilities.length - 1)
+          this.spawnProjectile(bigAbilities[i])
+        }
+        const cooldown = getState('bigSpell')
+        this.bigAccumulator = cooldown
+        setState('bigAccumulator', cooldown)
       }
 
-      const smallAccumulator = getState('smallAccumulator')
-      const bigAccumulator = getState('bigAccumulator')
-      setState('smallAccumulator', smallAccumulator - roundedDelta)
-      setState('bigAccumulator', bigAccumulator - roundedDelta)
-
-      if (smallAccumulator <= 0) {
-        const i = Phaser.Math.RND.between(0, smallAbilities.length - 1)
-        this.spawnProjectile(smallAbilities[i])
-        setState('smallAccumulator', getState('smallSpell'))
-      }
-      if (bigAccumulator <= 0) {
-        const i = Phaser.Math.RND.between(0, bigAbilities.length - 1)
-        this.spawnProjectile(bigAbilities[i])
-        setState('bigAccumulator', getState('bigSpell'))
-      }
-
-      this.pointText?.setText(`Points: ${points}`)
+      this.pointText?.setText(`Points: ${this.points}`)
     } else if (this.registry.get('isDesktop')) {
-      const activePlayerIDs = getState('alivePlayers')
       for (const player of this.players) {
-        if (!activePlayerIDs.includes(player.state.id)) {
-          player.sprite.destroy()
-        } else if (player.state.getState('active') == false) {
-          player.sprite.destroy(true)
-          if (player.state.id == myPlayer()?.id) {
-            this.joystick?.destroy()
-            this.add.text(
-              this.deathMessagePos.x,
-              this.deathMessagePos.y,
-              this.deathMessagePos.message(),
-              this.deathMessagePos.settings
-            )
-          }
-        }
-
         const pos = player.state.getState('pos')
 
         if (pos && player.sprite.body) {

@@ -21,11 +21,11 @@ export const bigAbilities: { name: string; speed: number }[] = [
   { name: 'jinxUlt', speed: 4.5 },
 ]
 
-export const bigAccumulator = 10000
+export const bigAccumulator = 4000
 export const smallAccumulator = 500
 
 export const difficulties = ['easy', 'normal', 'hard']
 
 // easy, normal, hard
-export const bigCooldown = [3500, 3000, 2500]
-export const smallCooldown = [1500, 1000, 500]
+export const bigCooldown = [650, 500, 450]
+export const smallCooldown = [200, 150, 100]

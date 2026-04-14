@@ -7,15 +7,8 @@ import {
   smallAccumulator,
   smallCooldown,
 } from '../constants'
-import {
-  getRoomCode,
-  getState,
-  isHost,
-  myPlayer,
-  PlayerState,
-  setState,
-  waitForState,
-} from 'playroomkit'
+import { getRoomCode, getState, isHost, myPlayer, PlayerState, RPC, setState } from 'playroomkit'
+import { resetRPCs, setPreloaderRef } from '../rpc'
 
 export class Preloader extends Scene {
   selected: number = 1
@@ -28,6 +21,7 @@ export class Preloader extends Scene {
   readyButton: Phaser.GameObjects.Image | null = null
   qrCode: Phaser.GameObjects.Image | null = null
   difficulty: number = 0
+  rpcInit = false
 
   constructor() {
     super('Preloader')
@@ -45,26 +39,116 @@ export class Preloader extends Scene {
     return 200 + 200 * (1 + Math.floor(index / 5))
   }
 
-  waitForGameStart() {
-    waitForState('gameActive', () => {
-      if (getState('gameActive') && !getState('gameWon')) {
-        this.sound.stopAll()
-        this.scene.start('MainMenu')
-      }
-    })
-  }
-
   moveSelectedBorder() {
     this.characterOutline?.setPosition(
       this.getButtonX(this.selected),
       this.getButtonY(this.selected)
     )
   }
+  checkStart() {
+    if (
+      isHost() &&
+      this.registry.get('players').length > 0 &&
+      this.registry.get('players').every((p: PlayerState) => p.getState('ready'))
+    ) {
+      RPC.call('startGame', '', RPC.Mode.ALL)
+    }
+  }
+  reDrawNames() {
+    if (
+      this.playerNames.length != this.registry.get('players').length ||
+      this.spectatorNames.length != this.registry.get('spectators').length
+    ) {
+      this.checkStart()
+      this.playerNames?.forEach((n) => n.destroy())
+      this.playerNames = []
+      this.spectatorNames?.forEach((n) => n.destroy())
+      this.spectatorNames = []
+
+      this.registry.get('spectators')?.forEach((spectator: PlayerState, i: number) => {
+        const nameText = this.add.text(10, 525 + 20 * i, spectator.getState('name'), {
+          fontFamily: 'goldman',
+          fontSize: 18,
+        })
+        this.spectatorNames.push(nameText)
+      })
+
+      this.registry
+        .get('players')
+        ?.sort((a: PlayerState, b: PlayerState) => a.getState('points') < b.getState('points'))
+        .forEach((player: PlayerState, i: number) => {
+          const nameText = this.add
+            .text(10, 25 + 20 * i, `${player.getState('name')} - ${player.getState('points')}`, {
+              fontFamily: 'goldman',
+              fontSize: 18,
+            })
+            .setDepth(5)
+          this.playerNames.push(nameText)
+        })
+    }
+  }
+
+  // called from rpc.ts
+  drawChamp(data: string) {
+    const index = characterNames.findIndex((name) => name == data)
+    const button = this.characterButtons[index]
+    if (this.pickedChamps.includes(data) && !getState('picked').includes(data)) {
+      this.pickedChamps.filter((a) => a != data)
+      button.clearTint()
+    } else {
+      this.pickedChamps.push(data)
+      if (this.pickedChamps.length >= characterNames.length) {
+        if (!myPlayer().getState('ready')) {
+          myPlayer().setState('spectator', true)
+          RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL)
+        }
+      } else if (this.selected == index && !myPlayer().getState('ready')) {
+        while (this.pickedChamps.includes(characterNames[this.selected])) {
+          this.selected = this.selected >= 1 ? this.selected - 1 : characterNames.length - 1
+          this.moveSelectedBorder()
+        }
+      }
+      button.setTint(index == this.selected ? 0x17a319 : 0x730000)
+    }
+    this.checkStart()
+  }
+
+  // called from rpc.ts
+  startGame() {
+    const players: PlayerState[] = this.registry.get('players') || []
+    if (isHost()) {
+      this.registry.get('spectators').forEach((s: PlayerState) => s.setState('points', 0))
+      setState(
+        'alivePlayers',
+        players.map((p) => p.id)
+      )
+      this.registry.set(
+        'alivePlayers',
+        players.map((p) => p.id)
+      )
+      setState('gameWon', false)
+      setState('picked', [])
+      setState('points', 0)
+      setState('projectiles', [])
+      setState('gameActive', true)
+      setState('smallAccumulator', smallAccumulator)
+      setState('bigAccumulator', bigAccumulator)
+      setState('smallSpell', smallCooldown[this.difficulty])
+      setState('bigSpell', bigCooldown[this.difficulty])
+    }
+    this.sound.stopAll()
+    this.scene.start('MainMenu')
+  }
 
   init() {
+    setPreloaderRef(this)
+    if (getState('gameActive')) {
+      this.scene.start('MainMenu')
+    }
     this.characterButtons = []
     this.playerNames = []
     this.spectatorNames = []
+    this.pickedChamps = []
     if (this.registry.get('isDesktop')) {
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
       this.add.image(0, 0, 'pickBackground').setOrigin(0, 0)
@@ -80,14 +164,18 @@ export class Preloader extends Scene {
     const { x, y } = this.registry.get('isDesktop') ? { x: 960, y: 500 } : { x: 1300, y: 500 }
 
     this.qrCode = this.add.image(x, y, 'qr').setVisible(false).setDepth(20).setScale(4)
+    this.reDrawNames()
   }
   create() {
     characterNames.forEach((name, i) => {
+      const spectating = myPlayer().getState('spectator')
       const button = this.add
         .image(this.getButtonX(i), this.getButtonY(i), name)
         .setScale(0.25)
         .setInteractive()
-      if (i == this.selected && !myPlayer().getState('spectator')) {
+      if (spectating) {
+        button.disableInteractive()
+      } else if (i == this.selected) {
         button.setTint(0x999999)
       }
       button.on('pointerup', () => {
@@ -110,10 +198,14 @@ export class Preloader extends Scene {
         volume: 0.3,
       })
       this.add.image(950, 950, 'lockInButtonInactive')
-      this.readyButton = this.add.image(950, 950, 'lockInButtonActive').setInteractive()
+      if (!myPlayer().getState('ready')) {
+        this.readyButton = this.add.image(950, 950, 'lockInButtonActive').setInteractive()
+      }
     } else {
       this.add.image(1300, 1000, 'lockInButtonInactive')
-      this.readyButton = this.add.image(1300, 1000, 'lockInButtonActive').setInteractive()
+      if (!myPlayer().getState('ready')) {
+        this.readyButton = this.add.image(1300, 1000, 'lockInButtonActive').setInteractive()
+      }
     }
 
     this.add.text(1700, 10, 'Room code: ' + getRoomCode(), {
@@ -129,6 +221,8 @@ export class Preloader extends Scene {
         .on('pointerup', () => {
           setState(myPlayer()?.id, undefined)
           myPlayer()?.leaveRoom()
+          resetRPCs()
+          this.events.destroy()
           this.game.destroy(true)
         }),
       this.add.text(30, 5, 'leave room', {
@@ -157,12 +251,14 @@ export class Preloader extends Scene {
         .setOrigin(0.5, 0.5),
     ])
 
-    this.readyButton.on('pointerup', () => {
-      myPlayer()?.setState('character', characterNames[this.selected])
+    this.readyButton?.on('pointerup', () => {
+      const character = characterNames[this.selected]
+      myPlayer()?.setState('character', character)
       myPlayer()?.setState('ready', true)
-      setState('picked', [...getState('picked'), characterNames[this.selected]])
+      setState('picked', [...getState('picked'), character])
       this.readyButton?.setVisible(false)
       this.specButton?.setVisible(false)
+      RPC.call('pickedChamp', character, RPC.Mode.ALL)
     })
     if (myPlayer()?.getState('spectator')) {
       this.readyButton?.setVisible(false)
@@ -182,13 +278,18 @@ export class Preloader extends Scene {
             this.characterOutline?.setVisible(false)
             this.characterButtons[this.selected].clearTint()
             this.characterButtons.forEach((button) => button.disableInteractive())
+            RPC.call('moveToSpectator', myPlayer().id)
           } else {
             myPlayer()?.setState('spectator', false)
             this.readyButton?.setVisible(true)
             this.characterOutline?.setVisible(true)
             this.characterButtons[this.selected].setTint(0x999999)
             this.characterButtons.forEach((button) => button.setInteractive())
+            RPC.call('moveToPlayer', myPlayer().id)
           }
+          this.specButton
+            ?.getByName<Phaser.GameObjects.Text>('specButtonText')
+            .setText(`${myPlayer()?.getState('spectator') ? 'leave' : 'join'} specators`)
         })
     )
     this.specButton.add(
@@ -237,137 +338,13 @@ export class Preloader extends Scene {
           .setName('btext'),
       ])
     }
-
-    this.waitForGameStart()
+    const pickedState = getState('picked')
+    pickedState.forEach((name: string) => {
+      this.drawChamp(name)
+    })
   }
 
   update() {
-    const players: PlayerState[] = this.registry.get('players') || []
-
-    const picked: string[] = getState('picked')
-    if (picked.length >= characterNames.length && !myPlayer().getState('ready')) {
-      myPlayer().setState('spectator', true)
-
-      this.readyButton?.setVisible(false)
-      this.characterOutline?.setVisible(false)
-    } else if (picked) {
-      picked.forEach((champ) => {
-        if (!this.pickedChamps.includes(champ)) {
-          const index = characterNames.findIndex((name) => name == champ)
-          if (this.selected == index && !myPlayer().getState('ready')) {
-            while (picked.includes(characterNames[this.selected])) {
-              this.selected = this.selected >= 1 ? this.selected - 1 : characterNames.length - 1
-              this.moveSelectedBorder()
-            }
-          }
-          this.characterButtons[index].setTint(index == this.selected ? 0x17a319 : 0x730000)
-        }
-      })
-    }
-
-    if (this.registry.get('isDesktop')) {
-      if (this.playerNames.length > players.length) {
-        this.playerNames.forEach((name) => name.destroy())
-        this.playerNames = []
-      }
-      let offset = 0
-
-      players.forEach((player, index) => {
-        const isSpectator = player.getState('spectator')
-        const playerName = player?.getState('name')
-        const playerText = this.playerNames.find((name) => name.text == playerName)
-        if (isSpectator) {
-          this.registry.set('spectators', [...this.registry.get('spectators'), player])
-          this.registry.set(
-            'players',
-            this.registry
-              .get('players')
-              .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
-          )
-          this.playerNames.forEach((name) => name.destroy())
-          this.playerNames = []
-          offset += 1
-        } else if (!playerText) {
-          {
-            this.specButton
-              ?.getByName<Phaser.GameObjects.Text>('specButtonText')
-              .setText(`${myPlayer()?.getState('spectator') ? 'leave' : 'join'} specators`)
-            const nameText = this.add
-              .text(
-                10,
-                25 + 20 * (index - offset),
-                `${playerName} - ${player.getState('points')}`,
-                {
-                  fontFamily: 'goldman',
-                  fontSize: 18,
-                }
-              )
-              .setDepth(5)
-            this.playerNames.push(nameText)
-          }
-        }
-      })
-      offset = 0
-      const spectators: PlayerState[] = this.registry.get('spectators') || []
-      if (this.spectatorNames.length > spectators.length) {
-        this.spectatorNames.forEach((name) => name.destroy())
-        this.spectatorNames = []
-      }
-      spectators.forEach((player, index) => {
-        const isSpectator = player.getState('spectator')
-        const playerName = player?.getState('name')
-        const spectatorText = this.spectatorNames.find((name) => name.text == playerName)
-        if (!isSpectator) {
-          this.registry.set('players', [...this.registry.get('players'), player])
-          this.registry.set(
-            'spectators',
-            this.registry
-              .get('spectators')
-              .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
-          )
-          this.spectatorNames.forEach((name) => name.destroy())
-          this.spectatorNames = []
-          offset += 1
-        } else if (!spectatorText) {
-          {
-            this.specButton
-              ?.getByName<Phaser.GameObjects.Text>('specButtonText')
-              .setText(`${myPlayer()?.getState('spectator') ? 'leave' : 'join'} specators`)
-            const nameText = this.add
-              .text(10, 525 + 20 * (index - offset), playerName, {
-                fontFamily: 'goldman',
-                fontSize: 18,
-              })
-              .setDepth(5)
-            this.spectatorNames.push(nameText)
-          }
-        }
-      })
-    }
-
-    if (isHost()) {
-      if (
-        players.filter((player) => player.getState('ready') == true).length == players.length &&
-        players.length > 0
-      ) {
-        setState(
-          'alivePlayers',
-          players.map((p) => p.id)
-        )
-        this.registry.set(
-          'alivePlayers',
-          players.map((p) => p.id)
-        )
-        setState('gameWon', false)
-        setState('picked', [])
-        setState('points', 0)
-        setState('projectiles', [])
-        setState('gameActive', true)
-        setState('smallAccumulator', smallAccumulator)
-        setState('bigAccumulator', bigAccumulator)
-        setState('smallSpell', smallCooldown[this.difficulty])
-        setState('bigSpell', bigCooldown[this.difficulty])
-      }
-    }
+    this.reDrawNames()
   }
 }

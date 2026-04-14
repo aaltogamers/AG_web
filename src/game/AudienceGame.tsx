@@ -49,6 +49,12 @@ const AudienceGame = () => {
   const params = useParams()
 
   const tryJoin = async (skipCheck?: boolean) => {
+    const success = () => {
+      setReady(true)
+      setError(null)
+      setConnected(false)
+    }
+
     if (!skipCheck) {
       if (roomcode == '') {
         setError('Room code must be atleast 1 character')
@@ -61,9 +67,7 @@ const AudienceGame = () => {
         }
         myPlayer().setState('name', name)
         setState(myPlayer().id, name)
-        setReady(true)
-        setError(null)
-        setConnected(false)
+        success()
 
         return
       }
@@ -94,7 +98,6 @@ const AudienceGame = () => {
         winner: '',
         originalHostID: '',
         spectators: [],
-        projectiles: [],
         smallSpell: smallCooldown[0],
         bigSpell: bigCooldown[0],
         smallAccumulator: smallAccumulator,
@@ -106,9 +109,7 @@ const AudienceGame = () => {
       .then(() => {
         if (getState(myPlayer().id)) {
           myPlayer().setState('name', getState(myPlayer().id))
-          setReady(true)
-          setError(null)
-          setConnected(false)
+          success()
         } else if (name != '') {
           if (players.find((a) => a.getState('name') == name)) {
             setError('Name already taken')
@@ -116,9 +117,7 @@ const AudienceGame = () => {
           }
           myPlayer().setState('name', name)
           setState(myPlayer().id, name)
-          setReady(true)
-          setError(null)
-          setConnected(false)
+          success()
         } else {
           setError(null)
           setConnected(true)
