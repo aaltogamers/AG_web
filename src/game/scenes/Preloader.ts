@@ -9,6 +9,7 @@ import {
 } from '../constants'
 import { getRoomCode, getState, isHost, myPlayer, PlayerState, RPC, setState } from 'playroomkit'
 import { resetRPCs, setPreloaderRef } from '../rpc'
+import { MainMenu } from './MainMenu'
 
 export class Preloader extends Scene {
   selected: number = 1
@@ -137,11 +138,29 @@ export class Preloader extends Scene {
       setState('bigSpell', bigCooldown[this.difficulty])
     }
     this.sound.stopAll()
-    this.scene.start('MainMenu')
+    if (this.registry.get('isDesktop')) {
+      this.add
+        .text(960, 540, 'Game Starting in 3 seconds', {
+          fontFamily: 'goldman',
+          fontSize: 80,
+          backgroundColor: 'black',
+        })
+        .setDepth(20)
+        .setOrigin(0.5, 0.5)
+    }
+    this.time.delayedCall(3000, () => {
+      if (!this.scene.get('MainMenu')) {
+        this.scene.add('MainMenu', MainMenu)
+      }
+      this.scene.start('MainMenu')
+      this.scene.remove('Preloader')
+      setPreloaderRef(undefined)
+    })
   }
 
   init() {
     setPreloaderRef(this)
+
     if (getState('gameActive')) {
       this.scene.start('MainMenu')
     }
@@ -149,6 +168,7 @@ export class Preloader extends Scene {
     this.playerNames = []
     this.spectatorNames = []
     this.pickedChamps = []
+    this.difficulty = getState('difficulty')
     if (this.registry.get('isDesktop')) {
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
       this.add.image(0, 0, 'pickBackground').setOrigin(0, 0)
@@ -325,6 +345,7 @@ export class Preloader extends Scene {
           .setInteractive()
           .on('pointerup', () => {
             this.difficulty = (this.difficulty + 1) % 3
+            setState('difficulty', this.difficulty)
             difficultyButton
               .getByName<Phaser.GameObjects.Text>('btext')
               .setText(difficulties[this.difficulty])

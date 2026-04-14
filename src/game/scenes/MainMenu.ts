@@ -12,6 +12,7 @@ import {
 import nipplejs from 'nipplejs'
 import { smallAbilities, bigAbilities } from '../constants'
 import { setMainMenuRef } from '../rpc'
+import { Preloader } from './Preloader'
 
 const radToXY = (rad: number) => {
   return {
@@ -183,6 +184,7 @@ export class MainMenu extends Scene {
         'spectators',
         'winner',
         'points',
+        'difficulty',
       ])
       this.scaler?.remove()
     }
@@ -190,10 +192,13 @@ export class MainMenu extends Scene {
     this.time.delayedCall(5000, () => {
       this.sound.stopAll()
       this.joystick?.destroy()
-
-      this.scene.stop()
+      if (!this.scene.get('Preloader')) {
+        this.scene.add('Preloader', Preloader)
+      }
       this.scene.start('Preloader')
-      this.hitboxes.forEach((p) => p.destroy(true))
+      this.scene.remove('MainMenu')
+      setMainMenuRef(undefined)
+
       myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
     })
   }
@@ -348,7 +353,7 @@ export class MainMenu extends Scene {
           const bigTime = Math.max(1, getState('bigSpell') * 0.8)
 
           setState('smallSpell', smallTime)
-          setState('BigSpell', bigTime)
+          setState('bigSpell', bigTime)
         },
         loop: true,
       })

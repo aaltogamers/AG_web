@@ -7,15 +7,17 @@ let bootRef: Boot | undefined = undefined
 let preloaderRef: Preloader | undefined = undefined
 let mainMenuRef: MainMenu | undefined = undefined
 
-export const setBootRef = (ref: Boot) => {
+let rpcsInitialized = false
+
+export const setBootRef = (ref: Boot | undefined) => {
   bootRef = ref
 }
 
-export const setPreloaderRef = (ref: Preloader) => {
+export const setPreloaderRef = (ref: Preloader | undefined) => {
   preloaderRef = ref
 }
 
-export const setMainMenuRef = (ref: MainMenu) => {
+export const setMainMenuRef = (ref: MainMenu | undefined) => {
   mainMenuRef = ref
 }
 
@@ -26,10 +28,8 @@ export const resetRPCs = () => {
 }
 
 export const initRPCs = (isDesktop: boolean) => {
-  if (bootRef && preloaderRef && mainMenuRef) {
-    resetRPCs()
-    return
-  }
+  if (rpcsInitialized) return
+  rpcsInitialized = true
 
   RPC.register('moveToSpectator', async (id) => {
     bootRef?.moveToSpectator(id)

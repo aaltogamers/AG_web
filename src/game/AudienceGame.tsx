@@ -104,6 +104,7 @@ const AudienceGame = () => {
         bigAccumulator: bigAccumulator,
         points: 0,
         winPoints: 0,
+        difficulty: 0,
       },
     })
       .then(() => {
