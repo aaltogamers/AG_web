@@ -196,6 +196,8 @@ export class MainMenu extends Scene {
         this.scene.add('Preloader', Preloader)
       }
       this.scene.start('Preloader')
+      this.matter.world.remove(this.matter.world.getAllBodies())
+
       this.scene.remove('MainMenu')
       setMainMenuRef(undefined)
 
