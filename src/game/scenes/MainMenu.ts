@@ -10,7 +10,7 @@ import {
   setState,
 } from 'playroomkit'
 import nipplejs from 'nipplejs'
-import { smallAbilities, bigAbilities } from '../constants'
+import { smallAbilities, bigAbilities, characterNames } from '../constants'
 import { setMainMenuRef } from '../rpc'
 import { Preloader } from './Preloader'
 
@@ -43,10 +43,12 @@ export class MainMenu extends Scene {
   outerEdgeHitBoxPoints: Phaser.Geom.Point[] = []
   playerCollisionGroup: number = 2
   projectileCollissionGroup: number = 4
+  shieldCollisionGroup: number = 8
   projectileSpeed = 3
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
   pointText: Phaser.GameObjects.Text | undefined = undefined
   scaler: Phaser.Time.TimerEvent | undefined = undefined
+  shieldSpawner: Phaser.Time.TimerEvent | undefined = undefined
   smallAccumulator = getState('smallAccumulator')
   bigAccumulator = getState('bigAccumulator')
   points = getState('points')
@@ -60,9 +62,71 @@ export class MainMenu extends Scene {
       fontSize: 40,
     },
   }
+  shield: Phaser.Physics.Matter.Image | undefined = undefined
+  playerShields: Map<string, Phaser.GameObjects.Image> = new Map()
 
   constructor() {
     super('MainMenu')
+  }
+
+  usedShield(id: string) {
+    const shield = this.playerShields.get(id)
+    if (!shield) return
+    const player = this.players.find((p) => p.state.id == id)
+    if (!player) return
+
+    player.sprite.setTintFill(0xa4d0fc)
+
+    this.time.delayedCall(100, () => {
+      player.sprite.clearTint()
+    })
+    shield.destroy()
+    this.playerShields.delete(id)
+  }
+
+  getShield(id: string) {
+    const player = this.players.find((p) => p.state.id == id)
+    if (!player) return
+    if (!this.shield) return
+
+    this.shield.setCollidesWith(0).setPosition(player.sprite.x, player.sprite.y).setScale(0.37)
+
+    this.playerShields.set(id, this.shield)
+
+    this.shield = undefined
+  }
+
+  spawnShield() {
+    if (this.shield) return
+
+    const shield = this.matter.add
+      .image(940, 550, 'spellShield', undefined, {
+        shape: {
+          type: 'circle',
+          radius: 80,
+        },
+      })
+      .setSensor(true)
+      .setCollidesWith(this.playerCollisionGroup)
+      .setFixedRotation()
+      .setFriction(0)
+      .setFrictionAir(0)
+      .setScale(0.45)
+      .setCollisionGroup(this.shieldCollisionGroup)
+
+    if (isHost()) {
+      shield.setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
+        const playerBody = event.bodyA.gameObject
+        if (!playerBody) return
+        const player = this.players.find((p) => p.sprite.name === playerBody.name)
+        if (!player) return
+
+        if (this.playerShields.get(player.state.id)) return
+
+        RPC.call('getShield', player.state.id)
+      })
+    }
+    this.shield = shield
   }
 
   spawnProjectile(type: { name: string; speed: number }) {
@@ -97,12 +161,20 @@ export class MainMenu extends Scene {
       .setCollisionCategory(this.projectileCollissionGroup)
       .setCollidesWith([this.playerCollisionGroup])
       .setSensor(true)
+      .setBounce(0)
       .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
         const playerBody = event.bodyA.gameObject
         if (!playerBody) return
 
         const player = this.players.find((p) => p.sprite.name === playerBody.name)
         if (!player) return
+
+        const shield = this.playerShields.get(player.state.id)
+
+        if (shield) {
+          RPC.call('usedShield', player.state.id)
+          return
+        }
 
         RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
         player.state.setState('points', this.points)
@@ -187,6 +259,7 @@ export class MainMenu extends Scene {
         'difficulty',
       ])
       this.scaler?.remove()
+      this.shieldSpawner?.remove()
     }
 
     this.time.delayedCall(5000, () => {
@@ -299,13 +372,13 @@ export class MainMenu extends Scene {
       })
 
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
+      this.add.image(940, 550, 'spawnAltar').setScale(0.55)
 
       this.playerStates.forEach((playerState) => {
         if (playerState.getState('active')) {
-          const character: string = playerState.getState('character')
-
+          const character: string = playerState.getState('character') || characterNames[0]
           const sprite = this.matter.add
-            .image(960, 540, character, undefined, {
+            .image(940, 550, character, undefined, {
               shape: {
                 type: 'circle',
                 radius: 340,
@@ -347,13 +420,20 @@ export class MainMenu extends Scene {
         }
       }
     }
+
     if (isHost()) {
+      this.shieldSpawner = this.time.addEvent({
+        delay: 15000,
+        callback: () => {
+          RPC.call('spawnShield', '')
+        },
+        loop: true,
+      })
       this.scaler = this.time.addEvent({
         delay: 10000,
         callback: () => {
           const smallTime = Math.max(1, getState('smallSpell') * 0.8)
           const bigTime = Math.max(1, getState('bigSpell') * 0.8)
-
           setState('smallSpell', smallTime)
           setState('bigSpell', bigTime)
         },
@@ -370,6 +450,10 @@ export class MainMenu extends Scene {
       setState('points', this.points)
 
       for (const player of this.players) {
+        const shield = this.playerShields.get(player.state.id)
+        if (shield) {
+          shield.setPosition(player.sprite.x, player.sprite.y)
+        }
         if (player.sprite.active) {
           const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
 
@@ -409,12 +493,17 @@ export class MainMenu extends Scene {
       this.pointText?.setText(`Points: ${this.points}`)
     } else if (this.registry.get('isDesktop')) {
       for (const player of this.players) {
-        const pos = player.state.getState('pos')
+        const shield = this.playerShields.get(player.state.id)
+        if (shield) {
+          shield.setPosition(player.sprite.x, player.sprite.y)
+        }
 
+        const pos = player.state.getState('pos')
         if (pos && player.sprite.body) {
           player.sprite.setPosition(pos.x, pos.y)
         }
       }
+
       const points = getState('points')
       this.pointText?.setText(`Points: ${points}`)
     }

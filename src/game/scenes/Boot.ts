@@ -85,6 +85,8 @@ export class Boot extends Scene {
         { key: 'jinxUlt', url: '/images/games/jinxUlt.webp' },
         { key: 'luxQ', url: '/images/games/luxQ.webp' },
         { key: 'pickBorder', url: '/images/games/pickBorder.webp' },
+        { key: 'spellShield', url: '/images/games/spellShield.webp' },
+        { key: 'spawnAltar', url: '/images/games/spawnAltar.webp' },
       ],
       audio: [
         { key: 'champSelect', url: '/music/champSelect.webm' },

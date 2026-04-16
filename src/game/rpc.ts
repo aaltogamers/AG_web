@@ -1,4 +1,4 @@
-import { RPC } from 'playroomkit'
+import { isHost, RPC } from 'playroomkit'
 import { Boot } from './scenes/Boot'
 import { MainMenu } from './scenes/MainMenu'
 import { Preloader } from './scenes/Preloader'
@@ -49,9 +49,18 @@ export const initRPCs = (isDesktop: boolean) => {
   RPC.register('killPlayer', async (data) => {
     mainMenuRef?.killPlayer(data)
   })
-  if (isDesktop) {
+  if (isDesktop || isHost()) {
     RPC.register('spawnClientProjectile', async (data) => {
       mainMenuRef?.spawnClientProjectile(data)
+    })
+    RPC.register('getShield', async (data) => {
+      mainMenuRef?.getShield(data)
+    })
+    RPC.register('spawnShield', async () => {
+      mainMenuRef?.spawnShield()
+    })
+    RPC.register('usedShield', async (data) => {
+      mainMenuRef?.usedShield(data)
     })
   }
 }
