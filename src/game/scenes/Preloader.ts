@@ -12,7 +12,7 @@ import { resetRPCs, setPreloaderRef } from '../rpc'
 import { MainMenu } from './MainMenu'
 
 export class Preloader extends Scene {
-  selected: number = 1
+  selected: number = 0
   pickedChamps: string[] = []
   characterButtons: Phaser.GameObjects.Image[] = []
   characterOutline: Phaser.GameObjects.Image | null = null
@@ -119,13 +119,10 @@ export class Preloader extends Scene {
     const players: PlayerState[] = this.registry.get('players') || []
     if (isHost()) {
       this.registry.get('spectators').forEach((s: PlayerState) => s.setState('points', 0))
+      const alivePlayers = players.filter((p) => p.getState('ready'))
       setState(
         'alivePlayers',
-        players.map((p) => p.id)
-      )
-      this.registry.set(
-        'alivePlayers',
-        players.map((p) => p.id)
+        alivePlayers.map((p) => p.id)
       )
       setState('gameWon', false)
       setState('picked', [])
@@ -169,6 +166,13 @@ export class Preloader extends Scene {
     this.spectatorNames = []
     this.pickedChamps = []
     this.difficulty = getState('difficulty')
+
+    this.selected = Phaser.Math.Clamp(
+      characterNames.findIndex((name) => myPlayer().getState('character') == name),
+      0,
+      10
+    )
+
     if (this.registry.get('isDesktop')) {
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
       this.add.image(0, 0, 'pickBackground').setOrigin(0, 0)
@@ -228,10 +232,18 @@ export class Preloader extends Scene {
       }
     }
 
-    this.add.text(1700, 10, 'Room code: ' + getRoomCode(), {
-      fontFamily: 'goldman',
-      fontSize: 20,
-    })
+    let roomcode = getRoomCode()
+    if (!roomcode) roomcode = ''
+
+    this.add.text(
+      1700,
+      10,
+      'Room code: ' + (roomcode.length > 5 ? roomcode.slice(0, 5) + '...' : roomcode),
+      {
+        fontFamily: 'goldman',
+        fontSize: 20,
+      }
+    )
 
     this.add.container(1700, 40).add([
       this.add

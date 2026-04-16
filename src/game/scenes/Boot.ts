@@ -87,20 +87,20 @@ export class Boot extends Scene {
         { key: 'pickBorder', url: '/images/games/pickBorder.webp' },
         { key: 'spellShield', url: '/images/games/spellShield.webp' },
         { key: 'spawnAltar', url: '/images/games/spawnAltar.webp' },
+        { key: 'background', url: '/images/games/arena.webp' },
+        ...characterNames.map((name) => {
+          return { key: name, url: `/images/games/${name}.webp` }
+        }),
       ],
       audio: [
         { key: 'champSelect', url: '/music/champSelect.webm' },
         { key: 'inGame', url: '/music/pledgeOfDemon.webm' },
       ],
+      font: [{ key: 'Goldman', url: '/fonts/Goldman-Regular.ttf' }],
     }
-    this.load.font('Goldman', '/fonts/Goldman-Regular.ttf')
-    this.load.image('background', '/images/games/arena.webp')
-    characterNames.forEach((character) => {
-      this.load.image(character, `/images/games/${character}.webp`)
-    })
-
     this.load.image(files.images)
     this.load.audio(files.audio)
+    this.load.font(files.font)
     this.createRoomQR()
   }
   create() {
@@ -164,6 +164,8 @@ export class Boot extends Scene {
 
     if (getState('gameActive')) {
       this.add.text(750, 540, 'game in progress ... \n please wait for the next round to start')
+    } else {
+      this.scene.start('Preloader')
     }
   }
   update() {

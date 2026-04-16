@@ -48,9 +48,11 @@ export class MainMenu extends Scene {
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
   pointText: Phaser.GameObjects.Text | undefined = undefined
   scaler: Phaser.Time.TimerEvent | undefined = undefined
-  shieldSpawner: Phaser.Time.TimerEvent | undefined = undefined
   smallAccumulator = getState('smallAccumulator')
   bigAccumulator = getState('bigAccumulator')
+  shieldAccumulator: number = 2000
+  shieldRespawnTime: number = 2000
+  spawnAltar: Phaser.GameObjects.Image | undefined = undefined
   points = getState('points')
   winMessagePos = { x: 960, y: 540 }
   deathMessagePos = {
@@ -89,9 +91,15 @@ export class MainMenu extends Scene {
     if (!player) return
     if (!this.shield) return
 
-    this.shield.setCollidesWith(0).setPosition(player.sprite.x, player.sprite.y).setScale(0.37)
+    this.shield
+      .setCollidesWith(0)
+      .setPosition(player.sprite.x, player.sprite.y)
+      .setScale(0.37)
+      .clearTint()
+      .setAlpha(0.85)
 
     this.playerShields.set(id, this.shield)
+    this.spawnAltar?.clearTint()
 
     this.shield = undefined
   }
@@ -111,9 +119,11 @@ export class MainMenu extends Scene {
       .setFixedRotation()
       .setFriction(0)
       .setFrictionAir(0)
-      .setScale(0.45)
+      .setScale(0.25)
       .setCollisionGroup(this.shieldCollisionGroup)
+      .setTintFill(0xadb1f0)
 
+    this.spawnAltar?.setTint(0xb8f7ff)
     if (isHost()) {
       shield.setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
         const playerBody = event.bodyA.gameObject
@@ -248,7 +258,7 @@ export class MainMenu extends Scene {
 
     if (isHost()) {
       setState('gameActive', false)
-      resetPlayersStates(['spectator', 'points', 'name'])
+      resetPlayersStates(['spectator', 'points', 'name', 'character'])
       resetStates([
         ...this.playerStates.map((p) => p.id),
         ...this.registry.get('spectators').map((p: PlayerState) => p.id),
@@ -259,7 +269,6 @@ export class MainMenu extends Scene {
         'difficulty',
       ])
       this.scaler?.remove()
-      this.shieldSpawner?.remove()
     }
 
     this.time.delayedCall(5000, () => {
@@ -281,7 +290,11 @@ export class MainMenu extends Scene {
   // called from rpc.ts
   killPlayer(data: string) {
     const playerToKill = this.players.find((p) => p.state.id == data)
-    playerToKill?.sprite?.destroy()
+    if (!playerToKill) return
+    playerToKill.sprite.setTint(0x610003)
+    this.time.delayedCall(50, () => {
+      playerToKill?.sprite?.destroy()
+    })
     if (data == myPlayer().id) {
       this.joystick?.destroy()
       this.add.text(
@@ -307,7 +320,9 @@ export class MainMenu extends Scene {
   }
 
   create() {
-    this.playerStates = this.registry.get('players')
+    this.playerStates = this.registry
+      .get('players')
+      .filter((p: PlayerState) => getState('alivePlayers').includes(p.id))
 
     if (myPlayer().getState('spectator')) {
       this.add
@@ -372,7 +387,7 @@ export class MainMenu extends Scene {
       })
 
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
-      this.add.image(940, 550, 'spawnAltar').setScale(0.55)
+      this.spawnAltar = this.add.image(940, 550, 'spawnAltar').setScale(0.55)
 
       this.playerStates.forEach((playerState) => {
         if (playerState.getState('active')) {
@@ -422,13 +437,6 @@ export class MainMenu extends Scene {
     }
 
     if (isHost()) {
-      this.shieldSpawner = this.time.addEvent({
-        delay: 15000,
-        callback: () => {
-          RPC.call('spawnShield', '')
-        },
-        loop: true,
-      })
       this.scaler = this.time.addEvent({
         delay: 10000,
         callback: () => {
@@ -450,6 +458,8 @@ export class MainMenu extends Scene {
       setState('points', this.points)
 
       for (const player of this.players) {
+        if (!player?.sprite) return
+
         const shield = this.playerShields.get(player.state.id)
         if (shield) {
           shield.setPosition(player.sprite.x, player.sprite.y)
@@ -466,6 +476,14 @@ export class MainMenu extends Scene {
             y: player.sprite.y,
           })
         }
+      }
+
+      if (!this.shield) {
+        this.shieldAccumulator -= roundedDelta
+      }
+      if (this.shieldAccumulator <= 0) {
+        RPC.call('spawnShield', '')
+        this.shieldAccumulator = this.shieldRespawnTime
       }
 
       this.smallAccumulator -= roundedDelta
@@ -493,6 +511,8 @@ export class MainMenu extends Scene {
       this.pointText?.setText(`Points: ${this.points}`)
     } else if (this.registry.get('isDesktop')) {
       for (const player of this.players) {
+        if (!player?.sprite) return
+
         const shield = this.playerShields.get(player.state.id)
         if (shield) {
           shield.setPosition(player.sprite.x, player.sprite.y)
