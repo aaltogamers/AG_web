@@ -18,14 +18,39 @@ import { useParams } from 'next/navigation'
 import Layout from '../components/Layout'
 import { bigAccumulator, bigCooldown, smallAccumulator, smallCooldown } from './constants'
 
+const isMobile = /iPhone|Android/i.test(navigator.userAgent)
+
+const getScale = () => {
+  if (isMobile) {
+    console.log('mobile')
+    return {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: 1920,
+      height: 1080,
+    }
+  }
+
+  return {
+    scale: {
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      mode: Phaser.Scale.FIT,
+      expandParent: true,
+      width: 1920,
+      height: 1080,
+      max: {
+        width: Math.min(window.innerWidth, window.innerHeight * (16 / 9)),
+        height: Math.min(window.innerHeight, window.innerWidth * (9 / 16)),
+      },
+    },
+  }
+}
+
 const startGame = () => {
-  const config = {
+  const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 1920,
-    height: 1080,
     parent: 'game-container',
+    ...getScale(),
     scene: [Boot, Preloader, MainMenu],
     physics: {
       default: 'matter',

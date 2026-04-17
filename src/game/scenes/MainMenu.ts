@@ -64,11 +64,35 @@ export class MainMenu extends Scene {
       fontSize: 40,
     },
   }
+  pauseText = {
+    x: 960,
+    y: 540,
+    message: `-- Game Paused -- \n Host has minimized the game `,
+    settings: {
+      fontFamily: 'goldman',
+      fontSize: 40,
+      align: 'center',
+      backgroundColor: 'black',
+    },
+  }
+  pauseTextObject: Phaser.GameObjects.Text | undefined = undefined
   shield: Phaser.Physics.Matter.Image | undefined = undefined
   playerShields: Map<string, Phaser.GameObjects.Image> = new Map()
 
   constructor() {
     super('MainMenu')
+  }
+
+  togglePause(data: boolean) {
+    if (data) {
+      this.scene.pause()
+      this.sound.pauseAll()
+      this.pauseTextObject?.setVisible(true)
+    } else {
+      this.scene.resume()
+      this.sound.resumeAll()
+      this.pauseTextObject?.setVisible(false)
+    }
   }
 
   usedShield(id: string) {
@@ -160,58 +184,16 @@ export class MainMenu extends Scene {
     const randomPoint = this.edgeCircle?.getRandomPoint()
     if (!randomPoint) return
     vector.setAngle(Phaser.Math.Angle.Between(x, y, randomPoint.x, randomPoint.y))
-    const rect = this.matter.add
-      .image(x, y, type.name)
-      .setRotation(vector.angle())
-      .setScale(0.5)
-      .setVelocity(vector.x * type.speed, vector.y * type.speed)
-      .setFixedRotation()
-      .setFriction(0)
-      .setFrictionAir(0)
-      .setCollisionCategory(this.projectileCollissionGroup)
-      .setCollidesWith([this.playerCollisionGroup])
-      .setSensor(true)
-      .setBounce(0)
-      .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
-        const playerBody = event.bodyA.gameObject
-        if (!playerBody) return
-
-        const player = this.players.find((p) => p.sprite.name === playerBody.name)
-        if (!player) return
-
-        const shield = this.playerShields.get(player.state.id)
-
-        if (shield) {
-          RPC.call('usedShield', player.state.id)
-          return
-        }
-
-        RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
-        player.state.setState('points', this.points)
-        setState(
-          'alivePlayers',
-          getState('alivePlayers').filter(
-            (alivePlayerID: string) => alivePlayerID != player.state.id
-          )
-        )
-        const alivePlayers = getState('alivePlayers')
-
-        if (alivePlayers.length <= 0) {
-          setState('winner', player.state.id)
-          RPC.call('gameWon', '', RPC.Mode.ALL)
-        }
-      })
-      .setName(type.name)
     RPC.call(
       'spawnClientProjectile',
       {
-        x: rect.x,
-        y: rect.y,
-        rotation: rect.rotation,
+        x: x,
+        y: y,
+        rotation: vector.angle(),
         speed: type.speed,
         name: type.name,
       },
-      RPC.Mode.OTHERS
+      RPC.Mode.ALL
     )
   }
   // called from rpc.ts
@@ -235,6 +217,38 @@ export class MainMenu extends Scene {
       .setVelocity(x * projectile.speed, y * projectile.speed)
       .setFriction(0)
       .setFrictionAir(0)
+      .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
+        if (isHost()) {
+          const playerBody = event.bodyA.gameObject
+          if (!playerBody) return
+
+          const player = this.players.find((p) => p.sprite.name === playerBody.name)
+          if (!player) return
+
+          const shield = this.playerShields.get(player.state.id)
+
+          if (shield) {
+            RPC.call('usedShield', player.state.id)
+            return
+          }
+
+          RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
+          player.state.setState('points', this.points)
+          setState(
+            'alivePlayers',
+            getState('alivePlayers').filter(
+              (alivePlayerID: string) => alivePlayerID != player.state.id
+            )
+          )
+          const alivePlayers = getState('alivePlayers')
+
+          if (alivePlayers.length <= 0) {
+            setState('winner', player.state.id)
+            RPC.call('gameWon', '', RPC.Mode.ALL)
+          }
+        }
+      })
+      .setName(data.name)
   }
 
   // called from rpc.ts
@@ -413,10 +427,18 @@ export class MainMenu extends Scene {
           })
         }
       })
+
       this.pointText = this.add.text(1650, 10, 'Points: 0', {
         fontFamily: 'goldman',
         fontSize: 30,
       })
+
+      this.pauseTextObject = this.add
+        .text(this.pauseText.x, this.pauseText.y, this.pauseText.message, this.pauseText.settings)
+        .setOrigin(0.5, 0.5)
+        .setVisible(false)
+        .setDepth(101)
+
       if (!this.registry.get('isDesktop')) {
         this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0).setDepth(100)
         if (myPlayer().getState('spectator')) {
@@ -435,6 +457,7 @@ export class MainMenu extends Scene {
         }
       }
     }
+    this.togglePause(true)
 
     if (isHost()) {
       this.scaler = this.time.addEvent({
@@ -447,6 +470,8 @@ export class MainMenu extends Scene {
         },
         loop: true,
       })
+
+      RPC.call('togglePause', false)
     }
   }
 

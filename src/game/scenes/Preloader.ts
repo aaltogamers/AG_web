@@ -134,21 +134,23 @@ export class Preloader extends Scene {
       setState('smallSpell', smallCooldown[this.difficulty])
       setState('bigSpell', bigCooldown[this.difficulty])
     }
-    this.sound.stopAll()
-    if (this.registry.get('isDesktop')) {
-      this.add
-        .text(960, 540, 'Game Starting in 3 seconds', {
-          fontFamily: 'goldman',
-          fontSize: 80,
-          backgroundColor: 'black',
-        })
-        .setDepth(20)
-        .setOrigin(0.5, 0.5)
-    }
+
+    const pos: [number, number] = this.registry.get('isDesktop') ? [960, 540] : [1350, 540]
+    const size = this.registry.get('isDesktop') ? 80 : 60
+    this.add
+      .text(...pos, 'Game Starting in 3 seconds', {
+        fontFamily: 'goldman',
+        fontSize: size,
+        backgroundColor: 'black',
+      })
+      .setDepth(20)
+      .setOrigin(0.5, 0.5)
+
     this.time.delayedCall(3000, () => {
       if (!this.scene.get('MainMenu')) {
         this.scene.add('MainMenu', MainMenu)
       }
+      this.sound.stopAll()
       this.scene.start('MainMenu')
       this.scene.remove('Preloader')
       setPreloaderRef(undefined)

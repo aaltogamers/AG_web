@@ -49,6 +49,9 @@ export const initRPCs = (isDesktop: boolean) => {
   RPC.register('killPlayer', async (data) => {
     mainMenuRef?.killPlayer(data)
   })
+  RPC.register('togglePause', async (data) => {
+    mainMenuRef?.togglePause(data)
+  })
   if (isDesktop || isHost()) {
     RPC.register('spawnClientProjectile', async (data) => {
       mainMenuRef?.spawnClientProjectile(data)

@@ -18,6 +18,7 @@ export class Boot extends Scene {
   myID = myPlayer().id
   doOnce = false
   rpcInit = false
+  isVisible = true
   async createRoomQR() {
     const url = window.location.href
     const qrDataURL = await QRCode.toDataURL(url)
@@ -108,6 +109,24 @@ export class Boot extends Scene {
       setState('originalHostID', this.myID)
     }
 
+    this.game.events.on('hidden', () => {
+      this.isVisible = false
+      if (isHost()) {
+        RPC.call('togglePause', true)
+      }
+    })
+
+    this.game.events.on('visible', () => {
+      this.isVisible = true
+      if (isHost()) {
+        RPC.call('togglePause', false)
+      }
+    })
+
+    this.game.events.on('destroy', () => {
+      RPC.call('togglePause', false)
+    })
+
     onPlayerJoin((player) => {
       waitForPlayerState(player, 'name', () => {
         if (
@@ -126,6 +145,9 @@ export class Boot extends Scene {
         }
         player.onQuit(() => {
           if (myPlayer()?.id) {
+            if (isHost() && player.id != myPlayer().id && this.isVisible) {
+              RPC.call('togglePause', false)
+            }
             if (player.getState('spectator')) {
               this.registry.set(
                 'spectators',
@@ -149,12 +171,14 @@ export class Boot extends Scene {
                   )
                   RPC.call('pickedChamp', player.getState('character'))
                 }
-                setState(
-                  'alivePlayers',
-                  getState('alivePlayers').filter(
-                    (alivePlayerID: string) => alivePlayerID != player.id
-                  )
+                const alivePlayers = getState('alivePlayers').filter(
+                  (alivePlayerID: string) => alivePlayerID != player.id
                 )
+                setState('alivePlayers', alivePlayers)
+                if (alivePlayers.length <= 0) {
+                  setState('winner', player.id)
+                  RPC.call('gameWon', '')
+                }
               }
             }
           }
