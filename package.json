@@ -30,7 +30,7 @@
     "octokit": "^4.1.1",
     "pg": "^8.20.0",
     "phaser": "^3.90.0",
-    "playroomkit": "^0.0.96",
+    "playroomkit": "0.0.95",
     "qrcode": "^1.5.4",
     "rcon-client": "^4.2.5",
     "react": "^19.2.1",

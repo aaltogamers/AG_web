@@ -45,6 +45,7 @@ export class MainMenu extends Scene {
   projectileCollissionGroup: number = 4
   shieldCollisionGroup: number = 8
   projectileSpeed = 3
+  projectiles: Phaser.Physics.Matter.Image[] | undefined = []
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
   pointText: Phaser.GameObjects.Text | undefined = undefined
   scaler: Phaser.Time.TimerEvent | undefined = undefined
@@ -81,6 +82,30 @@ export class MainMenu extends Scene {
 
   constructor() {
     super('MainMenu')
+  }
+
+  getProjectiles() {
+    return (
+      this.projectiles?.map((projectile) => {
+        return {
+          x: projectile.x,
+          y: projectile.y,
+          rotation: projectile.rotation,
+          speed: projectile.getData('speed'),
+          name: projectile.name,
+        }
+      }) || []
+    )
+  }
+
+  reSyncProjectiles(
+    projectiles: { x: number; y: number; rotation: number; speed: number; name: string }[]
+  ) {
+    this.projectiles?.forEach((p) => p.destroy())
+    this.projectiles = []
+    projectiles?.forEach((p) => {
+      this.spawnProjectile(p)
+    })
   }
 
   togglePause(data: boolean) {
@@ -163,7 +188,7 @@ export class MainMenu extends Scene {
     this.shield = shield
   }
 
-  spawnProjectile(type: { name: string; speed: number }) {
+  generateProjectile(type: { name: string; speed: number }) {
     const vector = new Phaser.Math.Vector2()
     Phaser.Math.RandomXY(vector)
     let x, y
@@ -185,7 +210,7 @@ export class MainMenu extends Scene {
     if (!randomPoint) return
     vector.setAngle(Phaser.Math.Angle.Between(x, y, randomPoint.x, randomPoint.y))
     RPC.call(
-      'spawnClientProjectile',
+      'spawnProjectile',
       {
         x: x,
         y: y,
@@ -197,16 +222,10 @@ export class MainMenu extends Scene {
     )
   }
   // called from rpc.ts
-  spawnClientProjectile(data: {
-    rotation: number
-    x: number
-    y: number
-    name: string
-    speed: number
-  }) {
+  spawnProjectile(data: { rotation: number; x: number; y: number; name: string; speed: number }) {
     const projectile = data
     const { x, y } = radToXY(projectile.rotation)
-    this.matter.add
+    const projectileObject = this.matter.add
       .image(projectile.x, projectile.y, projectile.name)
       .setRotation(projectile.rotation)
       .setScale(0.5)
@@ -249,6 +268,9 @@ export class MainMenu extends Scene {
         }
       })
       .setName(data.name)
+      .setData('speed', projectile.speed)
+
+    this.projectiles?.push(projectileObject)
   }
 
   // called from rpc.ts
@@ -517,7 +539,7 @@ export class MainMenu extends Scene {
       if (this.smallAccumulator <= 0) {
         for (let a = 0; a < Phaser.Math.RND.between(1, 3); a++) {
           const i = Phaser.Math.RND.between(0, smallAbilities.length - 1)
-          this.spawnProjectile(smallAbilities[i])
+          this.generateProjectile(smallAbilities[i])
         }
         const cooldown = getState('smallSpell')
         this.smallAccumulator = cooldown
@@ -526,7 +548,7 @@ export class MainMenu extends Scene {
       if (this.bigAccumulator <= 0) {
         for (let a = 0; a < Phaser.Math.RND.between(1, 3); a++) {
           const i = Phaser.Math.RND.between(0, bigAbilities.length - 1)
-          this.spawnProjectile(bigAbilities[i])
+          this.generateProjectile(bigAbilities[i])
         }
         const cooldown = getState('bigSpell')
         this.bigAccumulator = cooldown

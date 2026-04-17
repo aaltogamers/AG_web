@@ -3,9 +3,9 @@ import { Boot } from './scenes/Boot'
 import { MainMenu } from './scenes/MainMenu'
 import { Preloader } from './scenes/Preloader'
 
-let bootRef: Boot | undefined = undefined
-let preloaderRef: Preloader | undefined = undefined
-let mainMenuRef: MainMenu | undefined = undefined
+export let bootRef: Boot | undefined = undefined
+export let preloaderRef: Preloader | undefined = undefined
+export let mainMenuRef: MainMenu | undefined = undefined
 
 let rpcsInitialized = false
 
@@ -53,8 +53,8 @@ export const initRPCs = (isDesktop: boolean) => {
     mainMenuRef?.togglePause(data)
   })
   if (isDesktop || isHost()) {
-    RPC.register('spawnClientProjectile', async (data) => {
-      mainMenuRef?.spawnClientProjectile(data)
+    RPC.register('spawnProjectile', async (data) => {
+      mainMenuRef?.spawnProjectile(data)
     })
     RPC.register('getShield', async (data) => {
       mainMenuRef?.getShield(data)
@@ -64,6 +64,9 @@ export const initRPCs = (isDesktop: boolean) => {
     })
     RPC.register('usedShield', async (data) => {
       mainMenuRef?.usedShield(data)
+    })
+    RPC.register('getProjectiles', async () => {
+      return mainMenuRef?.getProjectiles()
     })
   }
 }

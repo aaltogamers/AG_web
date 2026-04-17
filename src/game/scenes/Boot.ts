@@ -12,7 +12,7 @@ import {
   waitForPlayerState,
 } from 'playroomkit'
 import QRCode from 'qrcode'
-import { initRPCs, setBootRef } from '../rpc'
+import { initRPCs, mainMenuRef, setBootRef } from '../rpc'
 
 export class Boot extends Scene {
   myID = myPlayer().id
@@ -116,10 +116,14 @@ export class Boot extends Scene {
       }
     })
 
-    this.game.events.on('visible', () => {
+    this.game.events.on('visible', async () => {
       this.isVisible = true
       if (isHost()) {
         RPC.call('togglePause', false)
+      } else if (getState('gameActive')) {
+        await RPC.call('getProjectiles', '', RPC.Mode.HOST, (data) => {
+          mainMenuRef?.reSyncProjectiles(data)
+        })
       }
     })
 
