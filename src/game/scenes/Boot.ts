@@ -120,7 +120,7 @@ export class Boot extends Scene {
       this.isVisible = true
       if (isHost()) {
         RPC.call('togglePause', false)
-      } else if (getState('gameActive')) {
+      } else if (getState('gameActive') && this.registry.get('isDesktop')) {
         await RPC.call('getProjectiles', '', RPC.Mode.HOST, (data) => {
           mainMenuRef?.reSyncProjectiles(data)
         })

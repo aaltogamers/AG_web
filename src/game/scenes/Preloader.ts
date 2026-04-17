@@ -18,6 +18,7 @@ export class Preloader extends Scene {
   characterOutline: Phaser.GameObjects.Image | null = null
   playerNames: Phaser.GameObjects.Text[] = []
   spectatorNames: Phaser.GameObjects.Text[] = []
+  pickedNames: Map<string, Phaser.GameObjects.Text> = new Map()
   specButton: Phaser.GameObjects.Container | null = null
   readyButton: Phaser.GameObjects.Image | null = null
   qrCode: Phaser.GameObjects.Image | null = null
@@ -96,6 +97,8 @@ export class Preloader extends Scene {
     if (this.pickedChamps.includes(data) && !getState('picked').includes(data)) {
       this.pickedChamps.filter((a) => a != data)
       button.clearTint()
+      this.pickedNames.get(data)?.destroy()
+      this.pickedNames.delete(data)
     } else {
       this.pickedChamps.push(data)
       if (this.pickedChamps.length >= characterNames.length) {
@@ -110,6 +113,23 @@ export class Preloader extends Scene {
         }
       }
       button.setTint(index == this.selected ? 0x17a319 : 0x730000)
+      const nameText = this.add
+        .text(
+          this.getButtonX(index),
+          this.getButtonY(index),
+          this.registry
+            .get('players')
+            .find((p: PlayerState) => p.getState('ready') && p.getState('character') == data)
+            ?.getState('name'),
+          {
+            fontFamily: 'goldman',
+            fontSize: 20,
+            backgroundColor: 'black',
+          }
+        )
+        .setOrigin(0.5, 0.5)
+        .setDepth(button.depth + 1)
+      this.pickedNames.set(data, nameText)
     }
     this.checkStart()
   }

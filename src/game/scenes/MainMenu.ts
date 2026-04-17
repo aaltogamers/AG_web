@@ -66,7 +66,7 @@ export class MainMenu extends Scene {
     },
   }
   pauseText = {
-    x: 960,
+    x: (isDesktop: boolean) => (isDesktop ? 960 : 1350),
     y: 540,
     message: `-- Game Paused -- \n Host has minimized the game `,
     settings: {
@@ -156,7 +156,7 @@ export class MainMenu extends Scene {
   spawnShield() {
     if (this.shield) return
 
-    const shield = this.matter.add
+    const newShield = this.matter.add
       .image(940, 550, 'spellShield', undefined, {
         shape: {
           type: 'circle',
@@ -171,21 +171,22 @@ export class MainMenu extends Scene {
       .setScale(0.25)
       .setCollisionGroup(this.shieldCollisionGroup)
       .setTintFill(0xadb1f0)
+      .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
+        if (isHost()) {
+          const playerBody = event.bodyA.gameObject
+          if (!playerBody) return
+          const player = this.players.find((p) => p.sprite.name === playerBody.name)
+          if (!player) return
+
+          if (this.playerShields.get(player.state.id)) return
+
+          RPC.call('getShield', player.state.id)
+        }
+      })
 
     this.spawnAltar?.setTint(0xb8f7ff)
-    if (isHost()) {
-      shield.setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
-        const playerBody = event.bodyA.gameObject
-        if (!playerBody) return
-        const player = this.players.find((p) => p.sprite.name === playerBody.name)
-        if (!player) return
 
-        if (this.playerShields.get(player.state.id)) return
-
-        RPC.call('getShield', player.state.id)
-      })
-    }
-    this.shield = shield
+    this.shield = newShield
   }
 
   generateProjectile(type: { name: string; speed: number }) {
@@ -360,6 +361,17 @@ export class MainMenu extends Scene {
       .get('players')
       .filter((p: PlayerState) => getState('alivePlayers').includes(p.id))
 
+    this.pauseTextObject = this.add
+      .text(
+        this.pauseText.x(this.registry.get('isDesktop')),
+        this.pauseText.y,
+        this.pauseText.message,
+        this.pauseText.settings
+      )
+      .setOrigin(0.5, 0.5)
+      .setVisible(false)
+      .setDepth(101)
+
     if (myPlayer().getState('spectator')) {
       this.add
         .text(10, 10, 'spectating', {
@@ -376,6 +388,7 @@ export class MainMenu extends Scene {
         myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
       })
     }
+
     if (!this.registry.get('isDesktop') && !isHost()) {
       this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0)
       if (myPlayer().getState('spectator')) {
@@ -455,12 +468,6 @@ export class MainMenu extends Scene {
         fontSize: 30,
       })
 
-      this.pauseTextObject = this.add
-        .text(this.pauseText.x, this.pauseText.y, this.pauseText.message, this.pauseText.settings)
-        .setOrigin(0.5, 0.5)
-        .setVisible(false)
-        .setDepth(101)
-
       if (!this.registry.get('isDesktop')) {
         this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0).setDepth(100)
         if (myPlayer().getState('spectator')) {
@@ -485,8 +492,8 @@ export class MainMenu extends Scene {
       this.scaler = this.time.addEvent({
         delay: 10000,
         callback: () => {
-          const smallTime = Math.max(1, getState('smallSpell') * 0.8)
-          const bigTime = Math.max(1, getState('bigSpell') * 0.8)
+          const smallTime = Math.max(1, getState('smallSpell') * 0.9)
+          const bigTime = Math.max(1, getState('bigSpell') * 0.9)
           setState('smallSpell', smallTime)
           setState('bigSpell', bigTime)
         },
