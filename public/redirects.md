@@ -20,10 +20,10 @@ redirects:
     url: https://www.twitch.tv/aaltogamers
   - name: LoL OSM Tickets
     slug: osmtickets
-    url: https://kide.app/events/bebd5407-6832-4493-9068-c1066d0da262
+    url: https://kide.app/events/111b1f9c-a506-44f3-a5fb-3a43a5d9f39a
   - name: LoL OSM signup
     slug: osmsignup
-    url: https://forms.gle/kUEEqGchkA1JepYd6
+    url: https://docs.google.com/forms/d/e/1FAIpQLSey7mWrfU4sW1mbKEYbHhLMAdnm8ClkFBtbfEHuc9j0BpysBQ/viewform?usp=dialog
   - name: Membership form
     slug: join
     url: https://forms.gle/HDT4ncn1X6UKMZFt8
