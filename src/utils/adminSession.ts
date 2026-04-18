@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 const COOKIE_NAME = 'ag_admin'
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 30
+const MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
 const getSecret = (): string => {
   const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD
