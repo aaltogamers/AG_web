@@ -45,7 +45,7 @@ export class MainMenu extends Scene {
   projectileCollissionGroup: number = 4
   shieldCollisionGroup: number = 8
   projectileSpeed = 3
-  projectiles: Phaser.Physics.Matter.Image[] | undefined = []
+  projectiles: Phaser.Physics.Matter.Image[] = []
   edgeCircle: Phaser.Geom.Circle | undefined = undefined
   pointText: Phaser.GameObjects.Text | undefined = undefined
   scaler: Phaser.Time.TimerEvent | undefined = undefined
@@ -101,8 +101,7 @@ export class MainMenu extends Scene {
   reSyncProjectiles(
     projectiles: { x: number; y: number; rotation: number; speed: number; name: string }[]
   ) {
-    this.projectiles?.forEach((p) => p.destroy())
-    this.projectiles = []
+    this.projectiles?.forEach((p) => p.setX(2000))
     projectiles?.forEach((p) => {
       this.spawnProjectile(p)
     })
@@ -189,6 +188,36 @@ export class MainMenu extends Scene {
     this.shield = newShield
   }
 
+  projectileOnHit(event: Phaser.Types.Physics.Matter.MatterCollisionData) {
+    if (isHost()) {
+      const playerBody = event.bodyA.gameObject
+      if (!playerBody) return
+
+      const player = this.players.find((p) => p.sprite.name === playerBody.name)
+      if (!player) return
+
+      const shield = this.playerShields.get(player.state.id)
+
+      if (shield) {
+        RPC.call('usedShield', player.state.id)
+        return
+      }
+
+      RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
+      player.state.setState('points', this.points)
+      setState(
+        'alivePlayers',
+        getState('alivePlayers').filter((alivePlayerID: string) => alivePlayerID != player.state.id)
+      )
+      const alivePlayers = getState('alivePlayers')
+
+      if (alivePlayers.length <= 0) {
+        setState('winner', player.state.id)
+        RPC.call('gameWon', '', RPC.Mode.ALL)
+      }
+    }
+  }
+
   generateProjectile(type: { name: string; speed: number }) {
     const vector = new Phaser.Math.Vector2()
     Phaser.Math.RandomXY(vector)
@@ -224,54 +253,37 @@ export class MainMenu extends Scene {
   }
   // called from rpc.ts
   spawnProjectile(data: { rotation: number; x: number; y: number; name: string; speed: number }) {
-    const projectile = data
-    const { x, y } = radToXY(projectile.rotation)
-    const projectileObject = this.matter.add
-      .image(projectile.x, projectile.y, projectile.name)
-      .setRotation(projectile.rotation)
-      .setScale(0.5)
-      .setFixedRotation()
-      .setCollisionCategory(this.projectileCollissionGroup)
-      .setCollidesWith([this.playerCollisionGroup])
-      .setSensor(true)
-      .setVelocity(x * projectile.speed, y * projectile.speed)
-      .setFriction(0)
-      .setFrictionAir(0)
-      .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
-        if (isHost()) {
-          const playerBody = event.bodyA.gameObject
-          if (!playerBody) return
+    const stored = this.projectiles.find((p) => p.x > 1920 || p.x < 0 || p.y > 1080 || p.y < 0)
+    const { x, y } = radToXY(data.rotation)
 
-          const player = this.players.find((p) => p.sprite.name === playerBody.name)
-          if (!player) return
+    if (stored) {
+      stored
+        .setTexture(data.name)
+        .setPosition(data.x, data.y)
+        .setVelocity(x * data.speed, y * data.speed)
+        .setRotation(data.rotation)
+      Phaser.Utils.Array.SendToBack(this.projectiles, stored)
+    } else {
+      const projectile = data
+      const projectileObject = this.matter.add
+        .image(projectile.x, projectile.y, projectile.name)
+        .setRotation(projectile.rotation)
+        .setScale(0.5)
+        .setFixedRotation()
+        .setCollisionCategory(this.projectileCollissionGroup)
+        .setCollidesWith([this.playerCollisionGroup])
+        .setSensor(true)
+        .setVelocity(x * projectile.speed, y * projectile.speed)
+        .setFriction(0)
+        .setFrictionAir(0)
+        .setOnCollide((event: Phaser.Types.Physics.Matter.MatterCollisionData) => {
+          this.projectileOnHit(event)
+        })
+        .setName(data.name)
+        .setData('speed', projectile.speed)
 
-          const shield = this.playerShields.get(player.state.id)
-
-          if (shield) {
-            RPC.call('usedShield', player.state.id)
-            return
-          }
-
-          RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
-          player.state.setState('points', this.points)
-          setState(
-            'alivePlayers',
-            getState('alivePlayers').filter(
-              (alivePlayerID: string) => alivePlayerID != player.state.id
-            )
-          )
-          const alivePlayers = getState('alivePlayers')
-
-          if (alivePlayers.length <= 0) {
-            setState('winner', player.state.id)
-            RPC.call('gameWon', '', RPC.Mode.ALL)
-          }
-        }
-      })
-      .setName(data.name)
-      .setData('speed', projectile.speed)
-
-    this.projectiles?.push(projectileObject)
+      this.projectiles.push(projectileObject)
+    }
   }
 
   // called from rpc.ts
@@ -371,6 +383,8 @@ export class MainMenu extends Scene {
       .setOrigin(0.5, 0.5)
       .setVisible(false)
       .setDepth(101)
+
+    this.togglePause(getState('paused'))
 
     if (myPlayer().getState('spectator')) {
       this.add
@@ -486,7 +500,6 @@ export class MainMenu extends Scene {
         }
       }
     }
-    this.togglePause(true)
 
     if (isHost()) {
       this.scaler = this.time.addEvent({

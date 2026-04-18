@@ -320,7 +320,10 @@ export class Preloader extends Scene {
     }
 
     const specButtonLocation = this.registry.get('isDesktop') ? [90, 470] : [900, 30]
-    this.specButton = this.add.container(...specButtonLocation)
+    this.specButton = this.add
+      .container(...specButtonLocation)
+      .setVisible(!myPlayer().getState('ready'))
+
     this.specButton.add(
       this.add
         .rectangle(0, 0, 160, 30, 0)

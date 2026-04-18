@@ -130,6 +130,7 @@ const AudienceGame = () => {
         points: 0,
         winPoints: 0,
         difficulty: 0,
+        paused: false,
       },
     })
       .then(() => {

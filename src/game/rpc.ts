@@ -26,7 +26,6 @@ export const resetRPCs = () => {
   preloaderRef = undefined
   mainMenuRef = undefined
 }
-
 export const initRPCs = (isDesktop: boolean) => {
   if (rpcsInitialized) return
   rpcsInitialized = true

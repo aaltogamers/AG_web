@@ -30,28 +30,22 @@ export class Boot extends Scene {
   }
 
   moveToSpectator(id: string) {
+    if (this.registry.get('spectators').some((p: PlayerState) => p.id == id)) return
+
     const player = this.registry.get('players').find((p: PlayerState) => p.id == id)
     if (!player) return
-    this.registry.set('spectators', [...this.registry.get('spectators'), player])
-    this.registry.set(
-      'players',
-      this.registry
-        .get('players')
-        .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
-    )
+    Phaser.Utils.Array.Remove(this.registry.get('players'), player)
+    Phaser.Utils.Array.Add(this.registry.get('spectators'), player)
   }
 
   moveToPlayer(id: string) {
+    if (this.registry.get('players').some((p: PlayerState) => p.id == id)) return
+
     const player = this.registry.get('spectators').find((p: PlayerState) => p.id == id)
     if (!player) return
 
-    this.registry.set('players', [...this.registry.get('players'), player])
-    this.registry.set(
-      'spectators',
-      this.registry
-        .get('spectators')
-        .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
-    )
+    Phaser.Utils.Array.Remove(this.registry.get('spectators'), player)
+    Phaser.Utils.Array.Add(this.registry.get('players'), player)
   }
 
   init() {
@@ -70,7 +64,11 @@ export class Boot extends Scene {
     }
     setBootRef(this)
 
-    this.add.text(850, 600, 'loading ...')
+    const pos: [number, number] = this.registry.get('isDesktop')
+      ? [940, 540]
+      : [1920 - window.innerWidth / 2, window.innerHeight / 2]
+
+    this.add.text(...pos, 'loading ...').setOrigin(0.5, 0.5)
   }
 
   preload() {
@@ -99,9 +97,10 @@ export class Boot extends Scene {
       ],
       font: [{ key: 'Goldman', url: '/fonts/Goldman-Regular.ttf' }],
     }
+
+    this.load.font(files.font)
     this.load.image(files.images)
     this.load.audio(files.audio)
-    this.load.font(files.font)
     this.createRoomQR()
   }
   create() {
@@ -113,6 +112,7 @@ export class Boot extends Scene {
       this.isVisible = false
       if (isHost()) {
         RPC.call('togglePause', true)
+        setState('paused', true)
       }
     })
 
@@ -120,6 +120,7 @@ export class Boot extends Scene {
       this.isVisible = true
       if (isHost()) {
         RPC.call('togglePause', false)
+        setState('paused', false)
       } else if (getState('gameActive') && this.registry.get('isDesktop')) {
         await RPC.call('getProjectiles', '', RPC.Mode.HOST, (data) => {
           mainMenuRef?.reSyncProjectiles(data)
@@ -136,13 +137,14 @@ export class Boot extends Scene {
         if (
           !this.registry
             .get('players')
-            .find((storedPlayer: PlayerState) => storedPlayer.id == player.id) &&
+            .some((storedPlayer: PlayerState) => storedPlayer.id == player.id) &&
           !this.registry
             .get('spectators')
-            .find((storedPlayer: PlayerState) => storedPlayer.id == player.id)
+            .some((storedPlayer: PlayerState) => storedPlayer.id == player.id)
         ) {
           const registry = player.getState('spectator') ? 'spectators' : 'players'
-          this.registry.set(registry, [...this.registry.get(registry), player])
+          Phaser.Utils.Array.Add(this.registry.get(registry), player)
+
           if (isHost() && player.id == getState('originalHostID')) {
             transferHost(player.id)
           }
@@ -152,37 +154,25 @@ export class Boot extends Scene {
             if (isHost() && player.id != myPlayer().id && this.isVisible) {
               RPC.call('togglePause', false)
             }
-            if (player.getState('spectator')) {
-              this.registry.set(
-                'spectators',
-                this.registry
-                  .get('spectators')
-                  .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
-              )
-            } else {
-              this.registry.set(
-                'players',
-                this.registry
-                  .get('players')
-                  .filter((storedPlayer: PlayerState) => storedPlayer.id != player.id)
-              )
 
-              if (isHost()) {
-                if (player.getState('ready')) {
-                  setState(
-                    'picked',
-                    getState('picked').filter((a: string) => a != player.getState('character'))
-                  )
-                  RPC.call('pickedChamp', player.getState('character'))
-                }
-                const alivePlayers = getState('alivePlayers').filter(
-                  (alivePlayerID: string) => alivePlayerID != player.id
+            Phaser.Utils.Array.Remove(this.registry.get('players'), player)
+            Phaser.Utils.Array.Remove(this.registry.get('spectators'), player)
+
+            if (isHost()) {
+              if (player.getState('ready')) {
+                setState(
+                  'picked',
+                  getState('picked').filter((a: string) => a != player.getState('character'))
                 )
-                setState('alivePlayers', alivePlayers)
-                if (alivePlayers.length <= 0) {
-                  setState('winner', player.id)
-                  RPC.call('gameWon', '')
-                }
+                RPC.call('pickedChamp', player.getState('character'))
+              }
+              const alivePlayers = getState('alivePlayers').filter(
+                (alivePlayerID: string) => alivePlayerID != player.id
+              )
+              setState('alivePlayers', alivePlayers)
+              if (alivePlayers.length <= 0) {
+                setState('winner', player.id)
+                RPC.call('gameWon', '')
               }
             }
           }
