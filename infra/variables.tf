@@ -39,6 +39,24 @@ variable "admin_password" {
   sensitive   = true
 }
 
+variable "github_app_id" {
+  description = "GitHub App ID used by Decap CMS to mint access tokens"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_app_private_key_base64" {
+  description = "GitHub App private key, base64-encoded PEM (used by Decap CMS via /api/auth)"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_app_installation_id" {
+  description = "GitHub App installation ID on the aaltogamers/AG_web repo"
+  type        = string
+  sensitive   = true
+}
+
 variable "app_settings" {
   description = "Additional app settings / environment variables for the web app"
   type        = map(string)

@@ -2,12 +2,15 @@ subscription_id           = "your-azure-subscription-id"
 postgresql_admin_password = "change-me-to-a-strong-password"
 admin_password            = "change-me-to-a-strong-password"
 
+# GitHub App credentials for Decap CMS (see infra/README.md).
+# Generate PRIVATE_KEY with:  base64 -w0 private-key.pem
+github_app_id                 = "123456"
+github_app_private_key_base64 = "<base64-encoded PEM>"
+github_app_installation_id    = "12345678"
+
 # Pass any extra env vars your Next.js app needs
 app_settings = {
   # RCON_IP       = "..." # Minecraft server admin access for whitelisting
   # RCON_PASSWORD = "..." # Minecraft server admin access for whitelisting
   # RCON_PORT     = "25575" # Minecraft server admin access for whitelisting
-  # APP_ID        = "..." # Github app for CMS
-  # PRIVATE_KEY   = "..." # GitHub App private key, base64-encoded (see infra/README.md)
-  # INSTALLATION_ID = "..." # Github app for CMS
 }
