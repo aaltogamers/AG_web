@@ -1,4 +1,3 @@
-import { Timestamp } from 'firebase/firestore'
 import { IconType } from 'react-icons'
 import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
 import { BracketsManager } from 'brackets-manager'
@@ -25,7 +24,7 @@ export type Option = {
   option: string
 }
 
-export type DataValue = string | number | boolean | Timestamp
+export type DataValue = string | number | boolean | string[]
 
 export type Data = {
   [key: string]: DataValue
@@ -100,6 +99,7 @@ export type EditableInputObj = {
 }
 
 export type SignupInput = {
+  id: number
   title: string
   description?: string
   type: EditableInputType
@@ -116,6 +116,13 @@ export type SignUpData = {
   openfrom: string
   openuntil: string
   inputs: SignupInput[]
+}
+
+// A participant row as returned by /api/signups. `answers` is keyed by field id.
+export type SignupRow = {
+  id: string
+  created_at: string
+  answers: Record<string, DataValue>
 }
 
 export type Poll = {

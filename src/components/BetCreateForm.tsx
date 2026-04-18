@@ -1,33 +1,33 @@
-import { FirebaseApp } from 'firebase/app'
-import { addDoc, collection, getFirestore } from 'firebase/firestore'
 import { useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { Poll } from '../types/types'
 import Input from './Input'
 
-type Props = {
-  app: FirebaseApp
-}
-
-type CreatableBet = Omit<Poll, 'id'>
-
-const BetCreateForm = ({ app }: Props) => {
+const BetCreateForm = () => {
   const [isFormVisible, setIsFormVisible] = useState(false)
   const { register, handleSubmit, control, reset } = useForm()
-  const db = getFirestore(app)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit: SubmitHandler<any> = async (data) => {
-    const options = data.options.split(',').map((option: string) => option.trim())
-    const newBet: CreatableBet = {
-      question: data.question,
-      options,
-      isVotable: false,
-      isVisible: false,
-      additionalMessage: data.additionalMessage,
-      creationTimeStamp: Date.now(),
+    const options = (data.options as string)
+      .split(',')
+      .map((option: string) => option.trim())
+      .filter((option) => option.length > 0)
+
+    const res = await fetch('/api/polls', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        question: data.question,
+        options,
+        additionalMessage: data.additionalMessage,
+      }),
+    })
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string }
+      alert(`Failed to create bet: ${err.error ?? res.status}`)
+      return
     }
-    await addDoc(collection(db, 'polls'), newBet)
     setIsFormVisible(false)
     reset()
   }
@@ -82,18 +82,3 @@ const BetCreateForm = ({ app }: Props) => {
 }
 
 export default BetCreateForm
-/*  const [options, setOptions] = useState<string[]>([])
-  const [newOption, setNewOption] = useState<string>('')
-  const [question, setQuestion] = useState<string>('')
-    <div>
-      <input value={question} onChange={(e) => setQuestion(e.target.value)}></input>
-      <input value={newOption} onChange={(e) => setNewOption(e.target.value)}></input>
-      <button onClick={() => setOptions([...options, newOption])}>Add option</button>
-      {options.map((option) => (
-        <div key={option}>
-          <span>{option}</span>
-          <button onClick={() => setOptions(options.filter((o) => o !== option))}>X</button>
-        </div>
-      ))}
-    </div>
-    */

@@ -1,28 +1,22 @@
 import Head from 'next/head'
 import { useEffect } from 'react'
-import { firebaseConfig, useFirestore } from '../utils/db'
-import { where } from 'firebase/firestore'
-import { initializeApp } from 'firebase/app'
-import type { ScoreBoardEntry, Vote } from '../types/types'
+import type { ScoreBoardEntry } from '../types/types'
+import { useLiveVotesWithPoints } from '../utils/live'
 import makeBackgroundInvisible from '../utils/makeBackgroundInvisible'
 import Scoreboard from '../components/Scoreboard'
 
-const Vote = () => {
-  const app = initializeApp(firebaseConfig)
-  const votes = useFirestore(app, 'votes', where('points', '!=', null)) as Vote[]
+const BetBoard = () => {
+  const votes = useLiveVotesWithPoints()
 
   useEffect(() => {
     makeBackgroundInvisible()
   }, [])
 
-  const userPoints = new Map()
+  const userPoints = new Map<string, number>()
 
   votes.forEach(({ user, points }) => {
-    if (userPoints.has(user)) {
-      userPoints.set(user, userPoints.get(user) + points)
-    } else {
-      userPoints.set(user, points)
-    }
+    if (points === undefined || points === null) return
+    userPoints.set(user, (userPoints.get(user) ?? 0) + points)
   })
 
   const entries: ScoreBoardEntry[] = []
@@ -43,4 +37,4 @@ const Vote = () => {
   )
 }
 
-export default Vote
+export default BetBoard

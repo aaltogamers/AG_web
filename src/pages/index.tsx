@@ -30,6 +30,7 @@ const Home = ({ landingInfos, events, imageShowCase }: Props) => {
               key={info.title}
               isLeft={i % 2 !== 1}
               isSmallImage={i === 0}
+              priority={i === 0}
             />
           ))}
           <hr className="bg-gray w-full md:my-16" />

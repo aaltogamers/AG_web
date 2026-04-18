@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { fetchAnalytics } from '../utils/analyticsAuth'
+import { fetchAdmin } from '../utils/adminAuth'
 
 ChartJS.register(
   CategoryScale,
@@ -75,9 +75,9 @@ const SiteStatistics = () => {
       const params = new URLSearchParams()
       if (from) params.set('from', from)
       if (to) params.set('to', to)
-      const res = await fetchAnalytics(`/api/analytics/stats?${params.toString()}`)
+      const res = await fetchAdmin(`/api/analytics/stats?${params.toString()}`)
       if (res.status === 401) {
-        setError('Analytics session expired. Please log in again.')
+        setError('Admin session expired. Please log in again.')
         return
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -99,9 +99,9 @@ const SiteStatistics = () => {
       params.set('path', selectedPath)
       if (from) params.set('from', from)
       if (to) params.set('to', to)
-      const res = await fetchAnalytics(`/api/analytics/stats?${params.toString()}`)
+      const res = await fetchAdmin(`/api/analytics/stats?${params.toString()}`)
       if (res.status === 401) {
-        setError('Analytics session expired. Please log in again.')
+        setError('Admin session expired. Please log in again.')
         return
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)

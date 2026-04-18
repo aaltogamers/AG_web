@@ -1,103 +1,92 @@
-import { FirebaseApp } from 'firebase/app'
-import { getFirestore, doc, updateDoc, deleteDoc, addDoc, collection } from 'firebase/firestore'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { Game, MapBanOrPick, MapName } from '../types/types'
-import { useMapBanStatus } from '../utils/db'
+import Link from 'next/link'
+import { Game, MapName } from '../types/types'
+import { useLiveMapBans } from '../utils/live'
 import Input from './Input'
 import MapBans from './MapBans'
-type Props = {
-  app: FirebaseApp
+
+const postMapBan = async (body: {
+  map: MapName
+  type: 'ban' | 'pick' | 'decider'
+  team: 'team1' | 'team2'
+}): Promise<void> => {
+  await fetch('/api/mapbans', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(body),
+  })
 }
 
-const MapBanMangement = ({ app }: Props) => {
-  const db = getFirestore(app)
-  const { mapBans, mapBanInfo, maps } = useMapBanStatus(app)
+const deleteMapBan = async (map: MapName): Promise<void> => {
+  await fetch(`/api/mapbans?map=${encodeURIComponent(map)}`, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+  })
+}
+
+const resetAllBans = async (): Promise<void> => {
+  await fetch('/api/mapbans', { method: 'DELETE', credentials: 'same-origin' })
+}
+
+const updateMapBanInfo = async (body: {
+  team1?: string
+  team2?: string
+  game?: Game
+}): Promise<void> => {
+  await fetch('/api/mapban-info', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(body),
+  })
+}
+
+const MapBanMangement = () => {
+  const { mapBans, mapBanInfo, maps } = useLiveMapBans()
+
+  const [host, setHost] = useState('')
+  useEffect(() => {
+    if (typeof window !== 'undefined') setHost(window.location.host)
+  }, [])
 
   const { register, handleSubmit, control, setValue } = useForm()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit: SubmitHandler<any> = async (data) => {
-    await updateDoc(doc(db, 'mapbaninfo', 'mapbaninfo'), {
-      team1: data.team1,
-      team2: data.team2,
-    })
-  }
-
-  const addPickOrBan = async (
-    map: MapName,
-    type: 'pick' | 'ban' | 'decider',
-    team: 'team1' | 'team2'
-  ) => {
-    const existingBan = mapBans.find((mapBan) => mapBan.map === map)
-    const newContent: Omit<MapBanOrPick, 'id'> = {
-      map,
-      type,
-      team,
-      index: mapBans.length,
-    }
-
-    if (existingBan) {
-      await updateDoc(doc(db, 'mapbans', existingBan.id), newContent)
-    } else {
-      await addDoc(collection(db, 'mapbans'), newContent)
-
-      const isLastBan = mapBans.length === 5
-      if (isLastBan) {
-        const mapBansWithNewBan = [...mapBans, newContent]
-        const remainingMap = maps.filter(
-          (map) => !mapBansWithNewBan.map((mapBan) => mapBan.map).includes(map)
-        )
-        const remainingMapName = remainingMap[0]
-        await addDoc(collection(db, 'mapbans'), {
-          map: remainingMapName,
-          type: 'decider',
-          team: 'team1',
-          index: 6,
-        })
-      }
-    }
-  }
-
-  const deleteBan = async (map: string) => {
-    const banToDelete = mapBans.find((mapBan) => mapBan.map === map)
-    if (banToDelete) {
-      await deleteDoc(doc(db, 'mapbans', banToDelete.id))
-    }
+    await updateMapBanInfo({ team1: data.team1, team2: data.team2 })
   }
 
   const handleResetBans = async () => {
-    const shouldReset = confirm(`Are you sure you want to reset all bans?`)
-    if (shouldReset) {
-      resetBands()
-    }
-  }
-
-  const resetBands = async () => {
-    for await (const mapBan of mapBans) {
-      await deleteDoc(doc(db, 'mapbans', mapBan.id))
+    if (confirm('Are you sure you want to reset all bans?')) {
+      await resetAllBans()
     }
   }
 
   const switchGame = async () => {
     const currentGame = mapBanInfo?.game
     const otherGame: Game = currentGame === 'CS 2' ? 'Valorant' : 'CS 2'
-    const shouldChange = confirm(`Are you sure you want to switch the game switch to ${otherGame}?`)
-    if (shouldChange) {
-      await resetBands()
-      await updateDoc(doc(db, 'mapbaninfo', 'mapbaninfo'), {
-        game: otherGame,
-      })
+    if (confirm(`Are you sure you want to switch the game switch to ${otherGame}?`)) {
+      await updateMapBanInfo({ game: otherGame })
     }
   }
 
   useEffect(() => {
-    setValue('team1', mapBanInfo?.team1)
-    setValue('team2', mapBanInfo?.team2)
+    setValue('team1', mapBanInfo?.team1 ?? '')
+    setValue('team2', mapBanInfo?.team2 ?? '')
   }, [mapBanInfo?.team1, mapBanInfo?.team2, setValue])
 
   return (
     <main className="flex flex-col">
+      <div className="mb-4 text-lg text-left">
+        <p>
+          Map bans can be seen at{' '}
+          <Link href="/mapban" className="text-red" target="_blank" rel="noopener noreferrer">
+            {host}/mapban
+          </Link>
+        </p>
+      </div>
       <h3 className="text-center">Current game is {mapBanInfo?.game}</h3>
       <div className="flex flex-row justify-between m-16">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-row gap-16">
@@ -142,30 +131,30 @@ const MapBanMangement = ({ app }: Props) => {
               className="flex  flex-col w-full text-center mb-8 text-[1.2rem] gap-4"
               key={mapName}
             >
-              <button className=" bg-red p-2 rounded-sm" onClick={() => deleteBan(mapName)}>
+              <button className=" bg-red p-2 rounded-sm" onClick={() => deleteMapBan(mapName)}>
                 Reset
               </button>
               <button
                 className=" bg-red p-2 rounded-sm"
-                onClick={() => addPickOrBan(mapName, 'ban', 'team1')}
+                onClick={() => postMapBan({ map: mapName, type: 'ban', team: 'team1' })}
               >
                 {mapBanInfo?.team1} BAN
               </button>
               <button
                 className="bg-green-800 p-2 rounded-sm"
-                onClick={() => addPickOrBan(mapName, 'pick', 'team1')}
+                onClick={() => postMapBan({ map: mapName, type: 'pick', team: 'team1' })}
               >
                 {mapBanInfo?.team1} PICK
               </button>
               <button
                 className="bg-red p-2 rounded-sm"
-                onClick={() => addPickOrBan(mapName, 'ban', 'team2')}
+                onClick={() => postMapBan({ map: mapName, type: 'ban', team: 'team2' })}
               >
                 {mapBanInfo?.team2} BAN
               </button>
               <button
                 className="bg-green-800 p-2 rounded-sm"
-                onClick={() => addPickOrBan(mapName, 'pick', 'team2')}
+                onClick={() => postMapBan({ map: mapName, type: 'pick', team: 'team2' })}
               >
                 {mapBanInfo?.team2} PICK
               </button>

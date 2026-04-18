@@ -81,6 +81,15 @@ const Calendar = ({ events }: Props) => {
   const [copySuccess, setCopySuccess] = useState(false)
   const calendarEvents = convertEventsToCalendarFormat(events, false)
 
+  // react-big-calendar marks "today" with `rbc-now rbc-current` based on the
+  // current date in the runtime's timezone. That differs between the server
+  // (UTC) and the browser, causing a hydration mismatch. Defer rendering the
+  // calendar until after mount so the client is the only one producing markup.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const copyCalendarUrl = async () => {
     const calendarUrl = `${window.location.origin}/calendar`
 
@@ -101,17 +110,19 @@ const Calendar = ({ events }: Props) => {
       </div>
 
       <div className={`w-full ${styles.calendarWrapper}`} style={{ height: 600 }}>
-        <BigCalendar
-          localizer={localizer}
-          events={calendarEvents}
-          startAccessor="start"
-          endAccessor="end"
-          views={['month']}
-          defaultView="month"
-          components={{
-            event: CustomEvent,
-          }}
-        />
+        {mounted && (
+          <BigCalendar
+            localizer={localizer}
+            events={calendarEvents}
+            startAccessor="start"
+            endAccessor="end"
+            views={['month']}
+            defaultView="month"
+            components={{
+              event: CustomEvent,
+            }}
+          />
+        )}
       </div>
     </div>
   )

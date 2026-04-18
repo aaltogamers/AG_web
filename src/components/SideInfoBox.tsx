@@ -7,9 +7,10 @@ type Props = {
   landingInfo: LandingInfo
   isLeft: boolean
   isSmallImage?: boolean
+  priority?: boolean
 }
 
-const SideInfoBox = ({ landingInfo, isLeft }: Props) => {
+const SideInfoBox = ({ landingInfo, isLeft, priority }: Props) => {
   const { title, subtitle, content, image, isSmallImage } = landingInfo
   return (
     <section
@@ -19,6 +20,7 @@ const SideInfoBox = ({ landingInfo, isLeft }: Props) => {
       <AGImage
         src={image}
         alt={title}
+        priority={priority}
         className={`object-cover md:w-1/2 h-full border-red border-t-8 md:border-t-0
         ${!isSmallImage && (isLeft ? 'md:border-l-8' : 'md:border-r-8')}
         ${isSmallImage && 'hidden md:block md:px-16 object-scale-down'} `}

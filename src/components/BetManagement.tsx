@@ -1,77 +1,51 @@
-import { FirebaseApp } from 'firebase/app'
-import {
-  getFirestore,
-  doc,
-  updateDoc,
-  deleteField,
-  deleteDoc,
-  writeBatch,
-} from 'firebase/firestore'
 import { Poll } from '../types/types'
-import { getVotesForPoll, useFirestore } from '../utils/db'
+import { useLivePolls } from '../utils/live'
 import BetCreateForm from './BetCreateForm'
 import Link from 'next/link'
-
-type Props = {
-  app: FirebaseApp
-}
+import { useEffect, useState } from 'react'
 
 type ButtonField = 'isVisible' | 'isVotable'
 
-const BetManagement = ({ app }: Props) => {
-  const db = getFirestore(app)
-  const polls = useFirestore(app, 'polls') as Poll[]
+const patchPoll = async (
+  id: string,
+  body: {
+    isVisible?: boolean
+    isVotable?: boolean
+    correctOption?: string | null
+  }
+): Promise<Response> =>
+  fetch(`/api/polls/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(body),
+  })
+
+const deletePollReq = async (id: string): Promise<Response> =>
+  fetch(`/api/polls/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+  })
+
+const BetManagement = () => {
+  const polls = useLivePolls()
+
+  const [host, setHost] = useState('')
+  useEffect(() => {
+    if (typeof window !== 'undefined') setHost(window.location.host)
+  }, [])
 
   const setAsCorrectOption = async (poll: Poll, option: string) => {
-    const pollRef = doc(db, 'polls', poll.id)
-    const alreadyHasCorrectOption = poll.correctOption === option
-    const votesForPoll = await getVotesForPoll(db, poll.id)
-    if (alreadyHasCorrectOption) {
-      const batch = writeBatch(db)
-      batch.update(pollRef, { correctOption: deleteField(), pointsForWin: deleteField() })
-      votesForPoll.forEach(async (vote) => {
-        const voteRef = doc(db, 'votes', vote.id)
-        batch.update(voteRef, { points: deleteField() })
-      })
-      await batch.commit()
-    } else if (!poll.isVotable) {
-      const winningOptionPicks = votesForPoll.filter(
-        ({ pickedOption }) => pickedOption === option
-      ).length
-      const pointMultiplier = votesForPoll.length / winningOptionPicks
-      const pointsForWin = Math.round(pointMultiplier * 100)
-
-      const batch = writeBatch(db)
-      batch.update(pollRef, { correctOption: option, pointsForWin })
-
-      votesForPoll.forEach(async (vote) => {
-        const voteRef = doc(db, 'votes', vote.id)
-        if (vote.pickedOption === option) {
-          batch.update(voteRef, { points: pointsForWin })
-        } else {
-          batch.update(voteRef, { points: 0 })
-        }
-      })
-      await batch.commit()
-    }
+    await patchPoll(poll.id, { correctOption: option })
   }
 
   const changeState = async (field: ButtonField, poll: Poll, newState: boolean) => {
-    const pollRef = doc(db, 'polls', poll.id)
-    const somePollsIsAlready = polls.some((poll) => poll[field])
-    const alreadyHasCorrectOption = field === 'isVotable' && poll.correctOption
-    if (newState && !somePollsIsAlready && !alreadyHasCorrectOption) {
-      await updateDoc(pollRef, { [field]: true })
-    } else {
-      await updateDoc(pollRef, { [field]: false })
-    }
+    await patchPoll(poll.id, { [field]: newState })
   }
 
   const deletePoll = async (poll: Poll) => {
-    const canDelete = confirm(`Are you sure you want to delete the poll "${poll.question}"?`)
-    if (canDelete) {
-      await deleteDoc(doc(db, 'polls', poll.id))
-    }
+    if (!confirm(`Are you sure you want to delete the poll "${poll.question}"?`)) return
+    await deletePollReq(poll.id)
   }
 
   const buttonFields: ButtonField[] = ['isVisible', 'isVotable']
@@ -82,19 +56,20 @@ const BetManagement = ({ app }: Props) => {
         <p>
           Bet results can be seen at{' '}
           <Link href="/bet" className="text-red">
-            {window.location.host}/bet
+            {host}/bet
           </Link>
         </p>
 
         <p>
           Bet scoreboard can be seen at{' '}
           <Link href="/betboard" className="text-red">
-            {window.location.host}/betboard
+            {host}/betboard
           </Link>
         </p>
       </div>
       <div className="flex gap-8 flex-wrap">
         {polls
+          .slice()
           .sort((a, b) => a.creationTimeStamp - b.creationTimeStamp)
           .map((poll) => (
             <div className="p-4 border-2 relative" key={poll.id}>
@@ -140,7 +115,7 @@ const BetManagement = ({ app }: Props) => {
             </div>
           ))}
         <div>
-          <BetCreateForm app={app} />
+          <BetCreateForm />
         </div>
       </div>
     </div>

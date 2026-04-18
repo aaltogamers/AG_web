@@ -11,6 +11,7 @@ type EditableInputProps = {
   handleDelete: (number: number) => void
   index: number
   lastIndex: number
+  duplicateId?: boolean
 }
 
 const EditableInput = ({
@@ -21,6 +22,7 @@ const EditableInput = ({
   handleDown,
   index,
   lastIndex,
+  duplicateId,
 }: EditableInputProps) => {
   const { number, type } = thisObj
   const className = 'p-2 border-black border-solid border-b-2'
@@ -32,6 +34,24 @@ const EditableInput = ({
           {type === 'select' && 'Dropdown'}
           {type === 'info' && 'Infobox'}
         </div>
+        <label className="text-black text-sm flex items-center gap-2">
+          <span className="w-16">Field ID</span>
+          <input
+            {...register(`${number}-id`, { valueAsNumber: true })}
+            type="number"
+            min={1}
+            step={1}
+            className={`${className} w-24 ${duplicateId ? 'border-red border-2' : ''}`}
+          />
+          {duplicateId ? (
+            <span className="text-red text-xs">Duplicate ID — must be unique.</span>
+          ) : (
+            <span className="text-lightgray text-xs">
+              Auto-assigned. Answers are stored under this ID — don&apos;t change after signups
+              have started.
+            </span>
+          )}
+        </label>
         <input
           {...register(`${number}-title`)}
           placeholder="Title"

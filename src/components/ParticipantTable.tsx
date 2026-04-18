@@ -1,14 +1,24 @@
-import { deleteDoc, doc, Firestore, Timestamp } from 'firebase/firestore'
-import { Data, DataValue, SignUpData } from '../types/types'
-import slug from 'slug'
+import { DataValue, SignupInput, SignupRow } from '../types/types'
+import { deleteSignup } from '../utils/signupApi'
 
 type Props = {
-  participants: Data[]
-  signupData: SignUpData
+  participants: SignupRow[]
+  signupData: {
+    name: string
+    maxparticipants: number
+    inputs: SignupInput[]
+  }
   showPrivateData?: boolean
   allowEdit?: boolean
-  db?: Firestore
-  getNewParticipants?: () => void
+  ownSignupId?: string | null
+  onChange?: () => void
+}
+
+const formatValue = (v: DataValue | undefined): string => {
+  if (v === undefined || v === null) return ''
+  if (Array.isArray(v)) return v.join(', ')
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No'
+  return String(v)
 }
 
 const ParticipantTable = ({
@@ -16,123 +26,86 @@ const ParticipantTable = ({
   signupData,
   showPrivateData,
   allowEdit,
-  db,
-  getNewParticipants,
+  ownSignupId,
+  onChange,
 }: Props) => {
-  const participantHeaders = Object.keys(participants[0] || {})
-    .filter((key) => {
-      const input = signupData?.inputs.find((item) => slug(item.title) === key)
-      return (showPrivateData || input?.public) && key !== 'event' && key !== 'id'
-    })
-    .sort(
-      (a, b) =>
-        (signupData?.inputs.findIndex((item) => slug(item.title) === a) || 0) -
-        (signupData?.inputs.findIndex((item) => slug(item.title) === b) || 0)
-    )
+  const inputsOrdered = [...signupData.inputs]
+    .filter((input) => input.type !== 'info')
+    .sort((a, b) => a.number - b.number)
 
-  const parseParticipantData = (dataValue: DataValue, header: string) => {
-    switch (header) {
-      case 'creationTime': {
-        const date = dataValue as Timestamp
-        return date.toDate().toLocaleString()
-      }
-      default:
-        if (Array.isArray(dataValue)) {
-          return dataValue.join(', ')
-        }
-        return dataValue.toString()
-    }
-  }
+  const visibleInputs = inputsOrdered.filter((input) => showPrivateData || input.public)
 
-  const participantsSortedByCreationTime = participants.sort((a, b) => {
-    const dateA = a.creationTime as Timestamp
-    const dateB = b.creationTime as Timestamp
-    return dateA && dateB && dateA.toMillis() > dateB.toMillis() ? 1 : -1
+  const sorted = [...participants].sort((a, b) => {
+    const ta = new Date(a.created_at).getTime()
+    const tb = new Date(b.created_at).getTime()
+    return ta - tb
   })
 
-  const deleteParticipant = async (participant: Data) => {
-    if (
-      participant.id &&
-      db &&
-      getNewParticipants &&
-      window.confirm(
-        `Are you sure you want to delete ${participant[participantHeaders[1]] || 'this sign-up'}?`
-      )
-    ) {
-      await deleteDoc(doc(db, 'signups', participant.id as string))
-      getNewParticipants()
-    }
+  const madeIt = sorted.slice(0, signupData.maxparticipants)
+  const reserve = sorted.slice(signupData.maxparticipants)
+
+  const deleteParticipant = async (p: SignupRow) => {
+    const firstAnswer = visibleInputs.length ? p.answers[String(visibleInputs[0].id)] : undefined
+    const label = formatValue(firstAnswer) || 'this sign-up'
+    if (!window.confirm(`Are you sure you want to delete ${label}?`)) return
+    await deleteSignup(p.id)
+    onChange?.()
   }
 
-  const participantToRow = (participant: Data) => (
-    <tr key={participant[participantHeaders[0]]?.toString()}>
-      {participantHeaders.map((header) => (
-        <td className="p-4 pl-0" key={participant[header].toString()}>
-          {parseParticipantData(participant[header], header)}
+  const rowFor = (p: SignupRow) => {
+    const isOwn = ownSignupId && ownSignupId === p.id
+    return (
+      <tr key={p.id} className={isOwn ? 'text-red' : ''}>
+        {visibleInputs.map((input) => (
+          <td className="p-4 pl-0" key={input.id}>
+            {formatValue(p.answers[String(input.id)] as DataValue | undefined)}
+          </td>
+        ))}
+        <td className="p-4 pl-0 text-sm text-lightgray">
+          {new Date(p.created_at).toLocaleString()}
         </td>
-      ))}
-      {allowEdit && (
-        <td>
-          <button
-            type="button"
-            className="mainbutton"
-            onClick={() => deleteParticipant(participant)}
-          >
-            Delete
-          </button>
-        </td>
-      )}
-    </tr>
-  )
-
-  const participantsThatMadeIt = participantsSortedByCreationTime.slice(
-    0,
-    signupData.maxparticipants
-  )
-
-  const participantsThatDidntMakeIt = participantsSortedByCreationTime.slice(
-    signupData.maxparticipants
-  )
-
-  const parseHeader = (header: string) => {
-    if (header === 'creationTime') {
-      return 'Signed up at'
-    }
-
-    const title = signupData?.inputs.find((item) => slug(item.title) === header)?.title
-
-    return title
+        {allowEdit && (
+          <td>
+            <button type="button" className="mainbutton" onClick={() => deleteParticipant(p)}>
+              Delete
+            </button>
+          </td>
+        )}
+      </tr>
+    )
   }
 
   return (
     <div>
       <h3 className="mt-4">
-        Signed up ({participantsThatMadeIt.length} / {signupData.maxparticipants})
+        Signed up ({madeIt.length} / {signupData.maxparticipants})
       </h3>
 
       <div className="overflow-x-auto max-w-[90vw]">
         <table className="table-auto">
           <thead>
             <tr>
-              {participantHeaders.map((header) => (
-                <th className="text-left p-2 pl-0" key={header}>
-                  {parseHeader(header)}
+              {visibleInputs.map((input) => (
+                <th className="text-left p-2 pl-0" key={input.id}>
+                  {input.title}
                 </th>
               ))}
+              <th className="text-left p-2 pl-0">Signed up at</th>
+              {allowEdit && <th />}
             </tr>
           </thead>
 
           <tbody>
-            {participantsThatMadeIt.map((participant) => participantToRow(participant))}
-            {participantsThatDidntMakeIt.length > 0 && (
+            {madeIt.map((p) => rowFor(p))}
+            {reserve.length > 0 && (
               <>
                 <tr>
-                  <td colSpan={participantHeaders.length}>
-                    <h5 className="mt-4">On reserve list ({participantsThatDidntMakeIt.length})</h5>
+                  <td colSpan={visibleInputs.length + 1}>
+                    <h5 className="mt-4">On reserve list ({reserve.length})</h5>
                     <hr className="bg-gray w-full mt-2 mb-0" />
                   </td>
                 </tr>
-                {participantsThatDidntMakeIt.map((participant) => participantToRow(participant))}
+                {reserve.map((p) => rowFor(p))}
               </>
             )}
           </tbody>

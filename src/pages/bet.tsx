@@ -1,8 +1,7 @@
 import Head from 'next/head'
 import { useEffect } from 'react'
-import { firebaseConfig, useVisiblePollAndVotes } from '../utils/db'
-import { initializeApp } from 'firebase/app'
 import type { Poll, Vote } from '../types/types'
+import { useLiveVisiblePollAndVotes } from '../utils/live'
 import makeBackgroundInvisible from '../utils/makeBackgroundInvisible'
 
 type Count = {
@@ -11,16 +10,15 @@ type Count = {
   color: string
 }
 
-const Vote = () => {
-  const app = initializeApp(firebaseConfig)
-  const { visiblePoll, votesForPoll } = useVisiblePollAndVotes(app)
+const BetPage = () => {
+  const { visiblePoll, votesForPoll } = useLiveVisiblePollAndVotes()
 
   const generateCountMap = (votes: Vote[], poll: Poll) => {
-    const countMap = new Map()
+    const countMap = new Map<string, number>()
     poll.options.forEach((option) => countMap.set(option, 0))
     votes.forEach(({ pickedOption }) => {
       if (countMap.has(pickedOption)) {
-        countMap.set(pickedOption, countMap.get(pickedOption) + 1)
+        countMap.set(pickedOption, (countMap.get(pickedOption) ?? 0) + 1)
       }
     })
     return countMap
@@ -50,7 +48,7 @@ const Vote = () => {
   const bottomTextHeight = 50
   const graphHeight = screenHeight - bottomTextHeight - topTextHeight
 
-  const barAndMarginHeight = graphHeight / counts.length
+  const barAndMarginHeight = graphHeight / Math.max(counts.length, 1)
 
   const barHeight = barAndMarginHeight * 0.8
   const marginHeight = barAndMarginHeight * 0.2
@@ -127,4 +125,4 @@ const Vote = () => {
   )
 }
 
-export default Vote
+export default BetPage

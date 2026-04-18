@@ -1,10 +1,2 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { clearAdminSessionCookie } from '../../../utils/adminSession'
-
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-  clearAdminSessionCookie(res)
-  return res.status(204).end()
-}
+// Backwards-compatible shim. The canonical endpoint is /api/admin/logout.
+export { default } from '../admin/logout'

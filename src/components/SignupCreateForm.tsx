@@ -1,13 +1,23 @@
 import moment from 'moment'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { useEffect, useState } from 'react'
-import { getFirestore, setDoc, doc, collection, query, where, getDocs } from 'firebase/firestore'
-import { FirebaseApp } from 'firebase/app'
 import Input from './Input'
-import { AGEvent, Data, EditableInputObj, EditableInputType, SignUpData } from '../types/types'
+import {
+  AGEvent,
+  EditableInputObj,
+  EditableInputType,
+  SignupInput,
+  SignUpData,
+  SignupRow,
+} from '../types/types'
 import EditableInput from './EditableInput'
 import ParticipantTable from './ParticipantTable'
-import { getParticipants } from '../utils/db'
+import {
+  getSignupEvent,
+  listSignups,
+  saveSignupEvent,
+  SignupEvent,
+} from '../utils/signupApi'
 
 type Inputs = {
   name: string
@@ -19,26 +29,39 @@ type Inputs = {
 
 type Props = {
   events: AGEvent[]
-  app: FirebaseApp
 }
 
-const SignUpCreateForm = ({ events, app }: Props) => {
-  const db = getFirestore(app)
-  const { register, handleSubmit, setValue, reset, resetField, control } = useForm<Inputs>()
-  const [signupData, setSignupData] = useState<SignUpData | null>(null)
-  const [participants, setParticipants] = useState<Data[]>([])
+const SignUpCreateForm = ({ events }: Props) => {
+  const { register, handleSubmit, setValue, reset, resetField, control, getValues, watch } =
+    useForm<Inputs>()
+  const [signupData, setSignupData] = useState<SignupEvent | null>(null)
+  const [participants, setParticipants] = useState<SignupRow[]>([])
   const [editableInputs, setEditableInputs] = useState<EditableInputObj[]>([])
   const [message, setMessage] = useState<string | null>(null)
+
+  const getNextFieldId = (): number => {
+    const used = new Set<number>()
+    editableInputs.forEach(({ number }) => {
+      const raw = getValues(`${number}-id` as keyof Inputs)
+      const n = Number(raw)
+      if (Number.isFinite(n) && n > 0) used.add(n)
+    })
+    let next = 1
+    while (used.has(next)) next += 1
+    return next
+  }
 
   const addEditableInput = (type: EditableInputType, predefinedNumber?: number) => {
     let max = 0
     editableInputs.forEach(({ number }) => {
-      if (number > max) {
-        max = number
-      }
+      if (number > max) max = number
     })
     const number = predefinedNumber || max + 1
     setEditableInputs((oldInputs) => [...oldInputs, { number, type }])
+    if (!predefinedNumber) {
+      const nextId = getNextFieldId()
+      setValue(`${number}-id` as keyof Inputs, nextId as unknown as string)
+    }
     return number
   }
 
@@ -47,51 +70,55 @@ const SignUpCreateForm = ({ events, app }: Props) => {
     setEditableInputs([])
   }
 
-  const getSignUpData = async (eventName: string) => {
-    const q = query(collection(db, 'events'), where('name', '==', eventName))
-    const querySnapshot = await getDocs(q)
-    if (querySnapshot.docs.length === 0) {
-      resetForm()
-      setValue('name', eventName)
-      setParticipants([])
-    } else {
-      const rawEvent = querySnapshot.docs[0]
-      const signUpData = rawEvent.data() as SignUpData
-      resetForm()
-      setValue('name', signUpData.name)
-      setValue('maxparticipants', signUpData.maxparticipants.toString())
-      setValue('openfrom', signUpData.openfrom)
-      setValue('openuntil', signUpData.openuntil)
-      signUpData.inputs.forEach(({ type, ...rest }, i) => {
-        const number = i + 1
-        addEditableInput(type, number)
-        Object.entries(rest).forEach(([key, value]) => {
-          let actualValue = value
-          switch (key) {
-            case 'options':
-              actualValue = (value as string[]).join(', ')
-              break
-            case 'public':
-            case 'required':
-              actualValue = value === true || value === 'true'
-              break
-            default:
-              actualValue = value
-          }
-          setValue(`${number}-${key}` as keyof Inputs, actualValue as string)
-        })
-      })
-      setSignupData(signUpData)
-      const newParticipants = await getParticipants(db, signUpData.name)
-      setParticipants(newParticipants)
-    }
+  const loadParticipants = async (eventName: string) => {
+    const { signups } = await listSignups(eventName)
+    setParticipants(signups)
   }
 
-  const getNewParticipants = async () => {
-    if (signupData) {
-      const newParticipants = await getParticipants(db, signupData.name)
-      setParticipants(newParticipants)
+  const loadEvent = async (eventName: string) => {
+    const event = await getSignupEvent(eventName)
+    if (!event) {
+      resetForm()
+      setValue('name', eventName)
+      setSignupData(null)
+      setParticipants([])
+      return
     }
+    resetForm()
+    setValue('name', event.name)
+    setValue('maxparticipants', event.maxparticipants.toString())
+    setValue(
+      'openfrom',
+      moment(event.openfrom).format('YYYY-MM-DDTHH:mm')
+    )
+    setValue(
+      'openuntil',
+      moment(event.openuntil).format('YYYY-MM-DDTHH:mm')
+    )
+    event.inputs.forEach(({ type, ...rest }, i) => {
+      const number = i + 1
+      addEditableInput(type, number)
+      setValue(`${number}-id` as keyof Inputs, rest.id as unknown as string)
+      Object.entries(rest).forEach(([key, value]) => {
+        if (key === 'id') return
+        let actualValue: unknown = value
+        switch (key) {
+          case 'options':
+            actualValue = (value as string[]).join(', ')
+            break
+          case 'public':
+          case 'required':
+          case 'multi':
+            actualValue = value === true || value === 'true'
+            break
+          default:
+            actualValue = value
+        }
+        setValue(`${number}-${key}` as keyof Inputs, actualValue as string)
+      })
+    })
+    setSignupData(event)
+    await loadParticipants(event.name)
   }
 
   const nowMoment = moment()
@@ -104,50 +131,108 @@ const SignUpCreateForm = ({ events, app }: Props) => {
     .map((event) => event.name)
 
   useEffect(() => {
-    getSignUpData(eventValuesSorted[0])
+    if (eventValuesSorted[0]) loadEvent(eventValuesSorted[0])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const onSubmit: SubmitHandler<Inputs> = (data) => {
-    const finalData = data
-    const entries = Object.entries(data)
-    const inputs = editableInputs.map(({ number }) => {
+  const watchedIds = watch(
+    editableInputs.map(({ number }) => `${number}-id` as keyof Inputs)
+  ) as unknown as Array<number | string | undefined>
+  const duplicateIdSet = (() => {
+    const seen = new Map<number, number>()
+    watchedIds.forEach((raw) => {
+      const n = Number(raw)
+      if (Number.isFinite(n) && n > 0) seen.set(n, (seen.get(n) ?? 0) + 1)
+    })
+    const dup = new Set<number>()
+    seen.forEach((count, n) => {
+      if (count > 1) dup.add(n)
+    })
+    return dup
+  })()
+  const hasDuplicateIds = duplicateIdSet.size > 0
+
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    if (hasDuplicateIds) {
+      setMessage('Error: field IDs must be unique.')
+      return
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = data as any
+    const entries = Object.entries(raw)
+
+    const usedIds = new Set<number>()
+    let nextAutoId = 1
+    const assignFreshId = (): number => {
+      while (usedIds.has(nextAutoId)) nextAutoId += 1
+      usedIds.add(nextAutoId)
+      return nextAutoId
+    }
+
+    const rawInputs = editableInputs.map(({ number }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const obj: any = {}
+      const obj: any = { number }
       const keyStart = `${number}-`
-      const entriesForInput = entries.filter(([key]) => key.includes(keyStart))
-      entriesForInput.forEach(([key, value]) => {
-        delete finalData[key as keyof Inputs]
-        const newKey = key.replace(keyStart, '')
-        obj[newKey] = value
-      })
+      entries
+        .filter(([key]) => key.startsWith(keyStart))
+        .forEach(([key, value]) => {
+          const newKey = key.replace(keyStart, '')
+          obj[newKey] = value
+        })
       return obj
     })
-    finalData.inputs = inputs.map((input) => {
-      if (input.type === 'select') {
-        const options = input.options.split(',').map((item: string) => item.trim())
-        return {
-          ...input,
-          options,
-        }
-      }
-      return input
-    })
-    Object.entries(finalData).forEach(([key, value]) => {
-      if (value === undefined) {
-        delete finalData[key as keyof Inputs]
+
+    // First pass: honour explicit IDs.
+    rawInputs.forEach((inp) => {
+      const n = Number(inp.id)
+      if (Number.isFinite(n) && n > 0) {
+        inp.id = n
+        usedIds.add(n)
+      } else {
+        inp.id = null
       }
     })
-    const maxparticipantsAsInt = parseInt(finalData.maxparticipants.toString(), 10) || 0
-    setDoc(doc(db, 'events', finalData.name), {
-      ...finalData,
-      maxparticipants: maxparticipantsAsInt,
+    // Second pass: fill in blanks.
+    rawInputs.forEach((inp) => {
+      if (inp.id === null) inp.id = assignFreshId()
     })
-      .then(() => {
-        setMessage('Saved!')
-        setTimeout(() => setMessage(null), 2000)
-      })
-      .catch((error) => setMessage(`Error: ${error}`))
+
+    const inputs: SignupInput[] = rawInputs.map((inp) => {
+      const base: SignupInput = {
+        id: inp.id,
+        number: inp.number,
+        type: inp.type as EditableInputType,
+        title: inp.title ?? '',
+        public: Boolean(inp.public),
+        required: Boolean(inp.required),
+      }
+      if (inp.description) base.description = inp.description
+      if (inp.type === 'select') {
+        base.options = (inp.options ?? '')
+          .split(',')
+          .map((opt: string) => opt.trim())
+          .filter((opt: string) => opt.length > 0)
+        base.multi = Boolean(inp.multi)
+      }
+      return base
+    })
+
+    const payload: SignUpData = {
+      name: data.name,
+      maxparticipants: parseInt(data.maxparticipants.toString(), 10) || 0,
+      openfrom: new Date(data.openfrom).toISOString(),
+      openuntil: new Date(data.openuntil).toISOString(),
+      inputs,
+    }
+
+    try {
+      const saved = await saveSignupEvent(payload)
+      setSignupData(saved)
+      setMessage('Saved!')
+      setTimeout(() => setMessage(null), 2000)
+    } catch (e) {
+      setMessage(`Error: ${e instanceof Error ? e.message : e}`)
+    }
   }
 
   const editableInputUp = (thisObj: EditableInputObj) => {
@@ -176,7 +261,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
 
   const editableInputDelete = (number: number) => {
     setEditableInputs((oldInputs) => oldInputs.filter((item) => item.number !== number))
-    const fields = ['title', 'description', 'options', 'required', 'public', 'type']
+    const fields = ['id', 'title', 'description', 'options', 'required', 'public', 'multi', 'type']
     fields.forEach((key) => {
       resetField(`${number}-${key}` as keyof Inputs)
     })
@@ -191,7 +276,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             name="name"
             displayName="Event"
             options={eventValuesSorted}
-            onChangeDo={(value) => getSignUpData(value)}
+            onChangeDo={(value) => loadEvent(value)}
             control={control}
             required
           />
@@ -226,21 +311,26 @@ const SignUpCreateForm = ({ events, app }: Props) => {
             <div className="flex flex-col">
               <h3 className="text-center mt-4 mb-5">Sign-up Fields</h3>
               <h5 className="text-center text-lightgray">
-                Don&apos;t edit input names or select options after signups have started. Stuff will
-                break.
+                Don&apos;t edit field IDs or select options after signups have started.
               </h5>
-              {editableInputs.map((thisObj, i) => (
-                <EditableInput
-                  thisObj={thisObj}
-                  register={register}
-                  handleUp={editableInputUp}
-                  handleDown={editableInputDown}
-                  handleDelete={editableInputDelete}
-                  index={i}
-                  lastIndex={editableInputs.length - 1}
-                  key={thisObj.number}
-                />
-              ))}
+              {editableInputs.map((thisObj, i) => {
+                const rawId = Number(watchedIds[i])
+                const duplicate =
+                  Number.isFinite(rawId) && rawId > 0 && duplicateIdSet.has(rawId)
+                return (
+                  <EditableInput
+                    thisObj={thisObj}
+                    register={register}
+                    handleUp={editableInputUp}
+                    handleDown={editableInputDown}
+                    handleDelete={editableInputDelete}
+                    index={i}
+                    lastIndex={editableInputs.length - 1}
+                    duplicateId={duplicate}
+                    key={thisObj.number}
+                  />
+                )
+              })}
             </div>
             <div className="w-full flex justify-center gap-4 p-4">
               <button
@@ -266,8 +356,17 @@ const SignUpCreateForm = ({ events, app }: Props) => {
               </button>
             </div>
             <div className="text-center h-4 mb-8 mt-4">{message}</div>
-            <div className="flex justify-center mb-16">
-              <button type="submit" className="mainbutton">
+            <div className="flex flex-col items-center mb-16">
+              {hasDuplicateIds && (
+                <div className="text-red mb-2">
+                  Two or more fields share the same ID. IDs must be unique.
+                </div>
+              )}
+              <button
+                type="submit"
+                className="mainbutton"
+                disabled={hasDuplicateIds}
+              >
                 Save changes
               </button>
             </div>
@@ -279,8 +378,7 @@ const SignUpCreateForm = ({ events, app }: Props) => {
                 participants={participants}
                 showPrivateData
                 allowEdit
-                db={db}
-                getNewParticipants={getNewParticipants}
+                onChange={() => loadParticipants(signupData.name)}
               />
             )}
           </div>

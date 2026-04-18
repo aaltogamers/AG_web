@@ -48,3 +48,24 @@ To reset the database, stop compose and remove the volume:
 ```
 docker compose down -v
 ```
+
+### Environment variables
+
+- `DATABASE_URL` — Postgres connection string.
+- `ADMIN_PASSWORD` — admin password for the `/admin` page and the CMS. The
+  server turns a correct password into a signed `ag_admin` cookie; all
+  admin-gated API routes check that cookie.
+- `ADMIN_SESSION_SECRET` — optional HMAC secret for the cookie. Defaults to
+  `ADMIN_PASSWORD` if unset.
+- `BET_BOT_SECRET` — shared secret the Twitch chat bot sends in the
+  `x-bet-secret` header when POSTing to `/api/votes`. No one but the bot
+  should know this.
+- `RCON_IP`, `RCON_PASSWORD`, `RCON_PORT` — Minecraft whitelist endpoint.
+- `APP_ID`, `PRIVATE_KEY`, `INSTALLATION_ID` — GitHub App credentials for
+  the Decap CMS auth handshake (`/api/auth`).
+
+### Live data & APIs
+
+Signups, map bans, and bets live in Postgres. Live updates to `/mapban`,
+`/bet`, and `/betboard` use Server-Sent Events streamed from
+`/api/stream/:topic` (`mapbans`, `polls`, `votes`).
