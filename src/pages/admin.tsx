@@ -87,14 +87,12 @@ const Admin = ({ events }: Props) => {
               >
                 Map Bans
               </button>
-              {/* 
               <button
                 className={`${tab === 'stats' && 'underline'}`}
                 onClick={() => setTab('stats')}
               >
                 Statistics
               </button>
-              */}
             </div>
             {tab === 'signups' ? (
               <SignUpCreateForm app={app} events={events} />
@@ -103,7 +101,7 @@ const Admin = ({ events }: Props) => {
             ) : tab === 'mapbans' ? (
               <MapBanMangement app={app} />
             ) : (
-              <SiteStatistics app={app} />
+              <SiteStatistics />
             )}
           </div>
         ) : (

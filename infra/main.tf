@@ -68,6 +68,7 @@ resource "azurerm_linux_web_app" "main" {
       DOCKER_ENABLE_CI                    = "true"
       WEBSITES_ENABLE_APP_SERVICE_STORAGE = "false"
       DATABASE_URL                        = "postgresql://${azurerm_postgresql_flexible_server.main.administrator_login}:${var.postgresql_admin_password}@${azurerm_postgresql_flexible_server.main.fqdn}:5432/${azurerm_postgresql_flexible_server_database.app.name}?sslmode=require"
+      ADMIN_PASSWORD                      = var.admin_password
     },
     var.app_settings,
   )

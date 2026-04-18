@@ -1,5 +1,6 @@
 subscription_id           = "your-azure-subscription-id"
 postgresql_admin_password = "change-me-to-a-strong-password"
+admin_password            = "change-me-to-a-strong-password"
 
 # Pass any extra env vars your Next.js app needs
 app_settings = {

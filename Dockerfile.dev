@@ -1,0 +1,20 @@
+# Development image for `docker compose up`.
+# Runs `next dev` with hot-reload against a bind-mounted source tree.
+FROM node:24-alpine
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
+# node_modules is a per-container anonymous volume (see docker-compose.yml),
+# so we don't pre-install here. The `command` in the compose file runs
+# `npm install` on startup to keep things in sync with package.json.
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0"]

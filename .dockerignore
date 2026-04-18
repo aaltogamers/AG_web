@@ -1,0 +1,15 @@
+.git
+.github
+.vscode
+.next
+node_modules
+npm-debug.log
+Dockerfile
+Dockerfile.dev
+docker-compose.yml
+.env.local
+*.log
+.DS_Store
+infra/.terraform
+infra/terraform.tfvars
+infra/*.tfstate*
