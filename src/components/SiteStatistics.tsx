@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { fetchWithAdmin, useAdminPassword } from '../utils/analyticsAuth'
+import { fetchAnalytics } from '../utils/analyticsAuth'
 
 ChartJS.register(
   CategoryScale,
@@ -36,7 +36,6 @@ const getQueryString = (value: string | string[] | undefined): string => {
 
 const SiteStatistics = () => {
   const router = useRouter()
-  const { password, promptForPassword, hydrated } = useAdminPassword()
 
   const selectedPath = getQueryString(router.query.path) || null
   const from = getQueryString(router.query.from)
@@ -69,38 +68,30 @@ const SiteStatistics = () => {
     [router, selectedPath, from, to]
   )
 
-  const handleUnauthorized = useCallback(() => {
-    setError('Admin password required or incorrect.')
-    promptForPassword()
-  }, [promptForPassword])
-
   const loadTotals = useCallback(async () => {
-    if (!password) return
     setLoading(true)
     setError(null)
     try {
       const params = new URLSearchParams()
       if (from) params.set('from', from)
       if (to) params.set('to', to)
-      const res = await fetchWithAdmin(
-        `/api/analytics/stats?${params.toString()}`,
-        password,
-        handleUnauthorized
-      )
+      const res = await fetchAnalytics(`/api/analytics/stats?${params.toString()}`)
+      if (res.status === 401) {
+        setError('Analytics session expired. Please log in again.')
+        return
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = (await res.json()) as { totals: Totals }
       setTotals(data.totals)
     } catch (e) {
-      if (e instanceof Error && e.message !== 'Unauthorized' && e.message !== 'Missing admin password') {
-        setError(e.message)
-      }
+      if (e instanceof Error) setError(e.message)
     } finally {
       setLoading(false)
     }
-  }, [password, from, to, handleUnauthorized])
+  }, [from, to])
 
   const loadSeries = useCallback(async () => {
-    if (!password || !selectedPath) return
+    if (!selectedPath) return
     setLoading(true)
     setError(null)
     try {
@@ -108,40 +99,32 @@ const SiteStatistics = () => {
       params.set('path', selectedPath)
       if (from) params.set('from', from)
       if (to) params.set('to', to)
-      const res = await fetchWithAdmin(
-        `/api/analytics/stats?${params.toString()}`,
-        password,
-        handleUnauthorized
-      )
+      const res = await fetchAnalytics(`/api/analytics/stats?${params.toString()}`)
+      if (res.status === 401) {
+        setError('Analytics session expired. Please log in again.')
+        return
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = (await res.json()) as { total: number; series: Series }
       setSeries(data)
     } catch (e) {
-      if (e instanceof Error && e.message !== 'Unauthorized' && e.message !== 'Missing admin password') {
-        setError(e.message)
-      }
+      if (e instanceof Error) setError(e.message)
     } finally {
       setLoading(false)
     }
-  }, [password, selectedPath, from, to, handleUnauthorized])
+  }, [selectedPath, from, to])
 
   useEffect(() => {
-    if (!hydrated) return
-    if (!password) {
-      promptForPassword()
-      return
-    }
     loadTotals()
-  }, [hydrated, password, from, to, loadTotals, promptForPassword])
+  }, [from, to, loadTotals])
 
   useEffect(() => {
-    if (!hydrated || !password) return
     if (selectedPath) {
       loadSeries()
     } else {
       setSeries(null)
     }
-  }, [hydrated, password, selectedPath, from, to, loadSeries])
+  }, [selectedPath, from, to, loadSeries])
 
   const pathOptions = useMemo(() => {
     if (!totals) return []

@@ -1,72 +1,25 @@
-import { useCallback, useEffect, useState } from 'react'
+// Client-side analytics auth helpers.
+//
+// The server issues a signed, HttpOnly `ag_admin` cookie after a successful
+// POST to /api/analytics/login. We never store the password in JS — the cookie
+// is attached automatically by the browser on same-origin requests.
 
-const STORAGE_KEY = 'agAnalyticsAdminPassword'
-
-const readStored = (): string | null => {
-  if (typeof window === 'undefined') return null
-  try {
-    return window.sessionStorage.getItem(STORAGE_KEY)
-  } catch {
-    return null
-  }
-}
-
-const writeStored = (value: string | null) => {
-  if (typeof window === 'undefined') return
-  try {
-    if (value) {
-      window.sessionStorage.setItem(STORAGE_KEY, value)
-    } else {
-      window.sessionStorage.removeItem(STORAGE_KEY)
-    }
-  } catch {
-    // ignore
-  }
-}
-
-export const useAdminPassword = () => {
-  const [password, setPasswordState] = useState<string | null>(null)
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    setPasswordState(readStored())
-    setHydrated(true)
-  }, [])
-
-  const setPassword = useCallback((value: string | null) => {
-    writeStored(value)
-    setPasswordState(value)
-  }, [])
-
-  const promptForPassword = useCallback(() => {
-    if (typeof window === 'undefined') return null
-    const input = window.prompt('Enter admin password for analytics:')
-    if (input) {
-      writeStored(input)
-      setPasswordState(input)
-      return input
-    }
-    return null
-  }, [])
-
-  return { password, setPassword, promptForPassword, hydrated }
-}
-
-export const fetchWithAdmin = async (
-  url: string,
-  password: string | null,
-  onUnauthorized: () => void
-): Promise<Response> => {
-  if (!password) {
-    onUnauthorized()
-    throw new Error('Missing admin password')
-  }
-  const res = await fetch(url, {
-    headers: { 'x-admin-password': password },
+export const loginAnalytics = async (password: string): Promise<boolean> => {
+  const res = await fetch('/api/analytics/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password }),
+    credentials: 'same-origin',
   })
-  if (res.status === 401) {
-    onUnauthorized()
-    throw new Error('Unauthorized')
-  }
-  return res
+  return res.ok
 }
+
+export const logoutAnalytics = async (): Promise<void> => {
+  await fetch('/api/analytics/logout', {
+    method: 'POST',
+    credentials: 'same-origin',
+  }).catch(() => undefined)
+}
+
+export const fetchAnalytics = async (url: string): Promise<Response> =>
+  fetch(url, { credentials: 'same-origin' })

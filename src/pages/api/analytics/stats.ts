@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../utils/db_pg'
+import { isAdminAuthorized } from '../../../utils/adminSession'
 
 const getQueryParam = (req: NextApiRequest, name: string): string | undefined => {
   const raw = req.query[name]
@@ -21,14 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const expected = process.env.ADMIN_PASSWORD
-  if (!expected) {
+  if (!process.env.ADMIN_PASSWORD) {
     return res.status(500).json({ error: 'ADMIN_PASSWORD not configured' })
   }
-
-  const provided = req.headers['x-admin-password']
-  const providedStr = Array.isArray(provided) ? provided[0] : provided
-  if (providedStr !== expected) {
+  if (!isAdminAuthorized(req)) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
