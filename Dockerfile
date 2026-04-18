@@ -58,6 +58,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Migrations are loaded from disk at runtime by node-pg-migrate (not traced
+# by Next.js), so they need to be copied into the image explicitly.
+COPY --from=builder --chown=nextjs:nodejs /app/migrations ./migrations
+
 USER nextjs
 
 # server.js is created by next build from the standalone output

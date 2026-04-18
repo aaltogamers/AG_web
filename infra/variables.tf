@@ -33,6 +33,12 @@ variable "postgresql_admin_password" {
   sensitive   = true
 }
 
+variable "admin_password" {
+  description = "Password required by the admin-only analytics API (/api/analytics/stats)"
+  type        = string
+  sensitive   = true
+}
+
 variable "app_settings" {
   description = "Additional app settings / environment variables for the web app"
   type        = map(string)

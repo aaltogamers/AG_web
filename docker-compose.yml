@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ag-web-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agweb
+      POSTGRES_PASSWORD: agweb
+      POSTGRES_DB: agweb
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U agweb -d agweb']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ag-web-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://agweb:agweb@postgres:5432/agweb
+      # Next.js dev server needs to watch files over a bind mount on
+      # Windows/macOS; polling is the most reliable option inside Docker.
+      WATCHPACK_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'
+      # Read any additional secrets from the local .env so `docker compose up`
+      # mirrors `npm run dev`.
+    env_file:
+      - .env
+    ports:
+      - '3000:3000'
+    volumes:
+      # Bind-mount the source tree so edits on the host trigger hot reload.
+      - .:/app
+      # Keep node_modules and .next inside the container (avoids clobbering
+      # host files and avoids Windows/Linux binary mismatches for `sharp`, pg,
+      # etc.). Anonymous volumes win over the bind-mount for these paths.
+      - /app/node_modules
+      - /app/.next
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- -H 0.0.0.0"
+
+volumes:
+  postgres-data:

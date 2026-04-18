@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
     return cfg
   },
   output: 'standalone',
+  // node-pg-migrate is loaded dynamically at runtime; make sure the standalone
+  // output ships its dist/ and bin/ so migrations can run in the container.
+  outputFileTracingIncludes: {
+    '/api/analytics/**/*': ['./node_modules/node-pg-migrate/**/*'],
+    '/api/db-health': ['./node_modules/node-pg-migrate/**/*'],
+  },
   async redirects() {
     return [
       {

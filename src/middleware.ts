@@ -1,92 +1,35 @@
-import { /*NextRequest, */ NextResponse } from 'next/server'
-/*
-let authData: {
-  kind: string
-  localId: string
-  email: string
-  displayName: string
-  idToken: string
-  registered: boolean
-  refreshToken: string
-  expiresIn: string
-} | null = null
-let lastAuthTime = 0*/
+import { NextFetchEvent, NextRequest, NextResponse } from 'next/server'
+import { isBotRequest } from './utils/botDetection'
 
-export default async function middleware(/*req: NextRequest*/) {
-  /*const url = req.url || ''
-  const urlObj = new URL(url)
-  let path = urlObj.pathname
-  urlObj.searchParams.forEach((value, key) => {
-    path += `?${key}=${value}`
-  })
-
-  const userAgent = req.headers.get('User-Agent')?.toLowerCase() || ''
-
-  if (
-    req.headers.get('purpose') === 'prefetch' ||
-    req.headers.get('next-url') ||
-    userAgent.includes('bot') ||
-    userAgent.includes('spider') ||
-    userAgent.includes('crawl') ||
-    userAgent.includes('slurp')
-  ) {
+export default function middleware(req: NextRequest, event: NextFetchEvent) {
+  if (isBotRequest(req.headers)) {
     return NextResponse.next()
   }
 
-  const isDev = urlObj.host.includes('localhost')
-  const timeNow = Date.now()
-  const secondsSinceLastAuth = (timeNow - lastAuthTime) / 1000
+  const urlObj = new URL(req.url)
+  let path = urlObj.pathname
+  urlObj.searchParams.forEach((value, key) => {
+    path += `${path.includes('?') ? '&' : '?'}${key}=${value}`
+  })
 
-  if (!authData?.idToken || secondsSinceLastAuth >= (Number(authData?.expiresIn) || 0)) {
-    try {
-      const apiKey = 'AIzaSyAWhfwD5GSsgZ8qzNyvn2kmNn3yVu0QaHY'
-      const authRes = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
-        {
-          body: JSON.stringify({
-            email: 'guest@aaltogamers.fi',
-            password: 'aaltogamerpassword',
-            returnSecureToken: true,
-          }),
-          method: 'POST',
-        }
-      )
-      authData = await authRes.json()
-      lastAuthTime = timeNow
-    } catch (e) {
-      console.error(e)
-    }
-  }
+  const trackUrl = `${urlObj.protocol}//${urlObj.host}/api/analytics/track`
 
-  if (authData?.idToken) {
-    const newId: string =
-      new Date().getTime().toString() + Math.random().toString(36).substring(4).toString()
-    try {
-      await fetch(
-        `https://firestore.googleapis.com/v1/projects/ag-web-ab4d9/databases/(default)/documents/analytics/${newId}`,
-        {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${authData.idToken}`,
-          },
-          body: JSON.stringify({
-            fields: {
-              path: { stringValue: path },
-              timestamp: { timestampValue: new Date().toISOString() },
-              isDev: { booleanValue: isDev },
-            },
-          }),
-        }
-      )
-    } catch (e) {
-      console.error(e)
-    }
-  }*/
+  // waitUntil lets the response return immediately while telling the Edge
+  // runtime not to terminate before the analytics POST finishes. The response
+  // to the browser is NOT blocked on this fetch.
+  event.waitUntil(
+    fetch(trackUrl, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ path }),
+    }).catch(() => {
+      // swallow – analytics must never break the page
+    })
+  )
 
   return NextResponse.next()
 }
 
 export const config = {
-  // matcher solution for public, api, assets and _next exclusion
-  matcher: '/((?!api|static|.*\\..*|_next).*)',
+  matcher: '/((?!api|static|.*\\..*|_next|admin).*)',
 }
