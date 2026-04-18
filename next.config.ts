@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
     '/api/analytics/**/*': ['./node_modules/node-pg-migrate/**/*'],
     '/api/db-health': ['./node_modules/node-pg-migrate/**/*'],
   },
+  experimental: {
+    // Enables Node.js runtime for middleware so we can use `pg` directly
+    // (avoiding the Edge runtime's lack of Node APIs / self-fetch round trip).
+    // Cast: the flag works at runtime but isn't yet in Next.js' typed config.
+    nodeMiddleware: true,
+  } as NextConfig['experimental'],
   async redirects() {
     return [
       {
