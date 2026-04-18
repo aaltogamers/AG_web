@@ -20,13 +20,35 @@ const passwordForm = (text: string) => `
 `
 
 const mintGithubTokenScript = async (): Promise<string> => {
-  const oktoApp = new App({
-    appId: process.env.APP_ID || '',
-    privateKey: Buffer.from(process.env.PRIVATE_KEY || '', 'base64').toString('ascii'),
-  })
+  const appId = process.env.APP_ID
+  const privateKeyB64 = process.env.PRIVATE_KEY
+  const installationId = process.env.INSTALLATION_ID
+
+  const missing = [
+    !appId && 'APP_ID',
+    !privateKeyB64 && 'PRIVATE_KEY',
+    !installationId && 'INSTALLATION_ID',
+  ].filter(Boolean)
+  if (missing.length > 0) {
+    throw new Error(`Missing GitHub App env vars: ${missing.join(', ')}`)
+  }
+
+  let privateKey: string
+  try {
+    privateKey = Buffer.from(privateKeyB64 as string, 'base64').toString('ascii')
+  } catch (e) {
+    throw new Error(`PRIVATE_KEY is not valid base64: ${e instanceof Error ? e.message : e}`)
+  }
+  if (!privateKey.includes('BEGIN') || !privateKey.includes('PRIVATE KEY')) {
+    throw new Error(
+      'PRIVATE_KEY does not look like a PEM (decoded content missing BEGIN PRIVATE KEY marker)'
+    )
+  }
+
+  const oktoApp = new App({ appId: appId as string, privateKey })
 
   const authRes = await oktoApp.octokit.request(
-    `POST /app/installations/${process.env.INSTALLATION_ID}/access_tokens`
+    `POST /app/installations/${installationId}/access_tokens`
   )
 
   const postMsgContent = {
@@ -34,7 +56,6 @@ const mintGithubTokenScript = async (): Promise<string> => {
     provider: 'github',
   }
 
-  // Hand the token to Decap CMS via window.postMessage on the opener window.
   return `
     <script>
     (function() {
@@ -52,44 +73,60 @@ const mintGithubTokenScript = async (): Promise<string> => {
     </script>`
 }
 
+const escapeHtml = (s: string): string =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+const respondWithToken = async (res: NextApiResponse<string>): Promise<void> => {
+  try {
+    res.send(await mintGithubTokenScript())
+  } catch (e) {
+    console.error('[api/auth] failed to mint github token:', e)
+    const msg = e instanceof Error ? e.message : String(e)
+    res.status(500).send(passwordForm(`GitHub token error: ${escapeHtml(msg)}`))
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse<string>) {
   res.setHeader('content-type', 'text/html; charset=utf-8')
 
-  // If the caller already has a valid admin session cookie (e.g. they just
-  // logged in via /admin), skip the password form and hand out a token.
-  if (isAdminAuthorized(req)) {
-    try {
-      return res.send(await mintGithubTokenScript())
-    } catch (e) {
-      console.error('[api/auth] failed to mint github token:', e)
-      return res.status(500).send(passwordForm('Failed to mint GitHub token'))
-    }
-  }
-
-  // GET with no cookie → show the password form.
-  if (req.method === 'GET') {
-    return res.send(passwordForm(''))
-  }
-
-  // POST with password → validate, set cookie, hand out a token.
-  const password = typeof req.body?.password === 'string' ? req.body.password : ''
-
-  if (!password) {
-    return res.send(passwordForm(''))
-  }
-  if (!process.env.ADMIN_PASSWORD) {
-    return res.status(500).send(passwordForm('ADMIN_PASSWORD not configured on server'))
-  }
-  if (!verifyAdminPassword(password)) {
-    return res.send(passwordForm('Incorrect password'))
-  }
-
-  setAdminSessionCookie(res)
-
   try {
-    return res.send(await mintGithubTokenScript())
+    if (isAdminAuthorized(req)) {
+      return await respondWithToken(res)
+    }
+
+    if (req.method === 'GET') {
+      return res.send(passwordForm(''))
+    }
+
+    const body = req.body as { password?: unknown } | undefined | string
+    let password = ''
+    if (typeof body === 'string') {
+      password = new URLSearchParams(body).get('password') ?? ''
+    } else if (body && typeof body === 'object' && typeof body.password === 'string') {
+      password = body.password
+    }
+
+    if (!password) {
+      return res.send(passwordForm(''))
+    }
+    if (!process.env.ADMIN_PASSWORD) {
+      console.error('[api/auth] ADMIN_PASSWORD not configured on server')
+      return res.status(500).send(passwordForm('Server misconfigured: ADMIN_PASSWORD not set'))
+    }
+    if (!verifyAdminPassword(password)) {
+      return res.send(passwordForm('Incorrect password'))
+    }
+
+    setAdminSessionCookie(res)
+    return await respondWithToken(res)
   } catch (e) {
-    console.error('[api/auth] failed to mint github token:', e)
-    return res.status(500).send(passwordForm('Failed to mint GitHub token'))
+    console.error('[api/auth] unexpected handler error:', e)
+    const msg = e instanceof Error ? e.message : String(e)
+    return res.status(500).send(passwordForm(`Server error: ${escapeHtml(msg)}`))
   }
 }
