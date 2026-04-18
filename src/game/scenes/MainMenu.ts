@@ -253,12 +253,13 @@ export class MainMenu extends Scene {
   }
   // called from rpc.ts
   spawnProjectile(data: { rotation: number; x: number; y: number; name: string; speed: number }) {
-    const stored = this.projectiles.find((p) => p.x > 1920 || p.x < 0 || p.y > 1080 || p.y < 0)
+    const stored = this.projectiles.find(
+      (p) => data.name == p.name && (p.x > 1920 || p.x < 0 || p.y > 1080 || p.y < 0)
+    )
     const { x, y } = radToXY(data.rotation)
 
     if (stored) {
       stored
-        .setTexture(data.name)
         .setPosition(data.x, data.y)
         .setVelocity(x * data.speed, y * data.speed)
         .setRotation(data.rotation)
