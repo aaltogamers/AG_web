@@ -44,10 +44,17 @@ const SiteStatistics = () => {
   const [totals, setTotals] = useState<Totals | null>(null)
   const [series, setSeries] = useState<{ total: number; series: Series } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const timeframeValid =
+    Boolean(from && to) && new Date(from).getTime() < new Date(to).getTime()
+  const canDeleteStatistics = Boolean(selectedPath) && timeframeValid
 
   const updateQuery = useCallback(
     (next: Partial<{ path: string | null; from: string; to: string }>) => {
+      setSuccessMessage(null)
       const merged: Record<string, string> = {}
       const currentPath = selectedPath
       const currentFrom = from
@@ -116,6 +123,49 @@ const SiteStatistics = () => {
     }
   }, [selectedPath, from, to])
 
+  const deleteStatistics = useCallback(async () => {
+    if (!selectedPath || !timeframeValid) return
+    const path = selectedPath
+    const detail =
+      `Delete ALL page view statistics for:\n\n` +
+      `Path: ${path}\n` +
+      `From: ${from}\n` +
+      `To: ${to}\n\n` +
+      `This cannot be undone. Continue?`
+    if (!window.confirm(detail)) return
+    if (!window.confirm('Final confirmation: permanently delete these records from the database?')) return
+
+    setSuccessMessage(null)
+    setDeleting(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      params.set('path', path)
+      params.set('from', from)
+      params.set('to', to)
+      const res = await fetch(`/api/analytics/stats?${params.toString()}`, {
+        method: 'DELETE',
+        credentials: 'same-origin',
+      })
+      if (res.status === 401) {
+        setError('Admin session expired. Please log in again.')
+        return
+      }
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        throw new Error(body?.error ?? `HTTP ${res.status}`)
+      }
+      const data = (await res.json()) as { deleted: number }
+      setSuccessMessage(`Deleted ${data.deleted} row(s).`)
+      await loadTotals()
+      await loadSeries()
+    } catch (e) {
+      if (e instanceof Error) setError(e.message)
+    } finally {
+      setDeleting(false)
+    }
+  }, [selectedPath, timeframeValid, from, to, loadTotals, loadSeries])
+
   useEffect(() => {
     loadTotals()
   }, [from, to, loadTotals])
@@ -174,18 +224,20 @@ const SiteStatistics = () => {
             className="bg-white text-black p-2 rounded border border-neutral-300"
           />
         </div>
-        <button
-          className="mainbutton"
-          onClick={() => {
-            if (selectedPath) loadSeries()
-            else loadTotals()
-          }}
-        >
-          Refresh
-        </button>
+        {canDeleteStatistics && (
+          <button
+            type="button"
+            className="mainbutton disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={deleting}
+            onClick={deleteStatistics}
+          >
+            {deleting ? 'Deleting' : 'Delete'}
+          </button>
+        )}
       </div>
 
       {error && <p className="text-red">{error}</p>}
+      {successMessage && <p className="text-green-400">{successMessage}</p>}
       {loading && <p>Loading…</p>}
 
       {!selectedPath && totals && (

@@ -18,7 +18,7 @@ const parseDate = (value: string | undefined): Date | undefined => {
 const ALLOWED_BUCKETS = new Set(['hour', 'day', 'week', 'month'])
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
+  if (req.method !== 'GET' && req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
@@ -34,12 +34,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const to = parseDate(getQueryParam(req, 'to'))
   const bucket = getQueryParam(req, 'bucket') || 'day'
 
-  if (!ALLOWED_BUCKETS.has(bucket)) {
-    return res.status(400).json({ error: 'Invalid bucket' })
-  }
-
   try {
     await ensureMigrated()
+
+    if (req.method === 'DELETE') {
+      if (!path || !from || !to) {
+        return res.status(400).json({ error: 'path, from, and to are required' })
+      }
+      if (from.getTime() >= to.getTime()) {
+        return res.status(400).json({ error: '"from" must be before "to"' })
+      }
+      const result = await pool.query(
+        `DELETE FROM page_views WHERE path = $1 AND ts >= $2 AND ts < $3`,
+        [path, from.toISOString(), to.toISOString()]
+      )
+      const deleted = result.rowCount ?? 0
+      return res.status(200).json({ deleted })
+    }
+
+    if (!ALLOWED_BUCKETS.has(bucket)) {
+      return res.status(400).json({ error: 'Invalid bucket' })
+    }
 
     if (!path) {
       const where: string[] = []
