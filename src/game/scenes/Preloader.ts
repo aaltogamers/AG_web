@@ -49,10 +49,12 @@ export class Preloader extends Scene {
     )
   }
   checkStart() {
+    const ready = getState('ready')
+    if (!ready) return
     if (
       isHost() &&
       this.registry.get('players').length > 0 &&
-      this.registry.get('players').every((p: PlayerState) => p.getState('ready'))
+      this.registry.get('players').every((p: PlayerState) => ready.includes(p.id))
     ) {
       RPC.call('startGame', '', RPC.Mode.ALL)
     }
@@ -116,20 +118,15 @@ export class Preloader extends Scene {
         }
       }
       button.setTint(index == this.selected ? 0x17a319 : 0x730000)
+      const player = this.registry
+        .get('players')
+        .find((p: PlayerState) => p.getState('character') == data)
       const nameText = this.add
-        .text(
-          this.getButtonX(index),
-          this.getButtonY(index),
-          this.registry
-            .get('players')
-            .find((p: PlayerState) => p.getState('ready') && p.getState('character') == data)
-            ?.getState('name'),
-          {
-            fontFamily: 'goldman',
-            fontSize: 20,
-            backgroundColor: 'black',
-          }
-        )
+        .text(this.getButtonX(index), this.getButtonY(index), player?.getState('name'), {
+          fontFamily: 'goldman',
+          fontSize: 20,
+          backgroundColor: 'black',
+        })
         .setOrigin(0.5, 0.5)
         .setDepth(button.depth + 1)
       this.pickedNames.set(data, nameText)
@@ -142,7 +139,7 @@ export class Preloader extends Scene {
     const players: PlayerState[] = this.registry.get('players') || []
     if (isHost()) {
       this.registry.get('spectators').forEach((s: PlayerState) => s.setState('points', 0))
-      const alivePlayers = players.filter((p) => p.getState('ready'))
+      const alivePlayers = players.filter((p) => getState('ready').includes(p.id))
       setState(
         'alivePlayers',
         alivePlayers.map((p) => p.id)
@@ -183,20 +180,13 @@ export class Preloader extends Scene {
   init() {
     setPreloaderRef(this)
 
-    if (getState('gameActive')) {
-      this.scene.start('MainMenu')
-    }
     this.characterButtons = []
     this.playerNames = []
     this.spectatorNames = []
     this.pickedChamps = []
     this.difficulty = getState('difficulty')
 
-    this.selected = Phaser.Math.Clamp(
-      characterNames.findIndex((name) => myPlayer().getState('character') == name),
-      0,
-      10
-    )
+    this.selected = Phaser.Math.Clamp(myPlayer().getState('selected'), 0, 10)
 
     if (this.registry.get('isDesktop')) {
       this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
@@ -310,9 +300,11 @@ export class Preloader extends Scene {
 
     this.readyButton?.on('pointerup', () => {
       const character = characterNames[this.selected]
-      myPlayer()?.setState('character', character)
-      myPlayer()?.setState('ready', true)
+      myPlayer().setState('character', character)
+      myPlayer().setState('ready', true)
       setState('picked', [...getState('picked'), character])
+      setState('ready', [...getState('ready'), myPlayer().id])
+      myPlayer().setState('selected', this.selected)
       this.readyButton?.setVisible(false)
       this.specButton?.setVisible(false)
       RPC.call('pickedChamp', character, RPC.Mode.ALL)
@@ -403,6 +395,15 @@ export class Preloader extends Scene {
     pickedState.forEach((name: string) => {
       this.drawChamp(name)
     })
+    if (getState('gameActive')) {
+      if (!this.scene.get('MainMenu')) {
+        this.scene.add('MainMenu', MainMenu)
+      }
+      this.sound.stopAll()
+      this.scene.start('MainMenu')
+      this.scene.remove('Preloader')
+      setPreloaderRef(undefined)
+    }
   }
 
   update() {

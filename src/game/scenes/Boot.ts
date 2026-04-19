@@ -34,6 +34,7 @@ export class Boot extends Scene {
 
     const player = this.registry.get('players').find((p: PlayerState) => p.id == id)
     if (!player) return
+    if (player.id == myPlayer().id) myPlayer().setState('spectator', true)
     Phaser.Utils.Array.Remove(this.registry.get('players'), player)
     Phaser.Utils.Array.Add(this.registry.get('spectators'), player)
   }
@@ -43,6 +44,7 @@ export class Boot extends Scene {
 
     const player = this.registry.get('spectators').find((p: PlayerState) => p.id == id)
     if (!player) return
+    if (player.id == myPlayer().id) myPlayer().setState('spectator', false)
 
     Phaser.Utils.Array.Remove(this.registry.get('spectators'), player)
     Phaser.Utils.Array.Add(this.registry.get('players'), player)
@@ -64,11 +66,70 @@ export class Boot extends Scene {
     }
     setBootRef(this)
 
+    const moveToRegistry = (player: PlayerState) => {
+      if (
+        !this.registry
+          .get('players')
+          .some((storedPlayer: PlayerState) => storedPlayer.id == player.id) &&
+        !this.registry
+          .get('spectators')
+          .some((storedPlayer: PlayerState) => storedPlayer.id == player.id)
+      ) {
+        const registry = player.getState('spectator') ? 'spectators' : 'players'
+        Phaser.Utils.Array.Add(this.registry.get(registry), player)
+
+        if (isHost() && player.id == getState('originalHostID')) {
+          transferHost(player.id)
+        }
+      }
+      player.onQuit(() => {
+        if (myPlayer()?.id) {
+          if (isHost() && player.id != myPlayer().id && this.isVisible) {
+            RPC.call('togglePause', false)
+          }
+
+          Phaser.Utils.Array.Remove(this.registry.get('players'), player)
+          Phaser.Utils.Array.Remove(this.registry.get('spectators'), player)
+
+          if (isHost()) {
+            if (player.getState('ready')) {
+              setState(
+                'picked',
+                getState('picked').filter((a: string) => a != player.getState('character'))
+              )
+              RPC.call('pickedChamp', player.getState('character'))
+            }
+
+            RPC.call('killPlayer', player.id)
+          }
+        }
+      })
+    }
+
+    onPlayerJoin((player) => {
+      if (player.getState('name') != '') {
+        moveToRegistry(player)
+      } else {
+        waitForPlayerState(player, 'name', () => {
+          moveToRegistry(player)
+        })
+      }
+    })
+
     const pos: [number, number] = this.registry.get('isDesktop')
       ? [940, 540]
       : [1920 - window.innerWidth / 2, window.innerHeight / 2]
 
     this.add.text(...pos, 'loading ...').setOrigin(0.5, 0.5)
+
+    if (getState('gameActive')) {
+      if (isHost()) {
+        RPC.call('togglePause', true)
+      }
+      if (!getState('alivePlayers').includes(myPlayer().id)) {
+        RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL)
+      }
+    }
   }
 
   preload() {
@@ -128,65 +189,6 @@ export class Boot extends Scene {
       }
     })
 
-    this.game.events.on('destroy', () => {
-      RPC.call('togglePause', false)
-    })
-
-    onPlayerJoin((player) => {
-      waitForPlayerState(player, 'name', () => {
-        if (
-          !this.registry
-            .get('players')
-            .some((storedPlayer: PlayerState) => storedPlayer.id == player.id) &&
-          !this.registry
-            .get('spectators')
-            .some((storedPlayer: PlayerState) => storedPlayer.id == player.id)
-        ) {
-          const registry = player.getState('spectator') ? 'spectators' : 'players'
-          Phaser.Utils.Array.Add(this.registry.get(registry), player)
-
-          if (isHost() && player.id == getState('originalHostID')) {
-            transferHost(player.id)
-          }
-        }
-        player.onQuit(() => {
-          if (myPlayer()?.id) {
-            if (isHost() && player.id != myPlayer().id && this.isVisible) {
-              RPC.call('togglePause', false)
-            }
-
-            Phaser.Utils.Array.Remove(this.registry.get('players'), player)
-            Phaser.Utils.Array.Remove(this.registry.get('spectators'), player)
-
-            if (isHost()) {
-              if (player.getState('ready')) {
-                setState(
-                  'picked',
-                  getState('picked').filter((a: string) => a != player.getState('character'))
-                )
-                RPC.call('pickedChamp', player.getState('character'))
-              }
-
-              RPC.call('killPlayer', player.id)
-            }
-          }
-        })
-      })
-    })
-
-    if (getState('gameActive')) {
-      this.add.text(750, 540, 'game in progress ... \n please wait for the next round to start')
-    } else {
-      this.scene.start('Preloader')
-    }
-  }
-  update() {
-    if (getState('alivePlayers').includes(myPlayer().id)) {
-      this.scene.start('Preloader')
-    }
-    if (!getState('gameActive') && !this.doOnce) {
-      this.doOnce = true
-      this.time.delayedCall(5000, () => this.scene.start('Preloader'))
-    }
+    this.scene.start('Preloader')
   }
 }

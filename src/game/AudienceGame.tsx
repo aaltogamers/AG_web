@@ -114,6 +114,8 @@ const AudienceGame = () => {
         points: 0,
         name: '',
         active: true,
+        pos: { x: 940, y: 540 },
+        selected: 0,
       },
       defaultStates: {
         alivePlayers: [],
@@ -131,6 +133,8 @@ const AudienceGame = () => {
         winPoints: 0,
         difficulty: 0,
         paused: false,
+        shields: [],
+        ready: [],
       },
     })
       .then(() => {

@@ -155,6 +155,7 @@ export class MainMenu extends Scene {
   getShield(id: string) {
     const player = this.players.find((p) => p.state.id == id)
     if (!player) return
+    if (!this.shield) this.spawnShield()
     if (!this.shield) return
 
     this.shield
@@ -198,6 +199,7 @@ export class MainMenu extends Scene {
           if (this.playerShields.get(player.state.id)) return
 
           RPC.call('getShield', player.state.id)
+          setState('shields', [...getState('shields'), player.state.id])
         }
       })
 
@@ -218,9 +220,13 @@ export class MainMenu extends Scene {
 
       if (shield) {
         RPC.call('usedShield', player.state.id)
+        setState(
+          'shields',
+          getState('shields').filter((p: string) => p != player.state.id)
+        )
         return
       }
-
+      player?.state.setState('points', this.points)
       RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
     }
   }
@@ -315,7 +321,7 @@ export class MainMenu extends Scene {
 
     if (isHost()) {
       setState('gameActive', false)
-      resetPlayersStates(['spectator', 'points', 'name', 'character'])
+      resetPlayersStates(['spectator', 'points', 'name', 'selected'])
       resetStates([
         ...this.playerStates.map((p) => p.id),
         ...this.registry.get('spectators').map((p: PlayerState) => p.id),
@@ -325,6 +331,7 @@ export class MainMenu extends Scene {
         'points',
         'difficulty',
       ])
+      setState('ready', [])
       this.scaler?.remove()
     }
 
@@ -341,6 +348,7 @@ export class MainMenu extends Scene {
       setMainMenuRef(undefined)
 
       myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
+      myPlayer()?.setState('pos', { x: 940, y: 540 })
     })
   }
 
@@ -349,13 +357,11 @@ export class MainMenu extends Scene {
     const playerToKill = this.players.find((p) => p.state.id == data)
 
     if (isHost()) {
-      playerToKill?.state.setState('points', this.points)
       setState(
         'alivePlayers',
         getState('alivePlayers').filter((alivePlayerID: string) => alivePlayerID != data)
       )
       const alivePlayers = getState('alivePlayers')
-
       if (alivePlayers.length <= 0) {
         setState('winner', data)
         RPC.call('gameWon', '', RPC.Mode.ALL)
@@ -426,7 +432,7 @@ export class MainMenu extends Scene {
       })
     }
 
-    if (!this.registry.get('isDesktop') && !isHost()) {
+    if (!this.registry.get('isDesktop')) {
       this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0).setDepth(200)
       if (myPlayer().getState('spectator')) {
         this.add
@@ -483,8 +489,9 @@ export class MainMenu extends Scene {
     this.playerStates.forEach((playerState) => {
       if (playerState.getState('active')) {
         const character: string = playerState.getState('character') || characterNames[0]
+        const pos: { x: number; y: number } = playerState.getState('pos')
         const sprite = this.matter.add
-          .image(940, 550, character, undefined, {
+          .image(pos.x, pos.y, character, undefined, {
             shape: {
               type: 'circle',
               radius: 340,
@@ -510,23 +517,13 @@ export class MainMenu extends Scene {
       fontSize: 30,
     })
 
-    if (!this.registry.get('isDesktop')) {
-      this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0).setDepth(100)
-      if (myPlayer().getState('spectator')) {
-        this.add
-          .text(1300, window.innerHeight / 2, 'spectating', {
-            fontFamily: 'goldman',
-            fontSize: 100,
-          })
-          .setOrigin(0.5, 0.5)
-          .setDepth(100)
-      } else {
-        this.add
-          .image(1300, window.innerHeight / 2, 'touchIcon')
-          .setScale(0.5)
-          .setDepth(100)
-      }
-    }
+    RPC.call('getProjectiles', '', RPC.Mode.HOST, (data) => {
+      this.reSyncProjectiles(data)
+    })
+
+    getState('shields').forEach((id: string) => {
+      this.getShield(id)
+    })
 
     if (isHost()) {
       this.scaler = this.time.addEvent({
