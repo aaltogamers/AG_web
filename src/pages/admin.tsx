@@ -85,6 +85,14 @@ const Admin = ({ events }: Props) => {
               >
                 Statistics
               </button>
+              <a
+                href="/cms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-4xl"
+              >
+                Content
+              </a>
             </div>
             <div className="flex justify-end mb-12">
               <button className="borderbutton" onClick={onLogout}>
