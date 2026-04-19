@@ -13,7 +13,7 @@ const AdminNavLink = ({ className, onNavigate }: Props) => {
   if (isAdmin !== true) return null
 
   return (
-    <Link href="/admin" className={className} onClick={onNavigate}>
+    <Link href="/admin/signups" className={className} onClick={onNavigate}>
       ADMIN
     </Link>
   )
