@@ -51,21 +51,27 @@ export const initRPCs = (isDesktop: boolean) => {
   RPC.register('togglePause', async (data) => {
     mainMenuRef?.togglePause(data)
   })
-  if (isDesktop || isHost()) {
-    RPC.register('spawnProjectile', async (data) => {
+  RPC.register('spawnProjectile', async (data) => {
+    if (isDesktop || isHost()) {
       mainMenuRef?.spawnProjectile(data)
-    })
-    RPC.register('getShield', async (data) => {
+    }
+  })
+  RPC.register('getShield', async (data) => {
+    if (isDesktop || isHost()) {
       mainMenuRef?.getShield(data)
-    })
-    RPC.register('spawnShield', async () => {
+    }
+  })
+  RPC.register('spawnShield', async () => {
+    if (isDesktop || isHost()) {
       mainMenuRef?.spawnShield()
-    })
-    RPC.register('usedShield', async (data) => {
+    }
+  })
+  RPC.register('usedShield', async (data) => {
+    if (isDesktop || isHost()) {
       mainMenuRef?.usedShield(data)
-    })
-    RPC.register('getProjectiles', async () => {
-      return mainMenuRef?.getProjectiles()
-    })
-  }
+    }
+  })
+  RPC.register('getProjectiles', async () => {
+    return mainMenuRef?.getProjectiles()
+  })
 }

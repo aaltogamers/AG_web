@@ -23,6 +23,7 @@ export class Preloader extends Scene {
   readyButton: Phaser.GameObjects.Image | null = null
   qrCode: Phaser.GameObjects.Image | null = null
   difficulty: number = 0
+  difficultyButton: Phaser.GameObjects.Container | undefined = undefined
   rpcInit = false
 
   constructor() {
@@ -66,6 +67,8 @@ export class Preloader extends Scene {
       this.playerNames = []
       this.spectatorNames?.forEach((n) => n.destroy())
       this.spectatorNames = []
+
+      this.difficultyButton?.setVisible(isHost())
 
       this.registry.get('spectators')?.forEach((spectator: PlayerState, i: number) => {
         const nameText = this.add.text(10, 525 + 20 * i, spectator.getState('name'), {
@@ -367,10 +370,9 @@ export class Preloader extends Scene {
       fontFamily: 'goldman',
       fontSize: 20,
     })
-
-    if (isHost()) {
-      const difficultyButton = this.add.container(1700, 130)
-      difficultyButton.add([
+    this.difficultyButton = this.add.container(1700, 130)
+    this.difficultyButton
+      .add([
         this.add
           .text(85, 0, 'Difficulty', {
             fontFamily: 'goldman',
@@ -383,8 +385,8 @@ export class Preloader extends Scene {
           .on('pointerup', () => {
             this.difficulty = (this.difficulty + 1) % 3
             setState('difficulty', this.difficulty)
-            difficultyButton
-              .getByName<Phaser.GameObjects.Text>('btext')
+            this.difficultyButton
+              ?.getByName<Phaser.GameObjects.Text>('btext')
               .setText(difficulties[this.difficulty])
           }),
         this.add
@@ -395,7 +397,8 @@ export class Preloader extends Scene {
           .setOrigin(0.5, 0.5)
           .setName('btext'),
       ])
-    }
+      .setVisible(isHost())
+
     const pickedState = getState('picked')
     pickedState.forEach((name: string) => {
       this.drawChamp(name)

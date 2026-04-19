@@ -107,12 +107,30 @@ export class MainMenu extends Scene {
     })
   }
 
+  resyncAfterPause() {
+    for (const player of this.players) {
+      if (!player?.sprite) return
+
+      const shield = this.playerShields.get(player.state.id)
+      if (shield) {
+        shield.setPosition(player.sprite.x, player.sprite.y)
+      }
+
+      const pos = player.state.getState('pos')
+      if (pos && player.sprite.body) {
+        player.sprite.setPosition(pos.x, pos.y)
+      }
+    }
+    this.points = getState('points')
+  }
+
   togglePause(data: boolean) {
     if (data) {
       this.scene.pause()
       this.sound.pauseAll()
       this.pauseTextObject?.setVisible(true)
     } else {
+      this.resyncAfterPause()
       this.scene.resume()
       this.sound.resumeAll()
       this.pauseTextObject?.setVisible(false)
@@ -204,17 +222,6 @@ export class MainMenu extends Scene {
       }
 
       RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
-      player.state.setState('points', this.points)
-      setState(
-        'alivePlayers',
-        getState('alivePlayers').filter((alivePlayerID: string) => alivePlayerID != player.state.id)
-      )
-      const alivePlayers = getState('alivePlayers')
-
-      if (alivePlayers.length <= 0) {
-        setState('winner', player.state.id)
-        RPC.call('gameWon', '', RPC.Mode.ALL)
-      }
     }
   }
 
@@ -340,6 +347,21 @@ export class MainMenu extends Scene {
   // called from rpc.ts
   killPlayer(data: string) {
     const playerToKill = this.players.find((p) => p.state.id == data)
+
+    if (isHost()) {
+      playerToKill?.state.setState('points', this.points)
+      setState(
+        'alivePlayers',
+        getState('alivePlayers').filter((alivePlayerID: string) => alivePlayerID != data)
+      )
+      const alivePlayers = getState('alivePlayers')
+
+      if (alivePlayers.length <= 0) {
+        setState('winner', data)
+        RPC.call('gameWon', '', RPC.Mode.ALL)
+      }
+    }
+
     if (!playerToKill) return
     playerToKill.sprite.setTint(0x610003)
     this.time.delayedCall(50, () => {
@@ -405,7 +427,7 @@ export class MainMenu extends Scene {
     }
 
     if (!this.registry.get('isDesktop') && !isHost()) {
-      this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0)
+      this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0).setDepth(200)
       if (myPlayer().getState('spectator')) {
         this.add
           .text(1300, window.innerHeight / 2, 'spectating', {
@@ -413,92 +435,96 @@ export class MainMenu extends Scene {
             fontSize: 100,
           })
           .setOrigin(0.5, 0.5)
+          .setDepth(201)
       } else {
-        this.add.image(1300, window.innerHeight / 2, 'touchIcon').setScale(0.5)
+        this.add
+          .image(1300, window.innerHeight / 2, 'touchIcon')
+          .setScale(0.5)
+          .setDepth(201)
       }
     } else {
       this.sound.play('inGame', {
         loop: true,
         volume: 0.05,
       })
-      this.hitboxes = this.hitboxCords.map((cords) => {
-        const rect = this.add
-          .rectangle(cords.x, cords.y, cords.sx, cords.sy, 0xff0000)
-          .setRotation(cords.rot)
-          .setOrigin(0, 0)
-          .setScale(1.25)
-        this.matter.add.gameObject(rect, {
-          isStatic: true,
-          angle: cords.rot,
-        })
-
-        return rect
+    }
+    this.hitboxes = this.hitboxCords.map((cords) => {
+      const rect = this.add
+        .rectangle(cords.x, cords.y, cords.sx, cords.sy, 0xff0000)
+        .setRotation(cords.rot)
+        .setOrigin(0, 0)
+        .setScale(1.25)
+      this.matter.add.gameObject(rect, {
+        isStatic: true,
+        angle: cords.rot,
       })
 
-      this.edgeCircle = new Phaser.Geom.Circle(930, 580, 500)
-      this.edgeCircle.getPoints(128, undefined, this.outerEdgeHitBoxPoints)
-      let lastPoint = this.outerEdgeHitBoxPoints[this.outerEdgeHitBoxPoints.length - 1]
-      this.outerEdgeHitBoxPoints.forEach((point) => {
-        const rot = Phaser.Math.Angle.Between(point.x, point.y, lastPoint.x, lastPoint.y)
-        const magnitude = Phaser.Math.Distance.Between(point.x, point.y, lastPoint.x, lastPoint.y)
-        const hitbox = this.add.rectangle(point.x, point.y, magnitude + 5, 60, 0).setRotation(rot)
-        this.matter.add.gameObject(hitbox, {
-          isStatic: true,
-          angle: rot,
-        })
-        this.hitboxes = [...this.hitboxes, hitbox]
-        lastPoint = point
+      return rect
+    })
+
+    this.edgeCircle = new Phaser.Geom.Circle(930, 580, 500)
+    this.edgeCircle.getPoints(128, undefined, this.outerEdgeHitBoxPoints)
+    let lastPoint = this.outerEdgeHitBoxPoints[this.outerEdgeHitBoxPoints.length - 1]
+    this.outerEdgeHitBoxPoints.forEach((point) => {
+      const rot = Phaser.Math.Angle.Between(point.x, point.y, lastPoint.x, lastPoint.y)
+      const magnitude = Phaser.Math.Distance.Between(point.x, point.y, lastPoint.x, lastPoint.y)
+      const hitbox = this.add.rectangle(point.x, point.y, magnitude + 5, 60, 0).setRotation(rot)
+      this.matter.add.gameObject(hitbox, {
+        isStatic: true,
+        angle: rot,
       })
+      this.hitboxes = [...this.hitboxes, hitbox]
+      lastPoint = point
+    })
 
-      this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
-      this.spawnAltar = this.add.image(940, 550, 'spawnAltar').setScale(0.55)
+    this.add.image(0, -50, 'background').setOrigin(0, 0).setScale(1.25)
+    this.spawnAltar = this.add.image(940, 550, 'spawnAltar').setScale(0.55)
 
-      this.playerStates.forEach((playerState) => {
-        if (playerState.getState('active')) {
-          const character: string = playerState.getState('character') || characterNames[0]
-          const sprite = this.matter.add
-            .image(940, 550, character, undefined, {
-              shape: {
-                type: 'circle',
-                radius: 340,
-              },
-            })
-            .setScale(0.08)
-            .setBounce(0)
-            .setFixedRotation()
-            .setCollisionCategory(this.playerCollisionGroup)
-            .setName(playerState.id)
-
-          this.players.push({ sprite, state: playerState })
-
-          playerState.onQuit(() => {
-            sprite.destroy()
-            this.players = this.players.filter((p) => p.state !== playerState)
+    this.playerStates.forEach((playerState) => {
+      if (playerState.getState('active')) {
+        const character: string = playerState.getState('character') || characterNames[0]
+        const sprite = this.matter.add
+          .image(940, 550, character, undefined, {
+            shape: {
+              type: 'circle',
+              radius: 340,
+            },
           })
-        }
-      })
+          .setScale(0.08)
+          .setBounce(0)
+          .setFixedRotation()
+          .setCollisionCategory(this.playerCollisionGroup)
+          .setName(playerState.id)
 
-      this.pointText = this.add.text(1650, 10, 'Points: 0', {
-        fontFamily: 'goldman',
-        fontSize: 30,
-      })
+        this.players.push({ sprite, state: playerState })
 
-      if (!this.registry.get('isDesktop')) {
-        this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0).setDepth(100)
-        if (myPlayer().getState('spectator')) {
-          this.add
-            .text(1300, window.innerHeight / 2, 'spectating', {
-              fontFamily: 'goldman',
-              fontSize: 100,
-            })
-            .setOrigin(0.5, 0.5)
-            .setDepth(100)
-        } else {
-          this.add
-            .image(1300, window.innerHeight / 2, 'touchIcon')
-            .setScale(0.5)
-            .setDepth(100)
-        }
+        playerState.onQuit(() => {
+          sprite.destroy()
+          this.players = this.players.filter((p) => p.state !== playerState)
+        })
+      }
+    })
+
+    this.pointText = this.add.text(1650, 10, 'Points: 0', {
+      fontFamily: 'goldman',
+      fontSize: 30,
+    })
+
+    if (!this.registry.get('isDesktop')) {
+      this.add.rectangle(0, 0, 1920, window.innerHeight, 0x2b2b2b).setOrigin(0, 0).setDepth(100)
+      if (myPlayer().getState('spectator')) {
+        this.add
+          .text(1300, window.innerHeight / 2, 'spectating', {
+            fontFamily: 'goldman',
+            fontSize: 100,
+          })
+          .setOrigin(0.5, 0.5)
+          .setDepth(100)
+      } else {
+        this.add
+          .image(1300, window.innerHeight / 2, 'touchIcon')
+          .setScale(0.5)
+          .setDepth(100)
       }
     }
 

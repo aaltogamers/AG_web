@@ -166,14 +166,8 @@ export class Boot extends Scene {
                 )
                 RPC.call('pickedChamp', player.getState('character'))
               }
-              const alivePlayers = getState('alivePlayers').filter(
-                (alivePlayerID: string) => alivePlayerID != player.id
-              )
-              setState('alivePlayers', alivePlayers)
-              if (alivePlayers.length <= 0) {
-                setState('winner', player.id)
-                RPC.call('gameWon', '')
-              }
+
+              RPC.call('killPlayer', player.id)
             }
           }
         })
