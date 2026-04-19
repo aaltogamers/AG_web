@@ -61,6 +61,8 @@ const SiteStatistics = () => {
       if (nextFrom) merged.from = nextFrom
       if (nextTo) merged.to = nextTo
 
+      merged.section = getQueryString(router.query.section) || 'stats'
+
       router.replace({ pathname: router.pathname, query: merged }, undefined, {
         shallow: true,
       })
@@ -160,7 +162,7 @@ const SiteStatistics = () => {
             type="date"
             value={from}
             onChange={(e) => updateQuery({ from: e.target.value })}
-            className="text-black p-2"
+            className="bg-white text-black p-2 rounded border border-neutral-300"
           />
         </div>
         <div>
@@ -169,7 +171,7 @@ const SiteStatistics = () => {
             type="date"
             value={to}
             onChange={(e) => updateQuery({ to: e.target.value })}
-            className="text-black p-2"
+            className="bg-white text-black p-2 rounded border border-neutral-300"
           />
         </div>
         <button
