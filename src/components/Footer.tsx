@@ -5,7 +5,7 @@ import { medias } from '../utils/socialMediaLinks'
 const Footer = () => (
   <footer className="flex flex-col justify-center items-center">
     <div className="flex justify-center mt-10">
-      {medias.slice(1).map(({ link, Icon }) => (
+      {medias.map(({ link, Icon }) => (
         <Link href={link} key={link}>
           <Icon size={30} className="mx-2" />
         </Link>
