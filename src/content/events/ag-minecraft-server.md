@@ -32,7 +32,7 @@ tldr: >-
 
   IP: mc.aaltogamers.fi
 
-  You can discuss the server on the [AG Discord](https://discord.gg/Ew7nGQqHgc)
+  You can discuss the server on the [AG Discord](https://discord.gg/aaltogamers)
 
 
   ### WHY?

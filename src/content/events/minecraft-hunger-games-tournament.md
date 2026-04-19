@@ -17,7 +17,7 @@ tldr: |-
 
   ### WHERE?
 
-  Online, [Aalto Gamers Discord](https://discord.gg/hwcsUxJ6pX)
+  Online, [Aalto Gamers Discord](https://discord.gg/aaltogamers)
 
   ### WHY?
 
