@@ -35,13 +35,14 @@ const mintGithubTokenScript = async (): Promise<string> => {
 
   let privateKey: string
   try {
-    privateKey = Buffer.from(privateKeyB64 as string, 'base64').toString('ascii')
+    // Trim: secret stores often append a newline, which breaks base64 decode.
+    privateKey = Buffer.from((privateKeyB64 as string).trim(), 'base64').toString('utf8')
   } catch (e) {
     throw new Error(`PRIVATE_KEY is not valid base64: ${e instanceof Error ? e.message : e}`)
   }
   if (!privateKey.includes('BEGIN') || !privateKey.includes('PRIVATE KEY')) {
     throw new Error(
-      'PRIVATE_KEY does not look like a PEM (decoded content missing BEGIN PRIVATE KEY marker)'
+      'PRIVATE_KEY must be base64-encoded PEM file bytes (see infra/README.md). After decode, the value should contain BEGIN … PRIVATE KEY (e.g. RSA or PKCS#8).'
     )
   }
 

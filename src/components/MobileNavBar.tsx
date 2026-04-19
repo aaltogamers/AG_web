@@ -5,6 +5,7 @@ import BurgerButton from './BurgerButton'
 import Link from 'next/link'
 import { HeaderLink } from '../types/types'
 import AGImage from './AGImage'
+import AdminNavLink from './AdminNavLink'
 
 type MobileProps = {
   links: HeaderLink[]
@@ -44,6 +45,7 @@ const MobileNavBar = ({ links }: MobileProps) => {
                 {name}
               </Link>
             ))}
+            <AdminNavLink className="text-2xl py-4" onNavigate={() => setIsOpen(false)} />
           </nav>
         </div>
         <div
