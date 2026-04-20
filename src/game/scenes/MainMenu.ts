@@ -611,7 +611,7 @@ export class MainMenu extends Scene {
 
         const shield = this.playerShields.get(player.state.id)
         if (shield) {
-          shield.setPosition(player.sprite.x, player.sprite.y)
+          shield.setPosition(player.sprite?.x, player.sprite?.y)
         }
 
         const pos = player.state.getState('pos')
