@@ -5,12 +5,26 @@ import { Boot } from './scenes/Boot'
 import { Preloader } from './scenes/Preloader'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { MainMenu } from './scenes/MainMenu'
-import { getRoomCode, insertCoin, myPlayer, onDisconnect, usePlayersList } from 'playroomkit'
+import {
+  getRoomCode,
+  getState,
+  insertCoin,
+  isHost,
+  myPlayer,
+  onDisconnect,
+  PlayerState,
+  usePlayersList,
+  waitForPlayerState,
+  waitForState,
+} from 'playroomkit'
 import { useParams } from 'next/navigation'
 import Layout from '../components/Layout'
 import { bigAccumulator, bigCooldown, smallAccumulator, smallCooldown } from './constants'
+import { bootRef } from './rpc'
 
 const isMobile = /iPhone|Android/i.test(navigator.userAgent)
+
+export let playerList: PlayerState[] = []
 
 const getScale = () => {
   if (isMobile) {
@@ -59,17 +73,45 @@ const AudienceGame = () => {
   const [connected, setConnected] = useState(false)
   const [name, setName] = useState('')
   const [ready, setReady] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | undefined>(undefined)
   const commonMargins = 'mt-1 mb-1'
+  let approved = false
 
   const players = usePlayersList()
   const params = useParams()
 
   const tryJoin = async (skipCheck?: boolean) => {
     const success = () => {
-      setReady(true)
-      setError(null)
-      setConnected(false)
+      if (players.some((a) => getState(a.id) == name && a.id != myPlayer().id)) {
+        setError('Name already taken')
+        return
+      }
+
+      if (isHost()) {
+        waitForPlayerState(myPlayer(), 'name', () => {
+          setReady(true)
+          setError(undefined)
+          setConnected(false)
+          approved = true
+        })
+      } else {
+        waitForState(myPlayer().id, (value) => {
+          if (value == myPlayer().getState('name')) {
+            setReady(true)
+            setError(undefined)
+            setConnected(false)
+            approved = true
+          }
+        })
+      }
+      if (!skipCheck) {
+        setTimeout(() => {
+          if (!approved) {
+            myPlayer().leaveRoom()
+            setError('Connecting timed out')
+          }
+        }, 4000)
+      }
     }
 
     if (!skipCheck) {
@@ -77,18 +119,13 @@ const AudienceGame = () => {
         setError('Room code must be atleast 1 character')
         return
       }
-      if (getRoomCode() == roomcode && name != '') {
-        if (players.some((a) => a.getState('name') == name && a.id != myPlayer().id)) {
-          setError('Name already taken')
-          return
-        }
-        myPlayer().setState('name', name)
-        success()
-
-        return
-      }
       if (name == '') {
         setError('Name must be atleast 1 character')
+      }
+      if (getRoomCode() == roomcode && name != '') {
+        myPlayer().setState('name', name)
+        success()
+        return
       }
     }
     if (!connected) {
@@ -129,23 +166,16 @@ const AudienceGame = () => {
       },
     })
       .then(() => {
-        if (myPlayer().getState('name')) {
-          success()
-        } else if (name != '') {
-          if (
-            players.some(
-              (a) =>
-                a.getState('name') == name && a.getState('name') == name && a.id != myPlayer().id
-            )
-          ) {
-            setError('Name already taken')
-            return
-          }
+        if (name != '') {
           myPlayer().setState('name', name)
           success()
-        } else {
-          setError(null)
+        } else if (skipCheck) {
           setConnected(true)
+          setError(undefined)
+          success()
+        } else {
+          setConnected(true)
+          setError(undefined)
         }
         onDisconnect(() => {
           setReady(false)
@@ -170,6 +200,11 @@ const AudienceGame = () => {
       setReady(false)
     }
   }, [params])
+
+  useEffect(() => {
+    playerList = players
+    bootRef?.reSyncPlayers(players)
+  }, [players])
 
   useLayoutEffect(() => {
     if (ready) {

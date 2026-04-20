@@ -4,7 +4,6 @@ import {
   getState,
   isHost,
   myPlayer,
-  onPlayerJoin,
   PlayerState,
   RPC,
   setState,
@@ -13,11 +12,11 @@ import {
 } from 'playroomkit'
 import QRCode from 'qrcode'
 import { initRPCs, mainMenuRef, setBootRef } from '../rpc'
+import { playerList } from '../AudienceGame'
 
 export class Boot extends Scene {
   myID = myPlayer().id
   doOnce = false
-  rpcInit = false
   isVisible = true
   async createRoomQR() {
     const url = window.location.href
@@ -27,6 +26,52 @@ export class Boot extends Scene {
 
   constructor() {
     super('Boot')
+  }
+
+  reSyncPlayers(players: PlayerState[]) {
+    const registryPlayers: PlayerState[] = this.registry
+      .get('players')
+      .filter((p: PlayerState) => !players.includes(p))
+    const registrySpectators: PlayerState[] = this.registry
+      .get('spectators')
+      .filter((p: PlayerState) => !players.includes(p))
+    const newPlayers: PlayerState[] = players.filter(
+      (p) =>
+        !this.registry.get('players').includes(p) && !this.registry.get('spectators').includes(p)
+    )
+
+    registryPlayers.forEach((p) => this.removePlayer(p))
+    registrySpectators.forEach((p) => this.removePlayer(p))
+    newPlayers.forEach((p) => {
+      this.moveToRegistry(p)
+    })
+  }
+
+  removePlayer(player: PlayerState) {
+    if (myPlayer()?.id) {
+      if (isHost() && player.id != myPlayer().id && this.isVisible) {
+        RPC.call('togglePause', false)
+      }
+
+      Phaser.Utils.Array.Remove(this.registry.get('players'), player)
+      Phaser.Utils.Array.Remove(this.registry.get('spectators'), player)
+
+      if (isHost()) {
+        if (player.getState('ready')) {
+          setState(
+            'picked',
+            getState('picked').filter((a: string) => a != player.getState('character'))
+          )
+          setState(
+            'ready',
+            getState('ready').filter((id: string) => id != player.id)
+          )
+          RPC.call('pickedChamp', player.getState('character'))
+        }
+
+        RPC.call('killPlayer', player.id)
+      }
+    }
   }
 
   moveToSpectator(id: string) {
@@ -50,23 +95,12 @@ export class Boot extends Scene {
     Phaser.Utils.Array.Add(this.registry.get('players'), player)
   }
 
-  init() {
-    this.registry.set('players', [])
-    this.registry.set('spectators', [])
-    this.registry.set(
-      'isDesktop',
-      this.scene.systems.game.device.os.desktop || this.scene.systems.game.device.os.iPad
-    )
-    if (!this.registry.get('isDesktop')) {
-      this.scale.resize(1920, window.innerHeight)
-    }
-    if (!this.rpcInit) {
-      initRPCs(this.registry.get('isDesktop'))
-      this.rpcInit = true
-    }
-    setBootRef(this)
-
-    const moveToRegistry = (player: PlayerState) => {
+  moveToRegistry(player: PlayerState) {
+    if (!player.getState('name')) {
+      waitForPlayerState(player, 'name', () => {
+        this.moveToRegistry(player)
+      })
+    } else {
       if (
         !this.registry
           .get('players')
@@ -77,48 +111,32 @@ export class Boot extends Scene {
       ) {
         const registry = player.getState('spectator') ? 'spectators' : 'players'
         Phaser.Utils.Array.Add(this.registry.get(registry), player)
+        setState(player.id, player.getState('name'))
 
         if (isHost() && player.id == getState('originalHostID')) {
           transferHost(player.id)
         }
       }
       player.onQuit(() => {
-        if (myPlayer()?.id) {
-          if (isHost() && player.id != myPlayer().id && this.isVisible) {
-            RPC.call('togglePause', false)
-          }
-
-          Phaser.Utils.Array.Remove(this.registry.get('players'), player)
-          Phaser.Utils.Array.Remove(this.registry.get('spectators'), player)
-
-          if (isHost()) {
-            if (player.getState('ready')) {
-              setState(
-                'picked',
-                getState('picked').filter((a: string) => a != player.getState('character'))
-              )
-              setState(
-                'ready',
-                getState('ready').filter((id: string) => id != player.id)
-              )
-              RPC.call('pickedChamp', player.getState('character'))
-            }
-
-            RPC.call('killPlayer', player.id)
-          }
-        }
+        this.removePlayer(player)
       })
     }
+  }
 
-    onPlayerJoin((player) => {
-      if (player.getState('name')) {
-        moveToRegistry(player)
-      } else {
-        waitForPlayerState(player, 'name', () => {
-          moveToRegistry(player)
-        })
-      }
-    })
+  init() {
+    this.registry.set('players', [])
+    this.registry.set('spectators', [])
+    this.registry.set(
+      'isDesktop',
+      this.scene.systems.game.device.os.desktop || this.scene.systems.game.device.os.iPad
+    )
+    if (!this.registry.get('isDesktop')) {
+      this.scale.resize(1920, window.innerHeight)
+    }
+
+    initRPCs(this.registry.get('isDesktop'))
+
+    setBootRef(this)
 
     const pos: [number, number] = this.registry.get('isDesktop')
       ? [940, 540]
@@ -168,7 +186,7 @@ export class Boot extends Scene {
     this.load.audio(files.audio)
     this.createRoomQR()
   }
-  create() {
+  async create() {
     if (isHost()) {
       setState('originalHostID', this.myID)
     }
@@ -192,6 +210,7 @@ export class Boot extends Scene {
         })
       }
     })
+    this.reSyncPlayers(playerList)
 
     this.scene.start('Preloader')
   }
