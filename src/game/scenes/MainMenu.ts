@@ -25,7 +25,7 @@ export class MainMenu extends Scene {
   joystick: nipplejs.JoystickManager | undefined = undefined
   playerStates: PlayerState[] = []
   players: {
-    sprite: Phaser.Physics.Matter.Image
+    sprite?: Phaser.Physics.Matter.Image
     state: PlayerState
   }[] = []
   hitboxes: Phaser.GameObjects.Rectangle[] = []
@@ -143,10 +143,10 @@ export class MainMenu extends Scene {
     const player = this.players.find((p) => p.state.id == id)
     if (!player) return
 
-    player.sprite.setTintFill(0xa4d0fc)
+    player.sprite?.setTintFill(0xa4d0fc)
 
     this.time.delayedCall(100, () => {
-      player.sprite.clearTint()
+      player.sprite?.clearTint()
     })
     shield.destroy()
     this.playerShields.delete(id)
@@ -155,6 +155,7 @@ export class MainMenu extends Scene {
   getShield(id: string) {
     const player = this.players.find((p) => p.state.id == id)
     if (!player) return
+    if (!player.sprite) return
     if (!this.shield) this.spawnShield()
     if (!this.shield) return
 
@@ -193,7 +194,7 @@ export class MainMenu extends Scene {
         if (isHost()) {
           const playerBody = event.bodyA.gameObject
           if (!playerBody) return
-          const player = this.players.find((p) => p.sprite.name === playerBody.name)
+          const player = this.players.find((p) => p.sprite?.name === playerBody.name)
           if (!player) return
 
           if (this.playerShields.get(player.state.id)) return
@@ -210,24 +211,26 @@ export class MainMenu extends Scene {
 
   projectileOnHit(event: Phaser.Types.Physics.Matter.MatterCollisionData) {
     if (isHost()) {
-      const playerBody = event.bodyA.gameObject
-      if (!playerBody) return
+      this.time.delayedCall(5, () => {
+        const playerBody = event.bodyA.gameObject
+        if (!playerBody) return
 
-      const player = this.players.find((p) => p.sprite.name === playerBody.name)
-      if (!player) return
+        const player = this.players.find((p) => p.sprite?.name === playerBody.name)
+        if (!player) return
 
-      const shield = this.playerShields.get(player.state.id)
+        const shield = this.playerShields.get(player.state.id)
 
-      if (shield) {
-        RPC.call('usedShield', player.state.id)
-        setState(
-          'shields',
-          getState('shields').filter((p: string) => p != player.state.id)
-        )
-        return
-      }
-      player?.state.setState('points', this.points)
-      RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
+        if (shield) {
+          RPC.call('usedShield', player.state.id)
+          setState(
+            'shields',
+            getState('shields').filter((p: string) => p != player.state.id)
+          )
+          return
+        }
+        player?.state.setState('points', this.points)
+        RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
+      })
     }
   }
 
@@ -369,9 +372,11 @@ export class MainMenu extends Scene {
     }
 
     if (!playerToKill) return
-    playerToKill.sprite.setTint(0x610003)
-    this.time.delayedCall(50, () => {
+    playerToKill.sprite?.setTint(0x610003)
+    this.time.delayedCall(20, () => {
       playerToKill?.sprite?.destroy()
+      this.playerShields.get(playerToKill?.state.id)?.destroy()
+      this.playerShields.delete(playerToKill?.state.id)
     })
     if (data == myPlayer().id) {
       this.joystick?.destroy()
@@ -553,7 +558,7 @@ export class MainMenu extends Scene {
 
         const shield = this.playerShields.get(player.state.id)
         if (shield) {
-          shield.setPosition(player.sprite.x, player.sprite.y)
+          shield.setPosition(player?.sprite?.x, player?.sprite?.y)
         }
         if (player.sprite.active) {
           const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
