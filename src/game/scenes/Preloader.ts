@@ -396,6 +396,9 @@ export class Preloader extends Scene {
       this.drawChamp(name)
     })
     if (getState('gameActive')) {
+      if (!getState('alivePlayers').includes(myPlayer().id)) {
+        RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL)
+      }
       if (!this.scene.get('MainMenu')) {
         this.scene.add('MainMenu', MainMenu)
       }

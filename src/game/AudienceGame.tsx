@@ -5,15 +5,7 @@ import { Boot } from './scenes/Boot'
 import { Preloader } from './scenes/Preloader'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { MainMenu } from './scenes/MainMenu'
-import {
-  getRoomCode,
-  getState,
-  insertCoin,
-  myPlayer,
-  onDisconnect,
-  setState,
-  usePlayersList,
-} from 'playroomkit'
+import { getRoomCode, insertCoin, myPlayer, onDisconnect, usePlayersList } from 'playroomkit'
 import { useParams } from 'next/navigation'
 import Layout from '../components/Layout'
 import { bigAccumulator, bigCooldown, smallAccumulator, smallCooldown } from './constants'
@@ -86,12 +78,11 @@ const AudienceGame = () => {
         return
       }
       if (getRoomCode() == roomcode && name != '') {
-        if (players.find((a) => a.getState('name') == name)) {
+        if (players.some((a) => a.getState('name') == name && a.id != myPlayer().id)) {
           setError('Name already taken')
           return
         }
         myPlayer().setState('name', name)
-        setState(myPlayer().id, name)
         success()
 
         return
@@ -138,16 +129,19 @@ const AudienceGame = () => {
       },
     })
       .then(() => {
-        if (getState(myPlayer().id)) {
-          myPlayer().setState('name', getState(myPlayer().id))
+        if (myPlayer().getState('name')) {
           success()
         } else if (name != '') {
-          if (players.find((a) => a.getState('name') == name)) {
+          if (
+            players.some(
+              (a) =>
+                a.getState('name') == name && a.getState('name') == name && a.id != myPlayer().id
+            )
+          ) {
             setError('Name already taken')
             return
           }
           myPlayer().setState('name', name)
-          setState(myPlayer().id, name)
           success()
         } else {
           setError(null)

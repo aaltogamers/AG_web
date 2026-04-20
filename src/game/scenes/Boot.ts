@@ -97,6 +97,10 @@ export class Boot extends Scene {
                 'picked',
                 getState('picked').filter((a: string) => a != player.getState('character'))
               )
+              setState(
+                'ready',
+                getState('ready').filter((id: string) => id != player.id)
+              )
               RPC.call('pickedChamp', player.getState('character'))
             }
 
@@ -107,7 +111,7 @@ export class Boot extends Scene {
     }
 
     onPlayerJoin((player) => {
-      if (player.getState('name') != '') {
+      if (player.getState('name')) {
         moveToRegistry(player)
       } else {
         waitForPlayerState(player, 'name', () => {
