@@ -200,7 +200,7 @@ export class MainMenu extends Scene {
           if (this.playerShields.get(player.state.id)) return
 
           RPC.call('getShield', player.state.id)
-          setState('shields', [...getState('shields'), player.state.id])
+          setState('shields', [...getState('shields'), player.state.id], true)
         }
       })
 
@@ -224,11 +224,12 @@ export class MainMenu extends Scene {
           RPC.call('usedShield', player.state.id)
           setState(
             'shields',
-            getState('shields').filter((p: string) => p != player.state.id)
+            getState('shields').filter((p: string) => p != player.state.id),
+            true
           )
           return
         }
-        player?.state.setState('points', this.points)
+        player?.state.setState('points', this.points, true)
         RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
       })
     }
@@ -323,7 +324,7 @@ export class MainMenu extends Scene {
     }
 
     if (isHost()) {
-      setState('gameActive', false)
+      setState('gameActive', false, true)
       resetPlayersStates(['spectator', 'points', 'name', 'selected'])
       resetStates([
         ...this.playerStates.map((p) => p.id),
@@ -334,7 +335,7 @@ export class MainMenu extends Scene {
         'points',
         'difficulty',
       ])
-      setState('ready', [])
+      setState('ready', [], true)
       this.scaler?.remove()
     }
 
@@ -362,11 +363,12 @@ export class MainMenu extends Scene {
     if (isHost()) {
       setState(
         'alivePlayers',
-        getState('alivePlayers').filter((alivePlayerID: string) => alivePlayerID != data)
+        getState('alivePlayers').filter((alivePlayerID: string) => alivePlayerID != data),
+        true
       )
       const alivePlayers = getState('alivePlayers')
       if (alivePlayers.length <= 0) {
-        setState('winner', data)
+        setState('winner', data, true)
         RPC.call('gameWon', '', RPC.Mode.ALL)
       }
     }

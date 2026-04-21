@@ -13,6 +13,8 @@ import {
   myPlayer,
   onDisconnect,
   PlayerState,
+  useIsHost,
+  useMultiplayerState,
   usePlayersList,
   waitForPlayerState,
   waitForState,
@@ -74,17 +76,30 @@ const AudienceGame = () => {
   const [name, setName] = useState('')
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
+  const [launched, _] = useMultiplayerState('launched', false)
+  const useHost = useIsHost()
   const commonMargins = 'mt-1 mb-1'
   let approved = false
+  let waitForHost = connected && !useHost && !launched
 
   const players = usePlayersList()
   const params = useParams()
 
   const tryJoin = async (skipCheck?: boolean) => {
-    const success = () => {
-      if (players.some((a) => getState(a.id) == name && a.id != myPlayer().id)) {
+    const waitForApprove = () => {
+      if (!isHost() && !launched && !skipCheck) {
+        return
+      } else if (players.some((a) => a.getState('name') == name && a.id != myPlayer().id)) {
         setError('Name already taken')
         return
+      } else if (!skipCheck) {
+        myPlayer().setState('name', name, true)
+        setTimeout(() => {
+          if (!approved) {
+            myPlayer().leaveRoom()
+            setError('Connecting timed out')
+          }
+        }, 2000)
       }
 
       if (isHost()) {
@@ -92,25 +107,25 @@ const AudienceGame = () => {
           setReady(true)
           setError(undefined)
           setConnected(false)
+
           approved = true
         })
       } else {
-        waitForState(myPlayer().id, (value) => {
-          if (value == myPlayer().getState('name')) {
-            setReady(true)
-            setError(undefined)
-            setConnected(false)
-            approved = true
-          }
-        })
-      }
-      if (!skipCheck) {
-        setTimeout(() => {
-          if (!approved) {
-            myPlayer().leaveRoom()
-            setError('Connecting timed out')
-          }
-        }, 4000)
+        if (getState(myPlayer().id)) {
+          setReady(true)
+          setError(undefined)
+          setConnected(false)
+          approved = true
+        } else {
+          waitForState(myPlayer().id, (value) => {
+            if (value) {
+              setReady(true)
+              setError(undefined)
+              setConnected(false)
+              approved = true
+            }
+          })
+        }
       }
     }
 
@@ -123,11 +138,11 @@ const AudienceGame = () => {
         setError('Name must be atleast 1 character')
       }
       if (getRoomCode() == roomcode && name != '') {
-        myPlayer().setState('name', name)
-        success()
+        waitForApprove()
         return
       }
     }
+
     if (!connected) {
       setError('Connecting ...')
     }
@@ -167,12 +182,13 @@ const AudienceGame = () => {
     })
       .then(() => {
         if (name != '') {
-          myPlayer().setState('name', name)
-          success()
+          setError(undefined)
+          setConnected(true)
+          waitForApprove()
         } else if (skipCheck) {
           setConnected(true)
           setError(undefined)
-          success()
+          waitForApprove()
         } else {
           setConnected(true)
           setError(undefined)
@@ -180,13 +196,14 @@ const AudienceGame = () => {
         onDisconnect(() => {
           setReady(false)
           setConnected(false)
+          approved = false
         })
       })
       .catch((e) => {
         if (e.message === 'ROOM_LIMIT_EXCEEDED') {
           setError(`Room full`)
         } else if (e.message === 'PLAYER_LEAVED') {
-          setError('Please wait 3 seconds before reconnecting')
+          setTimeout(() => tryJoin(true), 3500)
         }
       })
   }
@@ -247,7 +264,7 @@ const AudienceGame = () => {
               className="w-full flex justify-center flex-col items-center"
             >
               <input
-                disabled={connected}
+                disabled={connected || error == 'Connecting ...'}
                 type="text"
                 className={`p-2 rounded-md ${commonMargins} w-70 ${connected ? 'bg-gray-400' : 'bg-white '}`}
                 value={roomcode}
@@ -263,12 +280,14 @@ const AudienceGame = () => {
                 value={name}
                 minLength={1}
                 maxLength={12}
+                disabled={error == 'Connecting ...'}
               />
               <button
-                className={`text-1xl font-medium rounded-md bg-gray-700/70 p-1 px-4 ${commonMargins} hover:text-green-500 hover:cursor-pointer`}
+                className={`text-1xl font-medium rounded-md ${error == 'Connecting ...' || waitForHost ? 'bg-gray-500 ' : 'bg-gray-700/70 hover:text-green-500 hover:cursor-pointer'} p-1 px-4 ${commonMargins} `}
                 type="submit"
+                disabled={error == 'Connecting ...' || waitForHost}
               >
-                Play
+                {waitForHost ? 'Wait for the host to launch' : 'Play'}
               </button>
             </form>
           </div>

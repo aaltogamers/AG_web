@@ -57,14 +57,17 @@ export class Boot extends Scene {
       Phaser.Utils.Array.Remove(this.registry.get('spectators'), player)
 
       if (isHost()) {
+        setState(player?.id, undefined, true)
         if (player.getState('ready')) {
           setState(
             'picked',
-            getState('picked').filter((a: string) => a != player.getState('character'))
+            getState('picked').filter((a: string) => a != player.getState('character')),
+            true
           )
           setState(
             'ready',
-            getState('ready').filter((id: string) => id != player.id)
+            getState('ready').filter((id: string) => id != player.id),
+            true
           )
           RPC.call('pickedChamp', player.getState('character'))
         }
@@ -79,7 +82,7 @@ export class Boot extends Scene {
 
     const player = this.registry.get('players').find((p: PlayerState) => p.id == id)
     if (!player) return
-    if (player.id == myPlayer().id) myPlayer().setState('spectator', true)
+    if (player.id == myPlayer().id) myPlayer().setState('spectator', true, true)
     Phaser.Utils.Array.Remove(this.registry.get('players'), player)
     Phaser.Utils.Array.Add(this.registry.get('spectators'), player)
   }
@@ -89,7 +92,7 @@ export class Boot extends Scene {
 
     const player = this.registry.get('spectators').find((p: PlayerState) => p.id == id)
     if (!player) return
-    if (player.id == myPlayer().id) myPlayer().setState('spectator', false)
+    if (player.id == myPlayer().id) myPlayer().setState('spectator', false, true)
 
     Phaser.Utils.Array.Remove(this.registry.get('spectators'), player)
     Phaser.Utils.Array.Add(this.registry.get('players'), player)
@@ -100,6 +103,9 @@ export class Boot extends Scene {
       waitForPlayerState(player, 'name', () => {
         this.moveToRegistry(player)
       })
+      if (getState(player.id)) {
+        player.setState('name', getState(player.id), true)
+      }
     } else {
       if (
         !this.registry
@@ -111,7 +117,7 @@ export class Boot extends Scene {
       ) {
         const registry = player.getState('spectator') ? 'spectators' : 'players'
         Phaser.Utils.Array.Add(this.registry.get(registry), player)
-        setState(player.id, player.getState('name'))
+        setState(player.id, player.getState('name'), true)
 
         if (isHost() && player.id == getState('originalHostID')) {
           transferHost(player.id)
@@ -188,14 +194,14 @@ export class Boot extends Scene {
   }
   async create() {
     if (isHost()) {
-      setState('originalHostID', this.myID)
+      setState('originalHostID', this.myID, true)
     }
 
     this.game.events.on('hidden', () => {
       this.isVisible = false
       if (isHost()) {
         RPC.call('togglePause', true)
-        setState('paused', true)
+        setState('paused', true, true)
       }
     })
 
@@ -203,7 +209,7 @@ export class Boot extends Scene {
       this.isVisible = true
       if (isHost()) {
         RPC.call('togglePause', false)
-        setState('paused', false)
+        setState('paused', false, true)
       } else if (getState('gameActive') && this.registry.get('isDesktop')) {
         await RPC.call('getProjectiles', '', RPC.Mode.HOST, (data) => {
           mainMenuRef?.reSyncProjectiles(data)
@@ -211,7 +217,7 @@ export class Boot extends Scene {
       }
     })
     this.reSyncPlayers(playerList)
-
+    setState('launched', true, true)
     this.scene.start('Preloader')
   }
 }

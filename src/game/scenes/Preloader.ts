@@ -108,7 +108,7 @@ export class Preloader extends Scene {
       this.pickedChamps.push(data)
       if (this.pickedChamps.length >= characterNames.length) {
         if (!myPlayer().getState('ready')) {
-          myPlayer().setState('spectator', true)
+          myPlayer().setState('spectator', true, true)
           RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL)
         }
       } else if (this.selected == index && !myPlayer().getState('ready')) {
@@ -138,21 +138,22 @@ export class Preloader extends Scene {
   startGame() {
     const players: PlayerState[] = this.registry.get('players') || []
     if (isHost()) {
-      this.registry.get('spectators').forEach((s: PlayerState) => s.setState('points', 0))
+      this.registry.get('spectators').forEach((s: PlayerState) => s.setState('points', 0, true))
       const alivePlayers = players.filter((p) => getState('ready').includes(p.id))
       setState(
         'alivePlayers',
-        alivePlayers.map((p) => p.id)
+        alivePlayers.map((p) => p.id),
+        true
       )
-      setState('gameWon', false)
-      setState('picked', [])
-      setState('points', 0)
-      setState('projectiles', [])
-      setState('gameActive', true)
-      setState('smallAccumulator', smallAccumulator)
-      setState('bigAccumulator', bigAccumulator)
-      setState('smallSpell', smallCooldown[this.difficulty])
-      setState('bigSpell', bigCooldown[this.difficulty])
+      setState('gameWon', false, true)
+      setState('picked', [], true)
+      setState('points', 0, true)
+      setState('projectiles', [], true)
+      setState('gameActive', true, true)
+      setState('smallAccumulator', smallAccumulator, true)
+      setState('bigAccumulator', bigAccumulator, true)
+      setState('smallSpell', smallCooldown[this.difficulty], true)
+      setState('bigSpell', bigCooldown[this.difficulty], true)
     }
 
     const pos: [number, number] = this.registry.get('isDesktop') ? [960, 540] : [1350, 540]
@@ -266,7 +267,6 @@ export class Preloader extends Scene {
         .setOrigin(0, 0)
         .setInteractive()
         .on('pointerup', () => {
-          setState(myPlayer()?.id, undefined)
           myPlayer()?.leaveRoom()
           resetRPCs()
           this.events.destroy()
@@ -300,11 +300,11 @@ export class Preloader extends Scene {
 
     this.readyButton?.on('pointerup', () => {
       const character = characterNames[this.selected]
-      myPlayer().setState('character', character)
-      myPlayer().setState('ready', true)
-      setState('picked', [...getState('picked'), character])
-      setState('ready', [...getState('ready'), myPlayer().id])
-      myPlayer().setState('selected', this.selected)
+      myPlayer().setState('character', character, true)
+      myPlayer().setState('ready', true, true)
+      setState('picked', [...getState('picked'), character], true)
+      setState('ready', [...getState('ready'), myPlayer().id], true)
+      myPlayer().setState('selected', this.selected, true)
       this.readyButton?.setVisible(false)
       this.specButton?.setVisible(false)
       RPC.call('pickedChamp', character, RPC.Mode.ALL)
@@ -325,14 +325,14 @@ export class Preloader extends Scene {
         .setInteractive()
         .on('pointerup', () => {
           if (!myPlayer()?.getState('spectator')) {
-            myPlayer()?.setState('spectator', true)
+            myPlayer()?.setState('spectator', true, true)
             this.readyButton?.setVisible(false)
             this.characterOutline?.setVisible(false)
             this.characterButtons[this.selected].clearTint()
             this.characterButtons.forEach((button) => button.disableInteractive())
             RPC.call('moveToSpectator', myPlayer().id)
           } else {
-            myPlayer()?.setState('spectator', false)
+            myPlayer()?.setState('spectator', false, true)
             this.readyButton?.setVisible(true)
             this.characterOutline?.setVisible(true)
             this.characterButtons[this.selected].setTint(0x999999)
@@ -376,7 +376,7 @@ export class Preloader extends Scene {
           .setInteractive()
           .on('pointerup', () => {
             this.difficulty = (this.difficulty + 1) % 3
-            setState('difficulty', this.difficulty)
+            setState('difficulty', this.difficulty, true)
             this.difficultyButton
               ?.getByName<Phaser.GameObjects.Text>('btext')
               .setText(difficulties[this.difficulty])
