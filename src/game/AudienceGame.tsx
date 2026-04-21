@@ -76,11 +76,11 @@ const AudienceGame = () => {
   const [name, setName] = useState('')
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
-  const [launched, _] = useMultiplayerState('launched', false)
+  const [launched] = useMultiplayerState('launched', false)
   const useHost = useIsHost()
   const commonMargins = 'mt-1 mb-1'
   let approved = false
-  let waitForHost = connected && !useHost && !launched
+  const waitForHost = connected && !useHost && !launched
 
   const players = usePlayersList()
   const params = useParams()
