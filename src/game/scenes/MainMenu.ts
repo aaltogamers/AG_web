@@ -334,6 +334,7 @@ export class MainMenu extends Scene {
         'winner',
         'points',
         'difficulty',
+        'launched',
       ])
       setState('ready', [], true)
       this.scaler?.remove()

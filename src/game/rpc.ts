@@ -32,44 +32,55 @@ export const initRPCs = (isDesktop: boolean) => {
 
   RPC.register('moveToSpectator', async (id) => {
     bootRef?.moveToSpectator(id)
+    return 'ok'
   })
   RPC.register('moveToPlayer', async (id) => {
     bootRef?.moveToPlayer(id)
+    return 'ok'
   })
   RPC.register('startGame', async () => {
     preloaderRef?.startGame()
+    return 'ok'
   })
   RPC.register('pickedChamp', async (data) => {
     preloaderRef?.drawChamp(data)
+    return 'ok'
   })
   RPC.register('gameWon', async () => {
     mainMenuRef?.gameWon()
+    return 'ok'
   })
   RPC.register('killPlayer', async (data) => {
     mainMenuRef?.killPlayer(data)
+    return 'ok'
   })
   RPC.register('togglePause', async (data) => {
     mainMenuRef?.togglePause(data)
+    return 'ok'
   })
   RPC.register('spawnProjectile', async (data) => {
     if (isDesktop || isHost()) {
       mainMenuRef?.spawnProjectile(data)
     }
+    return 'ok'
   })
   RPC.register('getShield', async (data) => {
     if (isDesktop || isHost()) {
       mainMenuRef?.getShield(data)
     }
+    return 'ok'
   })
   RPC.register('spawnShield', async () => {
     if (isDesktop || isHost()) {
       mainMenuRef?.spawnShield()
     }
+    return 'ok'
   })
   RPC.register('usedShield', async (data) => {
     if (isDesktop || isHost()) {
       mainMenuRef?.usedShield(data)
     }
+    return 'ok'
   })
   RPC.register('getProjectiles', async () => {
     return mainMenuRef?.getProjectiles()
