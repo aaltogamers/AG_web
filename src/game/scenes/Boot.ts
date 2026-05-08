@@ -50,7 +50,7 @@ export class Boot extends Scene {
   removePlayer(player: PlayerState) {
     if (myPlayer()?.id) {
       if (isHost() && player.id != myPlayer().id && this.isVisible) {
-        RPC.call('togglePause', false)
+        RPC.call('togglePause', false, RPC.Mode.ALL, () => '')
       }
 
       Phaser.Utils.Array.Remove(this.registry.get('players'), player)
@@ -69,10 +69,10 @@ export class Boot extends Scene {
             getState('ready').filter((id: string) => id != player.id),
             true
           )
-          RPC.call('pickedChamp', player.getState('character'))
+          RPC.call('pickedChamp', player.getState('character'), RPC.Mode.ALL, () => '')
         }
 
-        RPC.call('killPlayer', player.id)
+        RPC.call('killPlayer', player.id, RPC.Mode.ALL, () => '')
       }
     }
   }
@@ -152,10 +152,10 @@ export class Boot extends Scene {
 
     if (getState('gameActive')) {
       if (isHost()) {
-        RPC.call('togglePause', true)
+        RPC.call('togglePause', true, RPC.Mode.ALL, () => '')
       }
       if (!getState('alivePlayers').includes(myPlayer().id)) {
-        RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL)
+        RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL, () => '')
       }
     }
   }
@@ -200,7 +200,7 @@ export class Boot extends Scene {
     this.game.events.on('hidden', () => {
       this.isVisible = false
       if (isHost()) {
-        RPC.call('togglePause', true)
+        RPC.call('togglePause', true, RPC.Mode.ALL, () => '')
         setState('paused', true, true)
       }
     })
@@ -208,7 +208,7 @@ export class Boot extends Scene {
     this.game.events.on('visible', async () => {
       this.isVisible = true
       if (isHost()) {
-        RPC.call('togglePause', false)
+        RPC.call('togglePause', false, RPC.Mode.ALL, () => '')
         setState('paused', false, true)
       } else if (getState('gameActive') && this.registry.get('isDesktop')) {
         await RPC.call('getProjectiles', '', RPC.Mode.HOST, (data) => {

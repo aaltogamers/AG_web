@@ -199,7 +199,7 @@ export class MainMenu extends Scene {
 
           if (this.playerShields.get(player.state.id)) return
 
-          RPC.call('getShield', player.state.id)
+          RPC.call('getShield', player.state.id, RPC.Mode.ALL, () => 'ok')
           setState('shields', [...getState('shields'), player.state.id], true)
         }
       })
@@ -221,7 +221,7 @@ export class MainMenu extends Scene {
         const shield = this.playerShields.get(player.state.id)
 
         if (shield) {
-          RPC.call('usedShield', player.state.id)
+          RPC.call('usedShield', player.state.id, RPC.Mode.ALL, () => '')
           setState(
             'shields',
             getState('shields').filter((p: string) => p != player.state.id),
@@ -230,7 +230,7 @@ export class MainMenu extends Scene {
           return
         }
         player?.state.setState('points', this.points, true)
-        RPC.call('killPlayer', player.state.id, RPC.Mode.ALL)
+        RPC.call('killPlayer', player.state.id, RPC.Mode.ALL, () => '')
       })
     }
   }
@@ -265,7 +265,8 @@ export class MainMenu extends Scene {
         speed: type.speed,
         name: type.name,
       },
-      RPC.Mode.ALL
+      RPC.Mode.ALL,
+      () => ''
     )
   }
   // called from rpc.ts
@@ -342,7 +343,6 @@ export class MainMenu extends Scene {
 
     this.time.delayedCall(5000, () => {
       this.sound.stopAll()
-      this.joystick?.destroy()
       if (!this.scene.get('Preloader')) {
         this.scene.add('Preloader', Preloader)
       }
@@ -351,7 +351,7 @@ export class MainMenu extends Scene {
 
       this.scene.remove('MainMenu')
       setMainMenuRef(undefined)
-
+      this.joystick?.destroy()
       myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
       myPlayer()?.setState('pos', { x: 940, y: 540 })
     })
@@ -370,7 +370,7 @@ export class MainMenu extends Scene {
       const alivePlayers = getState('alivePlayers')
       if (alivePlayers.length <= 0) {
         setState('winner', data, true)
-        RPC.call('gameWon', '', RPC.Mode.ALL)
+        RPC.call('gameWon', '', RPC.Mode.ALL, () => '')
       }
     }
 
@@ -433,10 +433,10 @@ export class MainMenu extends Scene {
     } else {
       this.joystick?.on('move', (_, data) => {
         const angle = radToXY(data.angle.radian)
-        myPlayer()?.setState('joystick', { ...angle, force: data.force })
+        myPlayer()?.setState('joystick', { ...angle, force: data.force }, true)
       })
       this.joystick?.on('end', () => {
-        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
+        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 }, true)
       })
     }
 
@@ -512,11 +512,6 @@ export class MainMenu extends Scene {
           .setName(playerState.id)
 
         this.players.push({ sprite, state: playerState })
-
-        playerState.onQuit(() => {
-          sprite.destroy()
-          this.players = this.players.filter((p) => p.state !== playerState)
-        })
       }
     })
 
@@ -545,7 +540,7 @@ export class MainMenu extends Scene {
         loop: true,
       })
 
-      RPC.call('togglePause', false)
+      RPC.call('togglePause', false, RPC.Mode.ALL, () => 'ok')
     }
   }
 
@@ -581,7 +576,7 @@ export class MainMenu extends Scene {
         this.shieldAccumulator -= roundedDelta
       }
       if (this.shieldAccumulator <= 0) {
-        RPC.call('spawnShield', '')
+        RPC.call('spawnShield', '', RPC.Mode.ALL, () => 'ok')
         this.shieldAccumulator = this.shieldRespawnTime
       }
 

@@ -25,6 +25,7 @@ export class Preloader extends Scene {
   difficulty: number = 0
   difficultyButton: Phaser.GameObjects.Container | undefined = undefined
   rpcInit = false
+  doOnce = false
 
   constructor() {
     super('Preloader')
@@ -50,16 +51,18 @@ export class Preloader extends Scene {
   }
   checkStart() {
     const ready = getState('ready')
-    if (!ready) return
+    if (!ready || this.doOnce) return
     if (
       isHost() &&
       this.registry.get('players').length > 0 &&
       this.registry.get('players').every((p: PlayerState) => ready.includes(p.id))
     ) {
-      RPC.call('startGame', '', RPC.Mode.ALL)
+      RPC.call('startGame', '', RPC.Mode.ALL, () => '')
+      this.doOnce = true
     }
   }
   reDrawNames() {
+    this.checkStart()
     if (
       this.playerNames.length != this.registry.get('players').length ||
       this.spectatorNames.length != this.registry.get('spectators').length
@@ -109,7 +112,7 @@ export class Preloader extends Scene {
       if (this.pickedChamps.length >= characterNames.length) {
         if (!myPlayer().getState('ready')) {
           myPlayer().setState('spectator', true, true)
-          RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL)
+          RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL, () => '')
         }
       } else if (this.selected == index && !myPlayer().getState('ready')) {
         while (this.pickedChamps.includes(characterNames[this.selected])) {
@@ -307,7 +310,7 @@ export class Preloader extends Scene {
       myPlayer().setState('selected', this.selected, true)
       this.readyButton?.setVisible(false)
       this.specButton?.setVisible(false)
-      RPC.call('pickedChamp', character, RPC.Mode.ALL)
+      RPC.call('pickedChamp', character, RPC.Mode.ALL, () => '')
     })
     if (myPlayer()?.getState('spectator')) {
       this.readyButton?.setVisible(false)
@@ -330,14 +333,14 @@ export class Preloader extends Scene {
             this.characterOutline?.setVisible(false)
             this.characterButtons[this.selected].clearTint()
             this.characterButtons.forEach((button) => button.disableInteractive())
-            RPC.call('moveToSpectator', myPlayer().id)
+            RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL, () => '')
           } else {
             myPlayer()?.setState('spectator', false, true)
             this.readyButton?.setVisible(true)
             this.characterOutline?.setVisible(true)
             this.characterButtons[this.selected].setTint(0x999999)
             this.characterButtons.forEach((button) => button.setInteractive())
-            RPC.call('moveToPlayer', myPlayer().id)
+            RPC.call('moveToPlayer', myPlayer().id, RPC.Mode.ALL, () => '')
           }
           this.specButton
             ?.getByName<Phaser.GameObjects.Text>('specButtonText')
@@ -397,7 +400,7 @@ export class Preloader extends Scene {
     })
     if (getState('gameActive')) {
       if (!getState('alivePlayers').includes(myPlayer().id)) {
-        RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL)
+        RPC.call('moveToSpectator', myPlayer().id, RPC.Mode.ALL, () => '')
       }
       if (!this.scene.get('MainMenu')) {
         this.scene.add('MainMenu', MainMenu)
