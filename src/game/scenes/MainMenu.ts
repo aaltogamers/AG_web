@@ -352,8 +352,8 @@ export class MainMenu extends Scene {
       this.scene.remove('MainMenu')
       setMainMenuRef(undefined)
       this.joystick?.destroy()
-      myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
-      myPlayer()?.setState('pos', { x: 940, y: 540 })
+      myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 }, true)
+      myPlayer()?.setState('pos', { x: 940, y: 540 }, true)
     })
   }
 
@@ -433,7 +433,7 @@ export class MainMenu extends Scene {
     } else {
       this.joystick?.on('move', (_, data) => {
         const angle = radToXY(data.angle.radian)
-        myPlayer()?.setState('joystick', { ...angle, force: data.force }, true)
+        myPlayer()?.setState('joystick', { ...angle, force: data.force })
       })
       this.joystick?.on('end', () => {
         myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 }, true)
