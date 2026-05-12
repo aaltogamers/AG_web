@@ -43,6 +43,13 @@ export class Preloader extends Scene {
     return 200 + 200 * (1 + Math.floor(index / 5))
   }
 
+  disconnect() {
+    myPlayer()?.leaveRoom()
+    resetRPCs()
+    this.events.destroy()
+    this.game.destroy(true)
+  }
+
   moveSelectedBorder() {
     this.characterOutline?.setPosition(
       this.getButtonX(this.selected),
@@ -270,10 +277,7 @@ export class Preloader extends Scene {
         .setOrigin(0, 0)
         .setInteractive()
         .on('pointerup', () => {
-          myPlayer()?.leaveRoom()
-          resetRPCs()
-          this.events.destroy()
-          this.game.destroy(true)
+          this.disconnect()
         }),
       this.add.text(30, 5, 'leave room', {
         fontFamily: 'goldman',
@@ -410,6 +414,13 @@ export class Preloader extends Scene {
       this.scene.remove('Preloader')
       setPreloaderRef(undefined)
     }
+    this.time.addEvent({
+      loop: true,
+      delay: 5000,
+      callback: () => {
+        if (!getState(myPlayer().id)) this.disconnect()
+      },
+    })
   }
 
   update() {
