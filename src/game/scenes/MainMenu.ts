@@ -11,7 +11,7 @@ import {
 } from 'playroomkit'
 import nipplejs from 'nipplejs'
 import { smallAbilities, bigAbilities, characterNames } from '../constants'
-import { setMainMenuRef } from '../rpc'
+import { resetRPCs, setMainMenuRef } from '../rpc'
 import { Preloader } from './Preloader'
 
 const radToXY = (rad: number) => {
@@ -82,6 +82,13 @@ export class MainMenu extends Scene {
 
   constructor() {
     super('MainMenu')
+  }
+
+  disconnect() {
+    myPlayer()?.leaveRoom()
+    resetRPCs()
+    this.events.destroy()
+    this.game.destroy(true)
   }
 
   getProjectiles() {
@@ -542,6 +549,14 @@ export class MainMenu extends Scene {
 
       RPC.call('togglePause', false, RPC.Mode.ALL, () => 'ok')
     }
+
+    this.time.addEvent({
+      loop: true,
+      delay: 1000,
+      callback: () => {
+        if (!getState(myPlayer().id)) this.disconnect()
+      },
+    })
   }
 
   update(_: number, delta: number) {

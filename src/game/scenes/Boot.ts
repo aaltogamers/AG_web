@@ -11,7 +11,7 @@ import {
   waitForPlayerState,
 } from 'playroomkit'
 import QRCode from 'qrcode'
-import { initRPCs, mainMenuRef, setBootRef } from '../rpc'
+import { initRPCs, mainMenuRef, resetRPCs, setBootRef } from '../rpc'
 import { playerList } from '../AudienceGame'
 
 export class Boot extends Scene {
@@ -26,6 +26,13 @@ export class Boot extends Scene {
 
   constructor() {
     super('Boot')
+  }
+
+  disconnect() {
+    myPlayer()?.leaveRoom()
+    resetRPCs()
+    this.events.destroy()
+    this.game.destroy(true)
   }
 
   reSyncPlayers(players: PlayerState[]) {
@@ -218,6 +225,15 @@ export class Boot extends Scene {
     })
     this.reSyncPlayers(playerList)
     setState('launched', true, true)
+
+    this.time.addEvent({
+      loop: true,
+      delay: 1000,
+      callback: () => {
+        if (!getState(myPlayer().id)) this.disconnect()
+      },
+    })
+
     this.scene.start('Preloader')
   }
 }

@@ -414,6 +414,7 @@ export class Preloader extends Scene {
       this.scene.remove('Preloader')
       setPreloaderRef(undefined)
     }
+
     this.time.addEvent({
       loop: true,
       delay: 1000,
