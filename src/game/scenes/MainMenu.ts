@@ -87,6 +87,7 @@ export class MainMenu extends Scene {
   disconnect() {
     myPlayer()?.leaveRoom()
     resetRPCs()
+    this.joystick?.destroy()
     this.events.destroy()
     this.game.destroy(true)
   }
@@ -350,6 +351,7 @@ export class MainMenu extends Scene {
 
     this.time.delayedCall(5000, () => {
       this.sound.stopAll()
+      this.scene.remove('preloader')
       if (!this.scene.get('Preloader')) {
         this.scene.add('Preloader', Preloader)
       }
