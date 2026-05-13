@@ -416,7 +416,7 @@ export class Preloader extends Scene {
     }
     this.time.addEvent({
       loop: true,
-      delay: 5000,
+      delay: 1000,
       callback: () => {
         if (!getState(myPlayer().id)) this.disconnect()
       },
