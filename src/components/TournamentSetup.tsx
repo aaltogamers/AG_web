@@ -170,8 +170,8 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
   }
 
   const onBuildBracket = async () => {
-    if (filledCount !== slotCount) {
-      setMessage(`Fill in all ${slotCount} team names first.`)
+    if (filledCount < 2) {
+      setMessage('Fill in at least 2 team names first.')
       return
     }
     setBuilding(true)
@@ -179,7 +179,13 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
     try {
       const storage = new InMemoryDatabase()
       const manager = new BracketsManager(storage)
-      await createBracket(manager, bracketType, teamCount, paddedTeams)
+      // Empty slots become BYEs (null) so brackets fewer than `teamCount` teams
+      // can still be built.
+      const seedingTeams = paddedTeams.map((t) => {
+        const trimmed = t.trim()
+        return trimmed === '' ? null : trimmed
+      })
+      await createBracket(manager, bracketType, teamCount, seedingTeams)
       const snapshot = (await manager.export()) as unknown as BracketDatabaseSnapshot
       const updated = await updateTournament(tournament.slug, {
         name: name.trim(),
@@ -262,8 +268,7 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
           </button>
         </div>
         <p className="text-sm opacity-75 mb-4">
-          Seed 1 plays seed {slotCount}. Order matters: drag teams up/down to change seeding.
-          Once any score is added the tournament is locked.
+          Move teams up/down to change seeding. Empty slots become BYEs.
         </p>
         <div className="flex flex-col gap-2">
           {paddedTeams.map((team, i) => (
@@ -325,7 +330,7 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
           type="button"
           className="mainbutton"
           onClick={onBuildBracket}
-          disabled={saving || building || filledCount !== slotCount}
+          disabled={saving || building || filledCount < 2}
         >
           {building ? 'Building…' : tournament.data ? 'Rebuild bracket' : 'Build bracket'}
         </button>
@@ -356,8 +361,8 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
             <h3 id="import-teams-title">Import teams</h3>
 
             <p className="text-sm text-lightgray">
-              Paste team names below. Imported teams replace the current list. Up to{' '}
-              {slotCount} teams are allowed.
+              Paste team names below. Imported teams replace the current list. Up to {slotCount}{' '}
+              teams are allowed.
             </p>
 
             <label className="flex flex-col gap-1">

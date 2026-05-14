@@ -11,7 +11,7 @@ import TournamentBracketView, {
 import TournamentSetup from '../../components/TournamentSetup'
 import { Tournament, getBracketTypeLabel } from '../../types/types'
 import { checkAdminSession } from '../../utils/adminAuth'
-import { getTournament } from '../../utils/tournamentApi'
+import { getTournament, updateTournament } from '../../utils/tournamentApi'
 import makeBackgroundInvisible from '../../utils/makeBackgroundInvisible'
 import {
   isStreamMode,
@@ -29,6 +29,7 @@ const TournamentPage = () => {
   const [notFound, setNotFound] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [editingSettings, setEditingSettings] = useState(false)
+  const [restarting, setRestarting] = useState(false)
 
   const streamMode = router.isReady && isStreamMode(router.query)
 
@@ -76,6 +77,39 @@ const TournamentPage = () => {
     },
     [router, slug, refresh]
   )
+
+  // Throws away the built bracket but keeps name/bracketType/teamCount/teams,
+  // so the admin returns to the setup screen with the same seeded team list.
+  // When scores have already been recorded the admin is asked to confirm a
+  // second time before the data is destroyed.
+  const handleRestart = useCallback(async () => {
+    if (!tournament || !slug) return
+    if (
+      !confirm(
+        'Restart this tournament? The built bracket will be cleared. Settings and team names are kept.'
+      )
+    ) {
+      return
+    }
+    if (
+      tournament.isStarted &&
+      !confirm(
+        'Scores have already been recorded for this tournament. Restarting will permanently delete ALL match results. Are you sure?'
+      )
+    ) {
+      return
+    }
+    setRestarting(true)
+    try {
+      const updated = await updateTournament(slug, { data: null })
+      setEditingSettings(false)
+      await handleSaved(updated)
+    } catch (e) {
+      alert(`Failed to restart: ${e instanceof Error ? e.message : e}`)
+    } finally {
+      setRestarting(false)
+    }
+  }, [tournament, slug, handleSaved])
 
   const streamBracketStyles = useMemo(
     () => parseStreamBracketStyles(router.query, defaultBracketStyles),
@@ -163,6 +197,21 @@ const TournamentPage = () => {
                   onClick={() => setEditingSettings((v) => !v)}
                 >
                   {editingSettings ? 'Back to bracket' : 'Edit settings'}
+                </button>
+              )}
+              {tournament.data && (
+                <button
+                  type="button"
+                  className="borderbutton"
+                  onClick={handleRestart}
+                  disabled={restarting}
+                  title={
+                    tournament.isStarted
+                      ? 'Clear the built bracket and ALL recorded match results. Settings and team names are kept.'
+                      : 'Clear the built bracket and return to setup (team names are kept).'
+                  }
+                >
+                  {restarting ? 'Restarting…' : 'Restart tournament'}
                 </button>
               )}
               <Link

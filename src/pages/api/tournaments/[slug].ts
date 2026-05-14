@@ -94,12 +94,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const params: unknown[] = []
       let nextSlug = existing.slug
 
+      // Settings (name/bracketType/teamCount/teams) are locked once any match
+      // has scores. Clearing `data` (the Restart tournament action) is allowed
+      // at any time so admins can recover from a mis-started bracket.
       const isSettingsChange =
         body.name !== undefined ||
         body.bracketType !== undefined ||
         body.teamCount !== undefined ||
-        body.teams !== undefined ||
-        (body.data === null && existing.data !== null)
+        body.teams !== undefined
 
       if (wasStarted && isSettingsChange) {
         await client.query('ROLLBACK')

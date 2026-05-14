@@ -362,7 +362,7 @@ export const createBracket = async (
   manager: BracketsManager,
   bracketType: BracketType,
   teamCount: 8 | 16 | 32 | 64,
-  teams: string[]
+  teams: (string | null)[]
 ): Promise<[BracketData, BracketData]> => {
   if (bracketType !== 'double_elimination_to_top_4') {
     throw Error('Only double_elimination_to_top_4 type supported currently')

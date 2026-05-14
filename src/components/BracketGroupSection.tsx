@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import type { Id, Match, Participant, Round } from 'brackets-model'
 import { Status } from 'brackets-model'
+import { BracketsManager } from 'brackets-manager'
 import { useForm, SubmitHandler } from 'react-hook-form'
 
 import MatchResultRow from './BracketMatchResultRow'
@@ -13,6 +14,125 @@ import {
   updateMatchResult,
 } from '../utils/brackets'
 import { FaPen } from 'react-icons/fa'
+
+type ParticipantNameEditorProps = {
+  participantId: Id | null | undefined
+  participantName: string | undefined
+  manager: BracketsManager
+  onRenamed: () => Promise<void> | void
+}
+
+const ParticipantNameEditor = ({
+  participantId,
+  participantName,
+  manager,
+  onRenamed,
+}: ParticipantNameEditorProps) => {
+  const [isEditing, setIsEditing] = useState(false)
+  const [draft, setDraft] = useState(participantName ?? '')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  if (participantId == null) {
+    return <span>{participantName ?? 'TBD'}</span>
+  }
+
+  const start = () => {
+    setDraft(participantName ?? '')
+    setError(null)
+    setIsEditing(true)
+  }
+  const cancel = () => {
+    setIsEditing(false)
+    setError(null)
+  }
+  const save = async () => {
+    const trimmed = draft.trim()
+    if (!trimmed) {
+      setError('Name cannot be empty.')
+      return
+    }
+    if (trimmed === participantName) {
+      setIsEditing(false)
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const existing = (await manager.storage.select(
+        'participant',
+        participantId
+      )) as Participant | null
+      if (!existing) {
+        setError('Participant not found.')
+        return
+      }
+      await manager.storage.update('participant', participantId, {
+        ...existing,
+        name: trimmed,
+      })
+      await onRenamed()
+      setIsEditing(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to rename.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!isEditing) {
+    return (
+      <span className="flex items-center gap-2">
+        <span>{participantName ?? 'TBD'}</span>
+        <button
+          type="button"
+          className="opacity-60 hover:opacity-100"
+          onClick={start}
+          aria-label="Rename participant"
+          title="Rename participant"
+        >
+          <FaPen />
+        </button>
+      </span>
+    )
+  }
+
+  return (
+    <span className="flex flex-col gap-1">
+      <span className="flex items-center gap-2">
+        <input
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          className="p-1 rounded-md bg-white text-black flex-1"
+          autoFocus
+          disabled={busy}
+        />
+        <button
+          type="button"
+          className="borderbutton"
+          onClick={save}
+          disabled={busy}
+        >
+          {busy ? '…' : 'Save'}
+        </button>
+        <button
+          type="button"
+          className="borderbutton"
+          onClick={cancel}
+          disabled={busy}
+        >
+          Cancel
+        </button>
+      </span>
+      {error != null && (
+        <span className="text-red text-sm" role="alert">
+          {error}
+        </span>
+      )}
+    </span>
+  )
+}
 
 type EditMatchFormValues = {
   score1: string
@@ -163,7 +283,16 @@ const GroupSection = ({
               <h3 id="edit-match-title">Edit match {selectedMatch.id}</h3>
 
               <label className="flex flex-col gap-1">
-                <span>{participantsById[selectedMatch.opponent1?.id ?? -1]?.name ?? 'TBD'}</span>
+                <ParticipantNameEditor
+                  participantId={selectedMatch.opponent1?.id ?? null}
+                  participantName={
+                    participantsById[selectedMatch.opponent1?.id ?? -1]?.name
+                  }
+                  manager={bracketData.manager}
+                  onRenamed={async () => {
+                    await onMatchResultSaved?.()
+                  }}
+                />
                 <input
                   type="number"
                   min={0}
@@ -173,7 +302,16 @@ const GroupSection = ({
               </label>
 
               <label className="flex flex-col gap-1">
-                <span>{participantsById[selectedMatch.opponent2?.id ?? -1]?.name ?? 'TBD'}</span>
+                <ParticipantNameEditor
+                  participantId={selectedMatch.opponent2?.id ?? null}
+                  participantName={
+                    participantsById[selectedMatch.opponent2?.id ?? -1]?.name
+                  }
+                  manager={bracketData.manager}
+                  onRenamed={async () => {
+                    await onMatchResultSaved?.()
+                  }}
+                />
                 <input
                   type="number"
                   min={0}
