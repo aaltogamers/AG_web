@@ -136,7 +136,17 @@ const TournamentPage = () => {
         <title>{tournament.name} - Aalto Gamers</title>
       </Head>
       <PageWrapper>
-        <div className="mt-8 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {isAdmin && (
+          <div className="mt-8">
+            <Link
+              href="/tournaments"
+              className="inline-block text-sm text-white border-lightgray border-[1px] py-1 px-3 hover:border-red"
+            >
+              ← Back to tournaments
+            </Link>
+          </div>
+        )}
+        <div className="mt-2 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-4xl">{tournament.name}</h1>
             <p className="text-sm opacity-75">

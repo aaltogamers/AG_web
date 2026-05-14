@@ -149,66 +149,52 @@ const GroupSection = ({
     <div className="flex flex-row" style={{ color: bracketStyles.textColor }}>
       {selectedMatch != null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-transparentBlack p-4"
           onClick={closeDialog}
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-match-title"
         >
           <div
-            className="w-full max-w-sm rounded-lg bg-gray-800 shadow-xl border border-gray-600"
+            className="w-full max-w-sm bg-darkgray border border-lightgray text-white"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="edit-match-title" className="text-lg font-semibold text-white px-4 pt-4">
-              Edit match {selectedMatch.id}
-            </h2>
+            <form onSubmit={handleSubmit(onSubmit)} className="p-6 flex flex-col gap-4">
+              <h3 id="edit-match-title">Edit match {selectedMatch.id}</h3>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  {participantsById[selectedMatch.opponent1?.id ?? -1]?.name ?? 'TBD'}
-                </label>
-
+              <label className="flex flex-col gap-1">
+                <span>{participantsById[selectedMatch.opponent1?.id ?? -1]?.name ?? 'TBD'}</span>
                 <input
                   type="number"
                   min={0}
                   {...register('score1')}
-                  className="w-full rounded border border-gray-600 bg-gray-700 text-white px-3 py-2"
+                  className="p-2 rounded-md bg-white text-black"
                 />
-              </div>
+              </label>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  {participantsById[selectedMatch.opponent2?.id ?? -1]?.name ?? 'TBD'}
-                </label>
+              <label className="flex flex-col gap-1">
+                <span>{participantsById[selectedMatch.opponent2?.id ?? -1]?.name ?? 'TBD'}</span>
                 <input
                   type="number"
                   min={0}
                   {...register('score2')}
-                  className="w-full rounded border border-gray-600 bg-gray-700 text-white px-3 py-2"
+                  className="p-2 rounded-md bg-white text-black"
                 />
-              </div>
+              </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  {...register('inProgress')}
-                  className="rounded border-gray-600 bg-gray-700 text-amber-500 focus:ring-amber-500"
-                />
-                <span className="text-sm text-gray-300">Match still in progress</span>
+                <input type="checkbox" {...register('inProgress')} />
+                <span>Match still in progress</span>
               </label>
+
               {errors.root?.message != null && (
-                <p className="text-sm text-red-400" role="alert">
+                <p className="text-red text-center" role="alert">
                   {errors.root.message}
                 </p>
               )}
 
-              <div className="flex gap-2 justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={closeDialog}
-                  className="rounded px-4 py-2 text-gray-300 hover:bg-gray-700 transition-colors"
-                >
+              <div className="flex flex-wrap gap-3 justify-center pt-2">
+                <button type="button" className="borderbutton" onClick={closeDialog}>
                   Cancel
                 </button>
                 {(selectedMatch.status === Status.Completed ||
@@ -219,16 +205,12 @@ const GroupSection = ({
                     type="button"
                     onClick={handleReset}
                     disabled={saving || resetting}
-                    className="rounded px-4 py-2 text-gray-300 border border-gray-500 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="borderbutton"
                   >
                     {resetting ? 'Resetting…' : 'Reset'}
                   </button>
                 )}
-                <button
-                  type="submit"
-                  disabled={saving || resetting}
-                  className="rounded px-4 py-2 bg-amber-600 text-white font-medium hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
+                <button type="submit" disabled={saving || resetting} className="mainbutton">
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               </div>

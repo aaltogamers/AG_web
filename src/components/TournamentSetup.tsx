@@ -3,6 +3,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { BracketsManager } from 'brackets-manager'
 import { InMemoryDatabase } from 'brackets-memory-db'
 
+type ImportDelimiter = 'newline' | 'comma' | 'semicolon'
+
+const DELIMITER_PATTERNS: Record<ImportDelimiter, RegExp> = {
+  newline: /\r?\n/,
+  comma: /,/,
+  semicolon: /;/,
+}
+
 import {
   BracketDatabaseSnapshot,
   BracketType,
@@ -34,6 +42,10 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
   const [message, setMessage] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [building, setBuilding] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
+  const [importText, setImportText] = useState('')
+  const [importDelimiter, setImportDelimiter] = useState<ImportDelimiter>('newline')
+  const [importError, setImportError] = useState<string | null>(null)
 
   // Keep state in sync if parent re-fetches.
   useEffect(() => {
@@ -83,6 +95,51 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
   }
 
   const filledCount = paddedTeams.filter((t) => t.trim() !== '').length
+
+  const openImportDialog = () => {
+    setImportText('')
+    setImportDelimiter('newline')
+    setImportError(null)
+    setImportOpen(true)
+  }
+
+  const closeImportDialog = () => {
+    setImportOpen(false)
+    setImportError(null)
+  }
+
+  useEffect(() => {
+    if (!importOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeImportDialog()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [importOpen])
+
+  const onConfirmImport = () => {
+    const parsed = importText
+      .split(DELIMITER_PATTERNS[importDelimiter])
+      .map((t) => t.trim())
+      .filter((t) => t !== '')
+
+    if (parsed.length === 0) {
+      setImportError('Enter at least one team name.')
+      return
+    }
+    if (parsed.length > slotCount) {
+      setImportError(
+        `Too many teams: got ${parsed.length} but only ${slotCount} slots are available.`
+      )
+      return
+    }
+
+    const next = parsed.slice()
+    while (next.length < slotCount) next.push('')
+    setTeams(next)
+    setImportOpen(false)
+    setImportError(null)
+  }
 
   const onSaveSettings = async () => {
     setSaving(true)
@@ -198,7 +255,12 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
       </div>
 
       <div>
-        <h3 className="text-2xl mb-2">Teams &amp; seeds</h3>
+        <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+          <h3 className="text-2xl">Teams &amp; seeds</h3>
+          <button type="button" className="borderbutton" onClick={openImportDialog}>
+            Import teams
+          </button>
+        </div>
         <p className="text-sm opacity-75 mb-4">
           Seed 1 plays seed {slotCount}. Order matters: drag teams up/down to change seeding.
           Once any score is added the tournament is locked.
@@ -278,6 +340,73 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
           </button>
         )}
       </div>
+
+      {importOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-transparentBlack p-4"
+          onClick={closeImportDialog}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="import-teams-title"
+        >
+          <div
+            className="w-full max-w-md bg-darkgray border border-lightgray p-6 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="import-teams-title">Import teams</h3>
+
+            <p className="text-sm text-lightgray">
+              Paste team names below. Imported teams replace the current list. Up to{' '}
+              {slotCount} teams are allowed.
+            </p>
+
+            <label className="flex flex-col gap-1">
+              <span>Delimiter</span>
+              <select
+                value={importDelimiter}
+                onChange={(e) => setImportDelimiter(e.target.value as ImportDelimiter)}
+                className="p-2 rounded-md bg-white text-black"
+              >
+                <option value="newline">Newline</option>
+                <option value="comma">Comma (,)</option>
+                <option value="semicolon">Semicolon (;)</option>
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span>Team names</span>
+              <textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                rows={8}
+                placeholder={
+                  importDelimiter === 'newline'
+                    ? 'Team A\nTeam B\nTeam C'
+                    : importDelimiter === 'comma'
+                      ? 'Team A, Team B, Team C'
+                      : 'Team A; Team B; Team C'
+                }
+                className="p-2 rounded-md bg-white text-black"
+              />
+            </label>
+
+            {importError != null && (
+              <p className="text-red text-center" role="alert">
+                {importError}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-3 justify-center pt-2">
+              <button type="button" className="borderbutton" onClick={closeImportDialog}>
+                Cancel
+              </button>
+              <button type="button" className="mainbutton" onClick={onConfirmImport}>
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
