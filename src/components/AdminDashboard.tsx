@@ -30,6 +30,9 @@ const AdminDashboard = ({ section, events, onLogout }: Props) => {
         <Link href="/admin/stats" className={tabClass(section === 'stats')}>
           Statistics
         </Link>
+        <Link href="/tournaments" className="text-4xl">
+          Tournaments
+        </Link>
         <a href="/cms" target="_blank" rel="noopener noreferrer" className="text-4xl">
           Content
         </a>

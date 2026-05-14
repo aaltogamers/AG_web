@@ -1,6 +1,12 @@
 import type { Id, Match, Participant, Round } from 'brackets-model'
 import { Status } from 'brackets-model'
-import { BracketData, BracketType, OpponentFroMatch, RoundLabel } from '../types/types'
+import {
+  BracketData,
+  BracketDatabaseSnapshot,
+  BracketType,
+  OpponentFroMatch,
+  RoundLabel,
+} from '../types/types'
 import { BracketsManager } from 'brackets-manager'
 
 /**
@@ -332,6 +338,22 @@ const QUALIFIER_MATCH_IDS_TO_SKIP = {
   32: new Set([30, 59, 60]),
   64: new Set([]), // TODO: support
 } as const
+
+/**
+ * A tournament is considered "started" once any match has scores or is no
+ * longer in the initial Locked/Waiting/Ready states. Once started, settings
+ * (teams, bracket type, team count) must not be changed.
+ */
+export const isTournamentStarted = (data: BracketDatabaseSnapshot | null | undefined): boolean => {
+  if (!data) return false
+  const matches = (data.match ?? []) as Match[]
+  return matches.some((m) => {
+    if (m.status === Status.Running || m.status === Status.Completed || m.status === Status.Archived) {
+      return true
+    }
+    return m.opponent1?.score != null || m.opponent2?.score != null
+  })
+}
 
 /**
  * First-time setup: creates qualifier and finals stages, then returns their data.

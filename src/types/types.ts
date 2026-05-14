@@ -241,3 +241,45 @@ export type BracketType =
   | 'single_elimination'
   | 'double_elimination'
   | 'double_elimination_to_top_4'
+
+export const TOURNAMENT_BRACKET_TYPES: BracketType[] = ['double_elimination_to_top_4']
+
+export const BRACKET_TYPE_LABELS: Record<BracketType, string> = {
+  single_elimination: 'Single Elimination',
+  double_elimination: 'Double Elimination',
+  double_elimination_to_top_4: 'Double Elimination with 4-team Final',
+}
+
+export const getBracketTypeLabel = (type: BracketType): string => BRACKET_TYPE_LABELS[type] ?? type
+
+export const TOURNAMENT_TEAM_COUNTS = [16, 32] as const
+export type TournamentTeamCount = (typeof TOURNAMENT_TEAM_COUNTS)[number]
+
+export type TournamentSettings = {
+  slug: string
+  name: string
+  bracketType: BracketType
+  teamCount: TournamentTeamCount
+  teams: string[]
+}
+
+// Exported snapshot of the BracketsManager database. We mirror the library's
+// `Database` shape here to avoid leaking the brackets-manager type to every
+// caller; it's intentionally `unknown` for safety at the storage boundary.
+export type BracketDatabaseSnapshot = {
+  stage: unknown[]
+  group: unknown[]
+  round: unknown[]
+  match: unknown[]
+  match_game: unknown[]
+  participant: unknown[]
+}
+
+export type TournamentSummary = TournamentSettings & {
+  isStarted: boolean
+}
+
+export type Tournament = TournamentSettings & {
+  data: BracketDatabaseSnapshot | null
+  isStarted: boolean
+}
