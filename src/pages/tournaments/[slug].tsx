@@ -156,10 +156,10 @@ const TournamentPage = () => {
                 </button>
               )}
               <Link
-                href={`/tournaments/${encodeURIComponent(tournament.slug)}/stream-info`}
+                href={`/tournaments/${encodeURIComponent(tournament.slug)}/stream-customization`}
                 className="borderbutton"
               >
-                Stream info
+                Stream customization
               </Link>
             </div>
           )}

@@ -283,3 +283,10 @@ export type Tournament = TournamentSettings & {
   data: BracketDatabaseSnapshot | null
   isStarted: boolean
 }
+
+export type StreamConfig = {
+  id: string
+  name: string
+  // Query string portion (without leading "?"), e.g. "stream&stage=winners".
+  query: string
+}

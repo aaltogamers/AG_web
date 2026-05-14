@@ -128,7 +128,8 @@ export type StreamParamDoc = {
 export const buildStreamParamDocs = (defaults: BracketStyles): StreamParamDoc[] => [
   {
     name: 'stream',
-    description: 'Enables stream mode (hides nav bar, footer, page chrome, transparent background). Value is ignored.',
+    description:
+      'Enables stream mode (hides nav bar, footer, page chrome, transparent background). Value is ignored.',
     type: 'flag',
     example: 'stream',
   },
@@ -146,35 +147,41 @@ export const buildStreamParamDocs = (defaults: BracketStyles): StreamParamDoc[] 
     example: 'stage=winners',
     defaultValue: 'all',
   },
-  ...([
-    ['titleFontSize', 'Title (round header) font size in px.'],
-    ['basicFontSize', 'Base font size in px used for connectors and match numbers.'],
-    ['teamHeight', 'Height of a single team row in px.'],
-    ['teamWidth', 'Width of a single team box in px.'],
-    ['teamGapX', 'Horizontal gap between rounds in px.'],
-    ['teamGapY', 'Vertical gap between matches at round 1 in px.'],
-    ['bracketGap', 'Gap between the qualifier and finals brackets in px.'],
-  ] as const).map(([key, description]): StreamParamDoc => ({
-    name: key,
-    description,
-    type: 'number',
-    example: `${key}=${defaults[key]}`,
-    defaultValue: String(defaults[key]),
-  })),
-  ...([
-    ['textColor', 'Default text color.'],
-    ['teamNameColor', 'Background color of the team name box.'],
-    ['loseScoreColor', 'Score box background color for losing opponent.'],
-    ['winScoreColor', 'Score box background color for winning opponent.'],
-    ['roundColor', 'Background color of round-header bars.'],
-    ['connectorColor', 'Color of the lines connecting matches.'],
-    ['dividerColor', 'Color of the thin divider between the two opponents in a match.'],
-  ] as const).map(([key, description]): StreamParamDoc => {
+  ...(
+    [
+      ['titleFontSize', 'Title (round header) font size in px.'],
+      ['basicFontSize', 'Base font size in px used for connectors and match numbers.'],
+      ['teamHeight', 'Height of a single team row in px.'],
+      ['teamWidth', 'Width of a single team box in px.'],
+      ['teamGapX', 'Horizontal gap between rounds in px.'],
+      ['teamGapY', 'Vertical gap between matches at round 1 in px.'],
+      ['bracketGap', 'Gap between the qualifier and finals brackets in px.'],
+    ] as const
+  ).map(
+    ([key, description]): StreamParamDoc => ({
+      name: key,
+      description,
+      type: 'number',
+      example: `${key}=${defaults[key]}`,
+      defaultValue: String(defaults[key]),
+    })
+  ),
+  ...(
+    [
+      ['textColor', 'Default text color'],
+      ['teamNameColor', 'Background color of the team name box'],
+      ['loseScoreColor', 'Score box background color for losing opponent'],
+      ['winScoreColor', 'Score box background color for winning opponent'],
+      ['roundColor', 'Background color of round-header bars'],
+      ['connectorColor', 'Color of the lines connecting matches'],
+      ['dividerColor', 'Color of the thin divider between the two opponents in a match'],
+    ] as const
+  ).map(([key, description]): StreamParamDoc => {
     const defaultValue = defaults[key]
     const stripped = typeof defaultValue === 'string' ? defaultValue.replace(/^#/, '') : ''
     return {
       name: key,
-      description: `${description} Accepts hex with or without leading "#".`,
+      description: `${description}.`,
       type: 'color',
       example: `${key}=${stripped}`,
       defaultValue: String(defaultValue),
