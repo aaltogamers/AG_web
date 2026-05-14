@@ -7,6 +7,7 @@ import MatchResultRow from './BracketMatchResultRow'
 import { BracketData, BracketStyles } from '../types/types'
 import {
   getGroupHasFinal,
+  isRoundAllBye,
   resetMatchResult,
   roundToLabel,
   updateMatchResult,
@@ -236,7 +237,14 @@ const GroupSection = ({
         </div>
       )}
       {roundsByGroup[groupLabel]?.map((round, i) => {
+        if (isRoundAllBye(round, matchesByRound)) return null
+
         const roundMatches = matchesByRound[round.id] ?? []
+
+        const visibleRoundNumber =
+          (roundsByGroup[groupLabel] ?? [])
+            .slice(0, i + 1)
+            .filter((r) => !isRoundAllBye(r, matchesByRound)).length
 
         const roundDepth = groupLabel === 'Lower' ? Math.floor(i / 2) : i
         const roundMultiplier = 2 ** roundDepth
@@ -268,7 +276,7 @@ const GroupSection = ({
                 fontSize: bracketStyles.titleFontSize,
               }}
             >
-              {roundToLabel(round, matchesByRound, groupHasFinal)}
+              {roundToLabel(round, matchesByRound, groupHasFinal, visibleRoundNumber)}
             </h3>
             <div
               className="flex flex-col"

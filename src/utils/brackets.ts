@@ -108,7 +108,8 @@ export const getGroupHasFinal = (
 export const roundToLabel = (
   round: Round,
   matchesByRound: Record<Id, Match[]>,
-  groupHasFinal: boolean
+  groupHasFinal: boolean,
+  visibleRoundNumber: number = round.number
 ) => {
   const groupLabel = groupToLabel(round.group_id)
 
@@ -131,10 +132,10 @@ export const roundToLabel = (
       return 'Quarter-final'
     }
 
-    return `Round ${round.number}`
+    return `Round ${visibleRoundNumber}`
   }
 
-  return `${groupLabel} Round ${round.number}`
+  return `${groupLabel} Round ${visibleRoundNumber}`
 }
 
 // For now, only finds losers, and slot (opponent1 vs opponent2) is not accurate
@@ -232,6 +233,14 @@ export const getRoundsByGroup = (data: BracketData) => {
   }
 
   return roundsByGroup
+}
+
+export const isRoundAllBye = (round: Round, matchesByRound: Record<Id, Match[]>) => {
+  const roundMatches = matchesByRound[round.id] ?? []
+  return (
+    roundMatches.length > 0 &&
+    roundMatches.every((m) => m.opponent1 === null || m.opponent2 === null)
+  )
 }
 
 export const getTopFourTeamsFromDoubleElimQualifiers = (data: BracketData): Participant[] => {
