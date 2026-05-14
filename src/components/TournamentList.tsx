@@ -12,11 +12,7 @@ import {
   TournamentTeamCount,
   getBracketTypeLabel,
 } from '../types/types'
-import {
-  createTournament,
-  deleteTournament,
-  listTournaments,
-} from '../utils/tournamentApi'
+import { createTournament, deleteTournament, listTournaments } from '../utils/tournamentApi'
 
 type Inputs = {
   name: string
@@ -81,10 +77,7 @@ const TournamentList = () => {
 
   return (
     <div>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col items-center text-xl mb-12"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center text-xl mb-12">
         <h3 className="text-2xl mb-4">Create a new tournament</h3>
         <div className="grid grid-cols-input w-full md:w-2/3">
           <Input
@@ -124,7 +117,8 @@ const TournamentList = () => {
             ))}
           </select>
         </div>
-        <div className="text-center h-4 mt-2 mb-2">{message}</div>
+        <div className="text-center h-4 mt-2 mb-6">{message}</div>
+
         <button type="submit" className="mainbutton">
           Create tournament
         </button>
@@ -155,17 +149,10 @@ const TournamentList = () => {
                 </span>
               </div>
               <div className="flex gap-2">
-                <Link
-                  href={`/tournaments/${encodeURIComponent(t.slug)}`}
-                  className="borderbutton"
-                >
+                <Link href={`/tournaments/${encodeURIComponent(t.slug)}`} className="borderbutton">
                   Open
                 </Link>
-                <button
-                  type="button"
-                  className="borderbutton"
-                  onClick={() => onDelete(t)}
-                >
+                <button type="button" className="borderbutton" onClick={() => onDelete(t)}>
                   Delete
                 </button>
               </div>

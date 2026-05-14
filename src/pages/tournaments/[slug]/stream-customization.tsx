@@ -53,6 +53,22 @@ const formValuesToQueryString = (values: Record<string, string>): string => {
   return parts.join('&')
 }
 
+// Accept either a full URL or a bare query string (with or without a leading
+// `?`) and return just the query portion. Throws on unparseable input.
+const extractQueryString = (input: string): string => {
+  const trimmed = input.trim()
+  if (!trimmed) return ''
+  try {
+    const url = new URL(trimmed)
+    return url.search.replace(/^\?/, '')
+  } catch {
+    let q = trimmed.replace(/^\?+/, '')
+    const hashIdx = q.indexOf('#')
+    if (hashIdx >= 0) q = q.slice(0, hashIdx)
+    return q
+  }
+}
+
 const StreamCustomizationPage = () => {
   const router = useRouter()
   const rawSlug = router.query.slug
@@ -70,6 +86,7 @@ const StreamCustomizationPage = () => {
   const [message, setMessage] = useState<string | null>(null)
 
   const [formValues, setFormValues] = useState<Record<string, string>>({})
+  const [importString, setImportString] = useState('')
 
   const [origin, setOrigin] = useState('')
   useEffect(() => {
@@ -136,6 +153,27 @@ const StreamCustomizationPage = () => {
     setConfigName(cfg.name)
     setEditingConfigId(cfg.id)
     setMessage(null)
+  }
+
+  const importFromString = () => {
+    if (!importString.trim()) {
+      setMessage('Paste a URL or query string to import.')
+      return
+    }
+    try {
+      const query = extractQueryString(importString)
+      const values = queryStringToFormValues(query)
+      setFormValues(values)
+      setImportString('')
+      setMessage(
+        Object.keys(values).length === 0
+          ? 'Imported (no parameters found — using defaults).'
+          : 'Imported.'
+      )
+      setTimeout(() => setMessage(null), 1500)
+    } catch (e) {
+      setMessage(`Error: ${e instanceof Error ? e.message : e}`)
+    }
   }
 
   const copyToClipboard = async (text: string) => {
@@ -336,6 +374,31 @@ const StreamCustomizationPage = () => {
                     Open
                   </a>
                 )}
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <div className="text-sm mb-1">Import from URL or query string</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  value={importString}
+                  onChange={(e) => setImportString(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      importFromString()
+                    }
+                  }}
+                  placeholder="ex. ?stream&bracketTitleFontSize=24 or a full URL"
+                  className="p-2 rounded-md bg-white text-black flex-1 min-w-0 text-sm"
+                />
+                <button type="button" className="borderbutton" onClick={importFromString}>
+                  Import
+                </button>
+              </div>
+              <div className="text-xs opacity-75 mt-1">
+                Replaces the current parameters with values parsed from the pasted string.
               </div>
             </div>
 
