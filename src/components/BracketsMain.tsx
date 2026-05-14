@@ -54,7 +54,7 @@ const defaultBracketStyles: BracketStyles = {
 const BracketsMain = () => {
   const [data, setData] = useState<BracketData[]>([])
   const [teams] = useState<string[]>([...defaultTeams])
-  const [teamCount] = useState<4 | 8 | 16 | 32 | 64>(16)
+  const [teamCount] = useState<8 | 16 | 32 | 64>(32)
   const [bracketStyles] = useState<BracketStyles>({ ...defaultBracketStyles })
   const [bracketType] = useState<BracketType>('double_elimination_to_top_4')
 
@@ -67,7 +67,12 @@ const BracketsMain = () => {
 
     if (current.length === 2) {
       const [qualifier, finals] = current
-      const newData = await getBracketsData(manager, qualifier.stages[0].id, finals.stages[0].id)
+      const newData = await getBracketsData(
+        manager,
+        qualifier.stages[0].id,
+        finals.stages[0].id,
+        teamCount
+      )
       setData(newData)
     } else {
       const newData = await createBracket(manager, bracketType, teamCount, teams)

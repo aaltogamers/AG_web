@@ -268,8 +268,12 @@ export const getBracketData = async (
   }
 }
 
-// TODO: Make support other than 16 teams
-const QUALIFIER_MATCH_IDS_TO_SKIP = new Set<Id>([14, 27, 28])
+const QUALIFIER_MATCH_IDS_TO_SKIP = {
+  8: new Set([]), // TODO: support
+  16: new Set([14, 27, 28]),
+  32: new Set([30, 59, 60]),
+  64: new Set([]), // TODO: support
+} as const
 
 /**
  * First-time setup: creates qualifier and finals stages, then returns their data.
@@ -277,15 +281,15 @@ const QUALIFIER_MATCH_IDS_TO_SKIP = new Set<Id>([14, 27, 28])
 export const createBracket = async (
   manager: BracketsManager,
   bracketType: BracketType,
-  teamCount: number,
+  teamCount: 8 | 16 | 32 | 64,
   teams: string[]
 ): Promise<[BracketData, BracketData]> => {
   if (bracketType !== 'double_elimination_to_top_4') {
     throw Error('Only double_elimination_to_top_4 type supported currently')
   }
 
-  if (teamCount !== 16) {
-    throw Error('Only 16 teams supported currently')
+  if (teamCount !== 16 && teamCount !== 32) {
+    throw Error('Only 16 or 32 teams supported currently')
   }
 
   const qualifierStage = await manager.create.stage({
@@ -299,7 +303,7 @@ export const createBracket = async (
   const mainBracketData = await getBracketData(
     manager,
     qualifierStage.id,
-    QUALIFIER_MATCH_IDS_TO_SKIP
+    QUALIFIER_MATCH_IDS_TO_SKIP[teamCount]
   )
 
   const topFourTeams = getTopFourTeamsFromDoubleElimQualifiers(mainBracketData)
@@ -326,10 +330,11 @@ export const createBracket = async (
 export const getBracketsData = async (
   manager: BracketsManager,
   qualifierStageId: Id,
-  finalsStageId: Id
+  finalsStageId: Id,
+  teamCount: 8 | 16 | 32 | 64
 ): Promise<[BracketData, BracketData]> => {
   const [mainBracketData, finalsBracketData] = await Promise.all([
-    getBracketData(manager, qualifierStageId, QUALIFIER_MATCH_IDS_TO_SKIP),
+    getBracketData(manager, qualifierStageId, QUALIFIER_MATCH_IDS_TO_SKIP[teamCount]),
     getBracketData(manager, finalsStageId, new Set()),
   ])
   return [mainBracketData, finalsBracketData]
