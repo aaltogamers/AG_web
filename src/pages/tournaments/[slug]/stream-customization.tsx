@@ -210,10 +210,12 @@ const StreamCustomizationPage = () => {
 
   const inputForDoc = (doc: StreamParamDoc) => {
     const value = formValues[doc.name] ?? ''
-    const commonClass = 'p-2 rounded-md bg-white text-black w-full md:w-64 disabled:opacity-50'
+    const commonClass = 'p-1.5 rounded-md bg-white text-black w-full text-base disabled:opacity-50'
+    const inputId = `param-${doc.name}`
     if (doc.name === 'stage') {
       return (
         <select
+          id={inputId}
           value={value}
           onChange={(e) => updateValue(doc.name, e.target.value)}
           className={commonClass}
@@ -229,6 +231,7 @@ const StreamCustomizationPage = () => {
     if (doc.type === 'number') {
       return (
         <input
+          id={inputId}
           type="number"
           value={value}
           placeholder={doc.defaultValue}
@@ -244,15 +247,16 @@ const StreamCustomizationPage = () => {
           ? `#${value}`
           : (doc.defaultValue ?? '#000000')
       return (
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-1 items-center">
           <input
             type="color"
             value={colorPickerValue}
             onChange={(e) => updateValue(doc.name, e.target.value)}
-            className="w-10 h-10 rounded border border-lightgray bg-white"
+            className="w-8 h-8 shrink-0 rounded border border-lightgray bg-white"
             aria-label={`${doc.name} color picker`}
           />
           <input
+            id={inputId}
             type="text"
             value={value}
             placeholder={doc.defaultValue ?? ''}
@@ -288,149 +292,159 @@ const StreamCustomizationPage = () => {
           preview below, and optionally save the configuration to share or reuse later.
         </p>
 
-        <div className="mb-6">
-          <label className="block text-sm mb-1">Generated URL</label>
-          <div className="flex flex-col md:flex-row gap-2">
-            <input
-              type="text"
-              readOnly
-              value={generatedUrl}
-              className="flex-1 p-2 rounded-md bg-white text-black font-mono text-sm"
-            />
-            <button
-              type="button"
-              className="borderbutton"
-              onClick={() => copyToClipboard(generatedUrl)}
-            >
-              Copy
-            </button>
-            {generatedUrl && (
-              <a
-                href={generatedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="borderbutton"
-              >
-                Open
-              </a>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-4 mb-8">
-          <h3 className="text-2xl">Parameters</h3>
-          {editableDocs.map((doc) => (
-            <div
-              key={doc.name}
-              className="flex flex-col md:flex-row md:items-start gap-2 md:gap-6 border-b border-darkgray pb-3"
-            >
-              <div className="md:w-72">
-                <div className="font-mono">{doc.name}</div>
-              </div>
-              <div className="flex-1 text-sm opacity-90">{doc.description}</div>
-              <div>{inputForDoc(doc)}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col md:flex-row md:items-end gap-3 mb-2">
-          <label className="flex flex-col gap-1 flex-1">
-            <span className="text-sm">Configuration name</span>
-            <input
-              type="text"
-              value={configName}
-              placeholder="ex. Qualifiers stream"
-              onChange={(e) => setConfigName(e.target.value)}
-              className="p-2 rounded-md bg-white text-black"
-            />
-          </label>
-          <div className="flex gap-2 flex-wrap">
-            <button type="button" className="mainbutton" onClick={onSave}>
-              {editingConfigId ? 'Update saved' : 'Save'}
-            </button>
-            {(editingConfigId || configName || Object.keys(formValues).length > 0) && (
-              <button type="button" className="borderbutton" onClick={clearForm}>
-                Cancel
-              </button>
-            )}
-          </div>
-        </div>
-        {message && <div className="text-sm">{message}</div>}
-
-        <div className="mt-8">
-          <h3 className="text-2xl mb-3">Saved configurations</h3>
-          {configs.length === 0 ? (
-            <div className="opacity-75 text-sm">No configurations saved yet.</div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {configs.map((cfg) => {
-                const url = `${origin}/tournaments/${encodeURIComponent(slug ?? '')}?${cfg.query}`
-                return (
-                  <div
-                    key={cfg.id}
-                    className={`flex flex-col md:flex-row md:items-center justify-between gap-2 p-3 border-2 ${
-                      editingConfigId === cfg.id ? 'border-red' : 'border-darkgray'
-                    }`}
+        <div className="grid xl:grid-cols-2 gap-6 xl:gap-10">
+          <div>
+            <h3 className="text-2xl mb-3">Parameters</h3>
+            <div className="flex flex-col gap-2 mb-6">
+              {editableDocs.map((doc) => (
+                <div
+                  key={doc.name}
+                  className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3"
+                >
+                  <label
+                    htmlFor={`param-${doc.name}`}
+                    className="font-mono text-sm w-40 shrink-0"
                   >
-                    <div className="min-w-0">
-                      <div className="text-xl">{cfg.name}</div>
-                      <div className="text-xs opacity-75 font-mono truncate">?{cfg.query}</div>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        className="borderbutton"
-                        onClick={() => copyToClipboard(url)}
-                      >
-                        Copy URL
-                      </button>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="borderbutton"
-                      >
-                        Open URL
-                      </a>
-                      <button
-                        type="button"
-                        className="borderbutton"
-                        onClick={() => loadConfig(cfg)}
-                      >
-                        Edit
-                      </button>
-                      <button type="button" className="borderbutton" onClick={() => onDelete(cfg)}>
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
+                    {doc.name}
+                  </label>
+                  <div className="w-full md:w-64 shrink-0">{inputForDoc(doc)}</div>
+                  <div className="text-sm opacity-75 flex-1">{doc.description}</div>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
 
-        <div className="mt-12">
-          <h3 className="text-2xl mb-3">Live preview</h3>
-          {tournamentLoading ? (
-            <div className="opacity-75 text-sm">Loading…</div>
-          ) : !tournament ? (
-            <div className="opacity-75 text-sm">Tournament not found.</div>
-          ) : !tournament.data ? (
-            <div className="opacity-75 text-sm">
-              The bracket for this tournament hasn&apos;t been built yet.
+            <div className="mb-4">
+              <div className="text-sm mb-1">Generated URL</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="font-mono text-sm break-all flex-1 min-w-0">
+                  {generatedUrl}
+                </code>
+                <button
+                  type="button"
+                  className="borderbutton"
+                  onClick={() => copyToClipboard(generatedUrl)}
+                >
+                  Copy
+                </button>
+                {generatedUrl && (
+                  <a
+                    href={generatedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="borderbutton"
+                  >
+                    Open
+                  </a>
+                )}
+              </div>
             </div>
-          ) : (
-            <div className="p-4 border-2 border-darkgray bg-black/40 overflow-x-auto">
-              <TournamentBracketView
-                tournament={tournament}
-                isAdmin={false}
-                bracketStyles={previewBracketStyles}
-                visibleStages={previewStageFilter.stageIndices}
-                visibleGroups={previewStageFilter.groups}
-              />
+
+            <div className="flex flex-col md:flex-row md:items-end gap-3 mb-2">
+              <label className="flex flex-col gap-1 flex-1">
+                <span className="text-sm">Configuration name</span>
+                <input
+                  type="text"
+                  value={configName}
+                  placeholder="ex. Qualifiers stream"
+                  onChange={(e) => setConfigName(e.target.value)}
+                  className="p-2 rounded-md bg-white text-black"
+                />
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                <button type="button" className="mainbutton" onClick={onSave}>
+                  {editingConfigId ? 'Update saved' : 'Save'}
+                </button>
+                {(editingConfigId || configName || Object.keys(formValues).length > 0) && (
+                  <button type="button" className="borderbutton" onClick={clearForm}>
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
-          )}
+            {message && <div className="text-sm">{message}</div>}
+
+            <div className="mt-6">
+              <h3 className="text-2xl mb-3">Saved configurations</h3>
+              {configs.length === 0 ? (
+                <div className="opacity-75 text-sm">No configurations saved yet.</div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {configs.map((cfg) => {
+                    const url = `${origin}/tournaments/${encodeURIComponent(slug ?? '')}?${cfg.query}`
+                    return (
+                      <div
+                        key={cfg.id}
+                        className={`flex flex-col md:flex-row md:items-center justify-between gap-2 p-3 border-2 ${
+                          editingConfigId === cfg.id ? 'border-red' : 'border-darkgray'
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xl">{cfg.name}</div>
+                          <div className="text-sm opacity-75 font-mono truncate">
+                            ?{cfg.query}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          <button
+                            type="button"
+                            className="borderbutton"
+                            onClick={() => copyToClipboard(url)}
+                          >
+                            Copy URL
+                          </button>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="borderbutton"
+                          >
+                            Open URL
+                          </a>
+                          <button
+                            type="button"
+                            className="borderbutton"
+                            onClick={() => loadConfig(cfg)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="borderbutton"
+                            onClick={() => onDelete(cfg)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="xl:sticky xl:top-4 xl:self-start">
+            <h3 className="text-2xl mb-3">Live preview</h3>
+            {tournamentLoading ? (
+              <div className="opacity-75 text-sm">Loading…</div>
+            ) : !tournament ? (
+              <div className="opacity-75 text-sm">Tournament not found.</div>
+            ) : !tournament.data ? (
+              <div className="opacity-75 text-sm">
+                The bracket for this tournament hasn&apos;t been built yet.
+              </div>
+            ) : (
+              <div className="p-4 border-2 border-darkgray bg-black/40 overflow-x-auto">
+                <TournamentBracketView
+                  tournament={tournament}
+                  isAdmin={false}
+                  bracketStyles={previewBracketStyles}
+                  visibleStages={previewStageFilter.stageIndices}
+                  visibleGroups={previewStageFilter.groups}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </PageWrapper>
