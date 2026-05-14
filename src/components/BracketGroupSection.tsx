@@ -205,7 +205,7 @@ const GroupSection = ({
 
       const hasScores = match.opponent1?.score != null || match.opponent2?.score != null
 
-      const isCompleted = match.status === Status.Completed || Status.Archived
+      const isCompleted = match.status === Status.Completed || match.status === Status.Archived
 
       reset({
         score1: String(match.opponent1?.score ?? ''),
