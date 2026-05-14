@@ -291,8 +291,10 @@ const GroupSection = ({
                 const prevMatches = bracketData.prevMatches[match.id]
                 const siblingMatch = bracketData.siblingMatches[match.id]
 
-                const siblingMatchIsBye =
-                  siblingMatch?.opponent1?.id === null || siblingMatch?.opponent2 === null
+                const isSiblingMatchBye =
+                  siblingMatch?.opponent1 === null || siblingMatch?.opponent2 === null
+
+                const isBothBye = isBye && isSiblingMatchBye
 
                 return (
                   <div
@@ -358,18 +360,22 @@ const GroupSection = ({
                       </div>
                     )}
 
-                    {!isBye && hasNextRound && shouldMergePairs && (
+                    {/* Connecting matches with a form ⑂ */}
+                    {!isBothBye && hasNextRound && shouldMergePairs && (
                       <>
-                        <div
-                          style={{
-                            position: 'absolute',
-                            left: bracketStyles.teamWidth,
-                            top: matchCenter - connectorThickness / 2,
-                            width: connectorHalfGap,
-                            height: connectorThickness,
-                            backgroundColor: bracketStyles.connectorColor,
-                          }}
-                        />
+                        {/* Starting connecting - */}
+                        {!isBye && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: bracketStyles.teamWidth,
+                              top: matchCenter - connectorThickness / 2,
+                              width: connectorHalfGap,
+                              height: connectorThickness,
+                              backgroundColor: bracketStyles.connectorColor,
+                            }}
+                          />
+                        )}
 
                         {matchIndex % 2 === 0 && matchIndex + 1 < roundMatches.length && (
                           <>
@@ -381,9 +387,11 @@ const GroupSection = ({
                                   bracketStyles.teamWidth +
                                   connectorHalfGap -
                                   connectorThickness / 2,
-                                top: matchCenter,
+                                top: isBye
+                                  ? matchCenter + nextMatchCenterDistance / 2
+                                  : matchCenter,
                                 width: connectorThickness,
-                                height: siblingMatchIsBye
+                                height: isSiblingMatchBye
                                   ? nextMatchCenterDistance / 2 + connectorThickness / 2
                                   : nextMatchCenterDistance,
                                 backgroundColor: bracketStyles.connectorColor,
@@ -409,6 +417,7 @@ const GroupSection = ({
                       </>
                     )}
 
+                    {/* Connecting matches linearly -- */}
                     {!isBye && hasNextRound && !shouldMergePairs && (
                       <div
                         style={{

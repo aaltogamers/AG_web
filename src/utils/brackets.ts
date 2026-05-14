@@ -145,26 +145,44 @@ export const getPrevMatches = async (matches: Match[], manager: BracketsManager)
   > = {}
 
   for (const match of matches) {
+    // BYE source matches have no real loser to label, so skip them entirely.
+    const matchIsBye = match.opponent1 === null || match.opponent2 === null
+    if (matchIsBye) continue
+
     const nextMatches = await manager.find.nextMatches(match.id)
+    let losersGame = nextMatches[1]
+    if (!losersGame) continue
 
-    const losersGame = nextMatches[1]
+    // The id whose position we use to identify the slot of `losersGame` to
+    // write the preview into. Equals `match.id` normally, but when we
+    // propagate past a BYE losers game, it's that pass-through match's id.
+    let slotFeederId: Id = match.id
 
-    if (losersGame) {
-      if (!prevMatches[losersGame.id]) {
-        prevMatches[losersGame.id] = {}
-      }
+    // If the target losers game is itself a BYE (because the source's sibling
+    // is a BYE), the "loser of match" preview is propagated one step forward
+    // in the losers bracket so it appears against the real next opponent.
+    const losersGameIsBye =
+      losersGame.opponent1 === null || losersGame.opponent2 === null
+    if (losersGameIsBye) {
+      const losersGameNextMatches = await manager.find.nextMatches(losersGame.id)
+      const propagated = losersGameNextMatches[0]
+      if (!propagated) continue
+      slotFeederId = losersGame.id
+      losersGame = propagated
+    }
 
-      if (prevMatches[losersGame.id].opponent1From) {
-        prevMatches[losersGame.id] = {
-          ...prevMatches[losersGame.id],
-          opponent2From: { match, outcome: 'loser' },
-        }
-      } else {
-        prevMatches[losersGame.id] = {
-          ...prevMatches[losersGame.id],
-          opponent1From: { match, outcome: 'loser' },
-        }
-      }
+    // Determine which slot of losersGame the feeder fills. previousMatches
+    // returns feeders in [opp1Feeder, opp2Feeder] order.
+    const prevsOfLosersGame = await manager.find.previousMatches(losersGame.id)
+    let slot: 'opponent1From' | 'opponent2From' | null = null
+    if (prevsOfLosersGame[0]?.id === slotFeederId) slot = 'opponent1From'
+    else if (prevsOfLosersGame[1]?.id === slotFeederId) slot = 'opponent2From'
+
+    if (slot == null) continue
+
+    prevMatches[losersGame.id] = {
+      ...(prevMatches[losersGame.id] ?? {}),
+      [slot]: { match, outcome: 'loser' },
     }
   }
 
