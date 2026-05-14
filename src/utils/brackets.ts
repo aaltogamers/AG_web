@@ -318,10 +318,10 @@ const MATCH_IDS = {
   },
   16: {
     skip: new Set<Id>([14, 27, 28]),
-    qualifying: new Set<Id>([13, 26]),
-    bronze: new Set<Id>([]), // TODO: Support
-    silver: new Set<Id>([]), // TODO: Support
-    gold: new Set<Id>([]), // TODO: Support
+    qualifying: new Set<Id>([12, 13, 25, 26]),
+    bronze: new Set<Id>([30, 31]),
+    silver: new Set<Id>([32]),
+    gold: new Set<Id>([32]),
   },
   32: {
     skip: new Set<Id>([30, 59, 60]),
