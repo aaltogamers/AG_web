@@ -2,7 +2,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import PageWrapper from '../../components/PageWrapper'
 import TournamentBracketView, {
@@ -11,7 +11,7 @@ import TournamentBracketView, {
 import TournamentSetup from '../../components/TournamentSetup'
 import { Tournament, getBracketTypeLabel } from '../../types/types'
 import { checkAdminSession } from '../../utils/adminAuth'
-import { getTournament, updateTournament } from '../../utils/tournamentApi'
+import { getTournament, getTournamentUpdatedAt, updateTournament } from '../../utils/tournamentApi'
 import makeBackgroundInvisible from '../../utils/makeBackgroundInvisible'
 import {
   isStreamMode,
@@ -33,6 +33,8 @@ const TournamentPage = () => {
 
   const streamMode = router.isReady && isStreamMode(router.query)
 
+  const lastServerUpdatedAtRef = useRef<string | null>(null)
+
   const refresh = useCallback(async () => {
     if (!slug) return
     const t = await getTournament(slug)
@@ -41,6 +43,7 @@ const TournamentPage = () => {
       setLoading(false)
       return
     }
+    lastServerUpdatedAtRef.current = t.updatedAt
     setTournament(t)
     setLoading(false)
   }, [slug])
@@ -120,6 +123,41 @@ const TournamentPage = () => {
     [router.query]
   )
 
+  const showSetup = useMemo(
+    () => isAdmin && (editingSettings || !tournament?.data),
+    [isAdmin, editingSettings, tournament?.data]
+  )
+
+  const bracketVisible = useMemo(() => {
+    if (!tournament?.data) return false
+    if (streamMode) return true
+    return !showSetup
+  }, [tournament?.data, streamMode, showSetup])
+
+  const BRACKET_POLL_MS = 2000
+
+  useEffect(() => {
+    if (!router.isReady || !slug || loading || !bracketVisible) return
+
+    const tick = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
+      try {
+        const u = await getTournamentUpdatedAt(slug)
+        if (u === null) return
+        if (u !== lastServerUpdatedAtRef.current) {
+          await refresh()
+        }
+      } catch {
+        // ignore transient network errors
+      }
+    }
+
+    const id = window.setInterval(() => {
+      void tick()
+    }, BRACKET_POLL_MS)
+    return () => clearInterval(id)
+  }, [router.isReady, slug, loading, bracketVisible, refresh])
+
   if (loading) {
     if (streamMode) return null
     return (
@@ -161,8 +199,6 @@ const TournamentPage = () => {
       </>
     )
   }
-
-  const showSetup = isAdmin && (editingSettings || !tournament.data)
 
   return (
     <>

@@ -20,6 +20,7 @@ type TournamentRow = {
   team_count: number
   teams: string[]
   data: BracketDatabaseSnapshot | null
+  updated_at?: Date
 }
 
 const rowToSummary = (r: TournamentRow): TournamentSummary => ({
@@ -92,14 +93,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const result = await pool.query(
         `INSERT INTO tournaments (slug, name, bracket_type, team_count, teams, updated_at)
          VALUES ($1, $2, $3, $4, $5::jsonb, now())
-         RETURNING slug, name, bracket_type, team_count, teams, data`,
+         RETURNING slug, name, bracket_type, team_count, teams, data, updated_at`,
         [tournamentSlug, name, body.bracketType, body.teamCount, JSON.stringify(teams)]
       )
       const row = result.rows[0] as TournamentRow
+      const ua = row.updated_at
+      if (!ua) {
+        console.error('[tournaments] insert missing updated_at')
+        return res.status(500).json({ error: 'Internal error' })
+      }
+      const updatedAt = ua instanceof Date ? ua.toISOString() : new Date(ua).toISOString()
       return res.status(201).json({
         tournament: {
           ...rowToSummary(row),
           data: row.data ?? null,
+          updatedAt,
         },
       })
     } catch (err) {

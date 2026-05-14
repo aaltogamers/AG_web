@@ -284,6 +284,8 @@ export type TournamentSummary = TournamentSettings & {
 export type Tournament = TournamentSettings & {
   data: BracketDatabaseSnapshot | null
   isStarted: boolean
+  /** ISO timestamp from DB `updated_at`; used for live refresh / change detection. */
+  updatedAt: string
 }
 
 export type StreamConfig = {

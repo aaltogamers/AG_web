@@ -45,6 +45,18 @@ export const getTournament = async (slug: string): Promise<Tournament | null> =>
   return data.tournament
 }
 
+/** Cheap version check for live refresh (does not load bracket `data` jsonb). */
+export const getTournamentUpdatedAt = async (slug: string): Promise<string | null> => {
+  const res = await fetch(
+    `/api/tournaments/${encodeURIComponent(slug)}?poll=1`,
+    { credentials: 'same-origin' }
+  )
+  if (res.status === 404) return null
+  if (!res.ok) return null
+  const data = (await res.json()) as { updatedAt?: string }
+  return typeof data.updatedAt === 'string' ? data.updatedAt : null
+}
+
 export const createTournament = async (
   payload: CreateTournamentPayload
 ): Promise<Tournament> => {

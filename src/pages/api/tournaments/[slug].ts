@@ -20,6 +20,13 @@ type TournamentRow = {
   team_count: number
   teams: string[]
   data: BracketDatabaseSnapshot | null
+  updated_at: Date
+}
+
+const updatedAtToIso = (v: unknown): string => {
+  if (v instanceof Date) return v.toISOString()
+  if (typeof v === 'string' || typeof v === 'number') return new Date(v).toISOString()
+  return new Date(0).toISOString()
 }
 
 const rowToTournament = (r: TournamentRow): Tournament => ({
@@ -30,6 +37,7 @@ const rowToTournament = (r: TournamentRow): Tournament => ({
   teams: r.teams ?? [],
   data: r.data ?? null,
   isStarted: isTournamentStarted(r.data ?? null),
+  updatedAt: updatedAtToIso(r.updated_at),
 })
 
 type PutBody = {
@@ -60,13 +68,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!slug) return res.status(400).json({ error: 'Missing slug' })
 
   if (req.method === 'GET') {
+    const rawPoll = req.query.poll
+    const poll = Array.isArray(rawPoll) ? rawPoll[0] : rawPoll
+    if (poll === '1') {
+      const light = await pool.query(`SELECT updated_at FROM tournaments WHERE slug = $1`, [slug])
+      if (light.rows.length === 0) return res.status(404).json({ error: 'Not found' })
+      return res.status(200).json({ updatedAt: updatedAtToIso(light.rows[0].updated_at) })
+    }
+
     const result = await pool.query(
-      `SELECT slug, name, bracket_type, team_count, teams, data
+      `SELECT slug, name, bracket_type, team_count, teams, data, updated_at
        FROM tournaments WHERE slug = $1`,
       [slug]
     )
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' })
-    return res.status(200).json({ tournament: rowToTournament(result.rows[0]) })
+    return res.status(200).json({ tournament: rowToTournament(result.rows[0] as TournamentRow) })
   }
 
   if (req.method === 'PUT') {
@@ -79,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await client.query('BEGIN')
 
       const existingRes = await client.query(
-        `SELECT slug, name, bracket_type, team_count, teams, data
+        `SELECT slug, name, bracket_type, team_count, teams, data, updated_at
          FROM tournaments WHERE slug = $1 FOR UPDATE`,
         [slug]
       )
@@ -191,7 +207,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         result = await client.query(
           `UPDATE tournaments SET ${updates.join(', ')} WHERE slug = $${params.length}
-           RETURNING slug, name, bracket_type, team_count, teams, data`,
+           RETURNING slug, name, bracket_type, team_count, teams, data, updated_at`,
           params
         )
       } catch (err) {
