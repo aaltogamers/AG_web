@@ -248,53 +248,63 @@ export const isRoundAllBye = (round: Round, matchesByRound: Record<Id, Match[]>)
   )
 }
 
-export const getTopFourTeamsFromDoubleElimQualifiers = (data: BracketData): Participant[] => {
-  const roundsByGroup = getRoundsByGroup(data)
-  const matchesByRound = getMatchesByRound(data)
-  const participantsById = getParticipantsById(data)
+/**
+ * Distinct placeholder names used as seeding entries in the 4-team finals
+ * stage for slots whose qualifier match hasn't been decided yet. Each entry
+ * must be unique (the library rejects duplicate seeding names) and visually
+ * blank so the bracket renders the slot as TBD. We keep these stable across
+ * re-syncs so the same placeholder participant is reused (instead of growing
+ * the participants table on every update).
+ */
+const FINALS_TBD_PLACEHOLDERS = [' ', '  ', '   ', '    '] as const
 
-  const matchesWithWinners: Match[] = []
-
-  for (const group of ['Upper', 'Lower'] as const) {
-    const rounds = roundsByGroup[group]
-    if (!rounds?.length) continue
-
-    const roundsWithAtLeastTwoMatches = rounds.filter(
-      (round) => (matchesByRound[round.id] ?? []).length >= 2
-    )
-
-    if (roundsWithAtLeastTwoMatches.length === 0) continue
-
-    const highestRound = roundsWithAtLeastTwoMatches.reduce((a, b) =>
-      a.number >= b.number ? a : b
-    )
-
-    const roundMatches = (matchesByRound[highestRound.id] ?? []).sort((a, b) => a.number - b.number)
-
-    matchesWithWinners.push(...roundMatches)
-  }
-
-  matchesWithWinners.sort((a, b) => {
+/**
+ * Returns the qualifier matches whose winners feed the finals stage, ordered
+ * to match the seeding slot order (Upper-bracket qualifiers first, then
+ * Lower-bracket qualifiers; ties broken by match number).
+ *
+ * With `inner_outer` first-round ordering (the brackets-manager default for
+ * an elimination stage), 4 seeds `[A, B, C, D]` become semi-finals
+ * `A vs D` and `B vs C`. With this ordering that yields the desired
+ * Upper-vs-Lower cross-pairings in the finals.
+ */
+const getQualifierFeederMatches = (qualifierData: BracketData): Match[] => {
+  const feeders = qualifierData.matches.filter((match) =>
+    qualifierData.qualifyingMatchIds.has(match.id)
+  )
+  feeders.sort((a, b) => {
     const groupOrderA = groupToLabel(a.group_id) === 'Upper' ? 0 : 1
     const groupOrderB = groupToLabel(b.group_id) === 'Upper' ? 0 : 1
     if (groupOrderA !== groupOrderB) return groupOrderA - groupOrderB
     return a.number - b.number
   })
+  return feeders
+}
 
-  const winners: Participant[] = []
-  for (const match of matchesWithWinners) {
-    const winnerId =
-      match.opponent1?.result === 'win'
-        ? match.opponent1.id
-        : match.opponent2?.result === 'win'
-          ? (match.opponent2?.id ?? null)
-          : null
+const getMatchWinnerId = (match: Match): Id | null => {
+  if (match.opponent1?.result === 'win') return match.opponent1.id ?? null
+  if (match.opponent2?.result === 'win') return match.opponent2.id ?? null
+  return null
+}
+
+/**
+ * Builds the seeding (names) for the 4-team finals stage based on the
+ * current qualifier results. Slots whose qualifier match isn't decided yet
+ * receive a stable, distinct placeholder so the slot stays TBD (rather than
+ * being treated as a BYE, which would auto-advance the opposing team).
+ */
+export const getFinalsSeedingNames = (qualifierData: BracketData): string[] => {
+  const participantsById = getParticipantsById(qualifierData)
+  const feeders = getQualifierFeederMatches(qualifierData)
+
+  return feeders.map((match, i) => {
+    const winnerId = getMatchWinnerId(match)
     if (winnerId != null) {
       const participant = participantsById[winnerId]
-      if (participant) winners.push(participant)
+      if (participant) return participant.name
     }
-  }
-  return winners
+    return FINALS_TBD_PLACEHOLDERS[i] ?? `TBD ${i + 1}`
+  })
 }
 
 const QUALIFIER_MATCH_IDS_TO_SKIP = {
@@ -396,22 +406,63 @@ export const createBracket = async (
 
   const mainBracketData = await getBracketData(manager, qualifierStage.id, teamCount)
 
-  const topFourTeams = getTopFourTeamsFromDoubleElimQualifiers(mainBracketData)
-
   const finalsStage = await manager.create.stage({
     tournamentId: 1,
     name: 'Final stage',
     type: 'single_elimination',
-    seeding:
-      topFourTeams.length === 4
-        ? topFourTeams.map((item) => item.name)
-        : [' ', '  ', '   ', '    '], // Very hacky
+    seeding: getFinalsSeedingNames(mainBracketData),
     settings: { grandFinal: 'simple' },
   })
 
   const finalsBracketData = await getBracketData(manager, finalsStage.id, teamCount)
 
   return [mainBracketData, finalsBracketData]
+}
+
+/**
+ * Re-seeds the 4-team finals stage from the current qualifier results so
+ * that the qualifier winners populate the semi-final slots automatically.
+ *
+ * Uses `manager.update.seeding`, the library's supported way to change a
+ * stage's seeding after creation: it preserves status/scores of matches
+ * whose participants don't change, and throws if a finals match has already
+ * started with different participants (preventing silent data loss).
+ *
+ * Skips work when the new seeding matches the current finals seeding to
+ * avoid unnecessary stage rebuilds (e.g. after a finals-only mutation).
+ *
+ * Returns `true` if the seeding was actually rewritten.
+ */
+export const syncFinalsSeedingFromQualifiers = async (
+  manager: BracketsManager,
+  qualifierData: BracketData,
+  finalsStageId: Id
+): Promise<boolean> => {
+  const feeders = getQualifierFeederMatches(qualifierData)
+  if (feeders.length !== 4) return false
+
+  const newSeedingNames = getFinalsSeedingNames(qualifierData)
+
+  const tournamentId = qualifierData.stages[0]?.tournament_id
+  if (tournamentId == null) return false
+
+  const allParticipants = ((await manager.storage.select('participant', { tournament_id: tournamentId })) ??
+    []) as Participant[]
+  const participantById: Record<Id, Participant> = {}
+  for (const participant of allParticipants) participantById[participant.id] = participant
+
+  const currentSlots = await manager.get.seeding(finalsStageId)
+  const currentSeedingNames = currentSlots.map((slot) =>
+    slot && slot.id != null ? (participantById[slot.id]?.name ?? null) : null
+  )
+
+  const seedingUnchanged =
+    currentSeedingNames.length === newSeedingNames.length &&
+    currentSeedingNames.every((name, i) => name === newSeedingNames[i])
+  if (seedingUnchanged) return false
+
+  await manager.update.seeding(finalsStageId, newSeedingNames)
+  return true
 }
 
 /**

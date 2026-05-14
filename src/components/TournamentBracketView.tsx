@@ -10,7 +10,7 @@ import type {
   BracketStyles,
   Tournament,
 } from '../types/types'
-import { getBracketsData } from '../utils/brackets'
+import { getBracketData, getBracketsData, syncFinalsSeedingFromQualifiers } from '../utils/brackets'
 import { saveTournamentData } from '../utils/tournamentApi'
 import BracketsSection from './BracketsSection'
 
@@ -126,10 +126,29 @@ const TournamentBracketView = ({
     const current = dataRef.current
     if (current.length !== 2) return
     const [qualifier, finals] = current
+    const qualifierStageId = qualifier.stages[0].id
+    const finalsStageId = finals.stages[0].id
+
+    // Propagate qualifier winners into the finals semi-finals before
+    // re-reading. The library doesn't link stages on its own, so we re-seed
+    // the finals stage from the (now mutated) qualifier results. Uses fresh
+    // qualifier data, since the mutation already landed in the manager.
+    try {
+      const refreshedQualifier = await getBracketData(
+        manager,
+        qualifierStageId,
+        tournament.teamCount
+      )
+      await syncFinalsSeedingFromQualifiers(manager, refreshedQualifier, finalsStageId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to propagate qualifier winners')
+      return
+    }
+
     const newData = await getBracketsData(
       manager,
-      qualifier.stages[0].id,
-      finals.stages[0].id,
+      qualifierStageId,
+      finalsStageId,
       tournament.teamCount
     )
     setData(newData)
