@@ -141,8 +141,7 @@ const TournamentBracketView = ({
       )
       await syncFinalsSeedingFromQualifiers(manager, refreshedQualifier, finalsStageId)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to propagate qualifier winners')
-      return
+      throw new Error(err instanceof Error ? err.message : 'Failed to propagate qualifier winners')
     }
 
     const newData = await getBracketsData(
@@ -157,7 +156,7 @@ const TournamentBracketView = ({
       await saveTournamentData(tournament.slug, snapshot)
       onSaved?.(snapshot)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save bracket')
+      throw new Error(err instanceof Error ? err.message : 'Failed to save bracket')
     }
   }, [tournament.slug, tournament.teamCount, onSaved])
 
