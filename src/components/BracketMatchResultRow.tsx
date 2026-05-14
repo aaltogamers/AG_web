@@ -1,6 +1,6 @@
 import { Id, Match, Participant } from 'brackets-model'
 import { BracketData, BracketStyles, OpponentFroMatch } from '../types/types'
-import { FaTrophy } from 'react-icons/fa'
+import { FaMedal, FaTrophy } from 'react-icons/fa'
 
 type Props = {
   match: Match
@@ -13,7 +13,16 @@ type Props = {
   bracketData: BracketData
 }
 
-const qualifyingIcon = { icon: FaTrophy, color: '#FAA916' }
+const PRIZE_COLORS = {
+  bronze: '#CD7F32',
+  silver: '#C0C0C0',
+  gold: '#FFD700',
+}
+
+const QUALIFYING_ICON = { icon: FaMedal }
+const THIRD_PLACE_ICON = { icon: FaMedal, color: PRIZE_COLORS.bronze }
+const SECOND_PLACE_ICON = { icon: FaMedal, color: PRIZE_COLORS.silver }
+const FIRST_PLACE_ICON = { icon: FaTrophy, color: PRIZE_COLORS.gold }
 
 const MatchResultRow = ({
   match,
@@ -81,7 +90,7 @@ const MatchResultRow = ({
           >
             {participantData.score ?? ''}
             <div
-              className="absolute flex items-center justify-center"
+              className="absolute flex items-center justify-center z-100"
               style={{
                 left: bracketStyles.teamWidth + 4,
                 top: 0,
@@ -90,12 +99,26 @@ const MatchResultRow = ({
               }}
             >
               {(() => {
-                if (bracketData.qualifyingMatchIds?.has(match.id) && isWin) {
-                  const icon = qualifyingIcon
-                  return <icon.icon color={icon.color} />
+                let icon: { icon: React.ComponentType<{ color?: string }>; color?: string } | null =
+                  null
+
+                if (bracketData.matchIds.qualifying?.has(match.id) && isWin) {
+                  icon = QUALIFYING_ICON
                 }
 
-                return null
+                if (bracketData.matchIds.bronze?.has(match.id) && !isWin) {
+                  icon = THIRD_PLACE_ICON
+                }
+
+                if (bracketData.matchIds.silver?.has(match.id) && !isWin) {
+                  icon = SECOND_PLACE_ICON
+                }
+
+                if (bracketData.matchIds.gold?.has(match.id) && isWin) {
+                  icon = FIRST_PLACE_ICON
+                }
+
+                return icon ? <icon.icon color={icon.color || bracketStyles.winScoreColor} /> : null
               })()}
             </div>
           </div>

@@ -209,7 +209,13 @@ export type BracketData = {
     }
   >
   siblingMatches: Record<Id, Match>
-  qualifyingMatchIds: Set<Id>
+  matchIds: {
+    skip: Set<Id>
+    qualifying: Set<Id>
+    bronze: Set<Id>
+    silver: Set<Id>
+    gold: Set<Id>
+  }
 }
 
 export type BracketStyles = {

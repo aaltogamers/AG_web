@@ -270,7 +270,7 @@ const FINALS_TBD_PLACEHOLDERS = [' ', '  ', '   ', '    '] as const
  */
 const getQualifierFeederMatches = (qualifierData: BracketData): Match[] => {
   const feeders = qualifierData.matches.filter((match) =>
-    qualifierData.qualifyingMatchIds.has(match.id)
+    qualifierData.matchIds?.qualifying?.has(match.id)
   )
   feeders.sort((a, b) => {
     const groupOrderA = groupToLabel(a.group_id) === 'Upper' ? 0 : 1
@@ -307,18 +307,37 @@ export const getFinalsSeedingNames = (qualifierData: BracketData): string[] => {
   })
 }
 
-const QUALIFIER_MATCH_IDS_TO_SKIP = {
-  8: new Set<Id>([]), // TODO: support
-  16: new Set<Id>([14, 27, 28]),
-  32: new Set<Id>([30, 59, 60]),
-  64: new Set<Id>([]), // TODO: support
-} as const
-
-const QUALIFYING_MATCH_IDS = {
-  8: new Set<Id>([]), // TODO: support
-  16: new Set<Id>([12, 13, 25, 26]),
-  32: new Set<Id>([28, 29, 57, 58]),
-  64: new Set<Id>([]), // TODO: support
+const MATCH_IDS = {
+  // TODO: Support
+  8: {
+    skip: new Set<Id>([]),
+    qualifying: new Set<Id>([]),
+    bronze: new Set<Id>([]),
+    silver: new Set<Id>([]),
+    gold: new Set<Id>([]),
+  },
+  16: {
+    skip: new Set<Id>([14, 27, 28]),
+    qualifying: new Set<Id>([13, 26]),
+    bronze: new Set<Id>([]), // TODO: Support
+    silver: new Set<Id>([]), // TODO: Support
+    gold: new Set<Id>([]), // TODO: Support
+  },
+  32: {
+    skip: new Set<Id>([30, 59, 60]),
+    qualifying: new Set<Id>([28, 29, 57, 58]),
+    bronze: new Set<Id>([62, 63]),
+    silver: new Set<Id>([64]),
+    gold: new Set<Id>([64]),
+  },
+  // TODO: Support
+  64: {
+    skip: new Set<Id>([]),
+    qualifying: new Set<Id>([]),
+    bronze: new Set<Id>([]),
+    silver: new Set<Id>([]),
+    gold: new Set<Id>([]),
+  },
 } as const
 
 export const getBracketData = async (
@@ -335,8 +354,8 @@ export const getBracketData = async (
     stage: stages,
   } = await manager.get.stageData(stageId)
 
-  const matchIdsToSkip = QUALIFIER_MATCH_IDS_TO_SKIP[teamCount]
-  const qualifyingMatchIds = QUALIFYING_MATCH_IDS[teamCount]
+  const matchIds = MATCH_IDS[teamCount]
+  const matchIdsToSkip = matchIds.skip || new Set<Id>()
 
   const filteredMatches = (matches ?? []).filter((match) => !matchIdsToSkip.has(match.id))
   const filteredRoundIds = new Set(filteredMatches.map((match) => match.round_id))
@@ -355,7 +374,7 @@ export const getBracketData = async (
     participants: participants,
     prevMatches,
     siblingMatches,
-    qualifyingMatchIds,
+    matchIds,
   }
 }
 
@@ -446,8 +465,9 @@ export const syncFinalsSeedingFromQualifiers = async (
   const tournamentId = qualifierData.stages[0]?.tournament_id
   if (tournamentId == null) return false
 
-  const allParticipants = ((await manager.storage.select('participant', { tournament_id: tournamentId })) ??
-    []) as Participant[]
+  const allParticipants = ((await manager.storage.select('participant', {
+    tournament_id: tournamentId,
+  })) ?? []) as Participant[]
   const participantById: Record<Id, Participant> = {}
   for (const participant of allParticipants) participantById[participant.id] = participant
 
