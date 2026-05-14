@@ -16,13 +16,13 @@ import { saveTournamentData } from '../utils/tournamentApi'
 import BracketsSection from './BracketsSection'
 
 export const defaultBracketStyles: BracketStyles = {
-  textColor: '#e8fefb',
-  teamNameColor: '#41337A',
-  loseScoreColor: '#6EA4BF',
-  winScoreColor: '#FAA916',
-  roundColor: '#211e36',
-  dividerColor: '#331E36',
-  connectorColor: '#FAA916',
+  textColor: '#FFFFFF',
+  teamNameColor: '#33353F',
+  loseScoreColor: '#AAABAD',
+  winScoreColor: '#F32929',
+  roundColor: '#23242D',
+  dividerColor: '#1C1D26',
+  connectorColor: '#F32929',
   titleFontSize: 24,
   basicFontSize: 16,
   teamHeight: 24,

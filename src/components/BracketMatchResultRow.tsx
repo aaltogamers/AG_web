@@ -67,7 +67,7 @@ const MatchResultRow = ({
         </div>
         {participantData?.result && !isBye && (
           <div
-            className="text-center aspect-square "
+            className="text-center aspect-square rounded-r-sm"
             style={{
               width: bracketStyles.teamHeight - 1,
               lineHeight: `${bracketStyles.teamHeight}px`,
