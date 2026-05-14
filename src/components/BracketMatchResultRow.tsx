@@ -90,7 +90,7 @@ const MatchResultRow = ({
           >
             {participantData.score ?? ''}
             <div
-              className="absolute flex items-center justify-center z-100"
+              className="absolute flex items-center justify-center z-10"
               style={{
                 left: bracketStyles.teamWidth + 4,
                 top: 0,
