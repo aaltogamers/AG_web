@@ -259,9 +259,19 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
             Import teams
           </button>
         </div>
-        <p className="text-sm opacity-75 mb-4">
-          Move teams up/down to change seeding. Empty slots become BYEs.
-        </p>
+
+        <span className="text-sm opacity-75 mb-4">
+          <p>
+            Move teams up/down to change seeding. The top seed is matched against the bottom seed,
+            etc.
+          </p>
+          <p>
+            You should fill the teams in order of their skill level (best team as 1st seed). This
+            maximizes the chance that the best teams make it to the later rounds.
+          </p>
+          <p>Empty teams become BYEs (free rounds).</p>
+        </span>
+
         <div className="flex flex-col gap-2">
           {paddedTeams.map((team, i) => (
             <div key={i} className="flex items-center gap-2">
@@ -341,8 +351,8 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
       {importOpen && (
         <Dialog title="Import teams" onClose={closeImportDialog} maxWidthClass="max-w-md">
           <p className="text-sm text-lightgray">
-            Paste team names below. Imported teams replace the current list. Up to {slotCount}{' '}
-            teams are allowed.
+            Paste team names below. Imported teams replace the current list. Up to {slotCount} teams
+            are allowed.
           </p>
 
           <label className="flex flex-col gap-1">
