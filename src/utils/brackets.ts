@@ -168,8 +168,7 @@ export const getPrevMatches = async (matches: Match[], manager: BracketsManager)
     // If the target losers game is itself a BYE (because the source's sibling
     // is a BYE), the "loser of match" preview is propagated one step forward
     // in the losers bracket so it appears against the real next opponent.
-    const losersGameIsBye =
-      losersGame.opponent1 === null || losersGame.opponent2 === null
+    const losersGameIsBye = losersGame.opponent1 === null || losersGame.opponent2 === null
     if (losersGameIsBye) {
       const losersGameNextMatches = await manager.find.nextMatches(losersGame.id)
       const propagated = losersGameNextMatches[0]
@@ -298,10 +297,24 @@ export const getTopFourTeamsFromDoubleElimQualifiers = (data: BracketData): Part
   return winners
 }
 
+const QUALIFIER_MATCH_IDS_TO_SKIP = {
+  8: new Set<Id>([]), // TODO: support
+  16: new Set<Id>([14, 27, 28]),
+  32: new Set<Id>([30, 59, 60]),
+  64: new Set<Id>([]), // TODO: support
+} as const
+
+const QUALIFYING_MATCH_IDS = {
+  8: new Set<Id>([]), // TODO: support
+  16: new Set<Id>([12, 13, 25, 26]),
+  32: new Set<Id>([28, 29, 57, 58]),
+  64: new Set<Id>([]), // TODO: support
+} as const
+
 export const getBracketData = async (
   manager: BracketsManager,
   stageId: Id,
-  matchIdsToSkip: Set<Id>
+  teamCount: 8 | 16 | 32 | 64
 ): Promise<BracketData> => {
   const {
     group: groups,
@@ -311,6 +324,9 @@ export const getBracketData = async (
     round: rounds,
     stage: stages,
   } = await manager.get.stageData(stageId)
+
+  const matchIdsToSkip = QUALIFIER_MATCH_IDS_TO_SKIP[teamCount]
+  const qualifyingMatchIds = QUALIFYING_MATCH_IDS[teamCount]
 
   const filteredMatches = (matches ?? []).filter((match) => !matchIdsToSkip.has(match.id))
   const filteredRoundIds = new Set(filteredMatches.map((match) => match.round_id))
@@ -329,15 +345,9 @@ export const getBracketData = async (
     participants: participants,
     prevMatches,
     siblingMatches,
+    qualifyingMatchIds,
   }
 }
-
-const QUALIFIER_MATCH_IDS_TO_SKIP = {
-  8: new Set([]), // TODO: support
-  16: new Set([14, 27, 28]),
-  32: new Set([30, 59, 60]),
-  64: new Set([]), // TODO: support
-} as const
 
 /**
  * A tournament is considered "started" once any match has scores or is no
@@ -348,7 +358,11 @@ export const isTournamentStarted = (data: BracketDatabaseSnapshot | null | undef
   if (!data) return false
   const matches = (data.match ?? []) as Match[]
   return matches.some((m) => {
-    if (m.status === Status.Running || m.status === Status.Completed || m.status === Status.Archived) {
+    if (
+      m.status === Status.Running ||
+      m.status === Status.Completed ||
+      m.status === Status.Archived
+    ) {
       return true
     }
     return m.opponent1?.score != null || m.opponent2?.score != null
@@ -380,11 +394,7 @@ export const createBracket = async (
     settings: { grandFinal: 'simple', balanceByes: true, size: teamCount },
   })
 
-  const mainBracketData = await getBracketData(
-    manager,
-    qualifierStage.id,
-    QUALIFIER_MATCH_IDS_TO_SKIP[teamCount]
-  )
+  const mainBracketData = await getBracketData(manager, qualifierStage.id, teamCount)
 
   const topFourTeams = getTopFourTeamsFromDoubleElimQualifiers(mainBracketData)
 
@@ -399,7 +409,7 @@ export const createBracket = async (
     settings: { grandFinal: 'simple' },
   })
 
-  const finalsBracketData = await getBracketData(manager, finalsStage.id, new Set())
+  const finalsBracketData = await getBracketData(manager, finalsStage.id, teamCount)
 
   return [mainBracketData, finalsBracketData]
 }
@@ -414,8 +424,8 @@ export const getBracketsData = async (
   teamCount: 8 | 16 | 32 | 64
 ): Promise<[BracketData, BracketData]> => {
   const [mainBracketData, finalsBracketData] = await Promise.all([
-    getBracketData(manager, qualifierStageId, QUALIFIER_MATCH_IDS_TO_SKIP[teamCount]),
-    getBracketData(manager, finalsStageId, new Set()),
+    getBracketData(manager, qualifierStageId, teamCount),
+    getBracketData(manager, finalsStageId, teamCount),
   ])
   return [mainBracketData, finalsBracketData]
 }

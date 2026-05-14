@@ -59,10 +59,8 @@ const normalizeColor = (raw: string): string => {
 /**
  * Builds a `BracketStyles` from a base, overriding any keys present in the
  * URL query. Color values without a leading `#` get one prepended. Numeric
- * values that don't parse are ignored. `matchIcons` is currently always
- * passed through from `base`.
+ * values that don't parse are ignored.
  *
- * TODO: support matchIcons via query params.
  */
 export const parseStreamBracketStyles = (
   query: ParsedUrlQuery,
@@ -70,7 +68,6 @@ export const parseStreamBracketStyles = (
 ): BracketStyles => {
   const out: BracketStyles = { ...base }
   ;(Object.keys(base) as (keyof BracketStyles)[]).forEach((key) => {
-    if (key === 'matchIcons') return
     const raw = getStringParam(query, key)
     if (raw === undefined) return
     if (NUMBER_KEYS.has(key)) {

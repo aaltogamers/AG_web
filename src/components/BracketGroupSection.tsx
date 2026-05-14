@@ -97,12 +97,7 @@ const RenameTeamDialog = ({
         )}
 
         <div className="flex flex-wrap gap-3 justify-center pt-2">
-          <button
-            type="button"
-            className="borderbutton"
-            onClick={onClose}
-            disabled={busy}
-          >
+          <button type="button" className="borderbutton" onClick={onClose} disabled={busy}>
             Cancel
           </button>
           <button type="submit" className="mainbutton" disabled={busy}>
@@ -294,9 +289,7 @@ const GroupSection = ({
             <label className="flex flex-col gap-1">
               <ParticipantNameEditor
                 participantId={selectedMatch.opponent1?.id ?? null}
-                participantName={
-                  participantsById[selectedMatch.opponent1?.id ?? -1]?.name
-                }
+                participantName={participantsById[selectedMatch.opponent1?.id ?? -1]?.name}
                 manager={bracketData.manager}
                 onRenamed={async () => {
                   await onMatchResultSaved?.()
@@ -313,9 +306,7 @@ const GroupSection = ({
             <label className="flex flex-col gap-1">
               <ParticipantNameEditor
                 participantId={selectedMatch.opponent2?.id ?? null}
-                participantName={
-                  participantsById[selectedMatch.opponent2?.id ?? -1]?.name
-                }
+                participantName={participantsById[selectedMatch.opponent2?.id ?? -1]?.name}
                 manager={bracketData.manager}
                 onRenamed={async () => {
                   await onMatchResultSaved?.()
@@ -369,10 +360,9 @@ const GroupSection = ({
 
         const roundMatches = matchesByRound[round.id] ?? []
 
-        const visibleRoundNumber =
-          (roundsByGroup[groupLabel] ?? [])
-            .slice(0, i + 1)
-            .filter((r) => !isRoundAllBye(r, matchesByRound)).length
+        const visibleRoundNumber = (roundsByGroup[groupLabel] ?? [])
+          .slice(0, i + 1)
+          .filter((r) => !isRoundAllBye(r, matchesByRound)).length
 
         const roundDepth = groupLabel === 'Lower' ? Math.floor(i / 2) : i
         const roundMultiplier = 2 ** roundDepth
@@ -454,6 +444,7 @@ const GroupSection = ({
                         participantsById={participantsById}
                         bracketStyles={bracketStyles}
                         feedInfo={prevMatches?.opponent1From}
+                        bracketData={bracketData}
                       />
 
                       <MatchResultRow
@@ -462,6 +453,7 @@ const GroupSection = ({
                         participantsById={participantsById}
                         bracketStyles={bracketStyles}
                         feedInfo={prevMatches?.opponent2From}
+                        bracketData={bracketData}
                       />
                     </span>
 

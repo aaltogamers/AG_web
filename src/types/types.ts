@@ -1,4 +1,3 @@
-import { IconType } from 'react-icons'
 import type { Group, Id, Match, MatchGame, Participant, Round, Stage } from 'brackets-model'
 import { BracketsManager } from 'brackets-manager'
 
@@ -210,6 +209,7 @@ export type BracketData = {
     }
   >
   siblingMatches: Record<Id, Match>
+  qualifyingMatchIds: Set<Id>
 }
 
 export type BracketStyles = {
@@ -227,10 +227,6 @@ export type BracketStyles = {
   teamGapX: number
   teamGapY: number
   bracketGap: number
-  matchIcons: Record<
-    Id,
-    { winner?: { icon: IconType; color: string }; loser?: { icon: IconType; color: string } }
-  >
 }
 
 export type RoundLabel = 'Upper' | 'Lower' | 'Final' | 'Unknown'

@@ -1,5 +1,6 @@
 import { Id, Match, Participant } from 'brackets-model'
-import { BracketStyles, OpponentFroMatch } from '../types/types'
+import { BracketData, BracketStyles, OpponentFroMatch } from '../types/types'
+import { FaTrophy } from 'react-icons/fa'
 
 type Props = {
   match: Match
@@ -9,7 +10,10 @@ type Props = {
   waitingForMatchId?: Id | null
   waitingForMatchType?: 'winner' | 'loser'
   feedInfo?: OpponentFroMatch
+  bracketData: BracketData
 }
+
+const qualifyingIcon = { icon: FaTrophy, color: '#FAA916' }
 
 const MatchResultRow = ({
   match,
@@ -17,6 +21,7 @@ const MatchResultRow = ({
   participantsById,
   bracketStyles,
   feedInfo,
+  bracketData,
 }: Props) => {
   const participantData = match[participant]
 
@@ -85,8 +90,12 @@ const MatchResultRow = ({
               }}
             >
               {(() => {
-                const icon = bracketStyles.matchIcons[match.id]?.[isWin ? 'winner' : 'loser']
-                return icon ? <icon.icon color={icon.color} /> : null
+                if (bracketData.qualifyingMatchIds?.has(match.id) && isWin) {
+                  const icon = qualifyingIcon
+                  return <icon.icon color={icon.color} />
+                }
+
+                return null
               })()}
             </div>
           </div>

@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BracketsManager } from 'brackets-manager'
 import type { Database } from 'brackets-manager'
 import { InMemoryDatabase } from 'brackets-memory-db'
-import { FaTrophy } from 'react-icons/fa'
 
 import type {
   BracketData,
@@ -30,12 +29,6 @@ export const defaultBracketStyles: BracketStyles = {
   teamGapX: 20,
   teamGapY: 10,
   bracketGap: 20,
-  matchIcons: {
-    12: { winner: { icon: FaTrophy, color: '#FAA916' } },
-    13: { winner: { icon: FaTrophy, color: '#FAA916' } },
-    25: { winner: { icon: FaTrophy, color: '#FAA916' } },
-    26: { winner: { icon: FaTrophy, color: '#FAA916' } },
-  },
 }
 
 type Props = {
