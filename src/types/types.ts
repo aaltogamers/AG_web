@@ -209,6 +209,7 @@ export type BracketData = {
       opponent2From?: OpponentFroMatch
     }
   >
+  siblingMatches: Record<Id, Match>
 }
 
 export type BracketStyles = {

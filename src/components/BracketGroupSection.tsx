@@ -281,6 +281,7 @@ const GroupSection = ({
             >
               {roundMatches.map((match, matchIndex) => {
                 const isBye = match.opponent1 === null || match.opponent2 === null
+
                 const isLocked =
                   isBye ||
                   match.opponent1?.id == null ||
@@ -288,6 +289,10 @@ const GroupSection = ({
                   match.status === Status.Archived
 
                 const prevMatches = bracketData.prevMatches[match.id]
+                const siblingMatch = bracketData.siblingMatches[match.id]
+
+                const siblingMatchIsBye =
+                  siblingMatch?.opponent1?.id === null || siblingMatch?.opponent2 === null
 
                 return (
                   <div
@@ -302,7 +307,7 @@ const GroupSection = ({
                       className="rounded-sm"
                       style={{
                         backgroundColor: bracketStyles.teamNameColor,
-                        opacity: isBye ? 0.75 : 1,
+                        opacity: isBye ? 0.0 : 1,
                       }}
                     >
                       <MatchResultRow
@@ -335,22 +340,25 @@ const GroupSection = ({
                       </div>
                     )}
 
-                    <div
-                      style={{
-                        position: 'absolute',
-                        lineHeight: `${bracketStyles.basicFontSize}px`,
-                        fontSize: bracketStyles.basicFontSize * 0.75,
-                        color: bracketStyles.connectorColor,
-                        top: matchCenter - connectorThickness / 2 - bracketStyles.basicFontSize / 2,
-                        textAlign: 'center',
-                        left: -bracketStyles.basicFontSize * 0.75,
-                        width: bracketStyles.basicFontSize * 0.75,
-                      }}
-                    >
-                      {match.id}
-                    </div>
+                    {!isBye && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          lineHeight: `${bracketStyles.basicFontSize}px`,
+                          fontSize: bracketStyles.basicFontSize * 0.75,
+                          color: bracketStyles.connectorColor,
+                          top:
+                            matchCenter - connectorThickness / 2 - bracketStyles.basicFontSize / 2,
+                          textAlign: 'center',
+                          left: -bracketStyles.basicFontSize * 0.75,
+                          width: bracketStyles.basicFontSize * 0.75,
+                        }}
+                      >
+                        {match.id}
+                      </div>
+                    )}
 
-                    {hasNextRound && shouldMergePairs && (
+                    {!isBye && hasNextRound && shouldMergePairs && (
                       <>
                         <div
                           style={{
@@ -365,6 +373,7 @@ const GroupSection = ({
 
                         {matchIndex % 2 === 0 && matchIndex + 1 < roundMatches.length && (
                           <>
+                            {/* Vertical line | */}
                             <div
                               style={{
                                 position: 'absolute',
@@ -374,11 +383,14 @@ const GroupSection = ({
                                   connectorThickness / 2,
                                 top: matchCenter,
                                 width: connectorThickness,
-                                height: nextMatchCenterDistance,
+                                height: siblingMatchIsBye
+                                  ? nextMatchCenterDistance / 2 + connectorThickness / 2
+                                  : nextMatchCenterDistance,
                                 backgroundColor: bracketStyles.connectorColor,
                               }}
                             />
 
+                            {/* Final connecting piece to next row - */}
                             <div
                               style={{
                                 position: 'absolute',
@@ -397,7 +409,7 @@ const GroupSection = ({
                       </>
                     )}
 
-                    {hasNextRound && !shouldMergePairs && (
+                    {!isBye && hasNextRound && !shouldMergePairs && (
                       <div
                         style={{
                           position: 'absolute',

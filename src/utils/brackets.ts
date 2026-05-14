@@ -171,6 +171,35 @@ export const getPrevMatches = async (matches: Match[], manager: BracketsManager)
   return prevMatches
 }
 
+// Finds the sibling match for each match: another match that feeds into the same next match.
+export const getSiblingMatches = async (
+  matches: Match[],
+  manager: BracketsManager
+): Promise<Record<Id, Match>> => {
+  const matchesByNextMatchId: Record<Id, Match[]> = {}
+
+  for (const match of matches) {
+    const nextMatches = await manager.find.nextMatches(match.id)
+    const winnersNext = nextMatches[0]
+    if (!winnersNext) continue
+
+    if (!matchesByNextMatchId[winnersNext.id]) {
+      matchesByNextMatchId[winnersNext.id] = []
+    }
+    matchesByNextMatchId[winnersNext.id].push(match)
+  }
+
+  const siblingMatches: Record<Id, Match> = {}
+  for (const matchesSharingNext of Object.values(matchesByNextMatchId)) {
+    if (matchesSharingNext.length !== 2) continue
+    const [a, b] = matchesSharingNext
+    siblingMatches[a.id] = b
+    siblingMatches[b.id] = a
+  }
+
+  return siblingMatches
+}
+
 export const getRoundsByGroup = (data: BracketData) => {
   const roundsByGroup: Partial<Record<RoundLabel, Round[]>> = {}
 
@@ -255,6 +284,7 @@ export const getBracketData = async (
   const filteredRounds = (rounds ?? []).filter((round) => filteredRoundIds.has(round.id))
 
   const prevMatches = await getPrevMatches(filteredMatches, manager)
+  const siblingMatches = await getSiblingMatches(filteredMatches, manager)
 
   return {
     manager: manager,
@@ -265,6 +295,7 @@ export const getBracketData = async (
     matchGames: matchGames,
     participants: participants,
     prevMatches,
+    siblingMatches,
   }
 }
 
