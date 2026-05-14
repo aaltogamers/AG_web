@@ -336,6 +336,7 @@ const GroupSection = ({
                 Cancel
               </button>
               {(selectedMatch.status === Status.Completed ||
+                bracketData.matchIds.gold?.has(selectedMatch.id) ||
                 (selectedMatch.status === Status.Running &&
                   (selectedMatch.opponent1?.score != null ||
                     selectedMatch.opponent2?.score != null))) && (
@@ -412,7 +413,7 @@ const GroupSection = ({
                   isBye ||
                   match.opponent1?.id == null ||
                   match.opponent2?.id == null ||
-                  match.status === Status.Archived
+                  (match.status === Status.Archived && !bracketData.matchIds.gold?.has(match.id))
 
                 const prevMatches = bracketData.prevMatches[match.id]
                 const siblingMatch = bracketData.siblingMatches[match.id]
