@@ -26,6 +26,12 @@ const defaultTeams = [
   'Grey',
   'Aquamarine',
   'Brown',
+  'Beige',
+  'Crimson',
+  'Cyan',
+  'Ultramarine',
+  'Some very cool color',
+  'Lime Green',
 ]
 
 const defaultBracketStyles: BracketStyles = {
