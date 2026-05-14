@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import type { Id, Match, Participant, Round } from 'brackets-model'
 import { Status } from 'brackets-model'
 import { BracketsManager } from 'brackets-manager'
 import { useForm, SubmitHandler } from 'react-hook-form'
 
 import MatchResultRow from './BracketMatchResultRow'
+import Dialog from './Dialog'
 import { BracketData, BracketStyles } from '../types/types'
 import {
   getGroupHasFinal,
@@ -15,37 +16,25 @@ import {
 } from '../utils/brackets'
 import { FaPen } from 'react-icons/fa'
 
-type ParticipantNameEditorProps = {
-  participantId: Id | null | undefined
-  participantName: string | undefined
+type RenameTeamDialogProps = {
+  participantId: Id
+  participantName: string
   manager: BracketsManager
+  onClose: () => void
   onRenamed: () => Promise<void> | void
 }
 
-const ParticipantNameEditor = ({
+const RenameTeamDialog = ({
   participantId,
   participantName,
   manager,
+  onClose,
   onRenamed,
-}: ParticipantNameEditorProps) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [draft, setDraft] = useState(participantName ?? '')
+}: RenameTeamDialogProps) => {
+  const [draft, setDraft] = useState(participantName)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (participantId == null) {
-    return <span>{participantName ?? 'TBD'}</span>
-  }
-
-  const start = () => {
-    setDraft(participantName ?? '')
-    setError(null)
-    setIsEditing(true)
-  }
-  const cancel = () => {
-    setIsEditing(false)
-    setError(null)
-  }
   const save = async () => {
     const trimmed = draft.trim()
     if (!trimmed) {
@@ -53,7 +42,7 @@ const ParticipantNameEditor = ({
       return
     }
     if (trimmed === participantName) {
-      setIsEditing(false)
+      onClose()
       return
     }
     setBusy(true)
@@ -72,7 +61,7 @@ const ParticipantNameEditor = ({
         name: trimmed,
       })
       await onRenamed()
-      setIsEditing(false)
+      onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to rename.')
     } finally {
@@ -80,57 +69,94 @@ const ParticipantNameEditor = ({
     }
   }
 
-  if (!isEditing) {
-    return (
+  return (
+    <Dialog title="Rename team" onClose={onClose} busy={busy} zClass="z-[60]">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          void save()
+        }}
+        className="flex flex-col gap-4"
+      >
+        <label className="flex flex-col gap-1">
+          <span>Team name</span>
+          <input
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            className="p-2 rounded-md bg-white text-black"
+            autoFocus
+            disabled={busy}
+          />
+        </label>
+
+        {error != null && (
+          <p className="text-red text-center" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-3 justify-center pt-2">
+          <button
+            type="button"
+            className="borderbutton"
+            onClick={onClose}
+            disabled={busy}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="mainbutton" disabled={busy}>
+            {busy ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </form>
+    </Dialog>
+  )
+}
+
+type ParticipantNameEditorProps = {
+  participantId: Id | null | undefined
+  participantName: string | undefined
+  manager: BracketsManager
+  onRenamed: () => Promise<void> | void
+}
+
+const ParticipantNameEditor = ({
+  participantId,
+  participantName,
+  manager,
+  onRenamed,
+}: ParticipantNameEditorProps) => {
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+  if (participantId == null) {
+    return <span>{participantName ?? 'TBD'}</span>
+  }
+
+  return (
+    <>
       <span className="flex items-center gap-2">
         <span>{participantName ?? 'TBD'}</span>
         <button
           type="button"
           className="opacity-60 hover:opacity-100"
-          onClick={start}
-          aria-label="Rename participant"
-          title="Rename participant"
+          onClick={() => setDialogOpen(true)}
+          aria-label="Rename team"
+          title="Rename team"
         >
           <FaPen />
         </button>
       </span>
-    )
-  }
-
-  return (
-    <span className="flex flex-col gap-1">
-      <span className="flex items-center gap-2">
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          className="p-1 rounded-md bg-white text-black flex-1"
-          autoFocus
-          disabled={busy}
+      {dialogOpen && (
+        <RenameTeamDialog
+          participantId={participantId}
+          participantName={participantName ?? ''}
+          manager={manager}
+          onClose={() => setDialogOpen(false)}
+          onRenamed={onRenamed}
         />
-        <button
-          type="button"
-          className="borderbutton"
-          onClick={save}
-          disabled={busy}
-        >
-          {busy ? '…' : 'Save'}
-        </button>
-        <button
-          type="button"
-          className="borderbutton"
-          onClick={cancel}
-          disabled={busy}
-        >
-          Cancel
-        </button>
-      </span>
-      {error != null && (
-        <span className="text-red text-sm" role="alert">
-          {error}
-        </span>
       )}
-    </span>
+    </>
   )
 }
 
@@ -199,15 +225,6 @@ const GroupSection = ({
     setSelectedMatch(null)
   }, [])
 
-  useEffect(() => {
-    if (selectedMatch == null) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeDialog()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [selectedMatch, closeDialog])
-
   const onSubmit: SubmitHandler<EditMatchFormValues> = useCallback(
     async (data) => {
       if (!selectedMatch) return
@@ -268,93 +285,84 @@ const GroupSection = ({
   return (
     <div className="flex flex-row" style={{ color: bracketStyles.textColor }}>
       {selectedMatch != null && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-transparentBlack p-4"
-          onClick={closeDialog}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-match-title"
+        <Dialog
+          title={`Edit match ${selectedMatch.id}`}
+          onClose={closeDialog}
+          busy={saving || resetting}
         >
-          <div
-            className="w-full max-w-sm bg-darkgray border border-lightgray text-white"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 flex flex-col gap-4">
-              <h3 id="edit-match-title">Edit match {selectedMatch.id}</h3>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <label className="flex flex-col gap-1">
+              <ParticipantNameEditor
+                participantId={selectedMatch.opponent1?.id ?? null}
+                participantName={
+                  participantsById[selectedMatch.opponent1?.id ?? -1]?.name
+                }
+                manager={bracketData.manager}
+                onRenamed={async () => {
+                  await onMatchResultSaved?.()
+                }}
+              />
+              <input
+                type="number"
+                min={0}
+                {...register('score1')}
+                className="p-2 rounded-md bg-white text-black"
+              />
+            </label>
 
-              <label className="flex flex-col gap-1">
-                <ParticipantNameEditor
-                  participantId={selectedMatch.opponent1?.id ?? null}
-                  participantName={
-                    participantsById[selectedMatch.opponent1?.id ?? -1]?.name
-                  }
-                  manager={bracketData.manager}
-                  onRenamed={async () => {
-                    await onMatchResultSaved?.()
-                  }}
-                />
-                <input
-                  type="number"
-                  min={0}
-                  {...register('score1')}
-                  className="p-2 rounded-md bg-white text-black"
-                />
-              </label>
+            <label className="flex flex-col gap-1">
+              <ParticipantNameEditor
+                participantId={selectedMatch.opponent2?.id ?? null}
+                participantName={
+                  participantsById[selectedMatch.opponent2?.id ?? -1]?.name
+                }
+                manager={bracketData.manager}
+                onRenamed={async () => {
+                  await onMatchResultSaved?.()
+                }}
+              />
+              <input
+                type="number"
+                min={0}
+                {...register('score2')}
+                className="p-2 rounded-md bg-white text-black"
+              />
+            </label>
 
-              <label className="flex flex-col gap-1">
-                <ParticipantNameEditor
-                  participantId={selectedMatch.opponent2?.id ?? null}
-                  participantName={
-                    participantsById[selectedMatch.opponent2?.id ?? -1]?.name
-                  }
-                  manager={bracketData.manager}
-                  onRenamed={async () => {
-                    await onMatchResultSaved?.()
-                  }}
-                />
-                <input
-                  type="number"
-                  min={0}
-                  {...register('score2')}
-                  className="p-2 rounded-md bg-white text-black"
-                />
-              </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" {...register('inProgress')} />
+              <span>Match still in progress</span>
+            </label>
 
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" {...register('inProgress')} />
-                <span>Match still in progress</span>
-              </label>
+            {errors.root?.message != null && (
+              <p className="text-red text-center" role="alert">
+                {errors.root.message}
+              </p>
+            )}
 
-              {errors.root?.message != null && (
-                <p className="text-red text-center" role="alert">
-                  {errors.root.message}
-                </p>
+            <div className="flex flex-wrap gap-3 justify-center pt-2">
+              <button type="button" className="borderbutton" onClick={closeDialog}>
+                Cancel
+              </button>
+              {(selectedMatch.status === Status.Completed ||
+                (selectedMatch.status === Status.Running &&
+                  (selectedMatch.opponent1?.score != null ||
+                    selectedMatch.opponent2?.score != null))) && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  disabled={saving || resetting}
+                  className="borderbutton"
+                >
+                  {resetting ? 'Resetting…' : 'Reset'}
+                </button>
               )}
-
-              <div className="flex flex-wrap gap-3 justify-center pt-2">
-                <button type="button" className="borderbutton" onClick={closeDialog}>
-                  Cancel
-                </button>
-                {(selectedMatch.status === Status.Completed ||
-                  (selectedMatch.status === Status.Running &&
-                    (selectedMatch.opponent1?.score != null ||
-                      selectedMatch.opponent2?.score != null))) && (
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    disabled={saving || resetting}
-                    className="borderbutton"
-                  >
-                    {resetting ? 'Resetting…' : 'Reset'}
-                  </button>
-                )}
-                <button type="submit" disabled={saving || resetting} className="mainbutton">
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+              <button type="submit" disabled={saving || resetting} className="mainbutton">
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </Dialog>
       )}
       {roundsByGroup[groupLabel]?.map((round, i) => {
         if (isRoundAllBye(round, matchesByRound)) return null

@@ -11,7 +11,7 @@ interface AProps extends ComponentProps {
 }
 
 interface ImgProps extends ComponentProps {
-  src?: string
+  src?: string | Blob
   title?: string
   alt?: string
 }
@@ -44,7 +44,11 @@ const Li = ({ children }: ComponentProps) => <li className="mb-2">{children}</li
 
 const Img = ({ title, src, alt }: ImgProps) => (
   <span className="block w-fit">
-    <AGImage className="max-h-80 object-contain w-fit" src={src || ''} alt={alt || ''} />
+    <AGImage
+      className="max-h-80 object-contain w-fit"
+      src={typeof src === 'string' ? src : ''}
+      alt={alt || ''}
+    />
     <i className="block">{title}</i>
   </span>
 )

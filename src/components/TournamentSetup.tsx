@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BracketsManager } from 'brackets-manager'
 import { InMemoryDatabase } from 'brackets-memory-db'
+import Dialog from './Dialog'
 
 type ImportDelimiter = 'newline' | 'comma' | 'semicolon'
 
@@ -107,15 +108,6 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
     setImportOpen(false)
     setImportError(null)
   }
-
-  useEffect(() => {
-    if (!importOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeImportDialog()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [importOpen])
 
   const onConfirmImport = () => {
     const parsed = importText
@@ -347,70 +339,57 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
       </div>
 
       {importOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-transparentBlack p-4"
-          onClick={closeImportDialog}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="import-teams-title"
-        >
-          <div
-            className="w-full max-w-md bg-darkgray border border-lightgray p-6 flex flex-col gap-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 id="import-teams-title">Import teams</h3>
+        <Dialog title="Import teams" onClose={closeImportDialog} maxWidthClass="max-w-md">
+          <p className="text-sm text-lightgray">
+            Paste team names below. Imported teams replace the current list. Up to {slotCount}{' '}
+            teams are allowed.
+          </p>
 
-            <p className="text-sm text-lightgray">
-              Paste team names below. Imported teams replace the current list. Up to {slotCount}{' '}
-              teams are allowed.
+          <label className="flex flex-col gap-1">
+            <span>Delimiter</span>
+            <select
+              value={importDelimiter}
+              onChange={(e) => setImportDelimiter(e.target.value as ImportDelimiter)}
+              className="p-2 rounded-md bg-white text-black"
+            >
+              <option value="newline">Newline</option>
+              <option value="comma">Comma (,)</option>
+              <option value="semicolon">Semicolon (;)</option>
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span>Team names</span>
+            <textarea
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              rows={8}
+              placeholder={
+                importDelimiter === 'newline'
+                  ? 'Team A\nTeam B\nTeam C'
+                  : importDelimiter === 'comma'
+                    ? 'Team A, Team B, Team C'
+                    : 'Team A; Team B; Team C'
+              }
+              className="p-2 rounded-md bg-white text-black"
+            />
+          </label>
+
+          {importError != null && (
+            <p className="text-red text-center" role="alert">
+              {importError}
             </p>
+          )}
 
-            <label className="flex flex-col gap-1">
-              <span>Delimiter</span>
-              <select
-                value={importDelimiter}
-                onChange={(e) => setImportDelimiter(e.target.value as ImportDelimiter)}
-                className="p-2 rounded-md bg-white text-black"
-              >
-                <option value="newline">Newline</option>
-                <option value="comma">Comma (,)</option>
-                <option value="semicolon">Semicolon (;)</option>
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1">
-              <span>Team names</span>
-              <textarea
-                value={importText}
-                onChange={(e) => setImportText(e.target.value)}
-                rows={8}
-                placeholder={
-                  importDelimiter === 'newline'
-                    ? 'Team A\nTeam B\nTeam C'
-                    : importDelimiter === 'comma'
-                      ? 'Team A, Team B, Team C'
-                      : 'Team A; Team B; Team C'
-                }
-                className="p-2 rounded-md bg-white text-black"
-              />
-            </label>
-
-            {importError != null && (
-              <p className="text-red text-center" role="alert">
-                {importError}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-3 justify-center pt-2">
-              <button type="button" className="borderbutton" onClick={closeImportDialog}>
-                Cancel
-              </button>
-              <button type="button" className="mainbutton" onClick={onConfirmImport}>
-                Import
-              </button>
-            </div>
+          <div className="flex flex-wrap gap-3 justify-center pt-2">
+            <button type="button" className="borderbutton" onClick={closeImportDialog}>
+              Cancel
+            </button>
+            <button type="button" className="mainbutton" onClick={onConfirmImport}>
+              Import
+            </button>
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   )
