@@ -1,14 +1,23 @@
 'use client'
 import Head from 'next/head'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import PageWrapper from '../../components/PageWrapper'
-import TournamentBracketView from '../../components/TournamentBracketView'
+import TournamentBracketView, {
+  defaultBracketStyles,
+} from '../../components/TournamentBracketView'
 import TournamentSetup from '../../components/TournamentSetup'
 import { Tournament, getBracketTypeLabel } from '../../types/types'
 import { checkAdminSession } from '../../utils/adminAuth'
 import { getTournament } from '../../utils/tournamentApi'
+import makeBackgroundInvisible from '../../utils/makeBackgroundInvisible'
+import {
+  isStreamMode,
+  parseStreamBracketStyles,
+  parseStreamStageFilter,
+} from '../../utils/streamMode'
 
 const TournamentPage = () => {
   const router = useRouter()
@@ -20,6 +29,8 @@ const TournamentPage = () => {
   const [notFound, setNotFound] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [editingSettings, setEditingSettings] = useState(false)
+
+  const streamMode = router.isReady && isStreamMode(router.query)
 
   const refresh = useCallback(async () => {
     if (!slug) return
@@ -47,6 +58,11 @@ const TournamentPage = () => {
     })()
   }, [])
 
+  // Make body/html transparent so OBS/etc. can overlay this page on a stream.
+  useEffect(() => {
+    if (streamMode) makeBackgroundInvisible()
+  }, [streamMode])
+
   // Called by setup/bracket views after a successful save. If the slug
   // changed (rename), navigate to the new URL instead of refetching the old
   // one (which would 404).
@@ -61,7 +77,17 @@ const TournamentPage = () => {
     [router, slug, refresh]
   )
 
+  const streamBracketStyles = useMemo(
+    () => parseStreamBracketStyles(router.query, defaultBracketStyles),
+    [router.query]
+  )
+  const streamStageFilter = useMemo(
+    () => parseStreamStageFilter(router.query),
+    [router.query]
+  )
+
   if (loading) {
+    if (streamMode) return null
     return (
       <PageWrapper>
         <div className="mt-8 text-center">Loading…</div>
@@ -70,6 +96,7 @@ const TournamentPage = () => {
   }
 
   if (notFound || !tournament) {
+    if (streamMode) return null
     return (
       <PageWrapper>
         <Head>
@@ -77,6 +104,27 @@ const TournamentPage = () => {
         </Head>
         <div className="mt-8 text-center">Tournament not found.</div>
       </PageWrapper>
+    )
+  }
+
+  // Stream mode: chrome-free, no margins, transparent background. Editing is
+  // disabled regardless of admin status so scores can't be changed by clicking
+  // through the overlay.
+  if (streamMode) {
+    if (!tournament.data) return null
+    return (
+      <>
+        <Head>
+          <title>{tournament.name} - Aalto Gamers</title>
+        </Head>
+        <TournamentBracketView
+          tournament={tournament}
+          isAdmin={false}
+          bracketStyles={streamBracketStyles}
+          visibleStages={streamStageFilter.stageIndices}
+          visibleGroups={streamStageFilter.groups}
+        />
+      </>
     )
   }
 
@@ -107,6 +155,12 @@ const TournamentPage = () => {
                   {editingSettings ? 'Back to bracket' : 'Edit settings'}
                 </button>
               )}
+              <Link
+                href={`/tournaments/${encodeURIComponent(tournament.slug)}/stream-info`}
+                className="borderbutton"
+              >
+                Stream info
+              </Link>
             </div>
           )}
         </div>

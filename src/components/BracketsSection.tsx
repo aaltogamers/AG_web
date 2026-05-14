@@ -8,6 +8,8 @@ type Props = {
   data: BracketData
   isEditingMode: boolean
   onMatchResultSaved?: () => Promise<void>
+  // When set, only these group labels are rendered. Default: both.
+  visibleGroups?: ('Upper' | 'Lower')[]
 }
 
 const BracketsSection = ({
@@ -15,10 +17,14 @@ const BracketsSection = ({
   data,
   isEditingMode,
   onMatchResultSaved,
+  visibleGroups,
 }: Props) => {
   const roundsByGroup = getRoundsByGroup(data)
   const matchesByRound = getMatchesByRound(data)
   const participantsById = getParticipantsById(data)
+
+  const showUpper = !visibleGroups || visibleGroups.includes('Upper')
+  const showLower = !visibleGroups || visibleGroups.includes('Lower')
 
   return (
     <div
@@ -29,26 +35,30 @@ const BracketsSection = ({
       }}
       className="flex flex-col"
     >
-      <GroupSection
-        groupLabel="Upper"
-        roundsByGroup={roundsByGroup}
-        matchesByRound={matchesByRound}
-        participantsById={participantsById}
-        bracketStyles={bracketStyles}
-        bracketData={data}
-        isEditingMode={isEditingMode}
-        onMatchResultSaved={onMatchResultSaved}
-      />
-      <GroupSection
-        groupLabel="Lower"
-        roundsByGroup={roundsByGroup}
-        matchesByRound={matchesByRound}
-        participantsById={participantsById}
-        bracketStyles={bracketStyles}
-        bracketData={data}
-        isEditingMode={isEditingMode}
-        onMatchResultSaved={onMatchResultSaved}
-      />
+      {showUpper && (
+        <GroupSection
+          groupLabel="Upper"
+          roundsByGroup={roundsByGroup}
+          matchesByRound={matchesByRound}
+          participantsById={participantsById}
+          bracketStyles={bracketStyles}
+          bracketData={data}
+          isEditingMode={isEditingMode}
+          onMatchResultSaved={onMatchResultSaved}
+        />
+      )}
+      {showLower && (
+        <GroupSection
+          groupLabel="Lower"
+          roundsByGroup={roundsByGroup}
+          matchesByRound={matchesByRound}
+          participantsById={participantsById}
+          bracketStyles={bracketStyles}
+          bracketData={data}
+          isEditingMode={isEditingMode}
+          onMatchResultSaved={onMatchResultSaved}
+        />
+      )}
     </div>
   )
 }

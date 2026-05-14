@@ -15,7 +15,7 @@ import { getBracketsData } from '../utils/brackets'
 import { saveTournamentData } from '../utils/tournamentApi'
 import BracketsSection from './BracketsSection'
 
-const defaultBracketStyles: BracketStyles = {
+export const defaultBracketStyles: BracketStyles = {
   textColor: '#e8fefb',
   teamNameColor: '#41337A',
   loseScoreColor: '#6EA4BF',
@@ -44,9 +44,23 @@ type Props = {
   // Called after a successful save so the parent page can re-read the
   // tournament (e.g. to flip "not started" → "started" once scores land).
   onSaved?: (snapshot: BracketDatabaseSnapshot) => void
+  // Optional overrides used by stream mode.
+  bracketStyles?: BracketStyles
+  // Indices into the internal `data: BracketData[]` array to show. Default:
+  // both stages.
+  visibleStages?: number[]
+  // Forwarded to BracketsSection.
+  visibleGroups?: ('Upper' | 'Lower')[]
 }
 
-const TournamentBracketView = ({ tournament, isAdmin, onSaved }: Props) => {
+const TournamentBracketView = ({
+  tournament,
+  isAdmin,
+  onSaved,
+  bracketStyles: bracketStylesProp,
+  visibleStages,
+  visibleGroups,
+}: Props) => {
   // The "current" manager is rebuilt on every hydrate (a fresh in-memory
   // storage each time). We hold the latest one in a ref so mutation handlers
   // can use it without re-rendering the BracketsSection tree.
@@ -57,7 +71,15 @@ const TournamentBracketView = ({ tournament, isAdmin, onSaved }: Props) => {
   const dataRef = useRef(data)
   dataRef.current = data
 
-  const bracketStyles = useMemo(() => ({ ...defaultBracketStyles }), [])
+  const bracketStyles = useMemo(
+    () => bracketStylesProp ?? { ...defaultBracketStyles },
+    [bracketStylesProp]
+  )
+
+  const visibleData = useMemo(() => {
+    if (!visibleStages || visibleStages.length === 0) return data
+    return data.filter((_, i) => visibleStages.includes(i))
+  }, [data, visibleStages])
 
   useEffect(() => {
     // Each effect run builds its own manager so concurrent hydrates (e.g.
@@ -141,13 +163,14 @@ const TournamentBracketView = ({ tournament, isAdmin, onSaved }: Props) => {
 
   return (
     <div className="flex flex-row overflow-x-auto">
-      {data.map((bracketData) => (
+      {visibleData.map((bracketData) => (
         <BracketsSection
           key={bracketData.stages[0].id}
           data={bracketData}
           bracketStyles={bracketStyles}
           isEditingMode={isAdmin}
           onMatchResultSaved={refreshAfterMutation}
+          visibleGroups={visibleGroups}
         />
       ))}
     </div>
