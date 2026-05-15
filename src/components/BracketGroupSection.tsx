@@ -447,7 +447,10 @@ const GroupSection = ({
 
                 const isBothBye = isBye && isSiblingMatchBye
 
-                if (shouldCollapseThisRound && matchIndex % 2 === 1) {
+                if (
+                  shouldCollapseThisRound &&
+                  ((matchIndex % 2 === 1 && isBothBye) || (!isSiblingMatchBye && isBye))
+                ) {
                   return null
                 }
 
