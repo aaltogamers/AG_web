@@ -365,21 +365,27 @@ const GroupSection = ({
           .slice(0, i + 1)
           .filter((r) => !isRoundAllBye(r, matchesByRound)).length
 
-        const isInFirstRoundGroup = roundsByGroup[groupLabel].some((r) => r.id === 0)
+        const firstRoundInGroup = roundsByGroup[groupLabel].find(
+          (r) => !isRoundAllBye(r, matchesByRound)
+        )
 
-        const allFirstRoundMatchPairsHaveOneBye = matchesByRound[0]?.every((match) => {
-          const siblingMatch = bracketData.siblingMatches[match.id]
-          const isSiblingBye = siblingMatch?.opponent1 === null || siblingMatch?.opponent2 === null
-          const isMatchBye = match.opponent1 === null || match.opponent2 === null
-          return isSiblingBye || isMatchBye
-        })
+        const allFirstRoundMatchPairsHaveOneBye =
+          firstRoundInGroup &&
+          matchesByRound[firstRoundInGroup.id]?.every((match) => {
+            const siblingMatch = bracketData.siblingMatches[match.id]
+            const isSiblingBye =
+              siblingMatch?.opponent1 === null || siblingMatch?.opponent2 === null
+            const isMatchBye = match.opponent1 === null || match.opponent2 === null
+            return isSiblingBye || isMatchBye
+          })
 
-        const shouldCollapseFirstRound = isInFirstRoundGroup && allFirstRoundMatchPairsHaveOneBye
+        const shouldCollapseFirstRound = allFirstRoundMatchPairsHaveOneBye
 
-        const shouldCollapseThisRound = shouldCollapseFirstRound && round.id === 0
+        const shouldCollapseThisRound =
+          shouldCollapseFirstRound && round.id === firstRoundInGroup.id
 
         const roundDepth = groupLabel === 'Lower' ? Math.floor(i / 2) : i
-        let roundMultiplier =
+        const roundMultiplier =
           2 ** (roundDepth - (shouldCollapseFirstRound && !shouldCollapseThisRound ? 1 : 0))
 
         const roundGap = baseGap * roundMultiplier + matchHeight * (roundMultiplier - 1)
