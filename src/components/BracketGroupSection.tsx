@@ -15,6 +15,7 @@ import {
   updateMatchResult,
 } from '../utils/brackets'
 import { FaPen } from 'react-icons/fa'
+import ThreeDotMenu from './ThreeDotMenu'
 
 type RenameTeamDialogProps = {
   participantId: Id
@@ -187,7 +188,6 @@ const GroupSection = ({
 
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
   const [saving, setSaving] = useState(false)
-  const [resetting, setResetting] = useState(false)
 
   const {
     register,
@@ -261,7 +261,7 @@ const GroupSection = ({
 
   const handleReset = useCallback(async () => {
     if (!selectedMatch) return
-    setResetting(true)
+
     try {
       await resetMatchResult(bracketData.manager, selectedMatch.id)
       await onMatchResultSaved?.()
@@ -270,21 +270,27 @@ const GroupSection = ({
       setError('root', {
         message: err instanceof Error ? err.message : 'Failed to reset match result.',
       })
-    } finally {
-      setResetting(false)
     }
   }, [selectedMatch, bracketData.manager, onMatchResultSaved, closeDialog, setError])
 
   const groupHasFinal = getGroupHasFinal(groupLabel, roundsByGroup, matchesByRound)
 
+  const isResettable =
+    selectedMatch &&
+    (selectedMatch.status === Status.Completed ||
+      bracketData.matchIds.gold?.has(selectedMatch.id) ||
+      (selectedMatch.status === Status.Running &&
+        (selectedMatch.opponent1?.score != null || selectedMatch.opponent2?.score != null)))
+
+  const possibleActions = [
+    ...(isResettable ? [{ label: 'Reset match', onClick: () => handleReset() }] : []),
+  ]
+
   return (
-    <div className="flex flex-row" style={{ color: bracketStyles.textColor }}>
+    <div className="flex flex-row " style={{ color: bracketStyles.textColor }}>
       {selectedMatch != null && (
-        <Dialog
-          title={`Edit match ${selectedMatch.id}`}
-          onClose={closeDialog}
-          busy={saving || resetting}
-        >
+        <Dialog title={`Edit match ${selectedMatch.id}`} onClose={closeDialog} busy={saving}>
+          <ThreeDotMenu items={possibleActions}></ThreeDotMenu>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1">
               <ParticipantNameEditor
@@ -335,21 +341,8 @@ const GroupSection = ({
               <button type="button" className="borderbutton" onClick={closeDialog}>
                 Cancel
               </button>
-              {(selectedMatch.status === Status.Completed ||
-                bracketData.matchIds.gold?.has(selectedMatch.id) ||
-                (selectedMatch.status === Status.Running &&
-                  (selectedMatch.opponent1?.score != null ||
-                    selectedMatch.opponent2?.score != null))) && (
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  disabled={saving || resetting}
-                  className="borderbutton"
-                >
-                  {resetting ? 'Resetting…' : 'Reset'}
-                </button>
-              )}
-              <button type="submit" disabled={saving || resetting} className="mainbutton">
+
+              <button type="submit" disabled={saving} className="mainbutton">
                 {saving ? 'Saving…' : 'Save'}
               </button>
             </div>

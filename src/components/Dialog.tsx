@@ -49,7 +49,7 @@ const Dialog = ({
       aria-labelledby={titleId}
     >
       <div
-        className={`w-full ${maxWidthClass} bg-darkgray border border-lightgray text-white`}
+        className={`w-full ${maxWidthClass} bg-darkgray border border-lightgray text-white relative`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 flex flex-col gap-4">
