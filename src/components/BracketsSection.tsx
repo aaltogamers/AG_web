@@ -1,4 +1,4 @@
-import type { BracketData, BracketStyles } from '../types/types'
+import type { BracketData, BracketStyles, Tournament } from '../types/types'
 import { getMatchesByRound, getParticipantsById, getRoundsByGroup } from '../utils/brackets'
 
 import GroupSection from './BracketGroupSection'
@@ -10,6 +10,8 @@ type Props = {
   onMatchResultSaved?: () => Promise<void>
   // When set, only these group labels are rendered. Default: both.
   visibleGroups?: ('Upper' | 'Lower')[]
+  tournamentSlug: string
+  onStreamMatchSaved?: (tournament: Tournament) => void
 }
 
 const BracketsSection = ({
@@ -18,6 +20,8 @@ const BracketsSection = ({
   isEditingMode,
   onMatchResultSaved,
   visibleGroups,
+  tournamentSlug,
+  onStreamMatchSaved,
 }: Props) => {
   const roundsByGroup = getRoundsByGroup(data)
   const matchesByRound = getMatchesByRound(data)
@@ -45,6 +49,8 @@ const BracketsSection = ({
           bracketData={data}
           isEditingMode={isEditingMode}
           onMatchResultSaved={onMatchResultSaved}
+          tournamentSlug={tournamentSlug}
+          onStreamMatchSaved={onStreamMatchSaved}
         />
       )}
       {showLower && (
@@ -57,6 +63,8 @@ const BracketsSection = ({
           bracketData={data}
           isEditingMode={isEditingMode}
           onMatchResultSaved={onMatchResultSaved}
+          tournamentSlug={tournamentSlug}
+          onStreamMatchSaved={onStreamMatchSaved}
         />
       )}
     </div>

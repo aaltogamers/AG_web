@@ -37,6 +37,8 @@ type Props = {
   // Called after a successful save so the parent page can re-read the
   // tournament (e.g. to flip "not started" → "started" once scores land).
   onSaved?: (snapshot: BracketDatabaseSnapshot) => void
+  /** Called after the stream match ID is persisted; parent should merge `t.updated` into state. */
+  onStreamMatchSaved?: (tournament: Tournament) => void
   // Optional overrides used by stream mode.
   bracketStyles?: BracketStyles
   // Indices into the internal `data: BracketData[]` array to show. Default:
@@ -50,6 +52,7 @@ const TournamentBracketView = ({
   tournament,
   isAdmin,
   onSaved,
+  onStreamMatchSaved,
   bracketStyles: bracketStylesProp,
   visibleStages,
   visibleGroups,
@@ -98,7 +101,8 @@ const TournamentBracketView = ({
           manager,
           stages[0].id,
           stages[1].id,
-          tournament.teamCount
+          tournament.teamCount,
+          tournament.streamMatchId ?? null
         )
         if (cancelled) return
         managerRef.current = manager
@@ -115,7 +119,7 @@ const TournamentBracketView = ({
     return () => {
       cancelled = true
     }
-  }, [tournament.data, tournament.teamCount])
+  }, [tournament.data, tournament.teamCount, tournament.streamMatchId])
 
   // Called by BracketGroupSection after a successful library mutation. We
   // refresh the on-screen data from the manager AND persist the full snapshot
@@ -137,7 +141,8 @@ const TournamentBracketView = ({
       const refreshedQualifier = await getBracketData(
         manager,
         qualifierStageId,
-        tournament.teamCount
+        tournament.teamCount,
+        tournament.streamMatchId ?? null
       )
       await syncFinalsSeedingFromQualifiers(manager, refreshedQualifier, finalsStageId)
     } catch (err) {
@@ -148,7 +153,8 @@ const TournamentBracketView = ({
       manager,
       qualifierStageId,
       finalsStageId,
-      tournament.teamCount
+      tournament.teamCount,
+      tournament.streamMatchId ?? null
     )
     setData(newData)
     const snapshot = (await manager.export()) as unknown as BracketDatabaseSnapshot
@@ -158,7 +164,7 @@ const TournamentBracketView = ({
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to save bracket')
     }
-  }, [tournament.slug, tournament.teamCount, onSaved])
+  }, [tournament.slug, tournament.teamCount, tournament.streamMatchId, onSaved])
 
   if (error) {
     return <div className="text-red text-center my-8">{error}</div>
@@ -182,6 +188,8 @@ const TournamentBracketView = ({
           isEditingMode={isAdmin}
           onMatchResultSaved={refreshAfterMutation}
           visibleGroups={visibleGroups}
+          tournamentSlug={tournament.slug}
+          onStreamMatchSaved={onStreamMatchSaved}
         />
       ))}
     </div>

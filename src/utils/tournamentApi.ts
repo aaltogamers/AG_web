@@ -21,6 +21,7 @@ export type UpdateTournamentSettingsPayload = {
   // Pass `null` to clear the built bracket (e.g. when changing settings before
   // start), or a full exported snapshot to overwrite.
   data?: BracketDatabaseSnapshot | null
+  streamMatchId?: number | null
 }
 
 const handleError = async (res: Response, fallback: string): Promise<never> => {

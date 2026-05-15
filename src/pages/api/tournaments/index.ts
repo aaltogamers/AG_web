@@ -9,6 +9,7 @@ import {
   BracketType,
   TOURNAMENT_BRACKET_TYPES,
   TOURNAMENT_TEAM_COUNTS,
+  Tournament,
   TournamentSummary,
   TournamentTeamCount,
 } from '../../../types/types'
@@ -21,6 +22,7 @@ type TournamentRow = {
   teams: string[]
   data: BracketDatabaseSnapshot | null
   updated_at?: Date
+  stream_match_id?: number | null
 }
 
 const rowToSummary = (r: TournamentRow): TournamentSummary => ({
@@ -93,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const result = await pool.query(
         `INSERT INTO tournaments (slug, name, bracket_type, team_count, teams, updated_at)
          VALUES ($1, $2, $3, $4, $5::jsonb, now())
-         RETURNING slug, name, bracket_type, team_count, teams, data, updated_at`,
+         RETURNING slug, name, bracket_type, team_count, teams, data, updated_at, stream_match_id`,
         [tournamentSlug, name, body.bracketType, body.teamCount, JSON.stringify(teams)]
       )
       const row = result.rows[0] as TournamentRow
@@ -103,12 +105,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({ error: 'Internal error' })
       }
       const updatedAt = ua instanceof Date ? ua.toISOString() : new Date(ua).toISOString()
+      const tournament: Tournament = {
+        ...rowToSummary(row),
+        data: row.data ?? null,
+        updatedAt,
+        streamMatchId: row.stream_match_id ?? null,
+      }
       return res.status(201).json({
-        tournament: {
-          ...rowToSummary(row),
-          data: row.data ?? null,
-          updatedAt,
-        },
+        tournament,
       })
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)

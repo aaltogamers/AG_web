@@ -216,6 +216,7 @@ export type BracketData = {
     silver: Set<Id>
     gold: Set<Id>
   }
+  streamMatchId: Id | null
 }
 
 export type BracketStyles = {
@@ -286,6 +287,8 @@ export type Tournament = TournamentSettings & {
   isStarted: boolean
   /** ISO timestamp from DB `updated_at`; used for live refresh / change detection. */
   updatedAt: string
+  /** Match ID from bracket snapshot designated for stream overlay; null if unset. */
+  streamMatchId: number | null
 }
 
 export type StreamConfig = {

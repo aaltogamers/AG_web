@@ -343,7 +343,8 @@ const MATCH_IDS = {
 export const getBracketData = async (
   manager: BracketsManager,
   stageId: Id,
-  teamCount: 8 | 16 | 32 | 64
+  teamCount: 8 | 16 | 32 | 64,
+  streamMatchId: Id | null = null
 ): Promise<BracketData> => {
   const {
     group: groups,
@@ -375,6 +376,7 @@ export const getBracketData = async (
     prevMatches,
     siblingMatches,
     matchIds,
+    streamMatchId,
   }
 }
 
@@ -492,11 +494,33 @@ export const getBracketsData = async (
   manager: BracketsManager,
   qualifierStageId: Id,
   finalsStageId: Id,
-  teamCount: 8 | 16 | 32 | 64
+  teamCount: 8 | 16 | 32 | 64,
+  streamMatchId: Id | null = null
 ): Promise<[BracketData, BracketData]> => {
   const [mainBracketData, finalsBracketData] = await Promise.all([
-    getBracketData(manager, qualifierStageId, teamCount),
-    getBracketData(manager, finalsStageId, teamCount),
+    getBracketData(manager, qualifierStageId, teamCount, streamMatchId),
+    getBracketData(manager, finalsStageId, teamCount, streamMatchId),
   ])
   return [mainBracketData, finalsBracketData]
+}
+
+export const teamNameToShortName = (teamName: string): string => {
+  const upperCaseName = teamName.toUpperCase()
+
+  if (teamName.length <= 3) return upperCaseName
+
+  const split = upperCaseName.split(' ')
+
+  if (split.length === 2 || split.length === 3) {
+    return split.map((s) => s[0]).join('')
+  }
+
+  if (split.length > 3) {
+    return split
+      .slice(0, 3)
+      .map((s) => s[0])
+      .join('')
+  }
+
+  return upperCaseName.slice(0, 3)
 }

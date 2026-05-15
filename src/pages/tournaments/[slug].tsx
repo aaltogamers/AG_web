@@ -270,6 +270,10 @@ const TournamentPage = () => {
               // Re-read so `isStarted` updates after scores are added.
               refresh()
             }}
+            onStreamMatchSaved={(t) => {
+              setTournament(t)
+              lastServerUpdatedAtRef.current = t.updatedAt
+            }}
           />
         ) : (
           <div className="text-center mt-8 opacity-75">

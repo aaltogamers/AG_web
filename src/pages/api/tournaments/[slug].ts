@@ -21,6 +21,7 @@ type TournamentRow = {
   teams: string[]
   data: BracketDatabaseSnapshot | null
   updated_at: Date
+  stream_match_id: number | null
 }
 
 const updatedAtToIso = (v: unknown): string => {
@@ -38,6 +39,7 @@ const rowToTournament = (r: TournamentRow): Tournament => ({
   data: r.data ?? null,
   isStarted: isTournamentStarted(r.data ?? null),
   updatedAt: updatedAtToIso(r.updated_at),
+  streamMatchId: r.stream_match_id ?? null,
 })
 
 type PutBody = {
@@ -47,6 +49,7 @@ type PutBody = {
   teams?: unknown
   // `data: null` clears the built bracket; an object overwrites it.
   data?: unknown
+  streamMatchId?: unknown
 }
 
 const isAllowedBracketType = (t: unknown): t is BracketType =>
@@ -77,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const result = await pool.query(
-      `SELECT slug, name, bracket_type, team_count, teams, data, updated_at
+      `SELECT slug, name, bracket_type, team_count, teams, data, updated_at, stream_match_id
        FROM tournaments WHERE slug = $1`,
       [slug]
     )
@@ -95,7 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await client.query('BEGIN')
 
       const existingRes = await client.query(
-        `SELECT slug, name, bracket_type, team_count, teams, data, updated_at
+        `SELECT slug, name, bracket_type, team_count, teams, data, updated_at, stream_match_id
          FROM tournaments WHERE slug = $1 FOR UPDATE`,
         [slug]
       )
@@ -196,6 +199,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
+      if (body.streamMatchId !== undefined) {
+        if (body.streamMatchId === null) {
+          updates.push(`stream_match_id = NULL`)
+        } else if (
+          typeof body.streamMatchId !== 'number' ||
+          !Number.isInteger(body.streamMatchId) ||
+          body.streamMatchId < 0
+        ) {
+          await client.query('ROLLBACK')
+          return res.status(400).json({ error: 'Invalid streamMatchId' })
+        } else {
+          params.push(body.streamMatchId)
+          updates.push(`stream_match_id = $${params.length}`)
+        }
+      }
+
       if (updates.length === 0) {
         await client.query('ROLLBACK')
         return res.status(200).json({ tournament: rowToTournament(existing) })
@@ -207,7 +226,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         result = await client.query(
           `UPDATE tournaments SET ${updates.join(', ')} WHERE slug = $${params.length}
-           RETURNING slug, name, bracket_type, team_count, teams, data, updated_at`,
+           RETURNING slug, name, bracket_type, team_count, teams, data, updated_at, stream_match_id`,
           params
         )
       } catch (err) {

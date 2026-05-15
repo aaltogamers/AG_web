@@ -6,7 +6,7 @@ import { useForm, SubmitHandler } from 'react-hook-form'
 
 import MatchResultRow from './BracketMatchResultRow'
 import Dialog from './Dialog'
-import { BracketData, BracketStyles } from '../types/types'
+import type { BracketData, BracketStyles, Tournament } from '../types/types'
 import {
   getGroupHasFinal,
   isRoundAllBye,
@@ -14,6 +14,7 @@ import {
   roundToLabel,
   updateMatchResult,
 } from '../utils/brackets'
+import { updateTournament } from '../utils/tournamentApi'
 import { FaPen } from 'react-icons/fa'
 import ThreeDotMenu from './ThreeDotMenu'
 
@@ -171,6 +172,8 @@ type Props = {
   bracketData: BracketData
   isEditingMode: boolean
   onMatchResultSaved?: () => Promise<void>
+  tournamentSlug: string
+  onStreamMatchSaved?: (tournament: Tournament) => void
 }
 
 const GroupSection = ({
@@ -182,12 +185,15 @@ const GroupSection = ({
   bracketData,
   isEditingMode,
   onMatchResultSaved,
+  tournamentSlug,
+  onStreamMatchSaved,
 }: Props) => {
   const matchHeight = bracketStyles.teamHeight * 2
   const baseGap = bracketStyles.teamGapY
 
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
   const [saving, setSaving] = useState(false)
+  const [streamSaving, setStreamSaving] = useState(false)
 
   const {
     register,
@@ -273,6 +279,41 @@ const GroupSection = ({
     }
   }, [selectedMatch, bracketData.manager, onMatchResultSaved, closeDialog, setError])
 
+  const handleStreamGameToggle = useCallback(async () => {
+    if (!selectedMatch) return
+
+    const matchNum = Number(selectedMatch.id)
+    if (!Number.isInteger(matchNum) || matchNum < 0) {
+      setError('root', { message: 'Invalid match id.' })
+      return
+    }
+
+    const isCurrentStream =
+      bracketData.streamMatchId != null && Number(bracketData.streamMatchId) === matchNum
+
+    setStreamSaving(true)
+    try {
+      const updated = await updateTournament(tournamentSlug, {
+        streamMatchId: isCurrentStream ? null : matchNum,
+      })
+      onStreamMatchSaved?.(updated)
+      closeDialog()
+    } catch (err) {
+      setError('root', {
+        message: err instanceof Error ? err.message : 'Failed to update stream game.',
+      })
+    } finally {
+      setStreamSaving(false)
+    }
+  }, [
+    selectedMatch,
+    bracketData.streamMatchId,
+    tournamentSlug,
+    onStreamMatchSaved,
+    closeDialog,
+    setError,
+  ])
+
   const groupHasFinal = getGroupHasFinal(groupLabel, roundsByGroup, matchesByRound)
 
   const isResettable =
@@ -282,14 +323,27 @@ const GroupSection = ({
       (selectedMatch.status === Status.Running &&
         (selectedMatch.opponent1?.score != null || selectedMatch.opponent2?.score != null)))
 
+  const isThisStreamGame =
+    selectedMatch != null &&
+    bracketData.streamMatchId != null &&
+    Number(bracketData.streamMatchId) === Number(selectedMatch.id)
+
   const possibleActions = [
     ...(isResettable ? [{ label: 'Reset match', onClick: () => handleReset() }] : []),
+    {
+      label: isThisStreamGame ? 'Unmark as stream game' : 'Mark as stream game',
+      onClick: () => handleStreamGameToggle(),
+    },
   ]
 
   return (
     <div className="flex flex-row " style={{ color: bracketStyles.textColor }}>
       {selectedMatch != null && (
-        <Dialog title={`Edit match ${selectedMatch.id}`} onClose={closeDialog} busy={saving}>
+        <Dialog
+          title={`Edit match ${selectedMatch.id}`}
+          onClose={closeDialog}
+          busy={saving || streamSaving}
+        >
           <ThreeDotMenu items={possibleActions}></ThreeDotMenu>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1">
@@ -342,7 +396,7 @@ const GroupSection = ({
                 Cancel
               </button>
 
-              <button type="submit" disabled={saving} className="mainbutton">
+              <button type="submit" disabled={saving || streamSaving} className="mainbutton">
                 {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
