@@ -365,15 +365,33 @@ const GroupSection = ({
           .slice(0, i + 1)
           .filter((r) => !isRoundAllBye(r, matchesByRound)).length
 
+        const isInFirstRoundGroup = roundsByGroup[groupLabel].some((r) => r.id === 0)
+
+        const allFirstRoundMatchPairsHaveOneBye = matchesByRound[0]?.every((match) => {
+          const siblingMatch = bracketData.siblingMatches[match.id]
+          const isSiblingBye = siblingMatch?.opponent1 === null || siblingMatch?.opponent2 === null
+          const isMatchBye = match.opponent1 === null || match.opponent2 === null
+          return isSiblingBye || isMatchBye
+        })
+
+        const shouldCollapseFirstRound = isInFirstRoundGroup && allFirstRoundMatchPairsHaveOneBye
+
+        const shouldCollapseThisRound = shouldCollapseFirstRound && round.id === 0
+
         const roundDepth = groupLabel === 'Lower' ? Math.floor(i / 2) : i
-        const roundMultiplier = 2 ** roundDepth
+        let roundMultiplier =
+          2 ** (roundDepth - (shouldCollapseFirstRound && !shouldCollapseThisRound ? 1 : 0))
+
         const roundGap = baseGap * roundMultiplier + matchHeight * (roundMultiplier - 1)
         const roundOffset = roundGap / 2
 
         const nextRound = roundsByGroup[groupLabel]?.[i + 1]
         const nextRoundMatches = nextRound ? (matchesByRound[nextRound.id] ?? []) : []
         const hasNextRound = nextRound != null
-        const shouldMergePairs = hasNextRound && roundMatches.length === nextRoundMatches.length * 2
+        const shouldMergePairs =
+          hasNextRound &&
+          roundMatches.length === nextRoundMatches.length * 2 &&
+          !shouldCollapseThisRound
 
         const connectorThickness = 2
         const connectorFullGap = bracketStyles.teamGapX - bracketStyles.basicFontSize * 0.2
@@ -422,6 +440,10 @@ const GroupSection = ({
                   siblingMatch?.opponent1 === null || siblingMatch?.opponent2 === null
 
                 const isBothBye = isBye && isSiblingMatchBye
+
+                if (shouldCollapseThisRound && matchIndex % 2 === 1) {
+                  return null
+                }
 
                 return (
                   <div
