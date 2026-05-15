@@ -520,9 +520,10 @@ const GroupSection = ({
                                   ? matchCenter + nextMatchCenterDistance / 2
                                   : matchCenter,
                                 width: connectorThickness,
-                                height: isSiblingMatchBye
-                                  ? nextMatchCenterDistance / 2 + connectorThickness / 2
-                                  : nextMatchCenterDistance,
+                                height:
+                                  isSiblingMatchBye || isBye
+                                    ? nextMatchCenterDistance / 2 + connectorThickness / 2
+                                    : nextMatchCenterDistance,
                                 backgroundColor: bracketStyles.connectorColor,
                               }}
                             />
