@@ -6,7 +6,7 @@ export type DialogProps = {
   // Called when the user requests dismissal (backdrop click or Escape key).
   // Suppressed while `busy` is true so async work can't be interrupted.
   onClose: () => void
-  title: string
+  title: string | ReactNode
   children: ReactNode
   busy?: boolean
   // Tailwind max-width class for the inner container. Defaults to `max-w-sm`.

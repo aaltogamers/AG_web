@@ -17,6 +17,7 @@ import {
 import { updateTournament } from '../utils/tournamentApi'
 import { FaPen } from 'react-icons/fa'
 import ThreeDotMenu from './ThreeDotMenu'
+import TwitchLogo from './TwitchLogo'
 
 type RenameTeamDialogProps = {
   participantId: Id
@@ -323,27 +324,28 @@ const GroupSection = ({
       (selectedMatch.status === Status.Running &&
         (selectedMatch.opponent1?.score != null || selectedMatch.opponent2?.score != null)))
 
-  const isThisStreamGame =
-    selectedMatch != null &&
-    bracketData.streamMatchId != null &&
-    Number(bracketData.streamMatchId) === Number(selectedMatch.id)
-
   const possibleActions = [
     ...(isResettable ? [{ label: 'Reset match', onClick: () => handleReset() }] : []),
     {
-      label: isThisStreamGame ? 'Unmark as stream game' : 'Mark as stream game',
+      label:
+        selectedMatch?.id === bracketData.streamMatchId
+          ? 'Unmark as stream game'
+          : 'Mark as stream game',
       onClick: () => handleStreamGameToggle(),
     },
   ]
 
+  const dialogTitle = (
+    <div className="flex items-center gap-2">
+      Edit match {selectedMatch?.id}
+      {selectedMatch?.id === bracketData.streamMatchId && <TwitchLogo size={24} />}
+    </div>
+  )
+
   return (
     <div className="flex flex-row " style={{ color: bracketStyles.textColor }}>
       {selectedMatch != null && (
-        <Dialog
-          title={`Edit match ${selectedMatch.id}`}
-          onClose={closeDialog}
-          busy={saving || streamSaving}
-        >
+        <Dialog title={dialogTitle} onClose={closeDialog} busy={saving || streamSaving}>
           <ThreeDotMenu items={possibleActions}></ThreeDotMenu>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1">
@@ -515,8 +517,17 @@ const GroupSection = ({
                       style={{
                         backgroundColor: bracketStyles.teamNameColor,
                         opacity: isBye ? 0.0 : 1,
+                        outline:
+                          match.id === bracketData.streamMatchId ? `2px solid #9344fe` : undefined,
                       }}
                     >
+                      {match.id === bracketData.streamMatchId && (
+                        <TwitchLogo
+                          size={16}
+                          className="absolute left-1/2 transform -translate-x-1/2 top-[-20px]"
+                        />
+                      )}
+
                       <MatchResultRow
                         match={match}
                         participant="opponent1"
