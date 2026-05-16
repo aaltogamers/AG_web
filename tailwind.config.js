@@ -1,7 +1,11 @@
 module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
-    fontFamily: { blockletter: 'Blockletter', oswald: 'Oswald' },
+    fontFamily: {
+      blockletter: 'Blockletter',
+      oswald: 'Oswald',
+      beaufort: ['Beaufort', 'sans-serif'],
+    },
     extend: {
       colors: {
         black: '#1C1D26',
