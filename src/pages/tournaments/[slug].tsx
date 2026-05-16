@@ -5,9 +5,7 @@ import { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import PageWrapper from '../../components/PageWrapper'
-import TournamentBracketView, {
-  defaultBracketStyles,
-} from '../../components/TournamentBracketView'
+import TournamentBracketView, { defaultBracketStyles } from '../../components/TournamentBracketView'
 import TournamentSetup from '../../components/TournamentSetup'
 import { Tournament, getBracketTypeLabel } from '../../types/types'
 import { checkAdminSession } from '../../utils/adminAuth'
@@ -118,10 +116,7 @@ const TournamentPage = () => {
     () => parseStreamBracketStyles(router.query, defaultBracketStyles),
     [router.query]
   )
-  const streamStageFilter = useMemo(
-    () => parseStreamStageFilter(router.query),
-    [router.query]
-  )
+  const streamStageFilter = useMemo(() => parseStreamStageFilter(router.query), [router.query])
 
   const showSetup = useMemo(
     () => isAdmin && (editingSettings || !tournament?.data),
@@ -221,7 +216,8 @@ const TournamentPage = () => {
             <h1 className="text-4xl">{tournament.name}</h1>
             <p className="text-sm opacity-75">
               {getBracketTypeLabel(tournament.bracketType)} — {tournament.teamCount} teams
-              {isAdmin && (tournament.isStarted ? ' — started (settings locked)' : ' — not started')}
+              {isAdmin &&
+                (tournament.isStarted ? ' — started (settings locked)' : ' — not started')}
             </p>
           </div>
           {isAdmin && (
@@ -250,11 +246,19 @@ const TournamentPage = () => {
                   {restarting ? 'Restarting…' : 'Restart tournament'}
                 </button>
               )}
+
               <Link
                 href={`/tournaments/${encodeURIComponent(tournament.slug)}/stream-customization`}
                 className="borderbutton"
               >
                 Stream customization
+              </Link>
+
+              <Link
+                href={`/tournaments/${encodeURIComponent(tournament.slug)}/spectator-view`}
+                className="borderbutton"
+              >
+                Spectator view
               </Link>
             </div>
           )}
