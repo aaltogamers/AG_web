@@ -49,13 +49,13 @@ const SpectatorViewNames = ({ team1, team2 }: { team1: string; team2: string }) 
     <>
       <span
         id={OVERLAY_TEAM1_ID}
-        className="absolute top-1 left-[25%] text-left font-beaufort text-5xl tracking-wide text-[#0783bd]"
+        className="absolute top-1 left-[25%] text-left font-beaufort text-5xl font-bold tracking-wide text-[#0783bd]"
       >
         {team1}
       </span>
       <span
         id={OVERLAY_TEAM2_ID}
-        className="absolute top-1 right-[25%] text-right font-beaufort text-5xl tracking-wide text-[#b63f42]"
+        className="absolute top-1 right-[25%] text-right font-beaufort text-5xl font-bold tracking-wide text-[#b63f42]"
       >
         {team2}
       </span>

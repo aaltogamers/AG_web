@@ -1,9 +1,84 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&display=swap');
 @import url('https://fonts.cdnfonts.com/css/blockletter');
 
+/* Beaufort: use font-beaufort + Tailwind font-light (300) … font-extrabold (800) and italic. */
 @font-face {
   font-family: 'Beaufort';
-  src: url('/fonts/Beaufort.ttf') format('truetype');
+  src: url('/fonts/Beaufort-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/Beaufort-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/Beaufor-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/Beaufort-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/Beaufort-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/Beaufort-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/Beaufort-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/Beaufort-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/Beaufort-Heavy.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Beaufort';
+  src: url('/fonts/Beaufort-HeavyItalic.ttf') format('truetype');
+  font-weight: 800;
+  font-style: italic;
   font-display: swap;
 }
 
