@@ -566,7 +566,7 @@ export class MainMenu extends Scene {
       const roundedDelta = Math.round(delta / 5)
       this.points += roundedDelta
 
-      setState('points', this.points)
+      setState('points', this.points, false)
 
       for (const player of this.players) {
         if (!player?.sprite) return
@@ -607,7 +607,7 @@ export class MainMenu extends Scene {
         }
         const cooldown = getState('smallSpell')
         this.smallAccumulator = cooldown
-        setState('smallAccumulator', cooldown)
+        setState('smallAccumulator', cooldown, false)
       }
       if (this.bigAccumulator <= 0) {
         for (let a = 0; a < Phaser.Math.RND.between(1, 3); a++) {
@@ -616,7 +616,7 @@ export class MainMenu extends Scene {
         }
         const cooldown = getState('bigSpell')
         this.bigAccumulator = cooldown
-        setState('bigAccumulator', cooldown)
+        setState('bigAccumulator', cooldown, false)
       }
 
       this.pointText?.setText(`Points: ${this.points}`)
