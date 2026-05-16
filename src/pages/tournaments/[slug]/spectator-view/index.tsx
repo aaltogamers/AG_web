@@ -44,18 +44,18 @@ function findStreamMatchNames(
   return { full1: '', full2: '' }
 }
 
-const SpectatorViewNames = ({ team1, team2 }) => {
+const SpectatorViewNames = ({ team1, team2 }: { team1: string; team2: string }) => {
   return (
     <>
       <span
         id={OVERLAY_TEAM1_ID}
-        className="absolute top-4 left-[8%] max-w-[38%] text-left text-3xl md:text-4xl font-medium tracking-wide text-[#0783bd] truncate"
+        className="absolute top-1 left-[25%] text-left text-5xl font-medium tracking-wide text-[#0783bd]"
       >
         {team1}
       </span>
       <span
         id={OVERLAY_TEAM2_ID}
-        className="absolute top-4 right-[8%] max-w-[38%] text-right text-3xl md:text-4xl font-medium tracking-wide text-[#b63f42] truncate"
+        className="absolute top-1 right-[25%] text-right text-5xl font-medium tracking-wide text-[#b63f42]"
       >
         {team2}
       </span>
@@ -250,7 +250,8 @@ const SpectatorViewPage = () => {
 
           <p className="mb-4 text-sm opacity-90">
             Stream spectator overlay shows only two shortened team labels for the match marked as
-            the <strong className="font-medium">stream game</strong> on the bracket.
+            the <strong className="font-medium">stream game</strong> on the bracket. Add{' '}
+            <span className="font-mono">?stream</span> to the current url to view it.
           </p>
 
           <div className="mb-6 p-4 rounded-md border border-lightgray border-opacity-40">
