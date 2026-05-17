@@ -22,6 +22,7 @@ import { getTournament, getTournamentUpdatedAt } from '../../../../utils/tournam
 /** Stable IDs for OBS / browser-source custom CSS (see info section on this page). */
 const OVERLAY_TEAM1_ID = 'team1'
 const OVERLAY_TEAM2_ID = 'team2'
+const OVERLAY_TEAM_CONTAINER_ID = 'team-container'
 
 const POLL_MS = 2000
 
@@ -46,20 +47,18 @@ function findStreamMatchNames(
 
 const SpectatorViewNames = ({ team1, team2 }: { team1: string; team2: string }) => {
   return (
-    <>
-      <span
-        id={OVERLAY_TEAM1_ID}
-        className="absolute top-1 left-[25%] text-left font-beaufort text-5xl font-bold tracking-wide text-[#0783bd]"
-      >
+    <div
+      className="absolute top-1 font-bold font-beaufort text-5xl w-full flex justify-center text-center gap-[61%]"
+      id={OVERLAY_TEAM_CONTAINER_ID}
+    >
+      <span id={OVERLAY_TEAM1_ID} className="text-[#0783bd] w-96 text-right">
         {team1}
       </span>
-      <span
-        id={OVERLAY_TEAM2_ID}
-        className="absolute top-1 right-[25%] text-right font-beaufort text-5xl font-bold tracking-wide text-[#b63f42]"
-      >
+
+      <span id={OVERLAY_TEAM2_ID} className="text-[#b63f42] w-96 text-left">
         {team2}
       </span>
-    </>
+    </div>
   )
 }
 
