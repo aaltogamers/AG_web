@@ -79,7 +79,7 @@ const MatchResultRow = ({
             participantsById[participantData.id]?.name
           )}
         </div>
-        {participantData?.result && !isBye && (
+        {participantData?.score != undefined && !isBye && (
           <div
             className="text-center aspect-square rounded-r-sm"
             style={{
@@ -88,7 +88,7 @@ const MatchResultRow = ({
               backgroundColor: isWin ? bracketStyles.winScoreColor : bracketStyles.loseScoreColor,
             }}
           >
-            {participantData.score ?? ''}
+            {participantData.score}
             <div
               className="absolute flex items-center justify-center z-10"
               style={{
