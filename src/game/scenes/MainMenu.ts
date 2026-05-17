@@ -22,6 +22,7 @@ const radToXY = (rad: number) => {
 }
 
 export class MainMenu extends Scene {
+  doOnce: boolean = false
   joystick: nipplejs.JoystickManager | undefined = undefined
   playerStates: PlayerState[] = []
   players: {
@@ -315,55 +316,57 @@ export class MainMenu extends Scene {
 
   // called from rpc.ts
   gameWon() {
-    if (this.registry.get('isDesktop')) {
-      const id = getState('winner')
-      const winner = this.playerStates.find((p) => p.id == id)
-      this.add
-        .text(
-          this.winMessagePos.x,
-          this.winMessagePos.y,
-          winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
-          {
-            fontFamily: 'goldman',
-            fontSize: 100,
-            align: 'center',
-          }
-        )
-        .setOrigin(0.5, 0.5)
-    }
-
-    if (isHost()) {
-      setState('gameActive', false, true)
-      resetPlayersStates(['spectator', 'points', 'name', 'selected'])
-      resetStates([
-        ...this.playerStates.map((p) => p.id),
-        ...this.registry.get('spectators').map((p: PlayerState) => p.id),
-        'originalHostID',
-        'spectators',
-        'winner',
-        'points',
-        'difficulty',
-        'launched',
-      ])
-      setState('ready', [], true)
-      this.scaler?.remove()
-    }
-
-    this.time.delayedCall(5000, () => {
-      this.sound.stopAll()
-      this.scene.remove('preloader')
-      if (!this.scene.get('Preloader')) {
-        this.scene.add('Preloader', Preloader)
+    if (!this.doOnce) {
+      this.doOnce = true
+      if (this.registry.get('isDesktop')) {
+        const id = getState('winner')
+        const winner = this.playerStates.find((p) => p.id == id)
+        this.add
+          .text(
+            this.winMessagePos.x,
+            this.winMessagePos.y,
+            winner?.getState('name') + ' won \n with ' + winner?.getState('points') + ' points',
+            {
+              fontFamily: 'goldman',
+              fontSize: 100,
+              align: 'center',
+            }
+          )
+          .setOrigin(0.5, 0.5)
       }
-      this.scene.start('Preloader')
-      this.matter.world.remove(this.matter.world.getAllBodies())
 
-      this.scene.remove('MainMenu')
-      setMainMenuRef(undefined)
-      this.joystick?.destroy()
-      myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 }, true)
-      myPlayer()?.setState('pos', { x: 940, y: 540 }, true)
-    })
+      if (isHost()) {
+        setState('gameActive', false, true)
+        resetPlayersStates(['spectator', 'points', 'name', 'selected'])
+        resetStates([
+          ...this.playerStates.map((p) => p.id),
+          ...this.registry.get('spectators').map((p: PlayerState) => p.id),
+          'originalHostID',
+          'spectators',
+          'winner',
+          'points',
+          'difficulty',
+          'launched',
+        ])
+        setState('ready', [], true)
+        this.scaler?.remove()
+      }
+
+      this.time.delayedCall(5000, () => {
+        this.sound.stopAll()
+        if (!this.scene.get('Preloader')) {
+          this.scene.add('Preloader', Preloader)
+        }
+        this.scene.start('Preloader')
+        this.matter.world.remove(this.matter.world.getAllBodies())
+
+        this.scene.remove('MainMenu')
+        setMainMenuRef(undefined)
+        this.joystick?.destroy()
+        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 }, true)
+        myPlayer()?.setState('pos', { x: 940, y: 540 }, true)
+      })
+    }
   }
 
   // called from rpc.ts
@@ -445,7 +448,8 @@ export class MainMenu extends Scene {
         myPlayer()?.setState('joystick', { ...angle, force: data.force })
       })
       this.joystick?.on('end', () => {
-        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 }, true)
+        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
+        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
       })
     }
 
