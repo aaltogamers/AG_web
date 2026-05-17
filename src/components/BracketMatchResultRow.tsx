@@ -89,38 +89,45 @@ const MatchResultRow = ({
             }}
           >
             {participantData.score}
-            <div
-              className="absolute flex items-center justify-center z-10"
-              style={{
-                left: bracketStyles.teamWidth + 4,
-                top: 0,
-                height: bracketStyles.teamHeight,
-                lineHeight: `${bracketStyles.teamHeight}px`,
-              }}
-            >
-              {(() => {
-                let icon: { icon: React.ComponentType<{ color?: string }>; color?: string } | null =
-                  null
 
-                if (bracketData.matchIds.qualifying?.has(match.id) && isWin) {
-                  icon = QUALIFYING_ICON
-                }
+            {participantData.result && (
+              <div
+                className="absolute flex items-center justify-center z-10"
+                style={{
+                  left: bracketStyles.teamWidth + 4,
+                  top: 0,
+                  height: bracketStyles.teamHeight,
+                  lineHeight: `${bracketStyles.teamHeight}px`,
+                }}
+              >
+                {(() => {
+                  let icon: {
+                    icon: React.ComponentType<{ color?: string }>
+                    color?: string
+                  } | null = null
 
-                if (bracketData.matchIds.bronze?.has(match.id) && !isWin) {
-                  icon = THIRD_PLACE_ICON
-                }
+                  if (bracketData.matchIds.qualifying?.has(match.id) && isWin) {
+                    icon = QUALIFYING_ICON
+                  }
 
-                if (bracketData.matchIds.silver?.has(match.id) && !isWin) {
-                  icon = SECOND_PLACE_ICON
-                }
+                  if (bracketData.matchIds.bronze?.has(match.id) && !isWin) {
+                    icon = THIRD_PLACE_ICON
+                  }
 
-                if (bracketData.matchIds.gold?.has(match.id) && isWin) {
-                  icon = FIRST_PLACE_ICON
-                }
+                  if (bracketData.matchIds.silver?.has(match.id) && !isWin) {
+                    icon = SECOND_PLACE_ICON
+                  }
 
-                return icon ? <icon.icon color={icon.color || bracketStyles.winScoreColor} /> : null
-              })()}
-            </div>
+                  if (bracketData.matchIds.gold?.has(match.id) && isWin) {
+                    icon = FIRST_PLACE_ICON
+                  }
+
+                  return icon ? (
+                    <icon.icon color={icon.color || bracketStyles.winScoreColor} />
+                  ) : null
+                })()}
+              </div>
+            )}
           </div>
         )}
       </div>
