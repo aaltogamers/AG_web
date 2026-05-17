@@ -45,18 +45,51 @@ function findStreamMatchNames(
   return { full1: '', full2: '' }
 }
 
-const SpectatorViewNames = ({ team1, team2 }: { team1: string; team2: string }) => {
+const SpectatorViewScore = ({
+  score,
+  color,
+  team,
+}: {
+  score: 0 | 1 | 2
+  color: string
+  team: string
+}) => {
+  return (
+    <div className="flex flex-col gap-2 justify-center items-center mx-2" id={`${team}-score`}>
+      {[2, 1].map((s) => (
+        <div
+          className="w-8 h-3 border-[#c89c38] border-solid border-1"
+          id={`${team}-score-${s}`}
+          key={s}
+          style={{ backgroundColor: score >= s ? color : 'transparent' }}
+        />
+      ))}
+    </div>
+  )
+}
+
+const SpectatorViewNames = ({
+  team1,
+  team2,
+  isBo3,
+}: {
+  team1: string
+  team2: string
+  isBo3: boolean
+}) => {
   return (
     <div
       className="absolute top-1 font-bold font-beaufort text-5xl w-full flex justify-center text-center gap-[61%]"
       id={OVERLAY_TEAM_CONTAINER_ID}
     >
-      <span id={OVERLAY_TEAM1_ID} className="text-[#0783bd] w-96 text-right">
+      <span id={OVERLAY_TEAM1_ID} className="text-[#0783bd] w-60 text-right flex justify-end">
+        {isBo3 && <SpectatorViewScore score={2} color="#0783bd" team="team1" />}
         {team1}
       </span>
 
-      <span id={OVERLAY_TEAM2_ID} className="text-[#b63f42] w-96 text-left">
+      <span id={OVERLAY_TEAM2_ID} className="pl-3 text-[#b63f42] w-60 text-left flex justify-start">
         {team2}
+        {isBo3 && <SpectatorViewScore score={1} color="#b63f42" team="team2" />}
       </span>
     </div>
   )
@@ -223,7 +256,7 @@ const SpectatorViewPage = () => {
           <title>{tournament.name} — Spectator - Aalto Gamers</title>
         </Head>
         <div className="fixed inset-0 bg-transparent pointer-events-none overflow-hidden">
-          <SpectatorViewNames team1={shortOpponent1} team2={shortOpponent2} />
+          <SpectatorViewNames team1={shortOpponent1} team2={shortOpponent2} isBo3={false} />
         </div>
       </>
     )
@@ -299,7 +332,7 @@ const SpectatorViewPage = () => {
           <div className="mb-6 p-4 rounded-md border border-lightgray border-opacity-40  h-36">
             <h3 className="text-2xl mb-2">Preview</h3>
             <div className="relative">
-              <SpectatorViewNames team1={shortOpponent1} team2={shortOpponent2} />
+              <SpectatorViewNames team1={shortOpponent1} team2={shortOpponent2} isBo3={false} />
             </div>
           </div>
         </div>
