@@ -26,6 +26,7 @@ export class Preloader extends Scene {
   difficultyButton: Phaser.GameObjects.Container | undefined = undefined
   rpcInit = false
   doOnce = false
+  specText: Phaser.GameObjects.Text | undefined = undefined
 
   constructor() {
     super('Preloader')
@@ -216,6 +217,7 @@ export class Preloader extends Scene {
     this.qrCode = this.add.image(x, y, 'qr').setVisible(false).setDepth(20).setScale(4)
     this.reDrawNames()
   }
+
   create() {
     characterNames.forEach((name, i) => {
       const spectating = myPlayer().getState('spectator')
@@ -321,6 +323,18 @@ export class Preloader extends Scene {
       this.characterOutline?.setVisible(false)
     }
 
+    const specX = this.registry.get('isDesktop') ? 960 : 1320
+    const specSize = this.registry.get('isDesktop') ? 100 : 80
+
+    this.specText = this.add
+      .text(specX, 100, ' -  Spectating  - ', {
+        fontFamily: 'goldman',
+        fontSize: specSize,
+        backgroundColor: 'black',
+      })
+      .setOrigin(0.5, 0.5)
+      .setVisible(myPlayer().getState('spectator'))
+
     const specButtonLocation = this.registry.get('isDesktop') ? [90, 470] : [900, 30]
     this.specButton = this.add
       .container(...specButtonLocation)
@@ -334,6 +348,7 @@ export class Preloader extends Scene {
           if (!myPlayer()?.getState('spectator')) {
             myPlayer()?.setState('spectator', true, true)
             this.readyButton?.setVisible(false)
+            this.specText?.setVisible(true)
             this.characterOutline?.setVisible(false)
             this.characterButtons[this.selected].clearTint()
             this.characterButtons.forEach((button) => button.disableInteractive())
@@ -341,6 +356,7 @@ export class Preloader extends Scene {
           } else {
             myPlayer()?.setState('spectator', false, true)
             this.readyButton?.setVisible(true)
+            this.specText?.setVisible(false)
             this.characterOutline?.setVisible(true)
             this.characterButtons[this.selected].setTint(0x999999)
             this.characterButtons.forEach((button) => button.setInteractive())
