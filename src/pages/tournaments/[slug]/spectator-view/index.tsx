@@ -1,7 +1,7 @@
 'use client'
 import type { Database } from 'brackets-manager'
 import { BracketsManager } from 'brackets-manager'
-import type { Id } from 'brackets-model'
+import { Match, type Id } from 'brackets-model'
 import { InMemoryDatabase } from 'brackets-memory-db'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -26,23 +26,24 @@ const OVERLAY_TEAM_CONTAINER_ID = 'team-container'
 
 const POLL_MS = 2000
 
-function findStreamMatchNames(
+function findStreamMatch(
   brackets: BracketData[],
   streamMatchId: number | null
-): { full1: string; full2: string } {
-  if (streamMatchId == null) return { full1: '', full2: '' }
+): { name1: string; name2: string; match: Match | null } {
+  if (streamMatchId == null) return { name1: '', name2: '', match: null }
   const id = streamMatchId as Id
   for (const bd of brackets) {
     const match = bd.matches.find((m) => m.id === id)
     if (!match) continue
     const participantsById = getParticipantsById(bd)
-    const full1 =
+    const name1 =
       match.opponent1?.id != null ? (participantsById[match.opponent1.id]?.name ?? '') : ''
-    const full2 =
+    const name2 =
       match.opponent2?.id != null ? (participantsById[match.opponent2.id]?.name ?? '') : ''
-    return { full1, full2 }
+
+    return { name1, name2, match }
   }
-  return { full1: '', full2: '' }
+  return { name1: '', name2: '', match: null }
 }
 
 const SpectatorViewScore = ({
@@ -50,7 +51,7 @@ const SpectatorViewScore = ({
   color,
   team,
 }: {
-  score: 0 | 1 | 2
+  score: number // 0, 1, or 2
   color: string
   team: string
 }) => {
@@ -71,11 +72,15 @@ const SpectatorViewScore = ({
 const SpectatorViewNames = ({
   team1,
   team2,
-  isBo3,
+  showScores,
+  opponent1Score,
+  opponent2Score,
 }: {
   team1: string
   team2: string
-  isBo3: boolean
+  showScores: boolean
+  opponent1Score: number
+  opponent2Score: number
 }) => {
   return (
     <div
@@ -83,13 +88,13 @@ const SpectatorViewNames = ({
       id={OVERLAY_TEAM_CONTAINER_ID}
     >
       <span id={OVERLAY_TEAM1_ID} className="text-[#0783bd] w-60 text-right flex justify-end">
-        {isBo3 && <SpectatorViewScore score={2} color="#0783bd" team="team1" />}
+        {showScores && <SpectatorViewScore score={opponent1Score} color="#0783bd" team="team1" />}
         {team1}
       </span>
 
       <span id={OVERLAY_TEAM2_ID} className="pl-3 text-[#b63f42] w-60 text-left flex justify-start">
         {team2}
-        {isBo3 && <SpectatorViewScore score={1} color="#b63f42" team="team2" />}
+        {showScores && <SpectatorViewScore score={opponent2Score} color="#b63f42" team="team2" />}
       </span>
     </div>
   )
@@ -104,9 +109,9 @@ const SpectatorViewPage = () => {
 
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
   const [shortOpponent1, setShortOpponent1] = useState('')
   const [shortOpponent2, setShortOpponent2] = useState('')
+  const [streamMatch, setStreamMatch] = useState<Match | null>(null)
 
   const [origin, setOrigin] = useState('')
   const [copyMessage, setCopyMessage] = useState<string | null>(null)
@@ -125,21 +130,18 @@ const SpectatorViewPage = () => {
     if (!slug) return
     const t = await getTournament(slug)
     if (!t) {
-      setNotFound(true)
       setLoading(false)
       setTournament(null)
       return
     }
     lastServerUpdatedAtRef.current = t.updatedAt
     setTournament(t)
-    setNotFound(false)
     setLoading(false)
   }, [slug])
 
   useEffect(() => {
     if (!router.isReady) return
     setLoading(true)
-    setNotFound(false)
     void refresh()
   }, [router.isReady, refresh])
 
@@ -168,8 +170,6 @@ const SpectatorViewPage = () => {
 
     const run = async () => {
       if (!tournament?.data) {
-        setShortOpponent1('')
-        setShortOpponent2('')
         return
       }
 
@@ -190,17 +190,19 @@ const SpectatorViewPage = () => {
         )
         if (cancelled) return
 
-        const { full1, full2 } = findStreamMatchNames(
+        const { name1, name2, match } = findStreamMatch(
           bracketBundle,
           tournament.streamMatchId ?? null
         )
-        setShortOpponent1(full1 ? teamNameToShortName(full1) : '')
-        setShortOpponent2(full2 ? teamNameToShortName(full2) : '')
+        setShortOpponent1(name1 ? teamNameToShortName(name1) : '')
+        setShortOpponent2(name2 ? teamNameToShortName(name2) : '')
+        setStreamMatch(match)
       } catch (err) {
         if (cancelled) return
         console.error('[SpectatorView] hydrate failed:', err)
         setShortOpponent1('')
         setShortOpponent2('')
+        setStreamMatch(null)
       }
     }
 
@@ -235,7 +237,7 @@ const SpectatorViewPage = () => {
     )
   }
 
-  if (notFound || !tournament) {
+  if (!tournament) {
     if (streamMode) return null
     return (
       <PageWrapper>
@@ -247,6 +249,12 @@ const SpectatorViewPage = () => {
     )
   }
 
+  const opponent1Score = streamMatch?.opponent1?.score ?? 0
+  const opponent2Score = streamMatch?.opponent2?.score ?? 0
+
+  const isOngoing =
+    streamMatch?.opponent1?.score != undefined || streamMatch?.opponent2?.score != undefined
+
   if (streamMode) {
     if (!tournament.data) return null
 
@@ -256,7 +264,13 @@ const SpectatorViewPage = () => {
           <title>{tournament.name} — Spectator - Aalto Gamers</title>
         </Head>
         <div className="fixed inset-0 bg-transparent pointer-events-none overflow-hidden">
-          <SpectatorViewNames team1={shortOpponent1} team2={shortOpponent2} isBo3={false} />
+          <SpectatorViewNames
+            team1={shortOpponent1}
+            team2={shortOpponent2}
+            showScores={isOngoing}
+            opponent1Score={opponent1Score}
+            opponent2Score={opponent2Score}
+          />
         </div>
       </>
     )
@@ -332,7 +346,13 @@ const SpectatorViewPage = () => {
           <div className="mb-6 p-4 rounded-md border border-lightgray border-opacity-40  h-36">
             <h3 className="text-2xl mb-2">Preview</h3>
             <div className="relative">
-              <SpectatorViewNames team1={shortOpponent1} team2={shortOpponent2} isBo3={false} />
+              <SpectatorViewNames
+                team1={shortOpponent1}
+                team2={shortOpponent2}
+                showScores={isOngoing}
+                opponent1Score={opponent1Score}
+                opponent2Score={opponent2Score}
+              />
             </div>
           </div>
         </div>
