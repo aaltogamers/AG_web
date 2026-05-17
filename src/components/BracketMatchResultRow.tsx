@@ -20,7 +20,7 @@ const PRIZE_COLORS = {
 }
 
 const QUALIFYING_ICON = { icon: FaMedal }
-const THIRD_PLACE_ICON = { icon: FaMedal, color: PRIZE_COLORS.bronze }
+//const THIRD_PLACE_ICON = { icon: FaMedal, color: PRIZE_COLORS.bronze }
 const SECOND_PLACE_ICON = { icon: FaMedal, color: PRIZE_COLORS.silver }
 const FIRST_PLACE_ICON = { icon: FaTrophy, color: PRIZE_COLORS.gold }
 
@@ -110,9 +110,10 @@ const MatchResultRow = ({
                     icon = QUALIFYING_ICON
                   }
 
+                  /*
                   if (bracketData.matchIds.bronze?.has(match.id) && !isWin) {
                     icon = THIRD_PLACE_ICON
-                  }
+                  }*/
 
                   if (bracketData.matchIds.silver?.has(match.id) && !isWin) {
                     icon = SECOND_PLACE_ICON
