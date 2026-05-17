@@ -1,7 +1,7 @@
 'use client'
 import type { Database } from 'brackets-manager'
 import { BracketsManager } from 'brackets-manager'
-import { Match, type Id } from 'brackets-model'
+import { Match, Status, type Id } from 'brackets-model'
 import { InMemoryDatabase } from 'brackets-memory-db'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -253,7 +253,8 @@ const SpectatorViewPage = () => {
   const opponent2Score = streamMatch?.opponent2?.score ?? 0
 
   const isOngoing =
-    streamMatch?.opponent1?.score != undefined || streamMatch?.opponent2?.score != undefined
+    (streamMatch?.opponent1?.score != undefined || streamMatch?.opponent2?.score != undefined) &&
+    streamMatch?.status === Status.Running
 
   if (streamMode) {
     if (!tournament.data) return null
