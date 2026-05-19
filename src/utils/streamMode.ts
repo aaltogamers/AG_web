@@ -47,6 +47,8 @@ const getStringParam = (query: ParsedUrlQuery, key: string): string | undefined 
 export const isStreamMode = (query: ParsedUrlQuery): boolean =>
   query.stream !== undefined || query.fullscreen !== undefined
 
+export const shouldFlipTeams = (query: ParsedUrlQuery): boolean => query.flip !== undefined
+
 const normalizeColor = (raw: string): string => {
   const trimmed = raw.trim()
   if (!trimmed) return trimmed

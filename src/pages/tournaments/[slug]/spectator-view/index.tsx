@@ -16,7 +16,7 @@ import {
   teamNameToShortName,
 } from '../../../../utils/brackets'
 import makeBackgroundInvisible from '../../../../utils/makeBackgroundInvisible'
-import { isStreamMode } from '../../../../utils/streamMode'
+import { isStreamMode, shouldFlipTeams } from '../../../../utils/streamMode'
 import { getTournament, getTournamentUpdatedAt } from '../../../../utils/tournamentApi'
 
 /** Stable IDs for OBS / browser-source custom CSS (see info section on this page). */
@@ -106,6 +106,7 @@ const SpectatorViewPage = () => {
   const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug
 
   const streamMode = router.isReady && isStreamMode(router.query)
+  const flipTeams = router.isReady && shouldFlipTeams(router.query)
 
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [loading, setLoading] = useState(true)
@@ -266,11 +267,11 @@ const SpectatorViewPage = () => {
         </Head>
         <div className="fixed inset-0 bg-transparent pointer-events-none overflow-hidden">
           <SpectatorViewNames
-            team1={shortOpponent1}
-            team2={shortOpponent2}
+            team1={flipTeams ? shortOpponent2 : shortOpponent1}
+            team2={flipTeams ? shortOpponent1 : shortOpponent2}
             showScores={isOngoing}
-            opponent1Score={opponent1Score}
-            opponent2Score={opponent2Score}
+            opponent1Score={flipTeams ? opponent2Score : opponent1Score}
+            opponent2Score={flipTeams ? opponent1Score : opponent2Score}
           />
         </div>
       </>
@@ -298,7 +299,9 @@ const SpectatorViewPage = () => {
           <p className="mb-4 text-sm opacity-90">
             Stream spectator overlay shows only two shortened team labels for the match marked as
             the <strong className="font-medium">stream game</strong> on the bracket. Add{' '}
-            <span className="font-mono">?stream</span> to the current url to view it.
+            <span className="font-mono">?stream</span> to the current url to view it. You can also
+            add <span className="font-mono">?flip</span> to flip which team is shown on which side
+            of the overlay.
           </p>
 
           <div className="mb-6 p-4 rounded-md border border-lightgray border-opacity-40">
