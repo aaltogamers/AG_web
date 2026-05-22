@@ -514,7 +514,10 @@ export const teamNameToShortName = (teamName: string): string => {
   if (regexMatch && regexMatch[1]) {
     return regexMatch[1].replaceAll('.', '')
   }
-  const split = upperCaseName.split(' ')
+
+  const split = upperCaseName
+    .split(' ')
+    .filter((s) => s.toLowerCase() !== 'the' && s.toLowerCase() !== 'and')
 
   if (split.length === 2 || split.length === 3) {
     return split.map((s) => s[0]).join('')
