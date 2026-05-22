@@ -562,6 +562,7 @@ const GroupSection = ({
 
                     {!isBye && (
                       <div
+                        className="match-number"
                         style={{
                           position: 'absolute',
                           lineHeight: `${bracketStyles.basicFontSize}px`,
