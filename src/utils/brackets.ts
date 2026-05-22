@@ -530,5 +530,7 @@ export const teamNameToShortName = (teamName: string): string => {
       .join('')
   }
 
-  return upperCaseName.slice(0, 3)
+  const theOrAndRegex = /((^|\s)(the|and))(($|\s))/i
+
+  return upperCaseName.replaceAll(theOrAndRegex, '').slice(0, 3)
 }
