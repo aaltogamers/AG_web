@@ -10,12 +10,14 @@ type TelegramUser = {
 }
 
 type TelegramContextValue = {
+  ready: boolean
   isTelegram: boolean
   user: TelegramUser | null
   chatId: string | null
 }
 
 const TelegramContext = createContext<TelegramContextValue>({
+  ready: false,
   isTelegram: false,
   user: null,
   chatId: null,
@@ -25,33 +27,56 @@ export const useTelegram = () => useContext(TelegramContext)
 
 export default function TelegramProvider({ children }: { children: React.ReactNode }) {
   const [value, setValue] = useState<TelegramContextValue>({
+    ready: false,
     isTelegram: false,
     user: null,
     chatId: null,
   })
 
   useEffect(() => {
-    const tg = window.Telegram?.WebApp
-    if (!tg?.initData) return
+    let attempts = 0
+    const maxAttempts = 20
 
-    tg.ready()
-    tg.expand()
+    const init = () => {
+      const tg = window.Telegram?.WebApp
+      if (tg?.initData) {
+        tg.ready()
+        tg.expand()
 
-    const rawUser = tg.initDataUnsafe.user
-    const user: TelegramUser | null = rawUser
-      ? {
-          id: rawUser.id,
-          firstName: rawUser.first_name,
-          lastName: rawUser.last_name,
-          username: rawUser.username,
+        const rawUser = tg.initDataUnsafe.user
+        const user: TelegramUser | null = rawUser
+          ? {
+              id: rawUser.id,
+              firstName: rawUser.first_name,
+              lastName: rawUser.last_name,
+              username: rawUser.username,
+            }
+          : null
+
+        setValue({
+          ready: true,
+          isTelegram: true,
+          user,
+          chatId: tg.initDataUnsafe.start_param ?? null,
+        })
+        return true
+      }
+      return false
+    }
+
+    if (init()) return
+
+    const interval = setInterval(() => {
+      attempts++
+      if (init() || attempts >= maxAttempts) {
+        clearInterval(interval)
+        if (attempts >= maxAttempts) {
+          setValue((prev) => ({ ...prev, ready: true }))
         }
-      : null
+      }
+    }, 50)
 
-    setValue({
-      isTelegram: true,
-      user,
-      chatId: tg.initDataUnsafe.start_param ?? null,
-    })
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
