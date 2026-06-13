@@ -5,7 +5,7 @@ import { Metadata } from 'next'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <Head>
         <link rel="shortcut icon" href="/favicon.ico" />
       </Head>

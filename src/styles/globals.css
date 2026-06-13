@@ -253,6 +253,11 @@
   .abs-center-x {
     @apply right-1/2 transform -translate-x-1/2;
   }
+
+  body.tg-miniapp nav,
+  body.tg-miniapp footer {
+    @apply hidden;
+  }
 }
 
 .fade-in {

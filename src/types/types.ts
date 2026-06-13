@@ -297,3 +297,40 @@ export type StreamConfig = {
   // Query string portion (without leading "?"), e.g. "stream&stage=winners".
   query: string
 }
+
+export const TASK_STATES = ['todo', 'in_progress', 'done'] as const
+export type TaskState = (typeof TASK_STATES)[number]
+
+export const TASK_STATE_LABELS: Record<TaskState, string> = {
+  todo: 'To Do',
+  in_progress: 'In Progress',
+  done: 'Done',
+}
+
+export type TaskAssignee = {
+  tgUserId: string
+  tgUserName: string
+}
+
+export type Task = {
+  id: string
+  boardId: string
+  name: string
+  description?: string
+  deadline?: string
+  startTime?: string
+  state: TaskState
+  assignees: TaskAssignee[]
+  createdByTgId?: string
+  createdByTgName?: string
+  position: number
+  createdAt: string
+  updatedAt: string
+}
+
+export type TaskBoard = {
+  id: string
+  chatId: string
+  name: string
+  createdAt: string
+}

@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/analytics/**/*': ['./node_modules/node-pg-migrate/**/*'],
     '/api/db-health': ['./node_modules/node-pg-migrate/**/*'],
+    '/api/tasks/**/*': ['./node_modules/node-pg-migrate/**/*'],
   },
   experimental: {
     // Enables Node.js runtime for middleware so we can use `pg` directly
