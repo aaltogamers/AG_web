@@ -7,12 +7,8 @@ import TaskColumn from './TaskColumn'
 import TaskForm from './TaskForm'
 import { useTelegram } from './TelegramProvider'
 
-type Props = {
-  chatId: string
-}
-
-export default function TaskBoard({ chatId }: Props) {
-  const { user } = useTelegram()
+export default function TaskBoard() {
+  const { user, chatId, ready } = useTelegram()
   const [board, setBoard] = useState<TaskBoardType | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
@@ -21,6 +17,7 @@ export default function TaskBoard({ chatId }: Props) {
   const [activeTab, setActiveTab] = useState<TaskState>('todo')
 
   const fetchBoard = useCallback(async () => {
+    if (!chatId) return
     try {
       const res = await fetch(`/api/tasks/boards/${encodeURIComponent(chatId)}`)
       if (!res.ok) throw new Error('Failed to load board')
@@ -40,7 +37,7 @@ export default function TaskBoard({ chatId }: Props) {
   }, [fetchBoard])
 
   const createTask = async (formData: Record<string, unknown>) => {
-    const res = await fetch(`/api/tasks/boards/${encodeURIComponent(chatId)}/tasks`, {
+    const res = await fetch(`/api/tasks/boards/${encodeURIComponent(chatId!)}/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -71,6 +68,29 @@ export default function TaskBoard({ chatId }: Props) {
   }
 
   const tasksByState = (state: TaskState) => tasks.filter((t) => t.state === state)
+
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div
+          className="w-8 h-8 border-2 border-t-transparent rounded-full spinner"
+          style={{ borderColor: 'var(--tg-theme-button-color)', borderTopColor: 'transparent' }}
+        />
+      </div>
+    )
+  }
+
+  if (!chatId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Telegram Only</h1>
+        <p className="text-lightgray max-w-sm">
+          This task board is available exclusively as a Telegram Mini App.
+          Open it from the Telegram bot to get started.
+        </p>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
