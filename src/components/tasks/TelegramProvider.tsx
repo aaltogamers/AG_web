@@ -53,11 +53,17 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
             }
           : null
 
+        const chatId =
+          tg.initDataUnsafe.chat?.id?.toString() ??
+          tg.initDataUnsafe.start_param ??
+          tg.initDataUnsafe.chat_instance ??
+          null
+
         setValue({
           ready: true,
           isTelegram: true,
           user,
-          chatId: tg.initDataUnsafe.start_param ?? null,
+          chatId,
         })
         return true
       }

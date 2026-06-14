@@ -7,6 +7,12 @@ interface TelegramWebApp {
       last_name?: string
       username?: string
     }
+    chat?: {
+      id: number
+      type: string
+      title?: string
+      username?: string
+    }
     chat_instance?: string
     chat_type?: string
     start_param?: string
