@@ -13,8 +13,9 @@ export default function TasksPage() {
   const checkBoard = useCallback(async () => {
     if (!chatId) return
     try {
+      const nameParam = chatTitle ? `&name=${encodeURIComponent(chatTitle)}` : ''
       const res = await fetch(
-        `/api/tasks/boards/${encodeURIComponent(chatId)}?noCreate=true`
+        `/api/tasks/boards/${encodeURIComponent(chatId)}?noCreate=true${nameParam}`
       )
       if (!res.ok) return
       const data = await res.json()
@@ -22,7 +23,7 @@ export default function TasksPage() {
     } catch {
       setBoardExists(false)
     }
-  }, [chatId])
+  }, [chatId, chatTitle])
 
   useEffect(() => {
     checkBoard()
@@ -52,8 +53,8 @@ export default function TasksPage() {
     )
   }
 
-  const newGroup = chatId && chatTitle && !boardExists
-    ? { chatId, title: chatTitle }
+  const newGroup = chatId && !boardExists
+    ? { chatId, title: chatTitle || 'this group' }
     : undefined
 
   return <BoardPicker onSelectBoard={setSelectedChatId} newGroup={newGroup} />

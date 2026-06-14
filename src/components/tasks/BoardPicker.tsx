@@ -122,7 +122,7 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
   return (
     <div className="px-4 py-4">
       <div className="mb-4">
-        <h1 className="text-lg font-semibold">Your Boards</h1>
+        <h1 className="text-lg font-semibold tg-text">Your Boards</h1>
         <p className="text-xs tg-hint mt-0.5">
           {boards.length} board{boards.length !== 1 ? 's' : ''}
         </p>
@@ -152,7 +152,7 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
             >
               <button
                 onClick={() => onSelectBoard(board.chatId)}
-                className="flex-1 text-left p-3 min-w-0"
+                className="flex-1 text-left p-3 min-w-0 tg-text"
               >
                 <p className="font-medium truncate">{board.name}</p>
                 <p className="text-xs tg-hint mt-0.5">
