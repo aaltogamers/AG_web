@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
     '/api/db-health': ['./node_modules/node-pg-migrate/**/*'],
     '/api/tasks/**/*': ['./node_modules/node-pg-migrate/**/*'],
   },
+  serverExternalPackages: ['node-pg-migrate'],
   experimental: {
     nodeMiddleware: true,
   } as NextConfig['experimental'],
