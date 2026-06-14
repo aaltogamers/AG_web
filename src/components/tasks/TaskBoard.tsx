@@ -5,6 +5,7 @@ import type { Task, TaskBoard as TaskBoardType, TaskState } from '../../types/ty
 import { TASK_STATES, TASK_STATE_LABELS } from '../../types/types'
 import TaskColumn from './TaskColumn'
 import TaskForm from './TaskForm'
+import NotificationSettings from './NotificationSettings'
 import { useTelegram } from './TelegramProvider'
 
 export default function TaskBoard() {
@@ -14,6 +15,7 @@ export default function TaskBoard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [activeTab, setActiveTab] = useState<TaskState>('todo')
 
   const registeredRef = useRef(false)
@@ -131,6 +133,10 @@ export default function TaskBoard() {
     )
   }
 
+  if (showSettings) {
+    return <NotificationSettings onBack={() => setShowSettings(false)} />
+  }
+
   return (
     <div className="px-4 py-4">
       <div className="flex items-center justify-between mb-4">
@@ -140,12 +146,21 @@ export default function TaskBoard() {
             {tasks.length} task{tasks.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="tg-primary-btn text-sm !py-2 !px-4"
-        >
-          + Add Task
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="tg-secondary-btn text-sm !py-2 !px-3"
+            title="Notification settings"
+          >
+            Settings
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="tg-primary-btn text-sm !py-2 !px-4"
+          >
+            + Add Task
+          </button>
+        </div>
       </div>
 
       {showForm && (

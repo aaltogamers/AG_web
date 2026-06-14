@@ -53,14 +53,42 @@ async function pingImageServer(): Promise<void> {
   }
 }
 
-async function checkDailyNotifications(): Promise<void> {
-  const now = new Date()
-  const todayStr = new Intl.DateTimeFormat('en-CA', {
+type UserSettings = {
+  deadlineDays: number
+  startDateDays: number
+  notifyBeforeDeadline: boolean
+  notifyBeforeStart: boolean
+  notifyOnDeadline: boolean
+  notifyOnStart: boolean
+  notifyPastDeadline: boolean
+  notifyPastStart: boolean
+  skipInProgress: boolean
+}
+
+const DEFAULT_SETTINGS: UserSettings = {
+  deadlineDays: 5,
+  startDateDays: 0,
+  notifyBeforeDeadline: true,
+  notifyBeforeStart: true,
+  notifyOnDeadline: true,
+  notifyOnStart: true,
+  notifyPastDeadline: true,
+  notifyPastStart: true,
+  skipInProgress: false,
+}
+
+function toHelsinkiDate(d: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Helsinki',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(now)
+  }).format(d)
+}
+
+async function checkDailyNotifications(): Promise<void> {
+  const now = new Date()
+  const todayStr = toHelsinkiDate(now)
   const hour = Number(
     new Intl.DateTimeFormat('en-US', {
       timeZone: 'Europe/Helsinki',
@@ -79,72 +107,116 @@ async function checkDailyNotifications(): Promise<void> {
     const { rows } = await pool.query<{
       task_id: string
       name: string
+      state: string
       deadline: Date | null
       start_time: Date | null
       tg_user_id: string
+      chat_id: string
     }>(`
-      SELECT t.id AS task_id, t.name, t.deadline, t.start_time,
-             ta.tg_user_id
+      SELECT t.id AS task_id, t.name, t.state, t.deadline, t.start_time,
+             ta.tg_user_id, tb.chat_id
       FROM tasks t
+      JOIN task_boards tb ON tb.id = t.board_id
       JOIN task_assignees ta ON ta.task_id = t.id
       WHERE t.state != 'done'
-        AND (
-          (t.deadline IS NOT NULL
-           AND t.deadline <= (NOW() AT TIME ZONE 'Europe/Helsinki' + INTERVAL '5 days'))
-          OR
-          (t.start_time IS NOT NULL
-           AND (t.start_time AT TIME ZONE 'Europe/Helsinki')::date
-               = (NOW() AT TIME ZONE 'Europe/Helsinki')::date)
-        )
+        AND (t.deadline IS NOT NULL OR t.start_time IS NOT NULL)
       ORDER BY t.id
     `)
 
     if (rows.length === 0) return
 
+    const userIds = [...new Set(rows.map((r) => r.tg_user_id))]
+    const chatIds = [...new Set(rows.map((r) => r.chat_id))]
+    const { rows: settingsRows } = await pool.query<{
+      chat_id: string
+      tg_user_id: string
+      deadline_days: number
+      start_date_days: number
+      notify_before_deadline: boolean
+      notify_before_start: boolean
+      notify_on_deadline: boolean
+      notify_on_start: boolean
+      notify_past_deadline: boolean
+      notify_past_start: boolean
+      skip_in_progress: boolean
+    }>(
+      `SELECT * FROM task_notification_settings
+       WHERE tg_user_id = ANY($1) AND chat_id = ANY($2)`,
+      [userIds, chatIds]
+    )
+
+    const settingsMap = new Map<string, UserSettings>()
+    for (const s of settingsRows) {
+      settingsMap.set(`${s.chat_id}:${s.tg_user_id}`, {
+        deadlineDays: s.deadline_days,
+        startDateDays: s.start_date_days,
+        notifyBeforeDeadline: s.notify_before_deadline,
+        notifyBeforeStart: s.notify_before_start,
+        notifyOnDeadline: s.notify_on_deadline,
+        notifyOnStart: s.notify_on_start,
+        notifyPastDeadline: s.notify_past_deadline,
+        notifyPastStart: s.notify_past_start,
+        skipInProgress: s.skip_in_progress,
+      })
+    }
+
     const formatDate = (d: Date) =>
       d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    const today = new Date(todayStr + 'T00:00:00')
 
     const byUser = new Map<string, string[]>()
     for (const row of rows) {
-      if (!byUser.has(row.tg_user_id)) byUser.set(row.tg_user_id, [])
-      const lines = byUser.get(row.tg_user_id)!
-      const today = new Date(todayStr + 'T00:00:00')
-
-      if (row.start_time) {
-        const startDate = new Date(
-          new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'Europe/Helsinki',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-          }).format(row.start_time)
-        )
-        if (startDate.getTime() === today.getTime()) {
-          lines.push(`🗓 <b>${row.name}</b> — starts today`)
-        }
-      }
+      const s = settingsMap.get(`${row.chat_id}:${row.tg_user_id}`) ?? DEFAULT_SETTINGS
+      if (s.skipInProgress && row.state === 'in_progress') continue
 
       if (row.deadline) {
-        const deadlineDate = new Date(
-          new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'Europe/Helsinki',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-          }).format(row.deadline)
-        )
+        const deadlineDate = new Date(toHelsinkiDate(row.deadline) + 'T00:00:00')
         const diffDays = Math.round(
           (deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
         )
-        let urgency: string
-        if (diffDays < 0) urgency = '(overdue!)'
-        else if (diffDays === 0) urgency = '(today!)'
-        else if (diffDays === 1) urgency = '(tomorrow)'
-        else urgency = `(in ${diffDays} days)`
+        let shouldNotify = false
+        if (diffDays < 0) shouldNotify = s.notifyPastDeadline
+        else if (diffDays === 0) shouldNotify = s.notifyOnDeadline
+        else if (diffDays <= s.deadlineDays) shouldNotify = s.notifyBeforeDeadline
 
-        lines.push(`📅 <b>${row.name}</b> — due ${formatDate(row.deadline)} ${urgency}`)
+        if (shouldNotify) {
+          let urgency: string
+          if (diffDays < 0) urgency = '(overdue!)'
+          else if (diffDays === 0) urgency = '(today!)'
+          else if (diffDays === 1) urgency = '(tomorrow)'
+          else urgency = `(in ${diffDays} days)`
+
+          if (!byUser.has(row.tg_user_id)) byUser.set(row.tg_user_id, [])
+          byUser.get(row.tg_user_id)!.push(
+            `📅 <b>${row.name}</b> — due ${formatDate(row.deadline)} ${urgency}`
+          )
+        }
+      }
+
+      if (row.start_time) {
+        const startDate = new Date(toHelsinkiDate(row.start_time) + 'T00:00:00')
+        const diffDays = Math.round(
+          (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+        )
+        let shouldNotify = false
+        if (diffDays < 0) shouldNotify = s.notifyPastStart
+        else if (diffDays === 0) shouldNotify = s.notifyOnStart
+        else if (diffDays <= s.startDateDays) shouldNotify = s.notifyBeforeStart
+
+        if (shouldNotify) {
+          let label: string
+          if (diffDays < 0) label = `started ${-diffDays} day${diffDays === -1 ? '' : 's'} ago`
+          else if (diffDays === 0) label = 'starts today'
+          else if (diffDays === 1) label = 'starts tomorrow'
+          else label = `starts in ${diffDays} days`
+
+          if (!byUser.has(row.tg_user_id)) byUser.set(row.tg_user_id, [])
+          byUser.get(row.tg_user_id)!.push(`🗓 <b>${row.name}</b> — ${label}`)
+        }
       }
     }
+
+    if (byUser.size === 0) return
 
     const promises = [...byUser.entries()].map(([userId, lines]) => {
       const message = `⏰ <b>Daily task reminder</b>\n\n${lines.join('\n')}`

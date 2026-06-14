@@ -343,3 +343,18 @@ export type TgUser = {
   lastName?: string
   username?: string
 }
+
+export type TaskNotificationSettings = {
+  chatId: string
+  tgUserId: string
+  deadlineDays: number
+  startDateDays: number
+  notifyCreation: boolean
+  notifyBeforeDeadline: boolean
+  notifyBeforeStart: boolean
+  notifyOnDeadline: boolean
+  notifyOnStart: boolean
+  notifyPastDeadline: boolean
+  notifyPastStart: boolean
+  skipInProgress: boolean
+}

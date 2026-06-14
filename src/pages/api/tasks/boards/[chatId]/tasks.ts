@@ -95,6 +95,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const formatDate = (iso: string) =>
         new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
+      const settingsResult = await pool.query(
+        `SELECT tg_user_id, notify_creation FROM task_notification_settings
+         WHERE chat_id = $1 AND tg_user_id = ANY($2)`,
+        [chatId, notifyAssignees.map((a) => a.tgUserId)]
+      )
+      const settingsMap = new Map(
+        settingsResult.rows.map((r: { tg_user_id: string; notify_creation: boolean }) => [r.tg_user_id, r.notify_creation])
+      )
+
       const lines = [`📋 <b>New task assigned to you</b>\n\n<b>${task.name}</b>`]
       if (task.description) lines.push(task.description)
       if (task.deadline) lines.push(`📅 Deadline: ${formatDate(task.deadline.toISOString())}`)
@@ -103,7 +112,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const message = lines.join('\n')
 
       void Promise.allSettled(
-        notifyAssignees.map((a) => sendTelegramDM(a.tgUserId, message))
+        notifyAssignees
+          .filter((a) => settingsMap.get(a.tgUserId) !== false)
+          .map((a) => sendTelegramDM(a.tgUserId, message))
       )
     }
 
