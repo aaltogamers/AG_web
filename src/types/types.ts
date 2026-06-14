@@ -335,6 +335,14 @@ export type TaskBoard = {
   createdAt: string
 }
 
+export type BoardSummary = {
+  id: string
+  chatId: string
+  name: string
+  taskCount: number
+  createdAt: string
+}
+
 export type TgUser = {
   id: string
   chatId: string

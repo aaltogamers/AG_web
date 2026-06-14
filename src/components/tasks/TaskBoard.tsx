@@ -8,8 +8,14 @@ import TaskForm from './TaskForm'
 import NotificationSettings from './NotificationSettings'
 import { useTelegram } from './TelegramProvider'
 
-export default function TaskBoard() {
-  const { user, chatId, ready } = useTelegram()
+type Props = {
+  chatIdOverride?: string | null
+  onBack?: () => void
+}
+
+export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
+  const { user, chatId: contextChatId, ready, webApp } = useTelegram()
+  const chatId = chatIdOverride ?? contextChatId
   const [board, setBoard] = useState<TaskBoardType | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
@@ -86,6 +92,16 @@ export default function TaskBoard() {
     setTasks((prev) => prev.filter((t) => t.id !== taskId))
   }
 
+  useEffect(() => {
+    if (!chatIdOverride || !webApp?.BackButton || !onBack) return
+    webApp.BackButton.show()
+    webApp.BackButton.onClick(onBack)
+    return () => {
+      webApp.BackButton.offClick(onBack)
+      webApp.BackButton.hide()
+    }
+  }, [chatIdOverride, webApp, onBack])
+
   const tasksByState = (state: TaskState) => tasks.filter((t) => t.state === state)
 
   if (!ready) {
@@ -95,18 +111,6 @@ export default function TaskBoard() {
           className="w-8 h-8 border-2 border-t-transparent rounded-full spinner"
           style={{ borderColor: 'var(--tg-theme-button-color)', borderTopColor: 'transparent' }}
         />
-      </div>
-    )
-  }
-
-  if (!chatId) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Telegram Only</h1>
-        <p className="text-lightgray max-w-sm">
-          This task board is available exclusively as a Telegram Mini App.
-          Open it from the Telegram bot to get started.
-        </p>
       </div>
     )
   }

@@ -37,6 +37,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       [chatId, body.tgUserId, body.firstName, body.lastName || null, body.username || null]
     )
 
+    await pool.query(
+      'DELETE FROM hidden_task_boards WHERE tg_user_id = $1 AND chat_id = $2',
+      [body.tgUserId, chatId]
+    )
+
     const row = result.rows[0]
     return res.status(200).json({
       user: {

@@ -66,7 +66,6 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
         const chatId =
           tg.initDataUnsafe.chat?.id?.toString() ??
           tg.initDataUnsafe.start_param ??
-          tg.initDataUnsafe.chat_instance ??
           null
 
         setValue({
