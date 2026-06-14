@@ -14,6 +14,7 @@ type TelegramContextValue = {
   isTelegram: boolean
   user: TelegramUser | null
   chatId: string | null
+  webApp: TelegramWebApp | null
 }
 
 const TelegramContext = createContext<TelegramContextValue>({
@@ -21,6 +22,7 @@ const TelegramContext = createContext<TelegramContextValue>({
   isTelegram: false,
   user: null,
   chatId: null,
+  webApp: null,
 })
 
 export const useTelegram = () => useContext(TelegramContext)
@@ -31,6 +33,7 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
     isTelegram: false,
     user: null,
     chatId: null,
+    webApp: null,
   })
 
   useEffect(() => {
@@ -42,6 +45,13 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
       if (tg?.initData) {
         tg.ready()
         tg.expand()
+
+        if (tg.setHeaderColor) {
+          tg.setHeaderColor(tg.themeParams.header_bg_color || tg.themeParams.bg_color || '#ffffff')
+        }
+        if (tg.setBackgroundColor) {
+          tg.setBackgroundColor(tg.themeParams.bg_color || '#ffffff')
+        }
 
         const rawUser = tg.initDataUnsafe.user
         const user: TelegramUser | null = rawUser
@@ -64,6 +74,7 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
           isTelegram: true,
           user,
           chatId,
+          webApp: tg,
         })
         return true
       }

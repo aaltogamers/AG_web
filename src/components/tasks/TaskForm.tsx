@@ -82,54 +82,54 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label className="block text-sm text-lightgray mb-1">Name *</label>
+        <label className="block text-sm tg-hint mb-1">Name *</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full px-3 py-2 rounded bg-black border border-lightgray/30 text-white focus:border-red focus:outline-none"
+          className="tg-input"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm text-lightgray mb-1">Description</label>
+        <label className="block text-sm tg-hint mb-1">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 rounded bg-black border border-lightgray/30 text-white focus:border-red focus:outline-none resize-y"
+          className="tg-input resize-y"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm text-lightgray mb-1">Start Time</label>
+          <label className="block text-sm tg-hint mb-1">Start Time</label>
           <input
             type="datetime-local"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="w-full px-3 py-2 rounded bg-black border border-lightgray/30 text-white focus:border-red focus:outline-none"
+            className="tg-input"
           />
         </div>
         <div>
-          <label className="block text-sm text-lightgray mb-1">Deadline</label>
+          <label className="block text-sm tg-hint mb-1">Deadline</label>
           <input
             type="datetime-local"
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
-            className="w-full px-3 py-2 rounded bg-black border border-lightgray/30 text-white focus:border-red focus:outline-none"
+            className="tg-input"
           />
         </div>
       </div>
 
       {task && (
         <div>
-          <label className="block text-sm text-lightgray mb-1">State</label>
+          <label className="block text-sm tg-hint mb-1">State</label>
           <select
             value={state}
             onChange={(e) => setState(e.target.value as TaskState)}
-            className="w-full px-3 py-2 rounded bg-black border border-lightgray/30 text-white focus:border-red focus:outline-none"
+            className="tg-input"
           >
             {TASK_STATES.map((s) => (
               <option key={s} value={s}>
@@ -141,7 +141,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
       )}
 
       <div>
-        <label className="block text-sm text-lightgray mb-1">Assignees</label>
+        <label className="block text-sm tg-hint mb-1">Assignees</label>
         <div className="flex gap-2">
           <input
             type="text"
@@ -154,12 +154,12 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
               }
             }}
             placeholder="Telegram username"
-            className="flex-1 px-3 py-2 rounded bg-black border border-lightgray/30 text-white focus:border-red focus:outline-none"
+            className="tg-input flex-1"
           />
           <button
             type="button"
             onClick={addAssignee}
-            className="borderbutton !text-sm !py-2 !px-4"
+            className="tg-secondary-btn text-sm !py-2 !px-4 shrink-0"
           >
             Add
           </button>
@@ -167,7 +167,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
             <button
               type="button"
               onClick={addSelf}
-              className="borderbutton !text-sm !py-2 !px-4"
+              className="tg-secondary-btn text-sm !py-2 !px-4 shrink-0"
             >
               + Me
             </button>
@@ -178,13 +178,13 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
             {assignees.map((a) => (
               <span
                 key={a.tgUserId}
-                className="inline-flex items-center gap-1 bg-black border border-lightgray/30 rounded px-2 py-1 text-sm"
+                className="inline-flex items-center gap-1 tg-card-bg border tg-separator rounded-lg px-2 py-1 text-sm"
               >
                 {a.tgUserName}
                 <button
                   type="button"
                   onClick={() => removeAssignee(a.tgUserId)}
-                  className="text-lightgray hover:text-red ml-1"
+                  className="tg-hint ml-1"
                 >
                   x
                 </button>
@@ -195,10 +195,10 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
       </div>
 
       <div className="flex gap-3 justify-end mt-2">
-        <button type="button" onClick={onCancel} className="borderbutton !text-base !py-2 !px-6">
+        <button type="button" onClick={onCancel} className="tg-secondary-btn">
           Cancel
         </button>
-        <button type="submit" disabled={submitting || !name.trim()} className="mainbutton !text-base !py-2 !px-6 disabled:opacity-50">
+        <button type="submit" disabled={submitting || !name.trim()} className="tg-primary-btn">
           {task ? 'Save' : 'Create Task'}
         </button>
       </div>

@@ -12,20 +12,20 @@ type Props = {
   onDelete: (taskId: string) => Promise<void>
 }
 
-const STATE_COLORS: Record<TaskState, string> = {
-  todo: 'border-lightgray/50',
-  in_progress: 'border-yellow-500/50',
-  done: 'border-green-500/50',
+const STATE_BORDER_COLORS: Record<TaskState, string> = {
+  todo: 'var(--tg-theme-hint-color, #999)',
+  in_progress: 'var(--tg-theme-accent-text-color, #f59e0b)',
+  done: 'var(--tg-theme-link-color, #22c55e)',
 }
 
 export default function TaskColumn({ state, tasks, onUpdate, onDelete }: Props) {
   return (
-    <div className={`border-t-2 ${STATE_COLORS[state]} pt-3`}>
+    <div className="border-t-2 pt-3" style={{ borderTopColor: STATE_BORDER_COLORS[state] }}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-medium text-white">
+        <h3 className="text-sm font-semibold">
           {TASK_STATE_LABELS[state]}
         </h3>
-        <span className="text-xs text-lightgray bg-black/50 px-2 py-0.5 rounded-full">
+        <span className="text-xs tg-hint tg-card-bg px-2 py-0.5 rounded-full">
           {tasks.length}
         </span>
       </div>
@@ -34,7 +34,7 @@ export default function TaskColumn({ state, tasks, onUpdate, onDelete }: Props) 
           <TaskCard key={task.id} task={task} onUpdate={onUpdate} onDelete={onDelete} />
         ))}
         {tasks.length === 0 && (
-          <p className="text-sm text-lightgray/50 text-center py-4">No tasks</p>
+          <p className="text-sm tg-hint text-center py-4 opacity-50">No tasks</p>
         )}
       </div>
     </div>

@@ -12,7 +12,7 @@ type Props = {
 }
 
 export default function TaskBoard({ chatId }: Props) {
-  const { user, isTelegram } = useTelegram()
+  const { user } = useTelegram()
   const [board, setBoard] = useState<TaskBoardType | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
@@ -75,7 +75,10 @@ export default function TaskBoard({ chatId }: Props) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-red border-t-transparent rounded-full spinner" />
+        <div
+          className="w-8 h-8 border-2 border-t-transparent rounded-full spinner"
+          style={{ borderColor: 'var(--tg-theme-button-color)', borderTopColor: 'transparent' }}
+        />
       </div>
     )
   }
@@ -83,8 +86,8 @@ export default function TaskBoard({ chatId }: Props) {
   if (error) {
     return (
       <div className="text-center py-20">
-        <p className="text-red mb-4">{error}</p>
-        <button onClick={fetchBoard} className="mainbutton !text-base">
+        <p className="tg-destructive mb-4">{error}</p>
+        <button onClick={fetchBoard} className="tg-primary-btn">
           Retry
         </button>
       </div>
@@ -92,41 +95,42 @@ export default function TaskBoard({ chatId }: Props) {
   }
 
   return (
-    <div className={`${isTelegram ? 'px-4 py-4' : 'px-4 md:px-8 lg:px-16 py-8'}`}>
-      <div className="flex items-center justify-between mb-6">
+    <div className="px-4 py-4">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-medium">{board?.name ?? 'Task Board'}</h1>
-          <p className="text-sm text-lightgray mt-1">
+          <h1 className="text-lg font-semibold">{board?.name ?? 'Task Board'}</h1>
+          <p className="text-xs tg-hint mt-0.5">
             {tasks.length} task{tasks.length !== 1 ? 's' : ''}
           </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="mainbutton !text-base !py-2 !px-5"
+          className="tg-primary-btn text-sm !py-2 !px-4"
         >
           + Add Task
         </button>
       </div>
 
       {showForm && (
-        <div className="mb-6 bg-darkgray rounded-lg p-4 border border-lightgray/20">
-          <h2 className="text-lg font-medium mb-4">New Task</h2>
+        <div className="mb-4 tg-section-bg rounded-xl p-4 border tg-separator">
+          <h2 className="text-base font-semibold mb-3">New Task</h2>
           <TaskForm onSubmit={createTask} onCancel={() => setShowForm(false)} />
         </div>
       )}
 
       {/* Mobile: tabs */}
       <div className="md:hidden">
-        <div className="flex border-b border-lightgray/20 mb-4 overflow-x-auto">
+        <div className="flex border-b tg-separator mb-4 overflow-x-auto">
           {TASK_STATES.map((s) => (
             <button
               key={s}
               onClick={() => setActiveTab(s)}
-              className={`px-4 py-2 text-sm whitespace-nowrap border-b-2 transition-colors ${
+              className="px-4 py-2 text-sm whitespace-nowrap border-b-2 transition-colors"
+              style={
                 activeTab === s
-                  ? 'border-red text-white'
-                  : 'border-transparent text-lightgray hover:text-white'
-              }`}
+                  ? { borderColor: 'var(--tg-theme-button-color)', color: 'var(--tg-theme-text-color)' }
+                  : { borderColor: 'transparent', color: 'var(--tg-theme-hint-color)' }
+              }
             >
               {TASK_STATE_LABELS[s]} ({tasksByState(s).length})
             </button>

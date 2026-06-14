@@ -58,7 +58,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
 
   if (editing) {
     return (
-      <div className="bg-darkgray rounded-lg p-4 border border-lightgray/20">
+      <div className="tg-card-bg rounded-xl p-4 border tg-separator">
         <TaskForm
           task={task}
           onSubmit={handleEdit}
@@ -71,18 +71,18 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
   const overdue = task.state !== 'done' && isOverdue(task.deadline)
 
   return (
-    <div className="bg-darkgray rounded-lg p-3 border border-lightgray/20 hover:border-lightgray/40 transition-colors">
+    <div className="tg-card-bg rounded-xl p-3 border tg-separator transition-colors">
       <div className="flex items-start justify-between gap-2">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-left flex-1 font-medium text-white hover:text-white"
+          className="text-left flex-1 font-medium tg-text"
         >
           {task.name}
         </button>
         <div className="flex gap-1 shrink-0">
           <button
             onClick={() => setEditing(true)}
-            className="text-lightgray hover:text-white text-xs px-1"
+            className="tg-hint text-xs px-1"
             title="Edit"
           >
             Edit
@@ -93,14 +93,14 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
                 onDelete(task.id)
                 setConfirming(false)
               }}
-              className="text-red text-xs px-1"
+              className="tg-destructive text-xs px-1"
             >
               Confirm?
             </button>
           ) : (
             <button
               onClick={() => setConfirming(true)}
-              className="text-lightgray hover:text-red text-xs px-1"
+              className="tg-hint text-xs px-1"
               title="Delete"
             >
               Del
@@ -110,12 +110,12 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
       </div>
 
       {(task.deadline || task.startTime || task.assignees.length > 0) && (
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-lightgray">
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs tg-hint">
           {task.startTime && (
             <span>Start: {formatDate(task.startTime)}</span>
           )}
           {task.deadline && (
-            <span className={overdue ? 'text-red' : ''}>
+            <span className={overdue ? 'tg-destructive' : ''}>
               Due: {formatDate(task.deadline)}
             </span>
           )}
@@ -126,7 +126,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
       )}
 
       {expanded && task.description && (
-        <p className="mt-2 text-sm text-lightgray whitespace-pre-wrap">{task.description}</p>
+        <p className="mt-2 text-sm tg-hint whitespace-pre-wrap">{task.description}</p>
       )}
 
       <div className="mt-2 flex gap-2">
@@ -134,11 +134,12 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
           <button
             key={next}
             onClick={() => handleStateChange(next)}
-            className={`text-xs px-2 py-1 rounded border transition-colors ${
+            className="text-xs px-3 py-1.5 rounded-lg border transition-colors"
+            style={
               next === 'done'
-                ? 'border-green-500/50 text-green-400 hover:bg-green-500/20'
-                : 'border-lightgray/30 text-lightgray hover:border-lightgray/60'
-            }`}
+                ? { borderColor: 'var(--tg-theme-link-color, #22c55e)', color: 'var(--tg-theme-link-color, #22c55e)' }
+                : { borderColor: 'var(--tg-theme-section-separator-color, rgba(0,0,0,0.1))', color: 'var(--tg-theme-hint-color)' }
+            }
           >
             {label}
           </button>
