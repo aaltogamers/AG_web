@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
-import type { Task, TaskState } from '../../types/types'
+import React, { useEffect, useRef, useState } from 'react'
+import type { Task, TaskState, TgUser } from '../../types/types'
 import { TASK_STATES, TASK_STATE_LABELS } from '../../types/types'
 import { useTelegram } from './TelegramProvider'
 
@@ -28,8 +28,11 @@ const toLocalDatetime = (iso?: string): string => {
   return local.toISOString().slice(0, 16)
 }
 
+const displayName = (u: TgUser) =>
+  u.username || `${u.firstName}${u.lastName ? ' ' + u.lastName : ''}`
+
 export default function TaskForm({ task, onSubmit, onCancel }: Props) {
-  const { user, isTelegram } = useTelegram()
+  const { chatId } = useTelegram()
   const [name, setName] = useState(task?.name ?? '')
   const [description, setDescription] = useState(task?.description ?? '')
   const [deadline, setDeadline] = useState(toLocalDatetime(task?.deadline))
@@ -40,25 +43,114 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
   )
   const [assigneeInput, setAssigneeInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [suggestions, setSuggestions] = useState<TgUser[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [resolving, setResolving] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
 
-  const addAssignee = () => {
-    const trimmed = assigneeInput.trim()
-    if (!trimmed) return
-    if (assignees.some((a) => a.tgUserName === trimmed)) return
-    setAssignees([...assignees, { tgUserId: trimmed, tgUserName: trimmed }])
-    setAssigneeInput('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const autocompleteRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const fetchSuggestions = (query: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!query.trim() || !chatId) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/tasks/boards/${encodeURIComponent(chatId)}/users?q=${encodeURIComponent(query)}`
+        )
+        if (res.ok) {
+          const data = await res.json()
+          const filtered = data.users.filter(
+            (u: TgUser) => !assignees.some((a) => a.tgUserId === u.tgUserId)
+          )
+          setSuggestions(filtered)
+          setShowSuggestions(filtered.length > 0)
+          setSelectedIndex(-1)
+        }
+      } catch { /* ignore */ }
+    }, 250)
   }
 
-  const addSelf = () => {
-    if (!user) return
-    const displayName = user.username || user.firstName
-    const userId = String(user.id)
-    if (assignees.some((a) => a.tgUserId === userId)) return
-    setAssignees([...assignees, { tgUserId: userId, tgUserName: displayName }])
+  const selectSuggestion = (u: TgUser) => {
+    if (assignees.some((a) => a.tgUserId === u.tgUserId)) return
+    setAssignees([...assignees, { tgUserId: u.tgUserId, tgUserName: displayName(u) }])
+    setAssigneeInput('')
+    setSuggestions([])
+    setShowSuggestions(false)
+  }
+
+  const addAssignee = async () => {
+    const trimmed = assigneeInput.trim()
+    if (!trimmed) return
+    if (assignees.some((a) => a.tgUserName === trimmed || a.tgUserId === trimmed)) return
+
+    if (/^\d+$/.test(trimmed) && chatId) {
+      setResolving(true)
+      try {
+        const res = await fetch(
+          `/api/tasks/boards/${encodeURIComponent(chatId)}/resolve-user`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tgUserId: trimmed }),
+          }
+        )
+        if (res.ok) {
+          const data = await res.json()
+          const u = data.user as TgUser
+          setAssignees([...assignees, { tgUserId: u.tgUserId, tgUserName: displayName(u) }])
+          setAssigneeInput('')
+          setSuggestions([])
+          setShowSuggestions(false)
+          setResolving(false)
+          return
+        }
+      } catch { /* fall through */ }
+      setResolving(false)
+    }
+
+    setAssignees([...assignees, { tgUserId: trimmed, tgUserName: trimmed }])
+    setAssigneeInput('')
+    setSuggestions([])
+    setShowSuggestions(false)
   }
 
   const removeAssignee = (tgUserId: string) => {
     setAssignees(assignees.filter((a) => a.tgUserId !== tgUserId))
+  }
+
+  const handleAssigneeKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' && showSuggestions) {
+      e.preventDefault()
+      setSelectedIndex((i) => Math.min(i + 1, suggestions.length - 1))
+    } else if (e.key === 'ArrowUp' && showSuggestions) {
+      e.preventDefault()
+      setSelectedIndex((i) => Math.max(i - 1, -1))
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false)
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (showSuggestions && selectedIndex >= 0 && suggestions[selectedIndex]) {
+        selectSuggestion(suggestions[selectedIndex])
+      } else {
+        addAssignee()
+      }
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,35 +234,57 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
 
       <div>
         <label className="block text-sm tg-hint mb-1">Assignees</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={assigneeInput}
-            onChange={(e) => setAssigneeInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                addAssignee()
-              }
-            }}
-            placeholder="Telegram username"
-            className="tg-input flex-1"
-          />
-          <button
-            type="button"
-            onClick={addAssignee}
-            className="tg-secondary-btn text-sm !py-2 !px-4 shrink-0"
-          >
-            Add
-          </button>
-          {isTelegram && user && (
+        <div ref={autocompleteRef} className="relative">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={assigneeInput}
+              onChange={(e) => {
+                setAssigneeInput(e.target.value)
+                fetchSuggestions(e.target.value)
+              }}
+              onKeyDown={handleAssigneeKeyDown}
+              onFocus={() => {
+                if (assigneeInput.trim()) fetchSuggestions(assigneeInput)
+              }}
+              placeholder="Name, username, or user ID"
+              className="tg-input flex-1"
+            />
             <button
               type="button"
-              onClick={addSelf}
+              onClick={addAssignee}
+              disabled={resolving}
               className="tg-secondary-btn text-sm !py-2 !px-4 shrink-0"
             >
-              + Me
+              {resolving ? '...' : 'Add'}
             </button>
+          </div>
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 tg-card-bg border tg-separator rounded-xl shadow-lg max-h-48 overflow-y-auto">
+              {suggestions.map((u, i) => (
+                <button
+                  key={u.tgUserId}
+                  type="button"
+                  onClick={() => selectSuggestion(u)}
+                  className="w-full text-left px-3 py-2 text-sm transition-colors"
+                  style={{
+                    backgroundColor: i === selectedIndex
+                      ? 'var(--tg-theme-button-color)'
+                      : 'transparent',
+                    color: i === selectedIndex
+                      ? 'var(--tg-theme-button-text-color)'
+                      : 'var(--tg-theme-text-color)',
+                  }}
+                >
+                  <span className="font-medium">
+                    {u.firstName}{u.lastName ? ` ${u.lastName}` : ''}
+                  </span>
+                  {u.username && (
+                    <span className="ml-2 tg-hint text-xs">@{u.username}</span>
+                  )}
+                </button>
+              ))}
+            </div>
           )}
         </div>
         {assignees.length > 0 && (

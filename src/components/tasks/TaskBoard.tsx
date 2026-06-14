@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { Task, TaskBoard as TaskBoardType, TaskState } from '../../types/types'
 import { TASK_STATES, TASK_STATE_LABELS } from '../../types/types'
 import TaskColumn from './TaskColumn'
@@ -15,6 +15,23 @@ export default function TaskBoard() {
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [activeTab, setActiveTab] = useState<TaskState>('todo')
+
+  const registeredRef = useRef(false)
+
+  useEffect(() => {
+    if (!user || !chatId || registeredRef.current) return
+    registeredRef.current = true
+    fetch(`/api/tasks/boards/${encodeURIComponent(chatId)}/register-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tgUserId: String(user.id),
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+      }),
+    }).catch(() => {})
+  }, [user, chatId])
 
   const fetchBoard = useCallback(async () => {
     if (!chatId) return
