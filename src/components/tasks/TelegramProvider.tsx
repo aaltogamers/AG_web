@@ -66,9 +66,14 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
             }
           : null
 
+        const isGroupChat = ['group', 'supergroup', 'channel'].includes(
+          tg.initDataUnsafe.chat_type ?? ''
+        )
+
         const chatId =
           tg.initDataUnsafe.chat?.id?.toString() ??
           tg.initDataUnsafe.start_param ??
+          (isGroupChat ? tg.initDataUnsafe.chat_instance : null) ??
           null
 
         const chatTitle = tg.initDataUnsafe.chat?.title ?? null

@@ -17,7 +17,10 @@ export default function TasksPage() {
       const res = await fetch(
         `/api/tasks/boards/${encodeURIComponent(chatId)}?noCreate=true${nameParam}`
       )
-      if (!res.ok) return
+      if (!res.ok) {
+        setBoardExists(false)
+        return
+      }
       const data = await res.json()
       setBoardExists(data.board !== null)
     } catch {
