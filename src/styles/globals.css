@@ -255,8 +255,9 @@
   }
 
   body.tg-miniapp nav,
-  body.tg-miniapp footer {
-    @apply hidden;
+  body.tg-miniapp footer,
+  body.tg-miniapp .tg-hide {
+    @apply !hidden;
   }
 
   body.tg-miniapp {
