@@ -25,8 +25,7 @@ const formatDate = (iso?: string): string => {
   return d.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: 'numeric',
   })
 }
 

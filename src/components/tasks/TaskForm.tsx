@@ -20,12 +20,12 @@ type Props = {
   onCancel: () => void
 }
 
-const toLocalDatetime = (iso?: string): string => {
+const toLocalDate = (iso?: string): string => {
   if (!iso) return ''
   const d = new Date(iso)
   const offset = d.getTimezoneOffset()
   const local = new Date(d.getTime() - offset * 60000)
-  return local.toISOString().slice(0, 16)
+  return local.toISOString().slice(0, 10)
 }
 
 const displayName = (u: TgUser) =>
@@ -35,8 +35,8 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
   const { chatId } = useTelegram()
   const [name, setName] = useState(task?.name ?? '')
   const [description, setDescription] = useState(task?.description ?? '')
-  const [deadline, setDeadline] = useState(toLocalDatetime(task?.deadline))
-  const [startTime, setStartTime] = useState(toLocalDatetime(task?.startTime))
+  const [deadline, setDeadline] = useState(toLocalDate(task?.deadline))
+  const [startTime, setStartTime] = useState(toLocalDate(task?.startTime))
   const [state, setState] = useState<TaskState>(task?.state ?? 'todo')
   const [assignees, setAssignees] = useState<{ tgUserId: string; tgUserName: string }[]>(
     task?.assignees ?? []
@@ -196,9 +196,9 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm tg-hint mb-1">Start Time</label>
+          <label className="block text-sm tg-hint mb-1">Start Date</label>
           <input
-            type="datetime-local"
+            type="date"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
             className="tg-input"
@@ -207,7 +207,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
         <div>
           <label className="block text-sm tg-hint mb-1">Deadline</label>
           <input
-            type="datetime-local"
+            type="date"
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
             className="tg-input"

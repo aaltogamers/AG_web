@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../../../utils/db_pg'
 import { parseJsonBody } from '../../../../../utils/apiUtils'
+import { sendTelegramDM } from '../../../../../utils/telegram'
 import type { TaskState } from '../../../../../types/types'
 
 type CreateTaskBody = {
@@ -86,6 +87,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     await client.query('COMMIT')
+
+    const notifyAssignees = assignees.filter(
+      (a) => a.tgUserId && a.tgUserName && a.tgUserId !== body.createdByTgId
+    )
+    if (notifyAssignees.length > 0) {
+      const formatDate = (iso: string) =>
+        new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+
+      const lines = [`📋 <b>New task assigned to you</b>\n\n<b>${task.name}</b>`]
+      if (task.description) lines.push(task.description)
+      if (task.deadline) lines.push(`📅 Deadline: ${formatDate(task.deadline.toISOString())}`)
+      if (task.start_time) lines.push(`🗓 Start: ${formatDate(task.start_time.toISOString())}`)
+      lines.push(`\nCreated by ${body.createdByTgName || 'someone'}`)
+      const message = lines.join('\n')
+
+      void Promise.allSettled(
+        notifyAssignees.map((a) => sendTelegramDM(a.tgUserId, message))
+      )
+    }
 
     return res.status(201).json({
       task: {
