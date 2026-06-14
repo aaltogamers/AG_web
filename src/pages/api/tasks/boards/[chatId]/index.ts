@@ -29,6 +29,8 @@ type AssigneeRow = {
   task_id: string
   tg_user_id: string
   tg_user_name: string
+  first_name: string | null
+  last_name: string | null
 }
 
 const toISOOrUndefined = (d: Date | null): string | undefined =>
@@ -106,15 +108,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (taskIds.length > 0) {
     const assigneesResult = await pool.query<AssigneeRow>(
-      `SELECT task_id, tg_user_id, tg_user_name
-       FROM task_assignees
-       WHERE task_id = ANY($1)`,
-      [taskIds]
+      `SELECT ta.task_id, ta.tg_user_id, ta.tg_user_name,
+              tu.first_name, tu.last_name
+       FROM task_assignees ta
+       LEFT JOIN tg_users tu ON ta.tg_user_id = tu.tg_user_id AND tu.chat_id = $2
+       WHERE ta.task_id = ANY($1)`,
+      [taskIds, chatId]
     )
     assigneesByTask = assigneesResult.rows.reduce(
       (acc, row) => {
         if (!acc[row.task_id]) acc[row.task_id] = []
-        acc[row.task_id].push({ tgUserId: row.tg_user_id, tgUserName: row.tg_user_name })
+        const realName = row.first_name
+          ? `${row.first_name}${row.last_name ? ' ' + row.last_name : ''}`
+          : undefined
+        acc[row.task_id].push({
+          tgUserId: row.tg_user_id,
+          tgUserName: realName ?? row.tg_user_name,
+          firstName: row.first_name ?? undefined,
+          lastName: row.last_name ?? undefined,
+        })
         return acc
       },
       {} as Record<string, TaskAssignee[]>

@@ -103,7 +103,20 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
     }
   }, [chatIdOverride, webApp, onBack])
 
-  const tasksByState = (state: TaskState) => tasks.filter((t) => t.state === state)
+  const sortTasks = (list: Task[]) => {
+    return [...list].sort((a, b) => {
+      const dateA = a.deadline || a.startTime
+      const dateB = b.deadline || b.startTime
+      if (dateA && !dateB) return -1
+      if (!dateA && dateB) return 1
+      if (!dateA && !dateB) return 0
+      return new Date(dateA!).getTime() - new Date(dateB!).getTime()
+    })
+  }
+
+  const currentUserId = user ? String(user.id) : undefined
+
+  const tasksByState = (state: TaskState) => sortTasks(tasks.filter((t) => t.state === state))
 
   if (!ready) {
     return (
@@ -196,6 +209,7 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
         <TaskColumn
           state={activeTab}
           tasks={tasksByState(activeTab)}
+          currentUserId={currentUserId}
           onUpdate={updateTask}
           onDelete={deleteTask}
         />
@@ -208,6 +222,7 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
             key={s}
             state={s}
             tasks={tasksByState(s)}
+            currentUserId={currentUserId}
             onUpdate={updateTask}
             onDelete={deleteTask}
           />

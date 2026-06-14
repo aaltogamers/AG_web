@@ -310,6 +310,8 @@ export const TASK_STATE_LABELS: Record<TaskState, string> = {
 export type TaskAssignee = {
   tgUserId: string
   tgUserName: string
+  firstName?: string
+  lastName?: string
 }
 
 export type Task = {

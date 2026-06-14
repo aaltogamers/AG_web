@@ -290,6 +290,13 @@
   body.tg-miniapp a:hover {
     color: var(--tg-theme-link-color);
   }
+
+  .task-card {
+    background-color: var(--tg-theme-secondary-bg-color);
+  }
+  body.tg-light .task-card {
+    background-color: #e8f0fe;
+  }
 }
 
 .tg-text {

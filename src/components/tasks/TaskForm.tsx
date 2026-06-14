@@ -29,7 +29,7 @@ const toLocalDate = (iso?: string): string => {
 }
 
 const displayName = (u: TgUser) =>
-  u.username || `${u.firstName}${u.lastName ? ' ' + u.lastName : ''}`
+  `${u.firstName}${u.lastName ? ' ' + u.lastName : ''}`
 
 export default function TaskForm({ task, onSubmit, onCancel }: Props) {
   const { chatId } = useTelegram()
@@ -185,7 +185,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
       </div>
 
       <div>
-        <label className="block text-sm tg-hint mb-1">Description</label>
+        <label className="block text-sm tg-hint mb-1">Description (optional)</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -196,7 +196,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm tg-hint mb-1">Start Date</label>
+          <label className="block text-sm tg-hint mb-1">Start Date (optional)</label>
           <input
             type="date"
             value={startTime}
@@ -205,7 +205,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="block text-sm tg-hint mb-1">Deadline</label>
+          <label className="block text-sm tg-hint mb-1">Deadline (optional)</label>
           <input
             type="date"
             value={deadline}
@@ -233,7 +233,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
       )}
 
       <div>
-        <label className="block text-sm tg-hint mb-1">Assignees</label>
+        <label className="block text-sm tg-hint mb-1">Assignees (optional)</label>
         <div ref={autocompleteRef} className="relative">
           <div className="flex gap-2">
             <input
@@ -292,7 +292,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
             {assignees.map((a) => (
               <span
                 key={a.tgUserId}
-                className="inline-flex items-center gap-1 tg-card-bg border tg-separator rounded-lg px-2 py-1 text-sm"
+                className="inline-flex items-center gap-1 tg-card-bg border tg-separator rounded-lg px-2 py-1 text-sm tg-text"
               >
                 {a.tgUserName}
                 <button

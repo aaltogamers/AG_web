@@ -6,27 +6,27 @@ import TaskForm from './TaskForm'
 
 type Props = {
   task: Task
+  currentUserId?: string
   onUpdate: (taskId: string, data: Record<string, unknown>) => Promise<void>
   onDelete: (taskId: string) => Promise<void>
 }
 
 const STATE_TRANSITIONS: Record<TaskState, { label: string; next: TaskState }[]> = {
-  todo: [{ label: 'Start', next: 'in_progress' }],
+  todo: [{ label: 'Mark as in progress', next: 'in_progress' }],
   in_progress: [
-    { label: 'Done', next: 'done' },
-    { label: 'Back', next: 'todo' },
+    { label: 'Mark as done', next: 'done' },
+    { label: 'Mark as todo', next: 'todo' },
   ],
-  done: [{ label: 'Reopen', next: 'todo' }],
+  done: [{ label: 'Mark as todo', next: 'todo' }],
 }
 
 const formatDate = (iso?: string): string => {
   if (!iso) return ''
   const d = new Date(iso)
-  return d.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  const day = d.getDate().toString().padStart(2, '0')
+  const month = d.toLocaleDateString('en-GB', { month: 'short' })
+  const year = d.getFullYear()
+  return `${day} ${month} ${year}`
 }
 
 const isOverdue = (deadline?: string): boolean => {
@@ -34,7 +34,12 @@ const isOverdue = (deadline?: string): boolean => {
   return new Date(deadline) < new Date()
 }
 
-export default function TaskCard({ task, onUpdate, onDelete }: Props) {
+const getAssigneeDisplayName = (a: { tgUserName: string; firstName?: string; lastName?: string }) => {
+  if (a.firstName) return `${a.firstName}${a.lastName ? ' ' + a.lastName : ''}`
+  return a.tgUserName
+}
+
+export default function TaskCard({ task, currentUserId, onUpdate, onDelete }: Props) {
   const [editing, setEditing] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [confirming, setConfirming] = useState(false)
@@ -57,7 +62,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
 
   if (editing) {
     return (
-      <div className="tg-card-bg rounded-xl p-4 border tg-separator">
+      <div className="task-card rounded-xl p-4 border tg-separator">
         <TaskForm
           task={task}
           onSubmit={handleEdit}
@@ -68,23 +73,33 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
   }
 
   const overdue = task.state !== 'done' && isOverdue(task.deadline)
+  const isAssignedToMe = currentUserId
+    ? task.assignees.some((a) => a.tgUserId === currentUserId)
+    : false
 
   return (
-    <div className="tg-card-bg rounded-xl p-3 border tg-separator transition-colors">
+    <div
+      className={`task-card rounded-xl p-3 transition-colors cursor-pointer${isAssignedToMe ? ' border-2' : ' border tg-separator'}`}
+      style={isAssignedToMe ? { borderColor: 'var(--tg-theme-button-color)' } : undefined}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('button')) return
+        setExpanded(!expanded)
+      }}
+    >
       <div className="flex items-start justify-between gap-2">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="text-left flex-1 font-medium tg-text"
-        >
+        <span className="text-left flex-1 font-medium tg-text">
           {task.name}
-        </button>
+        </span>
         <div className="flex gap-1 shrink-0">
           <button
             onClick={() => setEditing(true)}
-            className="tg-hint text-xs px-1"
+            className="tg-hint text-xs p-1"
             title="Edit"
           >
-            Edit
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              <path d="m15 5 4 4" />
+            </svg>
           </button>
           {confirming ? (
             <button
@@ -99,10 +114,14 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
           ) : (
             <button
               onClick={() => setConfirming(true)}
-              className="tg-hint text-xs px-1"
+              className="tg-hint text-xs p-1"
               title="Delete"
             >
-              Del
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
             </button>
           )}
         </div>
@@ -119,7 +138,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
             </span>
           )}
           {task.assignees.length > 0 && (
-            <span>{task.assignees.map((a) => a.tgUserName).join(', ')}</span>
+            <span>{task.assignees.map((a) => getAssigneeDisplayName(a)).join(', ')}</span>
           )}
         </div>
       )}
@@ -128,7 +147,7 @@ export default function TaskCard({ task, onUpdate, onDelete }: Props) {
         <p className="mt-2 text-sm tg-hint whitespace-pre-wrap">{task.description}</p>
       )}
 
-      <div className="mt-2 flex gap-2">
+      <div className="mt-2 flex gap-2 flex-wrap">
         {STATE_TRANSITIONS[task.state].map(({ label, next }) => (
           <button
             key={next}

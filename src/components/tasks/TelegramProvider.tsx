@@ -104,11 +104,14 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     if (value.isTelegram) {
       document.body.classList.add('tg-miniapp')
+      const scheme = value.webApp?.colorScheme
+      if (scheme === 'light') document.body.classList.add('tg-light')
+      else document.body.classList.add('tg-dark')
     }
     return () => {
-      document.body.classList.remove('tg-miniapp')
+      document.body.classList.remove('tg-miniapp', 'tg-light', 'tg-dark')
     }
-  }, [value.isTelegram])
+  }, [value.isTelegram, value.webApp])
 
   return <TelegramContext.Provider value={value}>{children}</TelegramContext.Provider>
 }

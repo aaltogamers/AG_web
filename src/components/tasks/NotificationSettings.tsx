@@ -111,10 +111,10 @@ export default function NotificationSettings({ onBack }: Props) {
 
       <div className="flex flex-col gap-5">
         <div className="tg-section-bg rounded-xl p-4 border tg-separator">
-          <h2 className="text-sm font-semibold mb-3">Timing</h2>
+          <h2 className="text-sm font-semibold mb-3 tg-text">Timing</h2>
           <div className="flex flex-col gap-3">
             <label className="flex items-center justify-between gap-3">
-              <span className="text-sm">Days before deadline</span>
+              <span className="text-sm tg-text">Days before deadline</span>
               <input
                 type="number"
                 min={0}
@@ -126,7 +126,7 @@ export default function NotificationSettings({ onBack }: Props) {
             </label>
             <label className="flex items-center justify-between gap-3">
               <div>
-                <span className="text-sm">Days before start date</span>
+                <span className="text-sm tg-text">Days before start date</span>
                 <span className="text-xs tg-hint block">0 = on the day</span>
               </div>
               <input
@@ -142,7 +142,7 @@ export default function NotificationSettings({ onBack }: Props) {
         </div>
 
         <div className="tg-section-bg rounded-xl p-4 border tg-separator">
-          <h2 className="text-sm font-semibold mb-3">Notify me when</h2>
+          <h2 className="text-sm font-semibold mb-3 tg-text">Notify me when</h2>
           <div className="flex flex-col gap-2">
             {checkboxes.map(({ key, label }) => (
               <label key={key} className="flex items-center gap-3 py-1 cursor-pointer">
@@ -152,7 +152,7 @@ export default function NotificationSettings({ onBack }: Props) {
                   onChange={(e) => update(key, e.target.checked as never)}
                   className="w-4 h-4 accent-[var(--tg-theme-button-color)]"
                 />
-                <span className="text-sm">{label}</span>
+                <span className="text-sm tg-text">{label}</span>
               </label>
             ))}
           </div>
@@ -161,7 +161,7 @@ export default function NotificationSettings({ onBack }: Props) {
         <div className="tg-section-bg rounded-xl p-4 border tg-separator">
           <label className="flex items-center justify-between gap-3 cursor-pointer">
             <div>
-              <span className="text-sm font-medium">Skip &quot;In Progress&quot; tasks</span>
+              <span className="text-sm font-medium tg-text">Skip &quot;In Progress&quot; tasks</span>
               <span className="text-xs tg-hint block">
                 Don&apos;t notify if the task is already in progress
               </span>
