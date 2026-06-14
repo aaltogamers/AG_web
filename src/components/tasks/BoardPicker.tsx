@@ -6,7 +6,7 @@ import { useTelegram } from './TelegramProvider'
 
 type Props = {
   onSelectBoard: (chatId: string) => void
-  newGroup?: { chatId: string; title: string }
+  newGroup?: { chatId: string; title: string | null }
 }
 
 export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
@@ -16,6 +16,7 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [hidingId, setHidingId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [newBoardName, setNewBoardName] = useState('')
 
   const fetchBoards = useCallback(async () => {
     if (!user) return
@@ -59,9 +60,11 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
 
   const createBoard = async () => {
     if (!newGroup) return
+    const name = newGroup.title || newBoardName.trim()
+    if (!name) return
     setCreating(true)
     try {
-      const params = `?name=${encodeURIComponent(newGroup.title)}`
+      const params = `?name=${encodeURIComponent(name)}`
       const res = await fetch(
         `/api/tasks/boards/${encodeURIComponent(newGroup.chatId)}${params}`
       )
@@ -137,13 +140,33 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
       ) : (
         <div className="flex flex-col gap-2">
           {newGroup && (
-            <button
-              onClick={createBoard}
-              disabled={creating}
-              className="tg-primary-btn w-full text-sm !py-3 rounded-xl"
-            >
-              {creating ? 'Creating...' : `Create task board for ${newGroup.title}`}
-            </button>
+            newGroup.title ? (
+              <button
+                onClick={createBoard}
+                disabled={creating}
+                className="tg-primary-btn w-full text-sm !py-3 rounded-xl"
+              >
+                {creating ? 'Creating...' : `Create task board for ${newGroup.title}`}
+              </button>
+            ) : (
+              <div className="tg-section-bg rounded-xl border tg-separator p-3 flex flex-col gap-2">
+                <p className="text-sm font-medium tg-text">Create a new task board</p>
+                <input
+                  type="text"
+                  value={newBoardName}
+                  onChange={(e) => setNewBoardName(e.target.value)}
+                  placeholder="Board name"
+                  className="tg-input w-full text-sm !py-2 px-3"
+                />
+                <button
+                  onClick={createBoard}
+                  disabled={creating || !newBoardName.trim()}
+                  className="tg-primary-btn w-full text-sm !py-2 rounded-lg"
+                >
+                  {creating ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            )
           )}
           {boards.map((board) => (
             <div

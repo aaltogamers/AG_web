@@ -57,7 +57,7 @@ export default function TasksPage() {
   }
 
   const newGroup = chatId && !boardExists
-    ? { chatId, title: chatTitle || 'this group' }
+    ? { chatId, title: chatTitle }
     : undefined
 
   return <BoardPicker onSelectBoard={setSelectedChatId} newGroup={newGroup} />

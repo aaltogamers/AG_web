@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../../../utils/db_pg'
-import { getQueryParam } from '../../../../../utils/apiUtils'
+import { getQueryParam, parseJsonBody } from '../../../../../utils/apiUtils'
+import { getTelegramChatTitle } from '../../../../../utils/telegram'
 import type { Task, TaskAssignee, TaskState } from '../../../../../types/types'
 
 type BoardRow = {
@@ -59,11 +60,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: 'Internal error' })
   }
 
+  const chatId = req.query.chatId as string
+
+  if (req.method === 'PUT') {
+    const body = parseJsonBody<{ name?: string }>(req)
+    if (!body?.name) {
+      return res.status(400).json({ error: 'name is required' })
+    }
+    const result = await pool.query<BoardRow>(
+      'UPDATE task_boards SET name = $1 WHERE chat_id = $2 RETURNING id, chat_id, name, created_at',
+      [body.name, chatId]
+    )
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Board not found' })
+    }
+    return res.status(200).json({
+      board: {
+        id: result.rows[0].id,
+        chatId: result.rows[0].chat_id,
+        name: result.rows[0].name,
+        createdAt: result.rows[0].created_at.toISOString(),
+      },
+    })
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const chatId = req.query.chatId as string
   const name = getQueryParam(req, 'name') || null
   const noCreate = getQueryParam(req, 'noCreate') === 'true'
 
@@ -83,13 +107,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       board.name = name
     }
   } else {
+    let boardName = name
+    if (!boardName) {
+      boardName = await getTelegramChatTitle(chatId)
+    }
     const boardResult = await pool.query<BoardRow>(
       `INSERT INTO task_boards (chat_id, name)
        VALUES ($1, COALESCE($2, 'Task Board'))
        ON CONFLICT (chat_id) DO UPDATE
          SET name = COALESCE($2, task_boards.name)
        RETURNING id, chat_id, name, created_at`,
-      [chatId, name]
+      [chatId, boardName]
     )
     board = boardResult.rows[0]
   }

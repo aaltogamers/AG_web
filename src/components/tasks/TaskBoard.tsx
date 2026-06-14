@@ -5,7 +5,7 @@ import type { Task, TaskBoard as TaskBoardType, TaskState } from '../../types/ty
 import { TASK_STATES, TASK_STATE_LABELS } from '../../types/types'
 import TaskColumn from './TaskColumn'
 import TaskForm from './TaskForm'
-import NotificationSettings from './NotificationSettings'
+import Settings from './Settings'
 import { useTelegram } from './TelegramProvider'
 
 type Props = {
@@ -152,7 +152,14 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
   }
 
   if (showSettings) {
-    return <NotificationSettings onBack={() => setShowSettings(false)} />
+    return (
+      <Settings
+        chatId={chatId!}
+        board={board}
+        onBack={() => setShowSettings(false)}
+        onBoardUpdated={fetchBoard}
+      />
+    )
   }
 
   return (
