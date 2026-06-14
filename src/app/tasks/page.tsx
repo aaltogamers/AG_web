@@ -1,16 +1,46 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTelegram } from '../../components/tasks/TelegramProvider'
 import TaskBoard from '../../components/tasks/TaskBoard'
 import BoardPicker from '../../components/tasks/BoardPicker'
 
 export default function TasksPage() {
-  const { chatId } = useTelegram()
+  const { chatId, chatTitle } = useTelegram()
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
+  const [boardExists, setBoardExists] = useState<boolean | null>(null)
 
-  if (chatId) {
+  const checkBoard = useCallback(async () => {
+    if (!chatId) return
+    try {
+      const res = await fetch(
+        `/api/tasks/boards/${encodeURIComponent(chatId)}?noCreate=true`
+      )
+      if (!res.ok) return
+      const data = await res.json()
+      setBoardExists(data.board !== null)
+    } catch {
+      setBoardExists(false)
+    }
+  }, [chatId])
+
+  useEffect(() => {
+    checkBoard()
+  }, [checkBoard])
+
+  if (chatId && boardExists === true) {
     return <TaskBoard />
+  }
+
+  if (chatId && boardExists === null) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div
+          className="w-8 h-8 border-2 border-t-transparent rounded-full spinner"
+          style={{ borderColor: 'var(--tg-theme-button-color)', borderTopColor: 'transparent' }}
+        />
+      </div>
+    )
   }
 
   if (selectedChatId) {
@@ -22,5 +52,9 @@ export default function TasksPage() {
     )
   }
 
-  return <BoardPicker onSelectBoard={setSelectedChatId} />
+  const newGroup = chatId && chatTitle && !boardExists
+    ? { chatId, title: chatTitle }
+    : undefined
+
+  return <BoardPicker onSelectBoard={setSelectedChatId} newGroup={newGroup} />
 }

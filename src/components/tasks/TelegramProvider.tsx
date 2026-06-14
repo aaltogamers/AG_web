@@ -14,6 +14,7 @@ type TelegramContextValue = {
   isTelegram: boolean
   user: TelegramUser | null
   chatId: string | null
+  chatTitle: string | null
   webApp: TelegramWebApp | null
 }
 
@@ -22,6 +23,7 @@ const TelegramContext = createContext<TelegramContextValue>({
   isTelegram: false,
   user: null,
   chatId: null,
+  chatTitle: null,
   webApp: null,
 })
 
@@ -33,6 +35,7 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
     isTelegram: false,
     user: null,
     chatId: null,
+    chatTitle: null,
     webApp: null,
   })
 
@@ -68,11 +71,14 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
           tg.initDataUnsafe.start_param ??
           null
 
+        const chatTitle = tg.initDataUnsafe.chat?.title ?? null
+
         setValue({
           ready: true,
           isTelegram: true,
           user,
           chatId,
+          chatTitle,
           webApp: tg,
         })
         return true

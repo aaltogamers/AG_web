@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../../../utils/db_pg'
+import { getQueryParam } from '../../../../../utils/apiUtils'
 import type { Task, TaskAssignee, TaskState } from '../../../../../types/types'
 
 type BoardRow = {
@@ -61,15 +62,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const chatId = req.query.chatId as string
+  const name = getQueryParam(req, 'name') || null
+  const noCreate = getQueryParam(req, 'noCreate') === 'true'
 
-  const boardResult = await pool.query<BoardRow>(
-    `INSERT INTO task_boards (chat_id)
-     VALUES ($1)
-     ON CONFLICT (chat_id) DO UPDATE SET chat_id = task_boards.chat_id
-     RETURNING id, chat_id, name, created_at`,
-    [chatId]
-  )
-  const board = boardResult.rows[0]
+  let board: BoardRow
+
+  if (noCreate) {
+    const result = await pool.query<BoardRow>(
+      'SELECT id, chat_id, name, created_at FROM task_boards WHERE chat_id = $1',
+      [chatId]
+    )
+    if (result.rows.length === 0) {
+      return res.status(200).json({ board: null, tasks: [] })
+    }
+    board = result.rows[0]
+    if (name && board.name !== name) {
+      await pool.query('UPDATE task_boards SET name = $1 WHERE id = $2', [name, board.id])
+      board.name = name
+    }
+  } else {
+    const boardResult = await pool.query<BoardRow>(
+      `INSERT INTO task_boards (chat_id, name)
+       VALUES ($1, COALESCE($2, 'Task Board'))
+       ON CONFLICT (chat_id) DO UPDATE
+         SET name = COALESCE($2, task_boards.name)
+       RETURNING id, chat_id, name, created_at`,
+      [chatId, name]
+    )
+    board = boardResult.rows[0]
+  }
 
   const tasksResult = await pool.query<TaskRow>(
     `SELECT id, board_id, name, description, deadline, start_time, state,

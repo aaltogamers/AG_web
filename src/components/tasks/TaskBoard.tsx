@@ -14,7 +14,7 @@ type Props = {
 }
 
 export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
-  const { user, chatId: contextChatId, ready, webApp } = useTelegram()
+  const { user, chatId: contextChatId, chatTitle, ready, webApp } = useTelegram()
   const chatId = chatIdOverride ?? contextChatId
   const [board, setBoard] = useState<TaskBoardType | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
@@ -44,7 +44,8 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
   const fetchBoard = useCallback(async () => {
     if (!chatId) return
     try {
-      const res = await fetch(`/api/tasks/boards/${encodeURIComponent(chatId)}`)
+      const params = chatTitle ? `?name=${encodeURIComponent(chatTitle)}` : ''
+      const res = await fetch(`/api/tasks/boards/${encodeURIComponent(chatId)}${params}`)
       if (!res.ok) throw new Error('Failed to load board')
       const data = await res.json()
       setBoard(data.board)
@@ -55,7 +56,7 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
     } finally {
       setLoading(false)
     }
-  }, [chatId])
+  }, [chatId, chatTitle])
 
   useEffect(() => {
     fetchBoard()

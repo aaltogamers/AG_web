@@ -6,14 +6,16 @@ import { useTelegram } from './TelegramProvider'
 
 type Props = {
   onSelectBoard: (chatId: string) => void
+  newGroup?: { chatId: string; title: string }
 }
 
-export default function BoardPicker({ onSelectBoard }: Props) {
+export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
   const { user, ready } = useTelegram()
   const [boards, setBoards] = useState<BoardSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [hidingId, setHidingId] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
 
   const fetchBoards = useCallback(async () => {
     if (!user) return
@@ -21,7 +23,7 @@ export default function BoardPicker({ onSelectBoard }: Props) {
       const res = await fetch(`/api/tasks/user-boards?tgUserId=${user.id}`)
       if (!res.ok) throw new Error('Failed to load boards')
       const data = await res.json()
-      if (data.boards.length === 1) {
+      if (data.boards.length === 1 && !newGroup) {
         onSelectBoard(data.boards[0].chatId)
         return
       }
@@ -32,7 +34,7 @@ export default function BoardPicker({ onSelectBoard }: Props) {
     } finally {
       setLoading(false)
     }
-  }, [user, onSelectBoard])
+  }, [user, onSelectBoard, newGroup])
 
   useEffect(() => {
     fetchBoards()
@@ -52,6 +54,21 @@ export default function BoardPicker({ onSelectBoard }: Props) {
       setBoards((prev) => [...prev, board])
     } finally {
       setHidingId(null)
+    }
+  }
+
+  const createBoard = async () => {
+    if (!newGroup) return
+    setCreating(true)
+    try {
+      const params = `?name=${encodeURIComponent(newGroup.title)}`
+      const res = await fetch(
+        `/api/tasks/boards/${encodeURIComponent(newGroup.chatId)}${params}`
+      )
+      if (!res.ok) throw new Error('Failed to create board')
+      onSelectBoard(newGroup.chatId)
+    } catch {
+      setCreating(false)
     }
   }
 
@@ -100,6 +117,8 @@ export default function BoardPicker({ onSelectBoard }: Props) {
     )
   }
 
+  const hasContent = newGroup || boards.length > 0
+
   return (
     <div className="px-4 py-4">
       <div className="mb-4">
@@ -109,7 +128,7 @@ export default function BoardPicker({ onSelectBoard }: Props) {
         </p>
       </div>
 
-      {boards.length === 0 ? (
+      {!hasContent ? (
         <div className="text-center py-12">
           <p className="tg-hint max-w-xs mx-auto">
             No boards to show. Open the app from a Telegram group to get started.
@@ -117,6 +136,15 @@ export default function BoardPicker({ onSelectBoard }: Props) {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
+          {newGroup && (
+            <button
+              onClick={createBoard}
+              disabled={creating}
+              className="tg-primary-btn w-full text-sm !py-3 rounded-xl"
+            >
+              {creating ? 'Creating...' : `Create task board for ${newGroup.title}`}
+            </button>
+          )}
           {boards.map((board) => (
             <div
               key={board.id}
