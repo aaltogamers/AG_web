@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const taskResult = await pool.query(
-      `SELECT id, board_id, name, description, deadline, start_time, state,
+      `SELECT id, name, description, deadline, start_time, state,
               created_by_tg_id, created_by_tg_name, position, created_at, updated_at
        FROM tasks WHERE id = $1`,
       [taskId]
@@ -44,7 +44,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       task: {
         id: t.id,
-        boardId: t.board_id,
         name: t.name,
         description: t.description ?? undefined,
         deadline: t.deadline ? t.deadline.toISOString() : undefined,
@@ -132,7 +131,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await client.query('COMMIT')
 
       const updated = await pool.query(
-        `SELECT id, board_id, name, description, deadline, start_time, state,
+        `SELECT id, name, description, deadline, start_time, state,
                 created_by_tg_id, created_by_tg_name, position, created_at, updated_at
          FROM tasks WHERE id = $1`,
         [taskId]
@@ -146,7 +145,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({
         task: {
           id: t.id,
-          boardId: t.board_id,
           name: t.name,
           description: t.description ?? undefined,
           deadline: t.deadline ? t.deadline.toISOString() : undefined,

@@ -4,7 +4,6 @@ import type { Task, TaskAssignee, TaskState } from '../../../../types/types'
 
 type TaskRow = {
   id: string
-  board_id: string
   name: string
   description: string | null
   deadline: Date | null
@@ -30,7 +29,6 @@ const toISOOrUndefined = (d: Date | null): string | undefined =>
 
 const rowToTask = (row: TaskRow, assignees: TaskAssignee[]): Task => ({
   id: row.id,
-  boardId: row.board_id,
   name: row.name,
   description: row.description ?? undefined,
   deadline: toISOOrUndefined(row.deadline),
@@ -44,8 +42,6 @@ const rowToTask = (row: TaskRow, assignees: TaskAssignee[]): Task => ({
   updatedAt: row.updated_at.toISOString(),
 })
 
-const BOARD_ID = 1
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     await ensureMigrated()
@@ -58,12 +54,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const tasksResult = await pool.query<TaskRow>(
-    `SELECT id, board_id, name, description, deadline, start_time, state,
+    `SELECT id, name, description, deadline, start_time, state,
             created_by_tg_id, created_by_tg_name, position, created_at, updated_at
      FROM tasks
-     WHERE board_id = $1
-     ORDER BY position ASC, created_at ASC`,
-    [BOARD_ID]
+     ORDER BY position ASC, created_at ASC`
   )
 
   const taskIds = tasksResult.rows.map((r) => r.id)

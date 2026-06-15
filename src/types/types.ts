@@ -316,7 +316,6 @@ export type TaskAssignee = {
 
 export type Task = {
   id: string
-  boardId: string
   name: string
   description?: string
   deadline?: string

@@ -16,7 +16,6 @@ type CreateTaskBody = {
 }
 
 const VALID_STATES: readonly string[] = ['todo', 'in_progress', 'done'] satisfies readonly TaskState[]
-const BOARD_ID = 1
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -42,19 +41,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await client.query('BEGIN')
 
     const maxPosResult = await client.query(
-      'SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM tasks WHERE board_id = $1',
-      [BOARD_ID]
+      'SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM tasks'
     )
     const nextPos = maxPosResult.rows[0].next_pos
 
     const taskResult = await client.query(
-      `INSERT INTO tasks (board_id, name, description, deadline, start_time, state,
+      `INSERT INTO tasks (name, description, deadline, start_time, state,
                           created_by_tg_id, created_by_tg_name, position)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING id, board_id, name, description, deadline, start_time, state,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, name, description, deadline, start_time, state,
                  created_by_tg_id, created_by_tg_name, position, created_at, updated_at`,
       [
-        BOARD_ID,
         body.name.trim(),
         body.description?.trim() || null,
         body.deadline || null,
@@ -112,7 +109,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(201).json({
       task: {
         id: task.id,
-        boardId: task.board_id,
         name: task.name,
         description: task.description ?? undefined,
         deadline: task.deadline ? task.deadline.toISOString() : undefined,
