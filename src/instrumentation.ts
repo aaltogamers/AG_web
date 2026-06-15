@@ -111,12 +111,10 @@ async function checkDailyNotifications(): Promise<void> {
       deadline: Date | null
       start_time: Date | null
       tg_user_id: string
-      chat_id: string
     }>(`
       SELECT t.id AS task_id, t.name, t.state, t.deadline, t.start_time,
-             ta.tg_user_id, tb.chat_id
+             ta.tg_user_id
       FROM tasks t
-      JOIN task_boards tb ON tb.id = t.board_id
       JOIN task_assignees ta ON ta.task_id = t.id
       WHERE t.state != 'done'
         AND (t.deadline IS NOT NULL OR t.start_time IS NOT NULL)
@@ -126,9 +124,7 @@ async function checkDailyNotifications(): Promise<void> {
     if (rows.length === 0) return
 
     const userIds = [...new Set(rows.map((r) => r.tg_user_id))]
-    const chatIds = [...new Set(rows.map((r) => r.chat_id))]
     const { rows: settingsRows } = await pool.query<{
-      chat_id: string
       tg_user_id: string
       deadline_days: number
       start_date_days: number
@@ -141,13 +137,13 @@ async function checkDailyNotifications(): Promise<void> {
       skip_in_progress: boolean
     }>(
       `SELECT * FROM task_notification_settings
-       WHERE tg_user_id = ANY($1) AND chat_id = ANY($2)`,
-      [userIds, chatIds]
+       WHERE tg_user_id = ANY($1)`,
+      [userIds]
     )
 
     const settingsMap = new Map<string, UserSettings>()
     for (const s of settingsRows) {
-      settingsMap.set(`${s.chat_id}:${s.tg_user_id}`, {
+      settingsMap.set(s.tg_user_id, {
         deadlineDays: s.deadline_days,
         startDateDays: s.start_date_days,
         notifyBeforeDeadline: s.notify_before_deadline,
@@ -166,7 +162,7 @@ async function checkDailyNotifications(): Promise<void> {
 
     const byUser = new Map<string, string[]>()
     for (const row of rows) {
-      const s = settingsMap.get(`${row.chat_id}:${row.tg_user_id}`) ?? DEFAULT_SETTINGS
+      const s = settingsMap.get(row.tg_user_id) ?? DEFAULT_SETTINGS
       if (s.skipInProgress && row.state === 'in_progress') continue
 
       if (row.deadline) {

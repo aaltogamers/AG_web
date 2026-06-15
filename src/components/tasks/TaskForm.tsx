@@ -63,7 +63,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
 
   const fetchSuggestions = (query: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!query.trim() || !chatId) {
+    if (!query.trim()) {
       setSuggestions([])
       setShowSuggestions(false)
       return
@@ -71,7 +71,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `/api/tasks/boards/${encodeURIComponent(chatId)}/users?q=${encodeURIComponent(query)}`
+          `/api/tasks/board/users?q=${encodeURIComponent(query)}`
         )
         if (res.ok) {
           const data = await res.json()
@@ -99,15 +99,15 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
     if (!trimmed) return
     if (assignees.some((a) => a.tgUserName === trimmed || a.tgUserId === trimmed)) return
 
-    if (/^\d+$/.test(trimmed) && chatId) {
+    if (/^\d+$/.test(trimmed)) {
       setResolving(true)
       try {
         const res = await fetch(
-          `/api/tasks/boards/${encodeURIComponent(chatId)}/resolve-user`,
+          '/api/tasks/board/resolve-user',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tgUserId: trimmed }),
+            body: JSON.stringify({ tgUserId: trimmed, chatId: chatId ?? undefined }),
           }
         )
         if (res.ok) {

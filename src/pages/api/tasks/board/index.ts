@@ -1,14 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import pool, { ensureMigrated } from '../../../../../utils/db_pg'
-import { getQueryParam, parseJsonBody } from '../../../../../utils/apiUtils'
-import type { Task, TaskAssignee, TaskState } from '../../../../../types/types'
-
-type BoardRow = {
-  id: string
-  chat_id: string
-  name: string
-  created_at: Date
-}
+import pool, { ensureMigrated } from '../../../../utils/db_pg'
+import type { Task, TaskAssignee, TaskState } from '../../../../types/types'
 
 type TaskRow = {
   id: string
@@ -52,6 +44,8 @@ const rowToTask = (row: TaskRow, assignees: TaskAssignee[]): Task => ({
   updatedAt: row.updated_at.toISOString(),
 })
 
+const BOARD_ID = 1
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     await ensureMigrated()
@@ -59,62 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: 'Internal error' })
   }
 
-  const chatId = req.query.chatId as string
-
-  if (req.method === 'PUT') {
-    const body = parseJsonBody<{ name?: string }>(req)
-    if (!body?.name) {
-      return res.status(400).json({ error: 'name is required' })
-    }
-    const result = await pool.query<BoardRow>(
-      'UPDATE task_boards SET name = $1 WHERE chat_id = $2 RETURNING id, chat_id, name, created_at',
-      [body.name, chatId]
-    )
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Board not found' })
-    }
-    return res.status(200).json({
-      board: {
-        id: result.rows[0].id,
-        chatId: result.rows[0].chat_id,
-        name: result.rows[0].name,
-        createdAt: result.rows[0].created_at.toISOString(),
-      },
-    })
-  }
-
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
-  }
-
-  const name = getQueryParam(req, 'name') || null
-  const noCreate = getQueryParam(req, 'noCreate') === 'true'
-
-  let board: BoardRow
-
-  if (noCreate) {
-    const result = await pool.query<BoardRow>(
-      'SELECT id, chat_id, name, created_at FROM task_boards WHERE chat_id = $1',
-      [chatId]
-    )
-    if (result.rows.length === 0) {
-      return res.status(200).json({ board: null, tasks: [] })
-    }
-    board = result.rows[0]
-    if (name && board.name !== name) {
-      await pool.query('UPDATE task_boards SET name = $1 WHERE id = $2', [name, board.id])
-      board.name = name
-    }
-  } else {
-    const boardResult = await pool.query<BoardRow>(
-      `INSERT INTO task_boards (chat_id, name)
-       VALUES ($1, COALESCE($2, 'Task Board'))
-       ON CONFLICT (chat_id) DO UPDATE
-         SET name = COALESCE($2, task_boards.name)
-       RETURNING id, chat_id, name, created_at`,
-      [chatId, name]
-    )
-    board = boardResult.rows[0]
   }
 
   const tasksResult = await pool.query<TaskRow>(
@@ -123,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
      FROM tasks
      WHERE board_id = $1
      ORDER BY position ASC, created_at ASC`,
-    [board.id]
+    [BOARD_ID]
   )
 
   const taskIds = tasksResult.rows.map((r) => r.id)
@@ -134,9 +74,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `SELECT ta.task_id, ta.tg_user_id, ta.tg_user_name,
               tu.first_name, tu.last_name
        FROM task_assignees ta
-       LEFT JOIN tg_users tu ON ta.tg_user_id = tu.tg_user_id AND tu.chat_id = $2
+       LEFT JOIN tg_users tu ON ta.tg_user_id = tu.tg_user_id
        WHERE ta.task_id = ANY($1)`,
-      [taskIds, chatId]
+      [taskIds]
     )
     assigneesByTask = assigneesResult.rows.reduce(
       (acc, row) => {
@@ -158,13 +98,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const tasks = tasksResult.rows.map((row) => rowToTask(row, assigneesByTask[row.id] ?? []))
 
-  return res.status(200).json({
-    board: {
-      id: board.id,
-      chatId: board.chat_id,
-      name: board.name,
-      createdAt: board.created_at.toISOString(),
-    },
-    tasks,
-  })
+  return res.status(200).json({ tasks })
 }

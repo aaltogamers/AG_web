@@ -8,7 +8,7 @@ type Props = {
   onBack: () => void
 }
 
-const DEFAULTS: Omit<TaskNotificationSettings, 'chatId' | 'tgUserId'> = {
+const DEFAULTS: Omit<TaskNotificationSettings, 'tgUserId'> = {
   deadlineDays: 5,
   startDateDays: 0,
   notifyCreation: true,
@@ -22,16 +22,16 @@ const DEFAULTS: Omit<TaskNotificationSettings, 'chatId' | 'tgUserId'> = {
 }
 
 export default function NotificationSettings({ onBack }: Props) {
-  const { user, chatId } = useTelegram()
+  const { user } = useTelegram()
   const [settings, setSettings] = useState(DEFAULTS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   const fetchSettings = useCallback(async () => {
-    if (!chatId || !user) return
+    if (!user) return
     try {
       const res = await fetch(
-        `/api/tasks/boards/${encodeURIComponent(chatId)}/notification-settings?tgUserId=${user.id}`
+        `/api/tasks/board/notification-settings?tgUserId=${user.id}`
       )
       if (res.ok) {
         const data = await res.json()
@@ -52,16 +52,16 @@ export default function NotificationSettings({ onBack }: Props) {
     } catch { /* use defaults */ } finally {
       setLoading(false)
     }
-  }, [chatId, user])
+  }, [user])
 
   useEffect(() => { fetchSettings() }, [fetchSettings])
 
   const save = async (updated: typeof settings) => {
-    if (!chatId || !user) return
+    if (!user) return
     setSaving(true)
     try {
       await fetch(
-        `/api/tasks/boards/${encodeURIComponent(chatId)}/notification-settings`,
+        '/api/tasks/board/notification-settings',
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },

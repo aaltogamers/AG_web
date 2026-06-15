@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import pool, { ensureMigrated } from '../../../../../utils/db_pg'
-import { parseJsonBody } from '../../../../../utils/apiUtils'
-import { sendTelegramDM } from '../../../../../utils/telegram'
-import type { TaskState } from '../../../../../types/types'
+import pool, { ensureMigrated } from '../../../../utils/db_pg'
+import { parseJsonBody } from '../../../../utils/apiUtils'
+import { sendTelegramDM } from '../../../../utils/telegram'
+import type { TaskState } from '../../../../types/types'
 
 type CreateTaskBody = {
   name: string
@@ -16,6 +16,7 @@ type CreateTaskBody = {
 }
 
 const VALID_STATES: readonly string[] = ['todo', 'in_progress', 'done'] satisfies readonly TaskState[]
+const BOARD_ID = 1
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -28,7 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const chatId = req.query.chatId as string
   const body = parseJsonBody<CreateTaskBody>(req)
 
   if (!body || typeof body.name !== 'string' || !body.name.trim()) {
@@ -41,18 +41,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await client.query('BEGIN')
 
-    const boardResult = await client.query(
-      `INSERT INTO task_boards (chat_id)
-       VALUES ($1)
-       ON CONFLICT (chat_id) DO UPDATE SET chat_id = task_boards.chat_id
-       RETURNING id`,
-      [chatId]
-    )
-    const boardId = boardResult.rows[0].id
-
     const maxPosResult = await client.query(
       'SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM tasks WHERE board_id = $1',
-      [boardId]
+      [BOARD_ID]
     )
     const nextPos = maxPosResult.rows[0].next_pos
 
@@ -63,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
        RETURNING id, board_id, name, description, deadline, start_time, state,
                  created_by_tg_id, created_by_tg_name, position, created_at, updated_at`,
       [
-        boardId,
+        BOARD_ID,
         body.name.trim(),
         body.description?.trim() || null,
         body.deadline || null,
@@ -97,8 +88,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const settingsResult = await pool.query(
         `SELECT tg_user_id, notify_creation FROM task_notification_settings
-         WHERE chat_id = $1 AND tg_user_id = ANY($2)`,
-        [chatId, notifyAssignees.map((a) => a.tgUserId)]
+         WHERE tg_user_id = ANY($1)`,
+        [notifyAssignees.map((a) => a.tgUserId)]
       )
       const settingsMap = new Map(
         settingsResult.rows.map((r: { tg_user_id: string; notify_creation: boolean }) => [r.tg_user_id, r.notify_creation])

@@ -1,22 +1,15 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import type { Task, TaskBoard as TaskBoardType, TaskState } from '../../types/types'
+import type { Task, TaskState } from '../../types/types'
 import { TASK_STATES, TASK_STATE_LABELS } from '../../types/types'
 import TaskColumn from './TaskColumn'
 import TaskForm from './TaskForm'
 import Settings from './Settings'
 import { useTelegram } from './TelegramProvider'
 
-type Props = {
-  chatIdOverride?: string | null
-  onBack?: () => void
-}
-
-export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
-  const { user, chatId: contextChatId, chatTitle, ready, webApp } = useTelegram()
-  const chatId = chatIdOverride ?? contextChatId
-  const [board, setBoard] = useState<TaskBoardType | null>(null)
+export default function TaskBoard() {
+  const { user, ready } = useTelegram()
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -27,9 +20,9 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
   const registeredRef = useRef(false)
 
   useEffect(() => {
-    if (!user || !chatId || registeredRef.current) return
+    if (!user || registeredRef.current) return
     registeredRef.current = true
-    fetch(`/api/tasks/boards/${encodeURIComponent(chatId)}/register-user`, {
+    fetch('/api/tasks/board/register-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -39,16 +32,13 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
         username: user.username,
       }),
     }).catch(() => {})
-  }, [user, chatId])
+  }, [user])
 
   const fetchBoard = useCallback(async () => {
-    if (!chatId) return
     try {
-      const params = chatTitle ? `?name=${encodeURIComponent(chatTitle)}` : ''
-      const res = await fetch(`/api/tasks/boards/${encodeURIComponent(chatId)}${params}`)
-      if (!res.ok) throw new Error('Failed to load board')
+      const res = await fetch('/api/tasks/board')
+      if (!res.ok) throw new Error('Failed to load tasks')
       const data = await res.json()
-      setBoard(data.board)
       setTasks(data.tasks)
       setError(null)
     } catch (err) {
@@ -56,14 +46,14 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
     } finally {
       setLoading(false)
     }
-  }, [chatId, chatTitle])
+  }, [])
 
   useEffect(() => {
     fetchBoard()
   }, [fetchBoard])
 
   const createTask = async (formData: Record<string, unknown>) => {
-    const res = await fetch(`/api/tasks/boards/${encodeURIComponent(chatId!)}/tasks`, {
+    const res = await fetch('/api/tasks/board/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -92,16 +82,6 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
     if (!res.ok) throw new Error('Failed to delete task')
     setTasks((prev) => prev.filter((t) => t.id !== taskId))
   }
-
-  useEffect(() => {
-    if (!chatIdOverride || !webApp?.BackButton || !onBack) return
-    webApp.BackButton.show()
-    webApp.BackButton.onClick(onBack)
-    return () => {
-      webApp.BackButton.offClick(onBack)
-      webApp.BackButton.hide()
-    }
-  }, [chatIdOverride, webApp, onBack])
 
   const sortTasks = (list: Task[]) => {
     return [...list].sort((a, b) => {
@@ -154,10 +134,7 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
   if (showSettings) {
     return (
       <Settings
-        chatId={chatId!}
-        board={board}
         onBack={() => setShowSettings(false)}
-        onBoardUpdated={fetchBoard}
       />
     )
   }
@@ -166,7 +143,7 @@ export default function TaskBoard({ chatIdOverride, onBack }: Props = {}) {
     <div className="px-4 py-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-lg font-semibold">{board?.name ?? 'Task Board'}</h1>
+          <h1 className="text-lg font-semibold">Tasks</h1>
           <p className="text-xs tg-hint mt-0.5">
             {tasks.length} task{tasks.length !== 1 ? 's' : ''}
           </p>

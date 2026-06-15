@@ -330,24 +330,8 @@ export type Task = {
   updatedAt: string
 }
 
-export type TaskBoard = {
-  id: string
-  chatId: string
-  name: string
-  createdAt: string
-}
-
-export type BoardSummary = {
-  id: string
-  chatId: string
-  name: string
-  taskCount: number
-  createdAt: string
-}
-
 export type TgUser = {
   id: string
-  chatId: string
   tgUserId: string
   firstName: string
   lastName?: string
@@ -355,7 +339,6 @@ export type TgUser = {
 }
 
 export type TaskNotificationSettings = {
-  chatId: string
   tgUserId: string
   deadlineDays: number
   startDateDays: number

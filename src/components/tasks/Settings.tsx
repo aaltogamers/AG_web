@@ -1,17 +1,14 @@
 'use client'
 
 import React, { useCallback, useEffect, useState } from 'react'
-import type { TaskBoard, TaskNotificationSettings } from '../../types/types'
+import type { TaskNotificationSettings } from '../../types/types'
 import { useTelegram } from './TelegramProvider'
 
 type Props = {
-  chatId: string
-  board: TaskBoard | null
   onBack: () => void
-  onBoardUpdated: () => void
 }
 
-const NOTIFICATION_DEFAULTS: Omit<TaskNotificationSettings, 'chatId' | 'tgUserId'> = {
+const NOTIFICATION_DEFAULTS: Omit<TaskNotificationSettings, 'tgUserId'> = {
   deadlineDays: 5,
   startDateDays: 0,
   notifyCreation: true,
@@ -24,25 +21,18 @@ const NOTIFICATION_DEFAULTS: Omit<TaskNotificationSettings, 'chatId' | 'tgUserId
   skipInProgress: false,
 }
 
-export default function Settings({ chatId, board, onBack, onBoardUpdated }: Props) {
+export default function Settings({ onBack }: Props) {
   const { user } = useTelegram()
 
   const [notifSettings, setNotifSettings] = useState(NOTIFICATION_DEFAULTS)
   const [loading, setLoading] = useState(true)
   const [savingNotif, setSavingNotif] = useState(false)
 
-  const [boardName, setBoardName] = useState(board?.name ?? '')
-  const [savingName, setSavingName] = useState(false)
-
-  useEffect(() => {
-    setBoardName(board?.name ?? '')
-  }, [board])
-
   const fetchNotifSettings = useCallback(async () => {
     if (!user) return
     try {
       const res = await fetch(
-        `/api/tasks/boards/${encodeURIComponent(chatId)}/notification-settings?tgUserId=${user.id}`
+        `/api/tasks/board/notification-settings?tgUserId=${user.id}`
       )
       if (res.ok) {
         const data = await res.json()
@@ -63,7 +53,7 @@ export default function Settings({ chatId, board, onBack, onBoardUpdated }: Prop
     } catch { /* use defaults */ } finally {
       setLoading(false)
     }
-  }, [chatId, user])
+  }, [user])
 
   useEffect(() => { fetchNotifSettings() }, [fetchNotifSettings])
 
@@ -72,7 +62,7 @@ export default function Settings({ chatId, board, onBack, onBoardUpdated }: Prop
     setSavingNotif(true)
     try {
       await fetch(
-        `/api/tasks/boards/${encodeURIComponent(chatId)}/notification-settings`,
+        '/api/tasks/board/notification-settings',
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -88,22 +78,6 @@ export default function Settings({ chatId, board, onBack, onBoardUpdated }: Prop
     const updated = { ...notifSettings, [key]: value }
     setNotifSettings(updated)
     saveNotif(updated)
-  }
-
-  const saveBoardName = async () => {
-    const trimmed = boardName.trim()
-    if (!trimmed || trimmed === board?.name) return
-    setSavingName(true)
-    try {
-      const res = await fetch(`/api/tasks/boards/${encodeURIComponent(chatId)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: trimmed }),
-      })
-      if (res.ok) onBoardUpdated()
-    } catch { /* ignore */ } finally {
-      setSavingName(false)
-    }
   }
 
   if (loading) {
@@ -137,8 +111,6 @@ export default function Settings({ chatId, board, onBack, onBoardUpdated }: Prop
       </div>
 
       <div className="flex flex-col gap-5">
-        <h2 className="text-sm font-semibold tg-hint uppercase tracking-wide">Personal settings</h2>
-
         <div className="tg-section-bg rounded-xl p-4 border tg-separator">
           <h3 className="text-sm font-semibold mb-3 tg-text">Timing</h3>
           <div className="flex flex-col gap-3">
@@ -202,27 +174,6 @@ export default function Settings({ chatId, board, onBack, onBoardUpdated }: Prop
               className="w-5 h-5 accent-[var(--tg-theme-button-color)]"
             />
           </label>
-        </div>
-
-        <h2 className="text-sm font-semibold tg-hint uppercase tracking-wide mt-2">Board settings</h2>
-
-        <div className="tg-section-bg rounded-xl p-4 border tg-separator">
-          <h3 className="text-sm font-semibold mb-3 tg-text">Board name</h3>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={boardName}
-              onChange={(e) => setBoardName(e.target.value)}
-              className="tg-input flex-1 text-sm !py-2 px-3"
-            />
-            <button
-              onClick={saveBoardName}
-              disabled={savingName || !boardName.trim() || boardName.trim() === board?.name}
-              className="tg-primary-btn text-sm !py-2 !px-4"
-            >
-              {savingName ? 'Saving...' : 'Save'}
-            </button>
-          </div>
         </div>
       </div>
 
