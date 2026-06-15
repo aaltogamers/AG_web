@@ -1,21 +1,3 @@
-export async function getTelegramChatTitle(chatId: string): Promise<string | null> {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN
-  if (!botToken) return null
-
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/getChat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId }),
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.result?.title ?? null
-  } catch {
-    return null
-  }
-}
-
 export async function sendTelegramDM(tgUserId: string, text: string): Promise<boolean> {
   const botToken = process.env.TELEGRAM_BOT_TOKEN
   if (!botToken) {

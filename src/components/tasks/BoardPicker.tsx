@@ -16,7 +16,6 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [hidingId, setHidingId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
-  const [newBoardName, setNewBoardName] = useState('')
 
   const fetchBoards = useCallback(async () => {
     if (!user) return
@@ -24,11 +23,18 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
       const res = await fetch(`/api/tasks/user-boards?tgUserId=${user.id}`)
       if (!res.ok) throw new Error('Failed to load boards')
       const data = await res.json()
-      if (data.boards.length === 1 && !newGroup) {
-        onSelectBoard(data.boards[0].chatId)
+      const boardList = data.boards as BoardSummary[]
+      if (newGroup) {
+        const existing = boardList.find((b) => b.chatId === newGroup.chatId)
+        if (existing) {
+          onSelectBoard(existing.chatId)
+          return
+        }
+      } else if (boardList.length === 1) {
+        onSelectBoard(boardList[0].chatId)
         return
       }
-      setBoards(data.boards)
+      setBoards(boardList)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load')
@@ -60,11 +66,9 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
 
   const createBoard = async () => {
     if (!newGroup) return
-    const name = newGroup.title || newBoardName.trim()
-    if (!name) return
     setCreating(true)
     try {
-      const params = `?name=${encodeURIComponent(name)}`
+      const params = newGroup.title ? `?name=${encodeURIComponent(newGroup.title)}` : ''
       const res = await fetch(`/api/tasks/boards/${encodeURIComponent(newGroup.chatId)}${params}`)
       if (!res.ok) throw new Error('Failed to create board')
       onSelectBoard(newGroup.chatId)
@@ -137,34 +141,17 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {newGroup &&
-            (newGroup.title ? (
-              <button
-                onClick={createBoard}
-                disabled={creating}
-                className="tg-primary-btn w-full text-sm !py-3 rounded-xl"
-              >
-                {creating ? 'Creating...' : `Create task board for ${newGroup.title}`}
-              </button>
-            ) : (
-              <div className="tg-section-bg rounded-xl border tg-separator p-3 flex flex-col gap-2">
-                <p className="text-sm font-medium tg-text">Create a task board for this group</p>
-                <input
-                  type="text"
-                  value={newBoardName}
-                  onChange={(e) => setNewBoardName(e.target.value)}
-                  placeholder="Board name"
-                  className="tg-input w-full text-sm !py-2 px-3"
-                />
-                <button
-                  onClick={createBoard}
-                  disabled={creating || !newBoardName.trim()}
-                  className="tg-primary-btn w-full text-sm !py-2 rounded-lg"
-                >
-                  {creating ? 'Creating...' : 'Create'}
-                </button>
-              </div>
-            ))}
+          {newGroup && (
+            <button
+              onClick={createBoard}
+              disabled={creating}
+              className="tg-primary-btn w-full text-sm !py-3 rounded-xl"
+            >
+              {creating
+                ? 'Creating...'
+                : `Create task board${newGroup.title ? ` for ${newGroup.title}` : ''}`}
+            </button>
+          )}
           {boards.map((board) => (
             <div
               key={board.id}
