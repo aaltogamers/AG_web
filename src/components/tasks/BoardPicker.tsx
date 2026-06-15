@@ -65,9 +65,7 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
     setCreating(true)
     try {
       const params = `?name=${encodeURIComponent(name)}`
-      const res = await fetch(
-        `/api/tasks/boards/${encodeURIComponent(newGroup.chatId)}${params}`
-      )
+      const res = await fetch(`/api/tasks/boards/${encodeURIComponent(newGroup.chatId)}${params}`)
       if (!res.ok) throw new Error('Failed to create board')
       onSelectBoard(newGroup.chatId)
     } catch {
@@ -91,8 +89,8 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
       <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Telegram Only</h1>
         <p className="tg-hint max-w-sm">
-          This task board is available exclusively as a Telegram Mini App.
-          Open it from the Telegram bot to get started.
+          This task board is available exclusively as a Telegram Mini App. Open it from the Telegram
+          bot to get started.
         </p>
       </div>
     )
@@ -139,8 +137,8 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {newGroup && (
-            newGroup.title ? (
+          {newGroup &&
+            (newGroup.title ? (
               <button
                 onClick={createBoard}
                 disabled={creating}
@@ -150,7 +148,7 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
               </button>
             ) : (
               <div className="tg-section-bg rounded-xl border tg-separator p-3 flex flex-col gap-2">
-                <p className="text-sm font-medium tg-text">Create a new task board</p>
+                <p className="text-sm font-medium tg-text">Create a task board for this group</p>
                 <input
                   type="text"
                   value={newBoardName}
@@ -166,8 +164,7 @@ export default function BoardPicker({ onSelectBoard, newGroup }: Props) {
                   {creating ? 'Creating...' : 'Create'}
                 </button>
               </div>
-            )
-          )}
+            ))}
           {boards.map((board) => (
             <div
               key={board.id}
