@@ -1,8 +1,3 @@
-import dns from 'node:dns'
-import https from 'node:https'
-import { LYCHEE_BASE_URL } from './utils/constants'
-
-dns.setDefaultResultOrder('ipv4first')
 import {
   type UserSettings,
   type AssigneeRow,
@@ -13,70 +8,8 @@ import {
   formatTaskBlock,
 } from './utils/taskNotifications'
 
-const PING_INTERVAL_MS = 10 * 60 * 1000
 const DAILY_CHECK_INTERVAL_MS = 60 * 1000
 let lastDailyRunDate: string | null = null
-
-async function sendTelegramAlert(error: string): Promise<void> {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN
-  const chatId = process.env.TELEGRAM_CHAT_ID
-
-  if (!botToken || !chatId) {
-    console.error('[image-ping] Telegram credentials not configured, skipping alert')
-    return
-  }
-
-  const text = `⚠️ images.aaltogamers.fi is down!\n\nError: ${error}`
-  const url = `https://api.telegram.org/bot${botToken}/sendMessage`
-
-  const body: Record<string, string | number> = {
-    chat_id: chatId,
-    text,
-    parse_mode: 'HTML',
-  }
-
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    if (!res.ok) {
-      console.error('[image-ping] Telegram API error:', res.status, await res.text())
-    }
-  } catch (err) {
-    console.error('[image-ping] Failed to send Telegram alert:', err)
-  }
-}
-
-function pingImageServer(): Promise<void> {
-  return new Promise((resolve) => {
-    const req = https.get(LYCHEE_BASE_URL, {
-      timeout: 30_000,
-      headers: { 'User-Agent': 'Mozilla/5.0 (Node.js Ping Monitor)' },
-      rejectUnauthorized: false,
-    }, (res) => {
-      res.resume()
-      if (!res.statusCode || res.statusCode >= 400) {
-        console.warn(`[image-ping] ${LYCHEE_BASE_URL} responded with status ${res.statusCode}`)
-        sendTelegramAlert(`HTTP ${res.statusCode}`).then(resolve, resolve)
-      } else {
-        resolve()
-      }
-    })
-    req.on('timeout', () => {
-      req.destroy()
-      const message = 'Connection timed out (30s)'
-      console.warn(`[image-ping] ${LYCHEE_BASE_URL} unreachable: ${message}`)
-      sendTelegramAlert(message).then(resolve, resolve)
-    })
-    req.on('error', (err) => {
-      const message = err.message
-      console.warn(`[image-ping] ${LYCHEE_BASE_URL} unreachable: ${message}`)
-      sendTelegramAlert(message).then(resolve, resolve)
-    })
-  })
-}
 
 async function checkDailyNotifications(): Promise<void> {
   const now = new Date()
@@ -182,9 +115,6 @@ async function checkDailyNotifications(): Promise<void> {
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    setInterval(pingImageServer, PING_INTERVAL_MS)
-    console.log('[image-ping] Monitoring started — pinging every 10 minutes')
-
     setInterval(checkDailyNotifications, DAILY_CHECK_INTERVAL_MS)
     console.log('[task-notify] Daily notification check started — checking every 60 seconds')
   }
