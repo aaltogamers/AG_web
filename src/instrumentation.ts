@@ -1,4 +1,5 @@
 import dns from 'node:dns'
+import https from 'node:https'
 import { LYCHEE_BASE_URL } from './utils/constants'
 
 dns.setDefaultResultOrder('ipv4first')
@@ -48,22 +49,29 @@ async function sendTelegramAlert(error: string): Promise<void> {
   }
 }
 
-async function pingImageServer(): Promise<void> {
-  try {
-    const res = await fetch(LYCHEE_BASE_URL, {
-      signal: AbortSignal.timeout(30_000),
-      redirect: 'manual',
+function pingImageServer(): Promise<void> {
+  return new Promise((resolve) => {
+    const req = https.get(LYCHEE_BASE_URL, { timeout: 30_000 }, (res) => {
+      res.resume()
+      if (!res.statusCode || res.statusCode >= 400) {
+        console.warn(`[image-ping] ${LYCHEE_BASE_URL} responded with status ${res.statusCode}`)
+        sendTelegramAlert(`HTTP ${res.statusCode}`).then(resolve, resolve)
+      } else {
+        resolve()
+      }
     })
-    if (!res.ok) {
-      console.warn(`[image-ping] ${LYCHEE_BASE_URL} responded with status ${res.status}`)
-      await sendTelegramAlert(`HTTP ${res.status}`)
-    }
-  } catch (err) {
-    const cause = err instanceof Error && err.cause ? ` (${err.cause})` : ''
-    const message = (err instanceof Error ? err.message : String(err)) + cause
-    console.warn(`[image-ping] ${LYCHEE_BASE_URL} unreachable: ${message}`)
-    await sendTelegramAlert(message)
-  }
+    req.on('timeout', () => {
+      req.destroy()
+      const message = 'Connection timed out (30s)'
+      console.warn(`[image-ping] ${LYCHEE_BASE_URL} unreachable: ${message}`)
+      sendTelegramAlert(message).then(resolve, resolve)
+    })
+    req.on('error', (err) => {
+      const message = err.message
+      console.warn(`[image-ping] ${LYCHEE_BASE_URL} unreachable: ${message}`)
+      sendTelegramAlert(message).then(resolve, resolve)
+    })
+  })
 }
 
 async function checkDailyNotifications(): Promise<void> {
