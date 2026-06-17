@@ -1,4 +1,7 @@
+import dns from 'node:dns'
 import { LYCHEE_BASE_URL } from './utils/constants'
+
+dns.setDefaultResultOrder('ipv4first')
 import {
   type UserSettings,
   type AssigneeRow,
@@ -56,7 +59,8 @@ async function pingImageServer(): Promise<void> {
       await sendTelegramAlert(`HTTP ${res.status}`)
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
+    const cause = err instanceof Error && err.cause ? ` (${err.cause})` : ''
+    const message = (err instanceof Error ? err.message : String(err)) + cause
     console.warn(`[image-ping] ${LYCHEE_BASE_URL} unreachable: ${message}`)
     await sendTelegramAlert(message)
   }
