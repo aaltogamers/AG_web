@@ -89,9 +89,51 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete, onEd
         setExpanded(!expanded)
       }}
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs md:text-sm tg-hint">
+      {/* Small screen: two-row layout (also used by Telegram) */}
+      <div className="md:hidden">
+        <div className="flex items-start justify-between gap-2">
+          <span className="text-left flex-1 font-medium tg-text">
+            {task.name}
+          </span>
+          <button
+            onClick={() => setEditingState(true)}
+            className="tg-hint p-1 shrink-0"
+            title="Edit"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              <path d="m15 5 4 4" />
+            </svg>
+          </button>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tg-hint">
+          <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
+          {task.description && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+              <line x1="21" y1="6" x2="3" y2="6" />
+              <line x1="21" y1="10" x2="3" y2="10" />
+              <line x1="21" y1="14" x2="3" y2="14" />
+              <line x1="14" y1="18" x2="3" y2="18" />
+            </svg>
+          )}
+          {task.startTime && (
+            <span>Start: {formatDate(task.startTime)}</span>
+          )}
+          {task.deadline && (
+            <span className={overdue ? 'tg-destructive' : ''}>
+              Due: {formatDate(task.deadline)}
+            </span>
+          )}
+          {task.assignees.length > 0 && (
+            <span>{task.assignees.map((a) => getAssigneeDisplayName(a)).join(', ')}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Large screen: single-line layout */}
+      <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tg-hint">
         <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
-        <span className="text-left font-medium tg-text text-sm md:text-base">
+        <span className="text-left font-medium tg-text text-base">
           {task.name}
         </span>
         {task.description && (
