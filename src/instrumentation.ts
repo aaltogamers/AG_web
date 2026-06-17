@@ -51,7 +51,11 @@ async function sendTelegramAlert(error: string): Promise<void> {
 
 function pingImageServer(): Promise<void> {
   return new Promise((resolve) => {
-    const req = https.get(LYCHEE_BASE_URL, { timeout: 30_000 }, (res) => {
+    const req = https.get(LYCHEE_BASE_URL, {
+      timeout: 30_000,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Node.js Ping Monitor)' },
+      rejectUnauthorized: false,
+    }, (res) => {
       res.resume()
       if (!res.statusCode || res.statusCode >= 400) {
         console.warn(`[image-ping] ${LYCHEE_BASE_URL} responded with status ${res.statusCode}`)
