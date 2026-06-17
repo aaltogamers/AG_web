@@ -14,6 +14,8 @@ export default function TaskBoard() {
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const formOpen = showForm || editingTaskId !== null
 
   const registeredRef = useRef(false)
 
@@ -148,29 +150,28 @@ export default function TaskBoard() {
 
   return (
     <div className="px-4 py-4">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-lg font-semibold">Tasks</h1>
-          <p className="text-xs tg-hint mt-0.5">
+      {!formOpen && (
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs tg-hint">
             {tasks.length} task{tasks.length !== 1 ? 's' : ''}
           </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowSettings(true)}
+              className="tg-secondary-btn text-sm !py-2 !px-3"
+              title="Notification settings"
+            >
+              Settings
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="tg-primary-btn text-sm !py-2 !px-4"
+            >
+              + Add Task
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowSettings(true)}
-            className="tg-secondary-btn text-sm !py-2 !px-3"
-            title="Notification settings"
-          >
-            Settings
-          </button>
-          <button
-            onClick={() => setShowForm(true)}
-            className="tg-primary-btn text-sm !py-2 !px-4"
-          >
-            + Add Task
-          </button>
-        </div>
-      </div>
+      )}
 
       {showForm && (
         <div className="mb-4 tg-section-bg rounded-xl p-4 border tg-separator">
@@ -181,7 +182,7 @@ export default function TaskBoard() {
 
       <div className="flex flex-col gap-2">
         {activeTasks.map((task) => (
-          <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} />
+          <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
         ))}
         {activeTasks.length === 0 && doneTasks.length === 0 && (
           <p className="text-sm tg-hint text-center py-4 opacity-50">No tasks</p>
@@ -197,7 +198,7 @@ export default function TaskBoard() {
           </div>
           <div className="flex flex-col gap-2">
             {doneTasks.map((task) => (
-              <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} />
+              <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
             ))}
           </div>
         </>

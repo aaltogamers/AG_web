@@ -18,6 +18,7 @@ type Props = {
   task?: Task
   onSubmit: (data: TaskFormData) => Promise<void>
   onCancel: () => void
+  onDelete?: () => Promise<void>
 }
 
 const toLocalDate = (iso?: string): string => {
@@ -31,7 +32,7 @@ const toLocalDate = (iso?: string): string => {
 const displayName = (u: TgUser) =>
   `${u.firstName}${u.lastName ? ' ' + u.lastName : ''}`
 
-export default function TaskForm({ task, onSubmit, onCancel }: Props) {
+export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) {
   const { chatId } = useTelegram()
   const [name, setName] = useState(task?.name ?? '')
   const [description, setDescription] = useState(task?.description ?? '')
@@ -43,6 +44,7 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
   )
   const [assigneeInput, setAssigneeInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [suggestions, setSuggestions] = useState<TgUser[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [resolving, setResolving] = useState(false)
@@ -308,13 +310,36 @@ export default function TaskForm({ task, onSubmit, onCancel }: Props) {
         )}
       </div>
 
-      <div className="flex gap-3 justify-end mt-2">
-        <button type="button" onClick={onCancel} className="tg-secondary-btn">
-          Cancel
-        </button>
-        <button type="submit" disabled={submitting || !name.trim()} className="tg-primary-btn">
-          {task ? 'Save' : 'Create Task'}
-        </button>
+      <div className="flex items-center mt-2">
+        {onDelete && (
+          <div className="flex-1">
+            {confirmingDelete ? (
+              <button
+                type="button"
+                onClick={() => onDelete()}
+                className="tg-destructive text-sm font-medium"
+              >
+                Confirm delete?
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                className="tg-hint text-sm"
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        )}
+        <div className="flex gap-3 ml-auto">
+          <button type="button" onClick={onCancel} className="tg-secondary-btn">
+            Cancel
+          </button>
+          <button type="submit" disabled={submitting || !name.trim()} className="tg-primary-btn">
+            {task ? 'Save' : 'Create Task'}
+          </button>
+        </div>
       </div>
     </form>
   )

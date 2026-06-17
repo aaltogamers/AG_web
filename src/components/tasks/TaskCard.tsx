@@ -10,6 +10,7 @@ type Props = {
   currentUserId?: string
   onUpdate: (taskId: string, data: Record<string, unknown>) => Promise<void>
   onDelete: (taskId: string) => Promise<void>
+  onEditingChange?: (editing: boolean) => void
 }
 
 const formatDate = (iso?: string): string => {
@@ -31,10 +32,14 @@ const getAssigneeDisplayName = (a: { tgUserName: string; firstName?: string; las
   return a.tgUserName
 }
 
-export default function TaskCard({ task, currentUserId, onUpdate, onDelete }: Props) {
+export default function TaskCard({ task, currentUserId, onUpdate, onDelete, onEditingChange }: Props) {
   const [editing, setEditing] = useState(false)
   const [expanded, setExpanded] = useState(false)
-  const [confirming, setConfirming] = useState(false)
+
+  const setEditingState = (value: boolean) => {
+    setEditing(value)
+    onEditingChange?.(value)
+  }
 
   const handleStateChange = async (newState: TaskState) => {
     await onUpdate(task.id, { state: newState })
@@ -49,7 +54,12 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete }: Pr
       state: data.state,
       assignees: data.assignees,
     })
-    setEditing(false)
+    setEditingState(false)
+  }
+
+  const handleDelete = async () => {
+    await onDelete(task.id)
+    setEditingState(false)
   }
 
   if (editing) {
@@ -58,7 +68,8 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete }: Pr
         <TaskForm
           task={task}
           onSubmit={handleEdit}
-          onCancel={() => setEditing(false)}
+          onCancel={() => setEditingState(false)}
+          onDelete={handleDelete}
         />
       </div>
     )
@@ -82,45 +93,28 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete }: Pr
         <span className="text-left flex-1 font-medium tg-text">
           {task.name}
         </span>
-        <div className="flex gap-1 shrink-0">
-          <button
-            onClick={() => setEditing(true)}
-            className="tg-hint text-xs p-1"
-            title="Edit"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-              <path d="m15 5 4 4" />
-            </svg>
-          </button>
-          {confirming ? (
-            <button
-              onClick={() => {
-                onDelete(task.id)
-                setConfirming(false)
-              }}
-              className="tg-destructive text-xs px-1"
-            >
-              Confirm?
-            </button>
-          ) : (
-            <button
-              onClick={() => setConfirming(true)}
-              className="tg-hint text-xs p-1"
-              title="Delete"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h18" />
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-              </svg>
-            </button>
-          )}
-        </div>
+        <button
+          onClick={() => setEditingState(true)}
+          className="tg-hint p-1 shrink-0"
+          title="Edit"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+            <path d="m15 5 4 4" />
+          </svg>
+        </button>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tg-hint">
         <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
+        {task.description && (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+        )}
         {task.startTime && (
           <span>Start: {formatDate(task.startTime)}</span>
         )}
