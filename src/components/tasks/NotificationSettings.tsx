@@ -30,9 +30,7 @@ export default function NotificationSettings({ onBack }: Props) {
   const fetchSettings = useCallback(async () => {
     if (!user) return
     try {
-      const res = await fetch(
-        `/api/tasks/board/notification-settings?tgUserId=${user.id}`
-      )
+      const res = await fetch(`/api/tasks/board/notification-settings?tgUserId=${user.id}`)
       if (res.ok) {
         const data = await res.json()
         const s = data.settings as TaskNotificationSettings
@@ -49,26 +47,29 @@ export default function NotificationSettings({ onBack }: Props) {
           skipInProgress: s.skipInProgress,
         })
       }
-    } catch { /* use defaults */ } finally {
+    } catch {
+      /* use defaults */
+    } finally {
       setLoading(false)
     }
   }, [user])
 
-  useEffect(() => { fetchSettings() }, [fetchSettings])
+  useEffect(() => {
+    fetchSettings()
+  }, [fetchSettings])
 
   const save = async (updated: typeof settings) => {
     if (!user) return
     setSaving(true)
     try {
-      await fetch(
-        '/api/tasks/board/notification-settings',
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tgUserId: String(user.id), ...updated }),
-        }
-      )
-    } catch { /* ignore */ } finally {
+      await fetch('/api/tasks/board/notification-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tgUserId: String(user.id), ...updated }),
+      })
+    } catch {
+      /* ignore */
+    } finally {
       setSaving(false)
     }
   }
@@ -111,7 +112,7 @@ export default function NotificationSettings({ onBack }: Props) {
 
       <div className="flex flex-col gap-5">
         <div className="tg-section-bg rounded-xl p-4 border tg-separator">
-          <h2 className="text-sm font-semibold mb-3 tg-text">Timing</h2>
+          <h2 className="text-sm font-semibold mb-3 tg-text">Notification Timing</h2>
           <div className="flex flex-col gap-3">
             <label className="flex items-center justify-between gap-3">
               <span className="text-sm tg-text">Days before deadline</span>
@@ -161,7 +162,9 @@ export default function NotificationSettings({ onBack }: Props) {
         <div className="tg-section-bg rounded-xl p-4 border tg-separator">
           <label className="flex items-center justify-between gap-3 cursor-pointer">
             <div>
-              <span className="text-sm font-medium tg-text">Skip &quot;In Progress&quot; tasks</span>
+              <span className="text-sm font-medium tg-text">
+                Skip &quot;In Progress&quot; tasks
+              </span>
               <span className="text-xs tg-hint block">
                 Don&apos;t notify if the task is already in progress
               </span>
@@ -176,9 +179,7 @@ export default function NotificationSettings({ onBack }: Props) {
         </div>
       </div>
 
-      {saving && (
-        <p className="text-xs tg-hint text-center mt-3">Saving...</p>
-      )}
+      {saving && <p className="text-xs tg-hint text-center mt-3">Saving...</p>}
     </div>
   )
 }
