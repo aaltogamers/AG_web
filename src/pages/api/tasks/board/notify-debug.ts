@@ -51,17 +51,30 @@ type DebugNotification = {
   notificationDates: string[]
 }
 
+async function resolveUserId(userParam: string): Promise<string | null> {
+  if (/^\d+$/.test(userParam)) return userParam
+  const username = userParam.replace(/^@/, '')
+  const result = await pool.query(
+    'SELECT tg_user_id FROM tg_users WHERE username ILIKE $1 LIMIT 1',
+    [username]
+  )
+  return result.rows.length > 0 ? (result.rows[0].tg_user_id as string) : null
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
 
-  const tgUserId = req.query.tgUserId as string
-  if (!tgUserId) return res.status(400).json({ error: 'tgUserId is required' })
+  const userParam = (req.query.tgUserId ?? req.query.username) as string
+  if (!userParam) return res.status(400).json({ error: 'tgUserId or username is required' })
 
   try {
     await ensureMigrated()
   } catch {
     return res.status(500).json({ error: 'Internal error' })
   }
+
+  const tgUserId = await resolveUserId(userParam)
+  if (!tgUserId) return res.status(404).json({ error: `User not found for "${userParam}"` })
 
   try {
     const { rows } = await pool.query<{
