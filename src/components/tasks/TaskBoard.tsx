@@ -8,7 +8,7 @@ import Settings from './Settings'
 import { useTelegram } from './TelegramProvider'
 
 export default function TaskBoard() {
-  const { user, ready } = useTelegram()
+  const { user, ready, isTelegram } = useTelegram()
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -152,17 +152,19 @@ export default function TaskBoard() {
     <div className="px-4 py-4">
       {!formOpen && (
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs tg-hint">
+          <p className="text-xs md:text-sm tg-hint">
             {tasks.length} task{tasks.length !== 1 ? 's' : ''}
           </p>
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowSettings(true)}
-              className="tg-secondary-btn text-sm !py-2 !px-3"
-              title="Notification settings"
-            >
-              Settings
-            </button>
+            {isTelegram && (
+              <button
+                onClick={() => setShowSettings(true)}
+                className="tg-secondary-btn text-sm !py-2 !px-3"
+                title="Notification settings"
+              >
+                Settings
+              </button>
+            )}
             <button
               onClick={() => setShowForm(true)}
               className="tg-primary-btn text-sm !py-2 !px-4"
@@ -192,7 +194,7 @@ export default function TaskBoard() {
         <>
           <div className="flex items-center gap-3 my-4">
             <div className="flex-1 border-t tg-separator" />
-            <span className="text-xs tg-hint">Completed ({doneTasks.length})</span>
+            <span className="text-xs md:text-sm tg-hint">Completed ({doneTasks.length})</span>
             <div className="flex-1 border-t tg-separator" />
           </div>
           <div className="flex flex-col gap-2">
