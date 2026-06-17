@@ -3,21 +3,13 @@
 import React, { useState } from 'react'
 import type { Task, TaskState } from '../../types/types'
 import TaskForm from './TaskForm'
+import StatusDropdown from './StatusDropdown'
 
 type Props = {
   task: Task
   currentUserId?: string
   onUpdate: (taskId: string, data: Record<string, unknown>) => Promise<void>
   onDelete: (taskId: string) => Promise<void>
-}
-
-const STATE_TRANSITIONS: Record<TaskState, { label: string; next: TaskState }[]> = {
-  todo: [{ label: 'Mark as in progress', next: 'in_progress' }],
-  in_progress: [
-    { label: 'Mark as done', next: 'done' },
-    { label: 'Mark as todo', next: 'todo' },
-  ],
-  done: [{ label: 'Mark as todo', next: 'todo' }],
 }
 
 const formatDate = (iso?: string): string => {
@@ -127,42 +119,24 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete }: Pr
         </div>
       </div>
 
-      {(task.deadline || task.startTime || task.assignees.length > 0) && (
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs tg-hint">
-          {task.startTime && (
-            <span>Start: {formatDate(task.startTime)}</span>
-          )}
-          {task.deadline && (
-            <span className={overdue ? 'tg-destructive' : ''}>
-              Due: {formatDate(task.deadline)}
-            </span>
-          )}
-          {task.assignees.length > 0 && (
-            <span>{task.assignees.map((a) => getAssigneeDisplayName(a)).join(', ')}</span>
-          )}
-        </div>
-      )}
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tg-hint">
+        <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
+        {task.startTime && (
+          <span>Start: {formatDate(task.startTime)}</span>
+        )}
+        {task.deadline && (
+          <span className={overdue ? 'tg-destructive' : ''}>
+            Due: {formatDate(task.deadline)}
+          </span>
+        )}
+        {task.assignees.length > 0 && (
+          <span>{task.assignees.map((a) => getAssigneeDisplayName(a)).join(', ')}</span>
+        )}
+      </div>
 
       {expanded && task.description && (
         <p className="mt-2 text-sm tg-hint whitespace-pre-wrap">{task.description}</p>
       )}
-
-      <div className="mt-2 flex gap-2 flex-wrap">
-        {STATE_TRANSITIONS[task.state].map(({ label, next }) => (
-          <button
-            key={next}
-            onClick={() => handleStateChange(next)}
-            className="text-xs px-3 py-1.5 rounded-lg border transition-colors"
-            style={
-              next === 'done'
-                ? { borderColor: 'var(--tg-theme-link-color, #22c55e)', color: 'var(--tg-theme-link-color, #22c55e)' }
-                : { borderColor: 'var(--tg-theme-section-separator-color, rgba(0,0,0,0.1))', color: 'var(--tg-theme-hint-color)' }
-            }
-          >
-            {label}
-          </button>
-        ))}
-      </div>
     </div>
   )
 }

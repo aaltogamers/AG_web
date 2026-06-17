@@ -327,6 +327,7 @@ export type Task = {
   position: number
   createdAt: string
   updatedAt: string
+  doneAt?: string
 }
 
 export type TgUser = {

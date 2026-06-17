@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import type { Task, TaskState } from '../../types/types'
-import { TASK_STATES, TASK_STATE_LABELS } from '../../types/types'
-import TaskColumn from './TaskColumn'
+import type { Task } from '../../types/types'
+import TaskCard from './TaskCard'
 import TaskForm from './TaskForm'
 import Settings from './Settings'
 import { useTelegram } from './TelegramProvider'
@@ -15,7 +14,6 @@ export default function TaskBoard() {
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [activeTab, setActiveTab] = useState<TaskState>('todo')
 
   const registeredRef = useRef(false)
 
@@ -83,7 +81,7 @@ export default function TaskBoard() {
     setTasks((prev) => prev.filter((t) => t.id !== taskId))
   }
 
-  const sortTasks = (list: Task[]) => {
+  const sortActiveTasks = (list: Task[]) => {
     return [...list].sort((a, b) => {
       const dateA = a.deadline || a.startTime
       const dateB = b.deadline || b.startTime
@@ -94,9 +92,18 @@ export default function TaskBoard() {
     })
   }
 
-  const currentUserId = user ? String(user.id) : undefined
+  const sortDoneTasks = (list: Task[]) => {
+    return [...list].sort((a, b) => {
+      if (a.doneAt && b.doneAt) return new Date(b.doneAt).getTime() - new Date(a.doneAt).getTime()
+      if (a.doneAt && !b.doneAt) return -1
+      if (!a.doneAt && b.doneAt) return 1
+      return 0
+    })
+  }
 
-  const tasksByState = (state: TaskState) => sortTasks(tasks.filter((t) => t.state === state))
+  const currentUserId = user ? String(user.id) : undefined
+  const activeTasks = sortActiveTasks(tasks.filter((t) => t.state !== 'done'))
+  const doneTasks = sortDoneTasks(tasks.filter((t) => t.state === 'done'))
 
   if (!ready) {
     return (
@@ -172,46 +179,29 @@ export default function TaskBoard() {
         </div>
       )}
 
-      {/* Mobile: tabs */}
-      <div className="md:hidden">
-        <div className="flex border-b tg-separator mb-4 overflow-x-auto">
-          {TASK_STATES.map((s) => (
-            <button
-              key={s}
-              onClick={() => setActiveTab(s)}
-              className="px-4 py-2 text-sm whitespace-nowrap border-b-2 transition-colors"
-              style={
-                activeTab === s
-                  ? { borderColor: 'var(--tg-theme-button-color)', color: 'var(--tg-theme-text-color)' }
-                  : { borderColor: 'transparent', color: 'var(--tg-theme-hint-color)' }
-              }
-            >
-              {TASK_STATE_LABELS[s]} ({tasksByState(s).length})
-            </button>
-          ))}
-        </div>
-        <TaskColumn
-          state={activeTab}
-          tasks={tasksByState(activeTab)}
-          currentUserId={currentUserId}
-          onUpdate={updateTask}
-          onDelete={deleteTask}
-        />
+      <div className="flex flex-col gap-2">
+        {activeTasks.map((task) => (
+          <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} />
+        ))}
+        {activeTasks.length === 0 && doneTasks.length === 0 && (
+          <p className="text-sm tg-hint text-center py-4 opacity-50">No tasks</p>
+        )}
       </div>
 
-      {/* Desktop: columns */}
-      <div className="hidden md:grid md:grid-cols-3 gap-4">
-        {TASK_STATES.map((s) => (
-          <TaskColumn
-            key={s}
-            state={s}
-            tasks={tasksByState(s)}
-            currentUserId={currentUserId}
-            onUpdate={updateTask}
-            onDelete={deleteTask}
-          />
-        ))}
-      </div>
+      {doneTasks.length > 0 && (
+        <>
+          <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 border-t tg-separator" />
+            <span className="text-xs tg-hint">Completed ({doneTasks.length})</span>
+            <div className="flex-1 border-t tg-separator" />
+          </div>
+          <div className="flex flex-col gap-2">
+            {doneTasks.map((task) => (
+              <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

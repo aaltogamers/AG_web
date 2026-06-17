@@ -14,6 +14,7 @@ type TaskRow = {
   position: number
   created_at: Date
   updated_at: Date
+  done_at: Date | null
 }
 
 type AssigneeRow = {
@@ -40,6 +41,7 @@ const rowToTask = (row: TaskRow, assignees: TaskAssignee[]): Task => ({
   position: row.position,
   createdAt: row.created_at.toISOString(),
   updatedAt: row.updated_at.toISOString(),
+  doneAt: toISOOrUndefined(row.done_at),
 })
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -55,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const tasksResult = await pool.query<TaskRow>(
     `SELECT id, name, description, deadline, start_time, state,
-            created_by_tg_id, created_by_tg_name, position, created_at, updated_at
+            created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
      FROM tasks
      ORDER BY position ASC, created_at ASC`
   )

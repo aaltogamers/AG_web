@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     const taskResult = await pool.query(
       `SELECT id, name, description, deadline, start_time, state,
-              created_by_tg_id, created_by_tg_name, position, created_at, updated_at
+              created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
        FROM tasks WHERE id = $1`,
       [taskId]
     )
@@ -58,6 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         position: t.position,
         createdAt: t.created_at.toISOString(),
         updatedAt: t.updated_at.toISOString(),
+        doneAt: t.done_at ? t.done_at.toISOString() : undefined,
       },
     })
   }
@@ -91,6 +92,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (body.state !== undefined && VALID_STATES.includes(body.state)) {
       sets.push(`state = $${paramIdx++}`)
       params.push(body.state)
+      if (body.state === 'done') {
+        sets.push(`done_at = now()`)
+      } else {
+        sets.push(`done_at = NULL`)
+      }
     }
     if (body.position !== undefined) {
       sets.push(`position = $${paramIdx++}`)
@@ -132,7 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const updated = await pool.query(
         `SELECT id, name, description, deadline, start_time, state,
-                created_by_tg_id, created_by_tg_name, position, created_at, updated_at
+                created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
          FROM tasks WHERE id = $1`,
         [taskId]
       )
@@ -161,6 +167,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           position: t.position,
           createdAt: t.created_at.toISOString(),
           updatedAt: t.updated_at.toISOString(),
+          doneAt: t.done_at ? t.done_at.toISOString() : undefined,
         },
       })
     } catch (err) {

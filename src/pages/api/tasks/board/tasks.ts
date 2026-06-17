@@ -47,10 +47,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const taskResult = await client.query(
       `INSERT INTO tasks (name, description, deadline, start_time, state,
-                          created_by_tg_id, created_by_tg_name, position)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                          created_by_tg_id, created_by_tg_name, position, done_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id, name, description, deadline, start_time, state,
-                 created_by_tg_id, created_by_tg_name, position, created_at, updated_at`,
+                 created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at`,
       [
         body.name.trim(),
         body.description?.trim() || null,
@@ -60,6 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         body.createdByTgId || null,
         body.createdByTgName || null,
         nextPos,
+        state === 'done' ? new Date().toISOString() : null,
       ]
     )
     const task = taskResult.rows[0]
@@ -120,6 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         position: task.position,
         createdAt: task.created_at.toISOString(),
         updatedAt: task.updated_at.toISOString(),
+        doneAt: task.done_at ? task.done_at.toISOString() : undefined,
       },
     })
   } catch (err) {
