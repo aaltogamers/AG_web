@@ -93,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ sent: false, message: 'No notifications to send based on current settings and dates' })
     }
 
-    const message = `🧪 <b>TEST — Daily task reminder</b>\n\n${blocks.join('\n\n')}`
+    const message = blocks.join('\n\n')
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN
     if (!botToken) {

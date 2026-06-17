@@ -74,7 +74,7 @@ export function formatTaskBlock(
   row: TaskNotificationRow,
   settings: UserSettings,
   assigneeNames: string[],
-  today: Date,
+  today: Date
 ): string | null {
   if (settings.skipInProgress && row.state === 'in_progress') return null
 
@@ -103,13 +103,17 @@ export function formatTaskBlock(
   if (!deadlineShouldNotify && !startShouldNotify) return null
 
   const dateParts: string[] = []
-  if (startShouldNotify && row.start_time) dateParts.push(`Start ${formatDateShort(row.start_time)}`)
-  if (deadlineShouldNotify && row.deadline) dateParts.push(`DL. ${formatDateShort(row.deadline)}`)
+  if (startShouldNotify && row.start_time)
+    dateParts.push(`Start ${formatDateShort(row.start_time)}`)
+  if (deadlineShouldNotify && row.deadline) dateParts.push(`DL ${formatDateShort(row.deadline)}`)
 
   let icon = ''
   if ((dlDiff !== null && dlDiff < 0) || (stDiff !== null && stDiff < 0)) {
-    icon = ' ❌'
-  } else if ((dlDiff !== null && dlDiff === 0) || (stDiff !== null && stDiff === 0 && row.state === 'todo')) {
+    icon = ' ❗️'
+  } else if (
+    (dlDiff !== null && dlDiff === 0) ||
+    (stDiff !== null && stDiff === 0 && row.state === 'todo')
+  ) {
     icon = ' ⚠️'
   }
 
@@ -119,7 +123,6 @@ export function formatTaskBlock(
     assigneeNames.join(', '),
   ]
   if (row.description) {
-    lines.push('')
     lines.push(`<i>${row.description}</i>`)
   }
 

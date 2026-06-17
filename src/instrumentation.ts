@@ -153,7 +153,7 @@ async function checkDailyNotifications(): Promise<void> {
     if (byUser.size === 0) return
 
     const promises = [...byUser.entries()].map(([userId, blocks]) => {
-      const message = `⏰ <b>Daily task reminder</b>\n\n${blocks.join('\n\n')}`
+      const message = blocks.join('\n\n')
       return sendTelegramDM(userId, message)
     })
     await Promise.allSettled(promises)
