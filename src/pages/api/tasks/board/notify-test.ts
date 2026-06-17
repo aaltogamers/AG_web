@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../../utils/db_pg'
-import { sendTelegramDM } from '../../../../utils/telegram'
 
 type UserSettings = {
   deadlineDays: number
@@ -157,9 +156,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const message = `🧪 <b>TEST — Daily task reminder</b>\n\n${lines.join('\n')}`
-    const sent = await sendTelegramDM(tgUserId, message)
 
-    return res.status(200).json({ sent, message, lineCount: lines.length })
+    const botToken = process.env.TELEGRAM_BOT_TOKEN
+    if (!botToken) {
+      return res.status(200).json({ sent: false, error: 'TELEGRAM_BOT_TOKEN not configured', message, lineCount: lines.length })
+    }
+
+    try {
+      const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: tgUserId, text: message, parse_mode: 'HTML' }),
+      })
+
+      if (!tgRes.ok) {
+        const body = await tgRes.text()
+        return res.status(200).json({ sent: false, telegramStatus: tgRes.status, telegramError: body, message, lineCount: lines.length })
+      }
+
+      return res.status(200).json({ sent: true, message, lineCount: lines.length })
+    } catch (err) {
+      return res.status(200).json({ sent: false, error: err instanceof Error ? err.message : String(err), message, lineCount: lines.length })
+    }
   } catch (err) {
     console.error('[notify-test] failed:', err)
     return res.status(500).json({ error: 'Internal error' })
