@@ -39,8 +39,8 @@ async function sendTelegramAlert(error: string): Promise<void> {
 async function pingImageServer(): Promise<void> {
   try {
     const res = await fetch(LYCHEE_BASE_URL, {
-      method: 'HEAD',
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(30_000),
+      redirect: 'manual',
     })
     if (!res.ok) {
       console.warn(`[image-ping] ${LYCHEE_BASE_URL} responded with status ${res.status}`)
@@ -107,12 +107,13 @@ async function checkDailyNotifications(): Promise<void> {
     const { rows } = await pool.query<{
       task_id: string
       name: string
+      description: string | null
       state: string
       deadline: Date | null
       start_time: Date | null
       tg_user_id: string
     }>(`
-      SELECT t.id AS task_id, t.name, t.state, t.deadline, t.start_time,
+      SELECT t.id AS task_id, t.name, t.description, t.state, t.deadline, t.start_time,
              ta.tg_user_id
       FROM tasks t
       JOIN task_assignees ta ON ta.task_id = t.id
@@ -156,66 +157,101 @@ async function checkDailyNotifications(): Promise<void> {
       })
     }
 
-    const formatDate = (d: Date) =>
-      d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     const today = new Date(todayStr + 'T00:00:00')
+
+    const taskIds = [...new Set(rows.map((r) => r.task_id))]
+    const { rows: assigneeRows } = await pool.query<{
+      task_id: string
+      tg_user_name: string
+      first_name: string | null
+      last_name: string | null
+    }>(`
+      SELECT ta.task_id, ta.tg_user_name,
+             tu.first_name, tu.last_name
+      FROM task_assignees ta
+      LEFT JOIN tg_users tu ON ta.tg_user_id = tu.tg_user_id
+      WHERE ta.task_id = ANY($1)
+    `, [taskIds])
+
+    const assigneeNamesByTask = new Map<string, string[]>()
+    for (const a of assigneeRows) {
+      const displayName = a.first_name
+        ? `${a.first_name}${a.last_name ? ' ' + a.last_name : ''}`
+        : a.tg_user_name
+      if (!assigneeNamesByTask.has(a.task_id)) assigneeNamesByTask.set(a.task_id, [])
+      assigneeNamesByTask.get(a.task_id)!.push(displayName)
+    }
+
+    const stateLabels: Record<string, string> = {
+      todo: 'To Do',
+      in_progress: 'In Progress',
+      done: 'Done',
+    }
+
+    const formatDateShort = (d: Date): string => {
+      const parts = toHelsinkiDate(d).split('-')
+      return `${parts[2]}.${parts[1]}.`
+    }
+
+    const daysDiff = (d: Date): number => {
+      const dateStr = new Date(toHelsinkiDate(d) + 'T00:00:00')
+      return Math.round((dateStr.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    }
 
     const byUser = new Map<string, string[]>()
     for (const row of rows) {
       const s = settingsMap.get(row.tg_user_id) ?? DEFAULT_SETTINGS
       if (s.skipInProgress && row.state === 'in_progress') continue
 
-      if (row.deadline) {
-        const deadlineDate = new Date(toHelsinkiDate(row.deadline) + 'T00:00:00')
-        const diffDays = Math.round(
-          (deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-        )
-        let shouldNotify = false
-        if (diffDays < 0) shouldNotify = s.notifyPastDeadline
-        else if (diffDays === 0) shouldNotify = s.notifyOnDeadline
-        else if (diffDays <= s.deadlineDays) shouldNotify = s.notifyBeforeDeadline
+      let deadlineShouldNotify = false
+      let startShouldNotify = false
+      const dlDiff = row.deadline ? daysDiff(row.deadline) : null
+      const stDiff = row.start_time ? daysDiff(row.start_time) : null
 
-        if (shouldNotify) {
-          let urgency: string
-          if (diffDays < 0) urgency = '(overdue!)'
-          else if (diffDays === 0) urgency = '(today!)'
-          else if (diffDays === 1) urgency = '(tomorrow)'
-          else urgency = `(in ${diffDays} days)`
-
-          if (!byUser.has(row.tg_user_id)) byUser.set(row.tg_user_id, [])
-          byUser.get(row.tg_user_id)!.push(
-            `📅 <b>${row.name}</b> — due ${formatDate(row.deadline)} ${urgency}`
-          )
-        }
+      if (dlDiff !== null) {
+        if (dlDiff < 0) deadlineShouldNotify = s.notifyPastDeadline
+        else if (dlDiff === 0) deadlineShouldNotify = s.notifyOnDeadline
+        else if (dlDiff <= s.deadlineDays) deadlineShouldNotify = s.notifyBeforeDeadline
       }
 
-      if (row.start_time) {
-        const startDate = new Date(toHelsinkiDate(row.start_time) + 'T00:00:00')
-        const diffDays = Math.round(
-          (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-        )
-        let shouldNotify = false
-        if (diffDays < 0) shouldNotify = s.notifyPastStart
-        else if (diffDays === 0) shouldNotify = s.notifyOnStart
-        else if (diffDays <= s.startDateDays) shouldNotify = s.notifyBeforeStart
-
-        if (shouldNotify) {
-          let label: string
-          if (diffDays < 0) label = `started ${-diffDays} day${diffDays === -1 ? '' : 's'} ago`
-          else if (diffDays === 0) label = 'starts today'
-          else if (diffDays === 1) label = 'starts tomorrow'
-          else label = `starts in ${diffDays} days`
-
-          if (!byUser.has(row.tg_user_id)) byUser.set(row.tg_user_id, [])
-          byUser.get(row.tg_user_id)!.push(`🗓 <b>${row.name}</b> — ${label}`)
-        }
+      if (stDiff !== null) {
+        if (stDiff < 0) startShouldNotify = s.notifyPastStart
+        else if (stDiff === 0) startShouldNotify = s.notifyOnStart
+        else if (stDiff <= s.startDateDays) startShouldNotify = s.notifyBeforeStart
       }
+
+      if (!deadlineShouldNotify && !startShouldNotify) continue
+
+      const dateParts: string[] = []
+      if (startShouldNotify && row.start_time) dateParts.push(`Start ${formatDateShort(row.start_time)}`)
+      if (deadlineShouldNotify && row.deadline) dateParts.push(`DL. ${formatDateShort(row.deadline)}`)
+
+      let icon = ''
+      if ((dlDiff !== null && dlDiff < 0) || (stDiff !== null && stDiff < 0)) {
+        icon = ' ❌'
+      } else if ((dlDiff !== null && dlDiff === 0) || (stDiff !== null && stDiff === 0 && row.state === 'todo')) {
+        icon = ' ⚠️'
+      }
+
+      const assigneeNames = assigneeNamesByTask.get(row.task_id) ?? []
+      const blockLines = [
+        `<b>${row.name}</b>`,
+        `${dateParts.join(' · ')} (${stateLabels[row.state] || row.state})${icon}`,
+        assigneeNames.join(', '),
+      ]
+      if (row.description) {
+        blockLines.push('')
+        blockLines.push(`<i>${row.description}</i>`)
+      }
+
+      if (!byUser.has(row.tg_user_id)) byUser.set(row.tg_user_id, [])
+      byUser.get(row.tg_user_id)!.push(blockLines.join('\n'))
     }
 
     if (byUser.size === 0) return
 
-    const promises = [...byUser.entries()].map(([userId, lines]) => {
-      const message = `⏰ <b>Daily task reminder</b>\n\n${lines.join('\n')}`
+    const promises = [...byUser.entries()].map(([userId, blocks]) => {
+      const message = `⏰ <b>Daily task reminder</b>\n\n${blocks.join('\n\n')}`
       return sendTelegramDM(userId, message)
     })
     await Promise.allSettled(promises)
