@@ -1,4 +1,13 @@
 import { LYCHEE_BASE_URL } from './utils/constants'
+import {
+  type UserSettings,
+  type AssigneeRow,
+  type TaskNotificationRow,
+  DEFAULT_SETTINGS,
+  toHelsinkiDate,
+  buildAssigneeNamesMap,
+  formatTaskBlock,
+} from './utils/taskNotifications'
 
 const PING_INTERVAL_MS = 10 * 60 * 1000
 const DAILY_CHECK_INTERVAL_MS = 60 * 1000
@@ -53,39 +62,6 @@ async function pingImageServer(): Promise<void> {
   }
 }
 
-type UserSettings = {
-  deadlineDays: number
-  startDateDays: number
-  notifyBeforeDeadline: boolean
-  notifyBeforeStart: boolean
-  notifyOnDeadline: boolean
-  notifyOnStart: boolean
-  notifyPastDeadline: boolean
-  notifyPastStart: boolean
-  skipInProgress: boolean
-}
-
-const DEFAULT_SETTINGS: UserSettings = {
-  deadlineDays: 5,
-  startDateDays: 0,
-  notifyBeforeDeadline: true,
-  notifyBeforeStart: true,
-  notifyOnDeadline: true,
-  notifyOnStart: true,
-  notifyPastDeadline: true,
-  notifyPastStart: true,
-  skipInProgress: false,
-}
-
-function toHelsinkiDate(d: Date): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Helsinki',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(d)
-}
-
 async function checkDailyNotifications(): Promise<void> {
   const now = new Date()
   const todayStr = toHelsinkiDate(now)
@@ -104,15 +80,9 @@ async function checkDailyNotifications(): Promise<void> {
     const { default: pool } = await import(/* webpackIgnore: true */ './utils/db_pg')
     const { sendTelegramDM } = await import(/* webpackIgnore: true */ './utils/telegram')
 
-    const { rows } = await pool.query<{
-      task_id: string
-      name: string
-      description: string | null
-      state: string
-      deadline: Date | null
-      start_time: Date | null
-      tg_user_id: string
-    }>(`
+    const { rows } = await pool.query<
+      TaskNotificationRow & { tg_user_id: string }
+    >(`
       SELECT t.id AS task_id, t.name, t.description, t.state, t.deadline, t.start_time,
              ta.tg_user_id
       FROM tasks t
@@ -160,12 +130,7 @@ async function checkDailyNotifications(): Promise<void> {
     const today = new Date(todayStr + 'T00:00:00')
 
     const taskIds = [...new Set(rows.map((r) => r.task_id))]
-    const { rows: assigneeRows } = await pool.query<{
-      task_id: string
-      tg_user_name: string
-      first_name: string | null
-      last_name: string | null
-    }>(`
+    const { rows: assigneeRows } = await pool.query<AssigneeRow>(`
       SELECT ta.task_id, ta.tg_user_name,
              tu.first_name, tu.last_name
       FROM task_assignees ta
@@ -173,79 +138,16 @@ async function checkDailyNotifications(): Promise<void> {
       WHERE ta.task_id = ANY($1)
     `, [taskIds])
 
-    const assigneeNamesByTask = new Map<string, string[]>()
-    for (const a of assigneeRows) {
-      const displayName = a.first_name
-        ? `${a.first_name}${a.last_name ? ' ' + a.last_name : ''}`
-        : a.tg_user_name
-      if (!assigneeNamesByTask.has(a.task_id)) assigneeNamesByTask.set(a.task_id, [])
-      assigneeNamesByTask.get(a.task_id)!.push(displayName)
-    }
-
-    const stateLabels: Record<string, string> = {
-      todo: 'To Do',
-      in_progress: 'In Progress',
-      done: 'Done',
-    }
-
-    const formatDateShort = (d: Date): string => {
-      const parts = toHelsinkiDate(d).split('-')
-      return `${parts[2]}.${parts[1]}.`
-    }
-
-    const daysDiff = (d: Date): number => {
-      const dateStr = new Date(toHelsinkiDate(d) + 'T00:00:00')
-      return Math.round((dateStr.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-    }
+    const assigneeNamesByTask = buildAssigneeNamesMap(assigneeRows)
 
     const byUser = new Map<string, string[]>()
     for (const row of rows) {
       const s = settingsMap.get(row.tg_user_id) ?? DEFAULT_SETTINGS
-      if (s.skipInProgress && row.state === 'in_progress') continue
-
-      let deadlineShouldNotify = false
-      let startShouldNotify = false
-      const dlDiff = row.deadline ? daysDiff(row.deadline) : null
-      const stDiff = row.start_time ? daysDiff(row.start_time) : null
-
-      if (dlDiff !== null) {
-        if (dlDiff < 0) deadlineShouldNotify = s.notifyPastDeadline
-        else if (dlDiff === 0) deadlineShouldNotify = s.notifyOnDeadline
-        else if (dlDiff <= s.deadlineDays) deadlineShouldNotify = s.notifyBeforeDeadline
+      const block = formatTaskBlock(row, s, assigneeNamesByTask.get(row.task_id) ?? [], today)
+      if (block) {
+        if (!byUser.has(row.tg_user_id)) byUser.set(row.tg_user_id, [])
+        byUser.get(row.tg_user_id)!.push(block)
       }
-
-      if (stDiff !== null) {
-        if (stDiff < 0) startShouldNotify = s.notifyPastStart
-        else if (stDiff === 0) startShouldNotify = s.notifyOnStart
-        else if (stDiff <= s.startDateDays) startShouldNotify = s.notifyBeforeStart
-      }
-
-      if (!deadlineShouldNotify && !startShouldNotify) continue
-
-      const dateParts: string[] = []
-      if (startShouldNotify && row.start_time) dateParts.push(`Start ${formatDateShort(row.start_time)}`)
-      if (deadlineShouldNotify && row.deadline) dateParts.push(`DL. ${formatDateShort(row.deadline)}`)
-
-      let icon = ''
-      if ((dlDiff !== null && dlDiff < 0) || (stDiff !== null && stDiff < 0)) {
-        icon = ' ❌'
-      } else if ((dlDiff !== null && dlDiff === 0) || (stDiff !== null && stDiff === 0 && row.state === 'todo')) {
-        icon = ' ⚠️'
-      }
-
-      const assigneeNames = assigneeNamesByTask.get(row.task_id) ?? []
-      const blockLines = [
-        `<b>${row.name}</b>`,
-        `${dateParts.join(' · ')} (${stateLabels[row.state] || row.state})${icon}`,
-        assigneeNames.join(', '),
-      ]
-      if (row.description) {
-        blockLines.push('')
-        blockLines.push(`<i>${row.description}</i>`)
-      }
-
-      if (!byUser.has(row.tg_user_id)) byUser.set(row.tg_user_id, [])
-      byUser.get(row.tg_user_id)!.push(blockLines.join('\n'))
     }
 
     if (byUser.size === 0) return
