@@ -175,7 +175,6 @@ export default function TaskBoard() {
 
       {showForm && (
         <div className="mb-4 tg-section-bg rounded-xl p-4 border tg-separator">
-          <h2 className="text-base font-semibold mb-3">New Task</h2>
           <TaskForm onSubmit={createTask} onCancel={() => setShowForm(false)} />
         </div>
       )}
