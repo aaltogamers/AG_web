@@ -1,43 +1,46 @@
 import React from 'react'
+import ReactMarkdown, { Components } from 'react-markdown'
 
-const LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g
-
-export function markdownLinksToHtml(text: string): string {
+export function markdownToTelegramHtml(text: string): string {
   const escaped = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-  return escaped.replace(LINK_RE, '<a href="$2">$1</a>')
+  return escaped
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<i>$1</i>')
+    .replace(/~~(.+?)~~/g, '<s>$1</s>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>')
 }
 
-export function renderDescriptionWithLinks(text: string): React.ReactNode {
-  const parts: React.ReactNode[] = []
-  let lastIndex = 0
-  const regex = new RegExp(LINK_RE.source, 'g')
-  let match: RegExpExecArray | null
+const components: Components = {
+  p: ({ children }) => <span>{children}</span>,
+  a: ({ children, href }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="underline"
+      style={{ color: 'var(--tg-theme-link-color, #2481cc)' }}
+    >
+      {children}
+    </a>
+  ),
+  strong: ({ children }) => <strong>{children}</strong>,
+  em: ({ children }) => <em>{children}</em>,
+  del: ({ children }) => <s>{children}</s>,
+  code: ({ children }) => (
+    <code className="px-1 rounded" style={{ backgroundColor: 'var(--tg-theme-secondary-bg-color, #f0f0f0)' }}>
+      {children}
+    </code>
+  ),
+}
 
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index))
-    }
-    parts.push(
-      <a
-        key={match.index}
-        href={match[2]}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline"
-        style={{ color: 'var(--tg-theme-link-color, #2481cc)' }}
-      >
-        {match[1]}
-      </a>
-    )
-    lastIndex = regex.lastIndex
-  }
-
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex))
-  }
-
-  return parts.length === 1 ? parts[0] : parts
+export function DescriptionMarkdown({ text }: { text: string }) {
+  return (
+    <ReactMarkdown components={components}>
+      {text}
+    </ReactMarkdown>
+  )
 }
