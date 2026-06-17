@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../../utils/db_pg'
 import { parseJsonBody } from '../../../../utils/apiUtils'
 import { sendTelegramDM } from '../../../../utils/telegram'
+import { markdownLinksToHtml } from '../../../../utils/markdownLinks'
 import type { TaskState } from '../../../../types/types'
 
 type CreateTaskBody = {
@@ -94,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       )
 
       const lines = [`📋 <b>New task assigned to you</b>\n\n<b>${task.name}</b>`]
-      if (task.description) lines.push(task.description)
+      if (task.description) lines.push(markdownLinksToHtml(task.description))
       if (task.deadline) lines.push(`📅 Deadline: ${formatDate(task.deadline.toISOString())}`)
       if (task.start_time) lines.push(`🗓 Start: ${formatDate(task.start_time.toISOString())}`)
       lines.push(`\nCreated by ${body.createdByTgName || 'someone'}`)

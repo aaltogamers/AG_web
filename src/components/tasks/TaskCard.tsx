@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import type { Task, TaskState } from '../../types/types'
+import { renderDescriptionWithLinks } from '../../utils/markdownLinks'
 import TaskForm from './TaskForm'
 import StatusDropdown from './StatusDropdown'
 
@@ -168,7 +169,7 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete, onEd
       </div>
 
       {expanded && task.description && (
-        <p className="mt-2 text-sm md:text-base tg-hint whitespace-pre-wrap">{task.description}</p>
+        <p className="mt-2 text-sm md:text-base tg-hint whitespace-pre-wrap">{renderDescriptionWithLinks(task.description)}</p>
       )}
     </div>
   )

@@ -1,3 +1,5 @@
+import { markdownLinksToHtml } from './markdownLinks'
+
 export type UserSettings = {
   deadlineDays: number
   startDateDays: number
@@ -123,7 +125,7 @@ export function formatTaskBlock(
     assigneeNames.join(', '),
   ]
   if (row.description) {
-    lines.push(`<i>${row.description}</i>`)
+    lines.push(`<i>${markdownLinksToHtml(row.description)}</i>`)
   }
 
   return lines.join('\n')
