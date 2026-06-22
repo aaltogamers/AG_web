@@ -22,16 +22,14 @@ async function checkDailyNotifications(): Promise<void> {
     }).format(now)
   )
 
-  if (hour !== 10 || lastDailyRunDate === todayStr) return
+  if (hour !== 19 || lastDailyRunDate === todayStr) return
   lastDailyRunDate = todayStr
 
   try {
     const { default: pool } = await import('./utils/db_pg')
     const { sendTelegramDM } = await import('./utils/telegram')
 
-    const { rows } = await pool.query<
-      TaskNotificationRow & { tg_user_id: string }
-    >(`
+    const { rows } = await pool.query<TaskNotificationRow & { tg_user_id: string }>(`
       SELECT t.id AS task_id, t.name, t.description, t.state, t.deadline, t.start_time,
              ta.tg_user_id
       FROM tasks t
@@ -79,13 +77,16 @@ async function checkDailyNotifications(): Promise<void> {
     const today = new Date(todayStr + 'T00:00:00')
 
     const taskIds = [...new Set(rows.map((r) => r.task_id))]
-    const { rows: assigneeRows } = await pool.query<AssigneeRow>(`
+    const { rows: assigneeRows } = await pool.query<AssigneeRow>(
+      `
       SELECT ta.task_id, ta.tg_user_name,
              tu.first_name, tu.last_name
       FROM task_assignees ta
       LEFT JOIN tg_users tu ON ta.tg_user_id = tu.tg_user_id
       WHERE ta.task_id = ANY($1)
-    `, [taskIds])
+    `,
+      [taskIds]
+    )
 
     const assigneeNamesByTask = buildAssigneeNamesMap(assigneeRows)
 
