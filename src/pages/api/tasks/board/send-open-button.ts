@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     text: 'Open the tasks board in Telegram:',
     reply_markup: {
       inline_keyboard: [
-        [{ text: 'Open Tasks App', web_app: { url: webAppUrl } }],
+        [{ text: 'Open Tasks App', url: webAppUrl }],
       ],
     },
   }
