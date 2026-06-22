@@ -22,7 +22,7 @@ async function checkDailyNotifications(): Promise<void> {
     }).format(now)
   )
 
-  if (hour !== 19 || lastDailyRunDate === todayStr) return
+  if (hour !== 10 || lastDailyRunDate === todayStr) return
   lastDailyRunDate = todayStr
 
   try {
