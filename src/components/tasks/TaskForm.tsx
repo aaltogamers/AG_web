@@ -29,8 +29,7 @@ const toLocalDate = (iso?: string): string => {
   return local.toISOString().slice(0, 10)
 }
 
-const displayName = (u: TgUser) =>
-  `${u.firstName}${u.lastName ? ' ' + u.lastName : ''}`
+const displayName = (u: TgUser) => `${u.firstName}${u.lastName ? ' ' + u.lastName : ''}`
 
 export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) {
   const { chatId } = useTelegram()
@@ -72,9 +71,7 @@ export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) 
     }
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `/api/tasks/board/users?q=${encodeURIComponent(query)}`
-        )
+        const res = await fetch(`/api/tasks/board/users?q=${encodeURIComponent(query)}`)
         if (res.ok) {
           const data = await res.json()
           const filtered = data.users.filter(
@@ -84,7 +81,9 @@ export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) 
           setShowSuggestions(filtered.length > 0)
           setSelectedIndex(-1)
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }, 250)
   }
 
@@ -104,14 +103,11 @@ export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) 
     if (/^\d+$/.test(trimmed)) {
       setResolving(true)
       try {
-        const res = await fetch(
-          '/api/tasks/board/resolve-user',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tgUserId: trimmed, chatId: chatId ?? undefined }),
-          }
-        )
+        const res = await fetch('/api/tasks/board/resolve-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tgUserId: trimmed, chatId: chatId ?? undefined }),
+        })
         if (res.ok) {
           const data = await res.json()
           const u = data.user as TgUser
@@ -122,7 +118,9 @@ export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) 
           setResolving(false)
           return
         }
-      } catch { /* fall through */ }
+      } catch {
+        /* fall through */
+      }
       setResolving(false)
     }
 
@@ -176,7 +174,7 @@ export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label className="block text-sm tg-hint mb-1">Name *</label>
+        <label className="block text-sm tg-hint mb-1">Task name *</label>
         <input
           type="text"
           value={name}
@@ -270,20 +268,19 @@ export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) 
                   onClick={() => selectSuggestion(u)}
                   className="w-full text-left px-3 py-2 text-sm transition-colors"
                   style={{
-                    backgroundColor: i === selectedIndex
-                      ? 'var(--tg-theme-button-color)'
-                      : 'transparent',
-                    color: i === selectedIndex
-                      ? 'var(--tg-theme-button-text-color)'
-                      : 'var(--tg-theme-text-color)',
+                    backgroundColor:
+                      i === selectedIndex ? 'var(--tg-theme-button-color)' : 'transparent',
+                    color:
+                      i === selectedIndex
+                        ? 'var(--tg-theme-button-text-color)'
+                        : 'var(--tg-theme-text-color)',
                   }}
                 >
                   <span className="font-medium">
-                    {u.firstName}{u.lastName ? ` ${u.lastName}` : ''}
+                    {u.firstName}
+                    {u.lastName ? ` ${u.lastName}` : ''}
                   </span>
-                  {u.username && (
-                    <span className="ml-2 tg-hint text-xs">@{u.username}</span>
-                  )}
+                  {u.username && <span className="ml-2 tg-hint text-xs">@{u.username}</span>}
                 </button>
               ))}
             </div>

@@ -28,12 +28,22 @@ const isOverdue = (deadline?: string): boolean => {
   return new Date(deadline) < new Date()
 }
 
-const getAssigneeDisplayName = (a: { tgUserName: string; firstName?: string; lastName?: string }) => {
+const getAssigneeDisplayName = (a: {
+  tgUserName: string
+  firstName?: string
+  lastName?: string
+}) => {
   if (a.firstName) return `${a.firstName}${a.lastName ? ' ' + a.lastName : ''}`
   return a.tgUserName
 }
 
-export default function TaskCard({ task, currentUserId, onUpdate, onDelete, onEditingChange }: Props) {
+export default function TaskCard({
+  task,
+  currentUserId,
+  onUpdate,
+  onDelete,
+  onEditingChange,
+}: Props) {
   const [editing, setEditing] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
@@ -93,15 +103,22 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete, onEd
       {/* Small screen: two-row layout (also used by Telegram) */}
       <div className="md:hidden">
         <div className="flex items-start justify-between gap-2">
-          <span className="text-left flex-1 font-medium tg-text">
-            {task.name}
-          </span>
+          <span className="text-left flex-1 font-medium tg-text">{task.name}</span>
           <button
             onClick={() => setEditingState(true)}
             className="tg-hint p-1 shrink-0"
             title="Edit"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
               <path d="m15 5 4 4" />
             </svg>
@@ -110,16 +127,24 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete, onEd
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tg-hint">
           <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
           {task.description && (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="opacity-60"
+            >
               <line x1="21" y1="6" x2="3" y2="6" />
               <line x1="21" y1="10" x2="3" y2="10" />
               <line x1="21" y1="14" x2="3" y2="14" />
               <line x1="14" y1="18" x2="3" y2="18" />
             </svg>
           )}
-          {task.startTime && (
-            <span>Start: {formatDate(task.startTime)}</span>
-          )}
+          {task.startTime && <span>Start: {formatDate(task.startTime)}</span>}
           {task.deadline && (
             <span className={overdue ? 'tg-destructive' : ''}>
               Due: {formatDate(task.deadline)}
@@ -134,24 +159,28 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete, onEd
       {/* Large screen: single-line layout */}
       <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tg-hint">
         <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
-        <span className="text-left font-medium tg-text text-base">
-          {task.name}
-        </span>
+        <span className="text-left font-medium tg-text text-base break-all">{task.name}</span>
         {task.description && (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="opacity-60"
+          >
             <line x1="21" y1="6" x2="3" y2="6" />
             <line x1="21" y1="10" x2="3" y2="10" />
             <line x1="21" y1="14" x2="3" y2="14" />
             <line x1="14" y1="18" x2="3" y2="18" />
           </svg>
         )}
-        {task.startTime && (
-          <span>Start: {formatDate(task.startTime)}</span>
-        )}
+        {task.startTime && <span>Start: {formatDate(task.startTime)}</span>}
         {task.deadline && (
-          <span className={overdue ? 'tg-destructive' : ''}>
-            Due: {formatDate(task.deadline)}
-          </span>
+          <span className={overdue ? 'tg-destructive' : ''}>Due: {formatDate(task.deadline)}</span>
         )}
         {task.assignees.length > 0 && (
           <span>{task.assignees.map((a) => getAssigneeDisplayName(a)).join(', ')}</span>
@@ -161,7 +190,16 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete, onEd
           className="tg-hint p-1 shrink-0 ml-auto"
           title="Edit"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
             <path d="m15 5 4 4" />
           </svg>
@@ -169,7 +207,7 @@ export default function TaskCard({ task, currentUserId, onUpdate, onDelete, onEd
       </div>
 
       {expanded && task.description && (
-        <div className="mt-2 text-sm md:text-base tg-hint whitespace-pre-wrap">
+        <div className="mt-2 text-sm md:text-base tg-hint whitespace-pre-wrap break-all">
           <DescriptionMarkdown text={task.description} />
         </div>
       )}
