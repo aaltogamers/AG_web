@@ -157,9 +157,9 @@ export default function TaskCard({
       </div>
 
       {/* Large screen: single-line layout */}
-      <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tg-hint">
+      <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tg-hint break-all">
         <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
-        <span className="text-left font-medium tg-text text-base break-all">{task.name}</span>
+        <span className="text-left font-medium tg-text text-base">{task.name}</span>
         {task.description && (
           <svg
             width="14"
