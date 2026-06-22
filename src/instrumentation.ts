@@ -26,8 +26,8 @@ async function checkDailyNotifications(): Promise<void> {
   lastDailyRunDate = todayStr
 
   try {
-    const { default: pool } = await import(/* webpackIgnore: true */ './utils/db_pg')
-    const { sendTelegramDM } = await import(/* webpackIgnore: true */ './utils/telegram')
+    const { default: pool } = await import('./utils/db_pg')
+    const { sendTelegramDM } = await import('./utils/telegram')
 
     const { rows } = await pool.query<
       TaskNotificationRow & { tg_user_id: string }
