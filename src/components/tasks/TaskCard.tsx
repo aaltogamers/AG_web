@@ -103,7 +103,7 @@ export default function TaskCard({
       {/* Small screen: two-row layout (also used by Telegram) */}
       <div className="md:hidden">
         <div className="flex items-start justify-between gap-2">
-          <span className="text-left flex-1 font-medium tg-text">{task.name}</span>
+          <span className="text-left flex-1 font-medium tg-text break-all">{task.name}</span>
           <button
             onClick={() => setEditingState(true)}
             className="tg-hint p-1 shrink-0"
@@ -157,9 +157,9 @@ export default function TaskCard({
       </div>
 
       {/* Large screen: single-line layout */}
-      <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tg-hint break-all">
+      <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tg-hint ">
         <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
-        <span className="text-left font-medium tg-text text-base">{task.name}</span>
+        <span className="text-left font-medium tg-text text-base break-all">{task.name}</span>
         {task.description && (
           <svg
             width="14"
