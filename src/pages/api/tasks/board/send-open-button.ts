@@ -16,9 +16,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     chat_id: chatId,
     text: 'Open the tasks board in Telegram:',
     reply_markup: {
-      inline_keyboard: [
-        [{ text: 'Open Tasks App', url: webAppUrl }],
+      keyboard: [
+        [{ text: 'Open Tasks App', web_app: { url: webAppUrl } }],
       ],
+      resize_keyboard: true,
     },
   }
 
