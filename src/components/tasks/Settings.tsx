@@ -170,7 +170,9 @@ export default function Settings({ onBack }: Props) {
         <div className="tg-section-bg rounded-xl p-4 border tg-separator">
           <label className="flex items-center justify-between gap-3 cursor-pointer">
             <div>
-              <span className="text-sm tg-text">Skip Notifications for "In Progress" tasks</span>
+              <span className="text-sm tg-text">
+                Skip Notifications for &quot;In Progress&quot; tasks
+              </span>
             </div>
             <input
               type="checkbox"
