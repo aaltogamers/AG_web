@@ -31,9 +31,7 @@ export default function Settings({ onBack }: Props) {
   const fetchNotifSettings = useCallback(async () => {
     if (!user) return
     try {
-      const res = await fetch(
-        `/api/tasks/board/notification-settings?tgUserId=${user.id}`
-      )
+      const res = await fetch(`/api/tasks/board/notification-settings?tgUserId=${user.id}`)
       if (res.ok) {
         const data = await res.json()
         const s = data.settings as TaskNotificationSettings
@@ -50,31 +48,37 @@ export default function Settings({ onBack }: Props) {
           skipInProgress: s.skipInProgress,
         })
       }
-    } catch { /* use defaults */ } finally {
+    } catch {
+      /* use defaults */
+    } finally {
       setLoading(false)
     }
   }, [user])
 
-  useEffect(() => { fetchNotifSettings() }, [fetchNotifSettings])
+  useEffect(() => {
+    fetchNotifSettings()
+  }, [fetchNotifSettings])
 
   const saveNotif = async (updated: typeof notifSettings) => {
     if (!user) return
     setSavingNotif(true)
     try {
-      await fetch(
-        '/api/tasks/board/notification-settings',
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tgUserId: String(user.id), ...updated }),
-        }
-      )
-    } catch { /* ignore */ } finally {
+      await fetch('/api/tasks/board/notification-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tgUserId: String(user.id), ...updated }),
+      })
+    } catch {
+      /* ignore */
+    } finally {
       setSavingNotif(false)
     }
   }
 
-  const updateNotif = <K extends keyof typeof notifSettings>(key: K, value: (typeof notifSettings)[K]) => {
+  const updateNotif = <K extends keyof typeof notifSettings>(
+    key: K,
+    value: (typeof notifSettings)[K]
+  ) => {
     const updated = { ...notifSettings, [key]: value }
     setNotifSettings(updated)
     saveNotif(updated)
@@ -112,7 +116,7 @@ export default function Settings({ onBack }: Props) {
 
       <div className="flex flex-col gap-5">
         <div className="tg-section-bg rounded-xl p-4 border tg-separator">
-          <h3 className="text-sm font-semibold mb-3 tg-text">Timing</h3>
+          <h3 className="text-sm font-semibold mb-3 tg-text">Notification Timing</h3>
           <div className="flex flex-col gap-3">
             <label className="flex items-center justify-between gap-3">
               <span className="text-sm tg-text">Days before deadline</span>
@@ -121,7 +125,9 @@ export default function Settings({ onBack }: Props) {
                 min={0}
                 max={30}
                 value={notifSettings.deadlineDays}
-                onChange={(e) => updateNotif('deadlineDays', Math.max(0, Number(e.target.value) || 0))}
+                onChange={(e) =>
+                  updateNotif('deadlineDays', Math.max(0, Number(e.target.value) || 0))
+                }
                 className="tg-input w-16 text-center !py-1"
               />
             </label>
@@ -135,7 +141,9 @@ export default function Settings({ onBack }: Props) {
                 min={0}
                 max={30}
                 value={notifSettings.startDateDays}
-                onChange={(e) => updateNotif('startDateDays', Math.max(0, Number(e.target.value) || 0))}
+                onChange={(e) =>
+                  updateNotif('startDateDays', Math.max(0, Number(e.target.value) || 0))
+                }
                 className="tg-input w-16 text-center !py-1"
               />
             </label>
@@ -162,10 +170,7 @@ export default function Settings({ onBack }: Props) {
         <div className="tg-section-bg rounded-xl p-4 border tg-separator">
           <label className="flex items-center justify-between gap-3 cursor-pointer">
             <div>
-              <span className="text-sm font-medium tg-text">Skip &quot;In Progress&quot; tasks</span>
-              <span className="text-xs tg-hint block">
-                Don&apos;t notify if the task is already in progress
-              </span>
+              <span className="text-sm tg-text">Skip Notifications for "In Progress" tasks</span>
             </div>
             <input
               type="checkbox"
@@ -177,9 +182,7 @@ export default function Settings({ onBack }: Props) {
         </div>
       </div>
 
-      {savingNotif && (
-        <p className="text-xs tg-hint text-center mt-3">Saving...</p>
-      )}
+      {savingNotif && <p className="text-xs tg-hint text-center mt-3">Saving...</p>}
     </div>
   )
 }
