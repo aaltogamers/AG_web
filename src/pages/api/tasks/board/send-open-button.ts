@@ -10,16 +10,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const botToken = process.env.TELEGRAM_BOT_TOKEN
   if (!botToken) return res.status(500).json({ error: 'TELEGRAM_BOT_TOKEN not configured' })
 
-  const webAppUrl = `https://aaltogamers.fi/tasks`
+  const webAppUrl = `https://t.me/AG_Alvar_Aalto_Bot/tasks`
 
   const body: Record<string, unknown> = {
     chat_id: chatId,
     text: 'Open the tasks board in Telegram:',
     reply_markup: {
-      keyboard: [
-        [{ text: 'Open Tasks App', web_app: { url: webAppUrl } }],
+      inline_keyboard: [
+        [{ text: 'Open Tasks App', url: webAppUrl }],
       ],
-      resize_keyboard: true,
     },
   }
 
