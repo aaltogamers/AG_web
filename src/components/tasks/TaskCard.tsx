@@ -158,14 +158,14 @@ export default function TaskCard({
 
       {/* Large screen: grid layout for column alignment across cards */}
       <div
-        className="hidden md:grid items-center text-sm tg-hint"
+        className="hidden md:grid items-center text-base tg-hint"
         style={{
-          gridTemplateColumns: '110px 1fr 20px 110px 110px minmax(0,140px) 30px',
-          gap: '0 8px',
+          gridTemplateColumns: '120px 1fr 20px 120px 120px minmax(0,200px) 30px',
+          gap: '0 10px',
         }}
       >
         <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
-        <span className="text-left font-medium tg-text text-base break-all min-w-0">{task.name}</span>
+        <span className="text-left font-medium tg-text text-lg break-all min-w-0">{task.name}</span>
         <span className="flex items-center justify-center">
           {task.description && (
             <svg

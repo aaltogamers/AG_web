@@ -60,7 +60,7 @@ export default function StatusDropdown({ currentState, onChangeState }: Props) {
         style={{ backgroundColor: 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05))' }}
       >
         {STATUS_ICONS[currentState]}
-        <span className="text-xs" style={{ color: 'var(--tg-theme-hint-color)' }}>
+        <span className="text-xs md:text-sm" style={{ color: 'var(--tg-theme-hint-color)' }}>
           {TASK_STATE_LABELS[currentState]}
         </span>
       </button>
