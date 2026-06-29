@@ -156,38 +156,42 @@ export default function TaskCard({
         </div>
       </div>
 
-      {/* Large screen: single-line layout */}
-      <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1 text-sm tg-hint ">
+      {/* Large screen: grid layout for column alignment across cards */}
+      <div
+        className="hidden md:grid items-center text-sm tg-hint"
+        style={{
+          gridTemplateColumns: '110px 1fr 20px 110px 110px minmax(0,140px) 30px',
+          gap: '0 8px',
+        }}
+      >
         <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
-        <span className="text-left font-medium tg-text text-base break-all">{task.name}</span>
-        {task.description && (
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="opacity-60"
-          >
-            <line x1="21" y1="6" x2="3" y2="6" />
-            <line x1="21" y1="10" x2="3" y2="10" />
-            <line x1="21" y1="14" x2="3" y2="14" />
-            <line x1="14" y1="18" x2="3" y2="18" />
-          </svg>
-        )}
-        {task.startTime && <span>Start: {formatDate(task.startTime)}</span>}
-        {task.deadline && (
-          <span className={overdue ? 'tg-destructive' : ''}>Due: {formatDate(task.deadline)}</span>
-        )}
-        {task.assignees.length > 0 && (
-          <span>{task.assignees.map((a) => getAssigneeDisplayName(a)).join(', ')}</span>
-        )}
+        <span className="text-left font-medium tg-text text-base break-all min-w-0">{task.name}</span>
+        <span className="flex items-center justify-center">
+          {task.description && (
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="opacity-60"
+            >
+              <line x1="21" y1="6" x2="3" y2="6" />
+              <line x1="21" y1="10" x2="3" y2="10" />
+              <line x1="21" y1="14" x2="3" y2="14" />
+              <line x1="14" y1="18" x2="3" y2="18" />
+            </svg>
+          )}
+        </span>
+        <span>{task.startTime ? `Start: ${formatDate(task.startTime)}` : ''}</span>
+        <span className={overdue ? 'tg-destructive' : ''}>{task.deadline ? `Due: ${formatDate(task.deadline)}` : ''}</span>
+        <span className="truncate">{task.assignees.length > 0 ? task.assignees.map((a) => getAssigneeDisplayName(a)).join(', ') : ''}</span>
         <button
           onClick={() => setEditingState(true)}
-          className="tg-hint p-1 shrink-0 ml-auto"
+          className="tg-hint p-1 shrink-0 justify-self-end"
           title="Edit"
         >
           <svg
