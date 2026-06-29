@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../../utils/db_pg'
 import type { Task, TaskAssignee, TaskState } from '../../../../types/types'
+import { TASK_STATES } from '../../../../types/types'
 
 type TaskRow = {
   id: string
@@ -55,12 +56,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const tasksResult = await pool.query<TaskRow>(
-    `SELECT id, name, description, deadline, start_time, state,
-            created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
-     FROM tasks
-     ORDER BY position ASC, created_at ASC`
-  )
+  const stateParam = typeof req.query.state === 'string' ? req.query.state : undefined
+  const stateFilter = stateParam
+    ? stateParam.split(',').filter((s): s is TaskState => (TASK_STATES as readonly string[]).includes(s))
+    : null
+
+  const tasksResult = stateFilter && stateFilter.length > 0
+    ? await pool.query<TaskRow>(
+        `SELECT id, name, description, deadline, start_time, state,
+                created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
+         FROM tasks
+         WHERE state = ANY($1)
+         ORDER BY position ASC, created_at ASC`,
+        [stateFilter]
+      )
+    : await pool.query<TaskRow>(
+        `SELECT id, name, description, deadline, start_time, state,
+                created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
+         FROM tasks
+         ORDER BY position ASC, created_at ASC`
+      )
 
   const taskIds = tasksResult.rows.map((r) => r.id)
   let assigneesByTask: Record<string, TaskAssignee[]> = {}
