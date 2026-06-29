@@ -194,7 +194,7 @@ export default function TaskBoard() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="p-1.5 rounded-lg transition-colors hover:opacity-80"
-              style={{ backgroundColor: showFilters || hiddenStates.size > 0 || assignFilter !== 'all' ? 'var(--tg-theme-button-color, #F32929)' : 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05))' }}
+              style={{ backgroundColor: (hiddenStates.size !== 1 || !hiddenStates.has('someday') || assignFilter !== 'all') ? 'var(--tg-theme-button-color, #F32929)' : 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05))' }}
               title="Filters"
             >
               <svg
@@ -202,7 +202,7 @@ export default function TaskBoard() {
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke={showFilters || hiddenStates.size > 0 || assignFilter !== 'all' ? 'var(--tg-theme-button-text-color, #fff)' : 'var(--tg-theme-hint-color)'}
+                stroke={(hiddenStates.size !== 1 || !hiddenStates.has('someday') || assignFilter !== 'all') ? 'var(--tg-theme-button-text-color, #fff)' : 'var(--tg-theme-hint-color)'}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
