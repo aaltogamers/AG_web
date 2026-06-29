@@ -298,10 +298,11 @@ export type StreamConfig = {
   query: string
 }
 
-export const TASK_STATES = ['todo', 'in_progress', 'done'] as const
+export const TASK_STATES = ['someday', 'todo', 'in_progress', 'done'] as const
 export type TaskState = (typeof TASK_STATES)[number]
 
 export const TASK_STATE_LABELS: Record<TaskState, string> = {
+  someday: 'Someday',
   todo: 'To Do',
   in_progress: 'In Progress',
   done: 'Done',

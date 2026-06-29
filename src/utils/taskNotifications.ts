@@ -62,6 +62,7 @@ export function buildAssigneeNamesMap(rows: AssigneeRow[]): Map<string, string[]
 }
 
 const STATE_LABELS: Record<string, string> = {
+  someday: 'Someday',
   todo: 'To Do',
   in_progress: 'In Progress',
   done: 'Done',

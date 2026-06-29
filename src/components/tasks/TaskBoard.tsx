@@ -1,11 +1,19 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import type { Task } from '../../types/types'
+import type { Task, TaskState } from '../../types/types'
 import TaskCard from './TaskCard'
 import TaskForm from './TaskForm'
 import Settings from './Settings'
 import { useTelegram } from './TelegramProvider'
+
+type AssignFilter = 'all' | 'mine' | 'mine_unassigned'
+
+const ASSIGN_FILTER_LABELS: Record<AssignFilter, string> = {
+  all: 'All',
+  mine: 'Mine',
+  mine_unassigned: 'Mine + Unassigned',
+}
 
 export default function TaskBoard() {
   const { user, ready, isTelegram } = useTelegram()
@@ -15,6 +23,9 @@ export default function TaskBoard() {
   const [showForm, setShowForm] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
+  const [hiddenStates, setHiddenStates] = useState<Set<TaskState>>(new Set(['someday']))
+  const [assignFilter, setAssignFilter] = useState<AssignFilter>('all')
   const formOpen = showForm || editingTaskId !== null
 
   const registeredRef = useRef(false)
@@ -104,8 +115,32 @@ export default function TaskBoard() {
   }
 
   const currentUserId = user ? String(user.id) : undefined
-  const activeTasks = sortActiveTasks(tasks.filter((t) => t.state !== 'done'))
-  const doneTasks = sortDoneTasks(tasks.filter((t) => t.state === 'done'))
+
+  const toggleState = (state: TaskState) => {
+    setHiddenStates((prev) => {
+      const next = new Set(prev)
+      if (next.has(state)) next.delete(state)
+      else next.add(state)
+      return next
+    })
+  }
+
+  const applyFilters = (list: Task[]) => {
+    let filtered = list.filter((t) => !hiddenStates.has(t.state))
+    if (assignFilter === 'mine' && currentUserId) {
+      filtered = filtered.filter((t) => t.assignees.some((a) => a.tgUserId === currentUserId))
+    } else if (assignFilter === 'mine_unassigned' && currentUserId) {
+      filtered = filtered.filter(
+        (t) => t.assignees.length === 0 || t.assignees.some((a) => a.tgUserId === currentUserId)
+      )
+    }
+    return filtered
+  }
+
+  const activeTasks = sortActiveTasks(applyFilters(tasks.filter((t) => t.state !== 'done')))
+  const doneTasks = hiddenStates.has('done')
+    ? []
+    : sortDoneTasks(applyFilters(tasks.filter((t) => t.state === 'done')))
 
   if (!ready) {
     return (
@@ -152,9 +187,30 @@ export default function TaskBoard() {
     <div className="px-4 py-4">
       {!formOpen && (
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs md:text-sm tg-hint">
-            {tasks.length} task{tasks.length !== 1 ? 's' : ''}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs md:text-sm tg-hint">
+              {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+            </p>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="p-1.5 rounded-lg transition-colors hover:opacity-80"
+              style={{ backgroundColor: showFilters || hiddenStates.size > 0 || assignFilter !== 'all' ? 'var(--tg-theme-button-color, #F32929)' : 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05))' }}
+              title="Filters"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={showFilters || hiddenStates.size > 0 || assignFilter !== 'all' ? 'var(--tg-theme-button-text-color, #fff)' : 'var(--tg-theme-hint-color)'}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+            </button>
+          </div>
           <div className="flex gap-2">
             {isTelegram && (
               <button
@@ -171,6 +227,56 @@ export default function TaskBoard() {
             >
               + Add Task
             </button>
+          </div>
+        </div>
+      )}
+
+      {showFilters && !formOpen && (
+        <div
+          className="mb-4 rounded-xl p-3 border flex flex-col gap-3"
+          style={{
+            backgroundColor: 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.03))',
+            borderColor: 'var(--tg-theme-section-separator-color, rgba(0,0,0,0.1))',
+          }}
+        >
+          <div>
+            <span className="text-xs tg-hint block mb-1.5">Status</span>
+            <div className="flex flex-wrap gap-1.5">
+              {(['someday', 'todo', 'in_progress', 'done'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => toggleState(s)}
+                  className="text-xs px-2.5 py-1 rounded-lg transition-colors"
+                  style={{
+                    backgroundColor: hiddenStates.has(s)
+                      ? 'transparent'
+                      : 'var(--tg-theme-button-color, #F32929)',
+                    color: hiddenStates.has(s)
+                      ? 'var(--tg-theme-hint-color)'
+                      : 'var(--tg-theme-button-text-color, #fff)',
+                    border: hiddenStates.has(s)
+                      ? '1px solid var(--tg-theme-section-separator-color, rgba(0,0,0,0.15))'
+                      : '1px solid transparent',
+                  }}
+                >
+                  {{ someday: 'Someday', todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[s]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <span className="text-xs tg-hint block mb-1.5">Assigned</span>
+            <select
+              value={assignFilter}
+              onChange={(e) => setAssignFilter(e.target.value as AssignFilter)}
+              className="tg-input text-sm !py-1.5"
+            >
+              {(Object.keys(ASSIGN_FILTER_LABELS) as AssignFilter[]).map((k) => (
+                <option key={k} value={k}>
+                  {ASSIGN_FILTER_LABELS[k]}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       )}

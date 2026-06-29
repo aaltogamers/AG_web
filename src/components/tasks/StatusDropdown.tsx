@@ -10,9 +10,15 @@ type Props = {
 }
 
 const STATUS_ICONS: Record<TaskState, React.ReactNode> = {
-  todo: (
+  someday: (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
       <circle cx="8" cy="8" r="6.5" stroke="#9ca3af" strokeWidth="1.5" />
+    </svg>
+  ),
+  todo: (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="6.5" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.5" />
+      <path d="M8 1.5 A6.5 6.5 0 0 1 14.5 8 L8 8 Z" fill="#3b82f6" fillOpacity="0.5" />
     </svg>
   ),
   in_progress: (

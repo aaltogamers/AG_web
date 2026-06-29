@@ -16,7 +16,7 @@ type CreateTaskBody = {
   createdByTgName?: string
 }
 
-const VALID_STATES: readonly string[] = ['todo', 'in_progress', 'done'] satisfies readonly TaskState[]
+const VALID_STATES: readonly string[] = ['someday', 'todo', 'in_progress', 'done'] satisfies readonly TaskState[]
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
