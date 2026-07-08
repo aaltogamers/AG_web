@@ -148,7 +148,7 @@ const AudienceGame = () => {
     }
     await insertCoin({
       skipLobby: true,
-      maxPlayersPerRoom: 14,
+      maxPlayersPerRoom: 5,
       reconnectGracePeriod: 3000,
       roomCode: roomcode,
       defaultPlayerStates: {
@@ -245,7 +245,7 @@ const AudienceGame = () => {
               <div
                 className={`text-1xl font-medium text-green-600 ${commonMargins} flex flex-col `}
               >
-                Connected to room {getRoomCode()} ({players.length}/14 in room)
+                Connected to room {getRoomCode()} ({players.length}/5 in room)
                 <button
                   className={`text-1xl font-medium rounded-md bg-gray-700/70 px-1 mx-1 ${commonMargins} hover:text-green-500 hover:cursor-pointer `}
                   onClick={() => myPlayer().leaveRoom()}
