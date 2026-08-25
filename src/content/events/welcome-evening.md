@@ -1,5 +1,5 @@
 ---
-name: Welcome Evening
+name: AG Welcome Evening 2026
 time: 2026-09-07T18:00:00
 durationHours: 5
 image: /images/Black-ag.png
