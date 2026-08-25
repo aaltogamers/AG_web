@@ -1,5 +1,5 @@
 ---
-name: AG CS2 Major Finals Watch Party
+name: AG CS2 Major Finals Watch Party Shanghai 2026
 time: 2026-12-13T11:00:00
 durationHours: 8
 image: /images/Black-ag.png
