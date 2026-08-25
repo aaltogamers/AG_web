@@ -1,7 +1,7 @@
 ---
-name: AG LoL Worlds 2025 Finals Watch Party
+name: AG LoL Worlds 2026 Finals Watch Party
 time: 2026-11-14T19:00:00
-durationHours: 6
+durationHours: 4
 image: /images/Black-ag.png
 visibleOnCalendar: true
 visibleOnEventsPage: false
