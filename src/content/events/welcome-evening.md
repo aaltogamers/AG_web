@@ -2,9 +2,10 @@
 name: AG Welcome Evening 2026
 time: 2026-09-07T18:00:00
 durationHours: 5
-image: /images/Black-ag.png
+image: /images/photo_2026-08-25_21-26-23.jpg
 visibleOnCalendar: true
-visibleOnEventsPage: false
+visibleOnEventsPage: true
+location: Game Cave Otaniemi
 description: More info TBA
 tldr: |-
   ### WHEN?
