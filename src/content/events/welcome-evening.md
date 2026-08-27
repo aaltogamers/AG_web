@@ -10,16 +10,16 @@ description: >-
   **Welcome Evening 2026 is here!** 🎉
 
 
-  Join us **LIVE** at Otaniemi Game Cave, Kivimiehentie 2, Espoo, on Monday 07.9, for the perfect chance to play your favorite games 🎮, meet new friends 🤝, and **get to know Aalto Gamers**!
+  Join us **LIVE** at **Otaniemi Game Cave, Kivimiehentie 2, Espoo, on Monday 7.9**., and kick off the new semester with Aalto Gamers! 🎮 Meet new people, play your favorite games, and discover what the AG community is all about. 🤝
 
 
-  🕕 The event starts at 18. Taking part is **FREE,** and you can buy refreshments at the venue. 
+  🕕 The event starts at 18. **Participation is FREE,** and you can buy refreshments at the venue. 
 
 
   Game Cave features a game room with 10 PCs, 5 consoles, a sauna, a poker/board gaming room, and even darts! 🎯[](https://aaltogamers.fi/events/ag-welcome-evening-2025)
 
 
-  Interested in organizing gaming events? Learn more about our board activities and taking part in our association! 😎
+  Curious about what Aalto Gamers does beyond game nights? Come chat with us, learn more about our activities, and find out how you can get involved in organising gaming events and being part of our community! 😎
 
 
   **See you there! 🙌**
