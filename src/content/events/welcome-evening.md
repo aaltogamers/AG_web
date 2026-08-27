@@ -7,22 +7,16 @@ visibleOnCalendar: true
 visibleOnEventsPage: true
 location: Game Cave Otaniemi
 description: >-
-  **Welcome Evening 2026 is here!** 🎉
+  **Welcome Evening 2026 is here! 🎉**
 
 
-  Join us **LIVE** at **Otaniemi Game Cave, Kivimiehentie 2, Espoo, on Monday 7.9**., and kick off the new semester with Aalto Gamers! 🎮 Meet new people, play your favorite games, and discover what the AG community is all about. 🤝
+  Looking for games, good vibes, and new friends? 🎮👋 Come join Aalto Gamers at Otaniemi Game Cave on Monday 7.9. from 18:00!
 
 
-  🕕 The event starts at 18. **Participation is FREE,** and you can buy refreshments at the venue. 
+  What will you play first? PC, console, board games, or darts? 👀 **The event is FREE!**
 
 
-  Game Cave features a game room with 10 PCs, 5 consoles, a sauna, a poker/board gaming room, and even darts! 🎯[](https://aaltogamers.fi/events/ag-welcome-evening-2025)
-
-
-  Curious about what Aalto Gamers does beyond game nights? Come chat with us, learn more about our activities, and find out how you can get involved in organising gaming events and being part of our community! 😎
-
-
-  **See you there! 🙌**
+  Come hang out, meet the community, and see what Aalto Gamers is all about! 🙌
 tldr: |-
   ### WHEN?
 
@@ -41,4 +35,14 @@ tldr: |-
   TBA
 recordings: []
 ---
-More info TBA
+**Welcome Evening 2026 is here!** 🎉
+
+Join us **LIVE** at **Otaniemi Game Cave, Kivimiehentie 2, Espoo, on Monday 7.9**., and kick off the new semester with Aalto Gamers! 🎮 Meet new people, play your favorite games, and discover what the AG community is all about. 🤝
+
+🕕 The event starts at 18. **Participation is FREE,** and you can buy refreshments at the venue. 
+
+Game Cave features a game room with 10 PCs, 5 consoles, a sauna, a poker/board gaming room, and even darts! 🎯[](<>)
+
+Curious about what Aalto Gamers does beyond game nights? Come chat with us, learn more about our activities, and find out how you can get involved in organising gaming events and being part of our community! 😎
+
+**See you there! 🙌**
