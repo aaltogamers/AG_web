@@ -290,19 +290,10 @@ export default function TaskBoard() {
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        {activeTasks.map((task) => (
-          <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
-        ))}
-        {activeTasks.length === 0 && doneTasks.length === 0 && somedayTasks.length === 0 && (
-          <p className="text-sm tg-hint text-center py-4 opacity-50">No tasks</p>
-        )}
-      </div>
-
       {somedayTasks.length > 0 && (
         <>
           <div
-            className="flex items-center gap-3 my-4 cursor-pointer select-none"
+            className="flex items-center gap-3 mb-3 cursor-pointer select-none"
             onClick={() => setSomedayCollapsed((v) => !v)}
           >
             <div className="flex-1 border-t tg-separator" />
@@ -314,7 +305,7 @@ export default function TaskBoard() {
             <div className="flex-1 border-t tg-separator" />
           </div>
           {!somedayCollapsed && (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 mb-3">
               {somedayTasks.map((task) => (
                 <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
               ))}
@@ -322,6 +313,15 @@ export default function TaskBoard() {
           )}
         </>
       )}
+
+      <div className="flex flex-col gap-2">
+        {activeTasks.map((task) => (
+          <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
+        ))}
+        {activeTasks.length === 0 && doneTasks.length === 0 && somedayTasks.length === 0 && (
+          <p className="text-sm tg-hint text-center py-4 opacity-50">No tasks</p>
+        )}
+      </div>
 
       {doneTasks.length > 0 && (
         <>
