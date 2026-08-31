@@ -24,7 +24,9 @@ export default function TaskBoard() {
   const [showSettings, setShowSettings] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
-  const [hiddenStates, setHiddenStates] = useState<Set<TaskState>>(new Set(['someday']))
+  const [hiddenStates, setHiddenStates] = useState<Set<TaskState>>(new Set())
+  const [completedCollapsed, setCompletedCollapsed] = useState(false)
+  const [somedayCollapsed, setSomedayCollapsed] = useState(true)
   const [assignFilter, setAssignFilter] = useState<AssignFilter>('all')
   const formOpen = showForm || editingTaskId !== null
 
@@ -137,7 +139,8 @@ export default function TaskBoard() {
     return filtered
   }
 
-  const activeTasks = sortActiveTasks(applyFilters(tasks.filter((t) => t.state !== 'done')))
+  const activeTasks = sortActiveTasks(applyFilters(tasks.filter((t) => t.state !== 'done' && t.state !== 'someday')))
+  const somedayTasks = applyFilters(tasks.filter((t) => t.state === 'someday'))
   const doneTasks = hiddenStates.has('done')
     ? []
     : sortDoneTasks(applyFilters(tasks.filter((t) => t.state === 'done')))
@@ -194,7 +197,7 @@ export default function TaskBoard() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="p-1.5 rounded-lg transition-colors hover:opacity-80"
-              style={{ backgroundColor: (hiddenStates.size !== 1 || !hiddenStates.has('someday') || assignFilter !== 'all') ? 'var(--tg-theme-button-color, #F32929)' : 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05))' }}
+              style={{ backgroundColor: (hiddenStates.size > 0 || assignFilter !== 'all') ? 'var(--tg-theme-button-color, #F32929)' : 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05))' }}
               title="Filters"
             >
               <svg
@@ -202,7 +205,7 @@ export default function TaskBoard() {
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke={(hiddenStates.size !== 1 || !hiddenStates.has('someday') || assignFilter !== 'all') ? 'var(--tg-theme-button-text-color, #fff)' : 'var(--tg-theme-hint-color)'}
+                stroke={(hiddenStates.size > 0 || assignFilter !== 'all') ? 'var(--tg-theme-button-text-color, #fff)' : 'var(--tg-theme-hint-color)'}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -242,7 +245,7 @@ export default function TaskBoard() {
           <div>
             <span className="text-xs tg-hint block mb-1.5">Status</span>
             <div className="flex flex-wrap gap-1.5">
-              {(['someday', 'todo', 'in_progress', 'done'] as const).map((s) => (
+              {(['todo', 'in_progress', 'done'] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => toggleState(s)}
@@ -259,7 +262,7 @@ export default function TaskBoard() {
                       : '1px solid transparent',
                   }}
                 >
-                  {{ someday: 'Someday', todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[s]}
+                  {{ todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[s]}
                 </button>
               ))}
             </div>
@@ -291,23 +294,56 @@ export default function TaskBoard() {
         {activeTasks.map((task) => (
           <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
         ))}
-        {activeTasks.length === 0 && doneTasks.length === 0 && (
+        {activeTasks.length === 0 && doneTasks.length === 0 && somedayTasks.length === 0 && (
           <p className="text-sm tg-hint text-center py-4 opacity-50">No tasks</p>
         )}
       </div>
 
+      {somedayTasks.length > 0 && (
+        <>
+          <div
+            className="flex items-center gap-3 my-4 cursor-pointer select-none"
+            onClick={() => setSomedayCollapsed((v) => !v)}
+          >
+            <div className="flex-1 border-t tg-separator" />
+            <span className="text-xs md:text-sm tg-hint">
+              {somedayCollapsed
+                ? `${somedayTasks.length} someday hidden`
+                : `Someday (${somedayTasks.length})`}
+            </span>
+            <div className="flex-1 border-t tg-separator" />
+          </div>
+          {!somedayCollapsed && (
+            <div className="flex flex-col gap-2">
+              {somedayTasks.map((task) => (
+                <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
       {doneTasks.length > 0 && (
         <>
-          <div className="flex items-center gap-3 my-4">
+          <div
+            className="flex items-center gap-3 my-4 cursor-pointer select-none"
+            onClick={() => setCompletedCollapsed((v) => !v)}
+          >
             <div className="flex-1 border-t tg-separator" />
-            <span className="text-xs md:text-sm tg-hint">Completed ({doneTasks.length})</span>
+            <span className="text-xs md:text-sm tg-hint">
+              {completedCollapsed
+                ? `${doneTasks.length} completed hidden`
+                : `Completed (${doneTasks.length})`}
+            </span>
             <div className="flex-1 border-t tg-separator" />
           </div>
-          <div className="flex flex-col gap-2">
-            {doneTasks.map((task) => (
-              <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
-            ))}
-          </div>
+          {!completedCollapsed && (
+            <div className="flex flex-col gap-2">
+              {doneTasks.map((task) => (
+                <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>
