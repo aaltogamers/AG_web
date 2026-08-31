@@ -2,12 +2,26 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  webpack: (cfg) => {
+  webpack: (cfg, { isServer }) => {
     cfg.module.rules.push({
       test: /\.md$/,
       loader: 'frontmatter-markdown-loader',
       options: { mode: ['react-component'] },
     })
+    if (isServer) {
+      cfg.externals = cfg.externals || []
+      if (Array.isArray(cfg.externals)) {
+        cfg.externals.push(
+          'pg',
+          'pg-connection-string',
+          'pg-pool',
+          'pg-native',
+          'node-pg-migrate',
+          'path',
+          'fs',
+        )
+      }
+    }
     return cfg
   },
   output: 'standalone',
