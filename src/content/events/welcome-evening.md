@@ -32,7 +32,7 @@ tldr: |-
 
   ### SIGN-UP
 
-  TBA
+  Opens 2.9. at 12:00, at the bottom of this page.
 recordings: []
 ---
 **Welcome Evening 2026 is here!** 🎉
