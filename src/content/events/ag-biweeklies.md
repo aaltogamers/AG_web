@@ -105,8 +105,8 @@ otherTimes:
     time: 2023-01-20T18:00:00.000
 durationHours: 5
 image: /images/biweekly.png
-visibleOnCalendar: true
-visibleOnEventsPage: true
+visibleOnCalendar: false
+visibleOnEventsPage: false
 location: AG Discord server or Live at the Clubroom at OK20
 isRecurring: true
 description: >-
