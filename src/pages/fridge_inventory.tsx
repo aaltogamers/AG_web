@@ -1088,14 +1088,14 @@ export default function FridgeInventoryPage() {
         </div>
         <nav className="flex border-t border-[#2a2a35] bg-[#1a1a22] shrink-0 pb-[env(safe-area-inset-bottom,0)]">
           <button
-            className={`flex-1 flex flex-col items-center gap-0.5 py-3 border-none bg-transparent text-xs cursor-pointer transition-colors duration-150 [&>svg]:text-2xl ${activeTab === 'catalog' ? 'text-[#6366f1]' : 'text-[#666]'}`}
+            className={`flex-1 flex flex-col items-center gap-1 py-3 border-none bg-transparent text-sm cursor-pointer transition-colors duration-150 [&>svg]:text-3xl ${activeTab === 'catalog' ? 'text-[#6366f1]' : 'text-[#666]'}`}
             onClick={() => setActiveTab('catalog')}
           >
             <MdGridView />
             <span>Catalog</span>
           </button>
           <button
-            className={`flex-1 flex flex-col items-center gap-0.5 py-3 border-none bg-transparent text-xs cursor-pointer transition-colors duration-150 [&>svg]:text-2xl ${activeTab === 'tabs' ? 'text-[#6366f1]' : 'text-[#666]'}`}
+            className={`flex-1 flex flex-col items-center gap-1 py-3 border-none bg-transparent text-sm cursor-pointer transition-colors duration-150 [&>svg]:text-3xl ${activeTab === 'tabs' ? 'text-[#6366f1]' : 'text-[#666]'}`}
             onClick={() => setActiveTab('tabs')}
           >
             <MdReceiptLong />
