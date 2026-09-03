@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Head from 'next/head'
-import { MdGridView, MdReceiptLong, MdSettings, MdAdd, MdClose, MdArchive, MdUnarchive, MdCancel, MdCameraAlt } from 'react-icons/md'
+import {
+  MdGridView,
+  MdReceiptLong,
+  MdSettings,
+  MdAdd,
+  MdClose,
+  MdArchive,
+  MdUnarchive,
+  MdCancel,
+  MdCameraAlt,
+} from 'react-icons/md'
 import { loginAdmin, checkAdminSession } from '../utils/adminAuth'
 
 // ── Types ──
@@ -32,7 +42,7 @@ type Transaction = {
   item_name: string | null
 }
 
-type Tab = 'catalog' | 'tabs' | 'settings'
+type Tab = 'catalog' | 'tabs'
 
 // ── Helpers ──
 
@@ -58,8 +68,7 @@ const adminPatch = (url: string, body?: unknown) =>
     body: body ? JSON.stringify(body) : undefined,
   })
 
-const adminDelete = (url: string) =>
-  adminFetch(url, { method: 'DELETE' })
+const adminDelete = (url: string) => adminFetch(url, { method: 'DELETE' })
 
 const CANCEL_WINDOW_MS = 2 * 60 * 1000
 
@@ -129,7 +138,13 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
 // ── Camera Capture Modal ──
 
-function CameraCapture({ onCapture, onClose }: { onCapture: (data: string) => void; onClose: () => void }) {
+function CameraCapture({
+  onCapture,
+  onClose,
+}: {
+  onCapture: (data: string) => void
+  onClose: () => void
+}) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
@@ -170,8 +185,12 @@ function CameraCapture({ onCapture, onClose }: { onCapture: (data: string) => vo
       <div className="modal camera-modal" onClick={(e) => e.stopPropagation()}>
         <video ref={videoRef} autoPlay playsInline muted />
         <div className="camera-actions">
-          <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={capture}>Take Photo</button>
+          <button className="btn-secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="btn-primary" onClick={capture}>
+            Take Photo
+          </button>
         </div>
       </div>
     </div>
@@ -180,10 +199,16 @@ function CameraCapture({ onCapture, onClose }: { onCapture: (data: string) => vo
 
 // ── Items Tab ──
 
-function ItemsTab({ items, users, onRefreshUsers }: {
+function ItemsTab({
+  items,
+  users,
+  onRefreshUsers,
+  onRefreshItems,
+}: {
   items: CatalogItem[]
   users: FridgeUser[]
   onRefreshUsers: () => void
+  onRefreshItems: () => void
 }) {
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null)
   const [quantity, setQuantity] = useState(1)
@@ -191,14 +216,14 @@ function ItemsTab({ items, users, onRefreshUsers }: {
   const [newUserName, setNewUserName] = useState('')
   const [newUserPhoto, setNewUserPhoto] = useState<string | null>(null)
   const [showCamera, setShowCamera] = useState(false)
-  const [recentPurchases, setRecentPurchases] = useState<{ id: number; label: string; time: number }[]>()
+  const [showManage, setShowManage] = useState(false)
+  const [recentPurchases, setRecentPurchases] =
+    useState<{ id: number; label: string; time: number }[]>()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setRecentPurchases((prev) =>
-        prev?.filter((p) => Date.now() - p.time < CANCEL_WINDOW_MS)
-      )
+      setRecentPurchases((prev) => prev?.filter((p) => Date.now() - p.time < CANCEL_WINDOW_MS))
     }, 5000)
     return () => clearInterval(interval)
   }, [])
@@ -278,6 +303,12 @@ function ItemsTab({ items, users, onRefreshUsers }: {
         </div>
       )}
 
+      <div className="catalog-header">
+        <button className="btn-gear" onClick={() => setShowManage(true)} title="Manage Catalog">
+          <MdSettings />
+        </button>
+      </div>
+
       {/* Items grid */}
       <div className="items-grid">
         {activeItems.map((item) => (
@@ -293,26 +324,61 @@ function ItemsTab({ items, users, onRefreshUsers }: {
         ))}
       </div>
 
+      {/* Manage catalog modal */}
+      {showManage && (
+        <div className="modal-overlay" onClick={() => setShowManage(false)}>
+          <div className="modal modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Manage Catalog</h2>
+              <button className="btn-icon" onClick={() => setShowManage(false)}>
+                <MdClose />
+              </button>
+            </div>
+            <SettingsTab items={items} onRefreshItems={onRefreshItems} />
+          </div>
+        </div>
+      )}
+
       {/* Select user modal */}
       {selectedItem && !showNewUser && (
-        <div className="modal-overlay" onClick={() => { setSelectedItem(null); setQuantity(1) }}>
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setSelectedItem(null)
+            setQuantity(1)
+          }}
+        >
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Add {selectedItem.name} to tab</h2>
-              <button className="btn-icon" onClick={() => { setSelectedItem(null); setQuantity(1) }}>
+              <button
+                className="btn-icon"
+                onClick={() => {
+                  setSelectedItem(null)
+                  setQuantity(1)
+                }}
+              >
                 <MdClose />
               </button>
             </div>
             <div className="quantity-row">
               <label>Quantity:</label>
-              <button className="btn-qty" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
+              <button className="btn-qty" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+                −
+              </button>
               <span className="qty-value">{quantity}</span>
-              <button className="btn-qty" onClick={() => setQuantity(quantity + 1)}>+</button>
+              <button className="btn-qty" onClick={() => setQuantity(quantity + 1)}>
+                +
+              </button>
               <span className="qty-total">{formatCents(selectedItem.price_cents * quantity)}</span>
             </div>
             <div className="users-grid">
               {users.map((user) => (
-                <button key={user.id} className="user-card" onClick={() => addToTab(user.id, user.name)}>
+                <button
+                  key={user.id}
+                  className="user-card"
+                  onClick={() => addToTab(user.id, user.name)}
+                >
                   {user.photo ? (
                     <img src={user.photo} alt={user.name} className="user-photo" />
                   ) : (
@@ -322,7 +388,9 @@ function ItemsTab({ items, users, onRefreshUsers }: {
                 </button>
               ))}
               <button className="user-card add-user-card" onClick={() => setShowNewUser(true)}>
-                <div className="user-photo-placeholder"><MdAdd /></div>
+                <div className="user-photo-placeholder">
+                  <MdAdd />
+                </div>
                 <div className="user-card-name">New User</div>
               </button>
             </div>
@@ -332,11 +400,25 @@ function ItemsTab({ items, users, onRefreshUsers }: {
 
       {/* New user modal */}
       {showNewUser && (
-        <div className="modal-overlay" onClick={() => { setShowNewUser(false); setNewUserName(''); setNewUserPhoto(null) }}>
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setShowNewUser(false)
+            setNewUserName('')
+            setNewUserPhoto(null)
+          }}
+        >
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>New User</h2>
-              <button className="btn-icon" onClick={() => { setShowNewUser(false); setNewUserName(''); setNewUserPhoto(null) }}>
+              <button
+                className="btn-icon"
+                onClick={() => {
+                  setShowNewUser(false)
+                  setNewUserName('')
+                  setNewUserPhoto(null)
+                }}
+              >
                 <MdClose />
               </button>
             </div>
@@ -370,7 +452,11 @@ function ItemsTab({ items, users, onRefreshUsers }: {
                   />
                 </div>
               </div>
-              <button className="btn-primary" onClick={createUserAndAdd} disabled={!newUserName.trim()}>
+              <button
+                className="btn-primary"
+                onClick={createUserAndAdd}
+                disabled={!newUserName.trim()}
+              >
                 Create & Add to Tab
               </button>
             </div>
@@ -380,7 +466,10 @@ function ItemsTab({ items, users, onRefreshUsers }: {
 
       {showCamera && (
         <CameraCapture
-          onCapture={(data) => { setNewUserPhoto(data); setShowCamera(false) }}
+          onCapture={(data) => {
+            setNewUserPhoto(data)
+            setShowCamera(false)
+          }}
           onClose={() => setShowCamera(false)}
         />
       )}
@@ -390,10 +479,7 @@ function ItemsTab({ items, users, onRefreshUsers }: {
 
 // ── Tabs Tab ──
 
-function TabsTab({ users, onRefreshUsers }: {
-  users: FridgeUser[]
-  onRefreshUsers: () => void
-}) {
+function TabsTab({ users, onRefreshUsers }: { users: FridgeUser[]; onRefreshUsers: () => void }) {
   const [selectedUser, setSelectedUser] = useState<FridgeUser | null>(null)
   const [history, setHistory] = useState<Transaction[]>([])
   const [showPay, setShowPay] = useState(false)
@@ -444,7 +530,13 @@ function TabsTab({ users, onRefreshUsers }: {
     const currentUser = users.find((u) => u.id === selectedUser.id) || selectedUser
     return (
       <div className="tab-content">
-        <button className="btn-back" onClick={() => { setSelectedUser(null); setHistory([]) }}>
+        <button
+          className="btn-back"
+          onClick={() => {
+            setSelectedUser(null)
+            setHistory([])
+          }}
+        >
           ← Back
         </button>
         <div className="user-detail-header">
@@ -470,7 +562,9 @@ function TabsTab({ users, onRefreshUsers }: {
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h2>Record Payment</h2>
-                <button className="btn-icon" onClick={() => setShowPay(false)}><MdClose /></button>
+                <button className="btn-icon" onClick={() => setShowPay(false)}>
+                  <MdClose />
+                </button>
               </div>
               <div className="pay-form">
                 <div className="pay-input-row">
@@ -499,8 +593,7 @@ function TabsTab({ users, onRefreshUsers }: {
         ) : (
           <div className="history-list">
             {history.map((tx) => {
-              const canCancel =
-                Date.now() - new Date(tx.created_at).getTime() < CANCEL_WINDOW_MS
+              const canCancel = Date.now() - new Date(tx.created_at).getTime() < CANCEL_WINDOW_MS
               return (
                 <div key={tx.id} className="history-item">
                   <div className="history-info">
@@ -509,11 +602,11 @@ function TabsTab({ users, onRefreshUsers }: {
                         ? `${tx.quantity}x ${tx.item_name || 'Unknown'}`
                         : 'Payment'}
                     </div>
-                    <div className="history-date">
-                      {new Date(tx.created_at).toLocaleString()}
-                    </div>
+                    <div className="history-date">{new Date(tx.created_at).toLocaleString()}</div>
                   </div>
-                  <div className={`history-amount ${tx.amount_cents >= 0 ? 'positive' : 'negative'}`}>
+                  <div
+                    className={`history-amount ${tx.amount_cents >= 0 ? 'positive' : 'negative'}`}
+                  >
                     {formatCents(tx.amount_cents)}
                   </div>
                   {canCancel && (
@@ -556,7 +649,10 @@ function TabsTab({ users, onRefreshUsers }: {
 
 // ── Settings Tab ──
 
-function SettingsTab({ items, onRefreshItems }: {
+function SettingsTab({
+  items,
+  onRefreshItems,
+}: {
   items: CatalogItem[]
   onRefreshItems: () => void
 }) {
@@ -633,7 +729,11 @@ function SettingsTab({ items, onRefreshItems }: {
             <button type="button" className="btn-secondary" onClick={() => setShowCamera(true)}>
               <MdCameraAlt /> Camera
             </button>
-            <button type="button" className="btn-secondary" onClick={() => fileInputRef.current?.click()}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => fileInputRef.current?.click()}
+            >
               Upload
             </button>
             <input
@@ -645,7 +745,11 @@ function SettingsTab({ items, onRefreshItems }: {
             />
           </div>
         </div>
-        <button type="submit" className="btn-primary" disabled={submitting || !name.trim() || !price}>
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={submitting || !name.trim() || !price}
+        >
           {submitting ? 'Adding…' : 'Add Item'}
         </button>
       </form>
@@ -689,7 +793,11 @@ function SettingsTab({ items, onRefreshItems }: {
                     <div className="settings-item-name">{item.name}</div>
                     <div className="settings-item-price">{formatCents(item.price_cents)}</div>
                   </div>
-                  <button className="btn-archive" onClick={() => toggleArchive(item)} title="Unarchive">
+                  <button
+                    className="btn-archive"
+                    onClick={() => toggleArchive(item)}
+                    title="Unarchive"
+                  >
                     <MdUnarchive />
                   </button>
                 </div>
@@ -701,7 +809,10 @@ function SettingsTab({ items, onRefreshItems }: {
 
       {showCamera && (
         <CameraCapture
-          onCapture={(data) => { setPhoto(data); setShowCamera(false) }}
+          onCapture={(data) => {
+            setPhoto(data)
+            setShowCamera(false)
+          }}
           onClose={() => setShowCamera(false)}
         />
       )}
@@ -752,8 +863,12 @@ export default function FridgeInventoryPage() {
   if (authed === null) {
     return (
       <>
-        <Head><title>Fridge Inventory</title></Head>
-        <style jsx global>{fridgeStyles}</style>
+        <Head>
+          <title>Fridge Inventory</title>
+        </Head>
+        <style jsx global>
+          {fridgeStyles}
+        </style>
         <div className="fridge-loading">Loading…</div>
       </>
     )
@@ -762,8 +877,12 @@ export default function FridgeInventoryPage() {
   if (!authed) {
     return (
       <>
-        <Head><title>Fridge Inventory</title></Head>
-        <style jsx global>{fridgeStyles}</style>
+        <Head>
+          <title>Fridge Inventory</title>
+        </Head>
+        <style jsx global>
+          {fridgeStyles}
+        </style>
         <LoginScreen onLogin={handleLogin} />
       </>
     )
@@ -771,19 +890,23 @@ export default function FridgeInventoryPage() {
 
   return (
     <>
-      <Head><title>Fridge Inventory</title></Head>
-      <style jsx global>{fridgeStyles}</style>
+      <Head>
+        <title>Fridge Inventory</title>
+      </Head>
+      <style jsx global>
+        {fridgeStyles}
+      </style>
       <div className="fridge-app">
         <div className="fridge-main">
           {activeTab === 'catalog' && (
-            <ItemsTab items={items} users={users} onRefreshUsers={loadUsers} />
+            <ItemsTab
+              items={items}
+              users={users}
+              onRefreshUsers={loadUsers}
+              onRefreshItems={loadItems}
+            />
           )}
-          {activeTab === 'tabs' && (
-            <TabsTab users={users} onRefreshUsers={loadUsers} />
-          )}
-          {activeTab === 'settings' && (
-            <SettingsTab items={items} onRefreshItems={loadItems} />
-          )}
+          {activeTab === 'tabs' && <TabsTab users={users} onRefreshUsers={loadUsers} />}
         </div>
         <nav className="bottom-nav">
           <button
@@ -799,13 +922,6 @@ export default function FridgeInventoryPage() {
           >
             <MdReceiptLong />
             <span>Tabs</span>
-          </button>
-          <button
-            className={`nav-btn ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            <MdSettings />
-            <span>Settings</span>
           </button>
         </nav>
       </div>
@@ -918,7 +1034,7 @@ const fridgeStyles = `
   .nav-btn.active { color: #6366f1; }
 
   /* Tab content */
-  .tab-content { max-width: 900px; margin: 0 auto; }
+  .tab-content { max-width: 900px; margin: 0 auto; position: relative; }
   .section-title {
     font-size: 1.1rem;
     margin: 1rem 0 0.75rem;
@@ -988,6 +1104,23 @@ const fridgeStyles = `
     max-height: 85dvh;
     overflow-y: auto;
   }
+  .modal-large { max-width: 600px; }
+  .catalog-header {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    z-index: 10;
+  }
+  .btn-gear {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+  }
+  .btn-gear:hover { color: #888; }
   .modal-header {
     display: flex;
     justify-content: space-between;
