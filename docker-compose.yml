@@ -22,6 +22,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     container_name: ag-web-dev
+    userns_mode: keep-id
     depends_on:
       postgres:
         condition: service_healthy
@@ -40,7 +41,7 @@ services:
       - '3000:3000'
     volumes:
       # Bind-mount the source tree so edits on the host trigger hot reload.
-      - .:/app
+      - .:/app:Z
       # Keep node_modules and .next inside the container (avoids clobbering
       # host files and avoids Windows/Linux binary mismatches for `sharp`, pg,
       # etc.). Anonymous volumes win over the bind-mount for these paths.
