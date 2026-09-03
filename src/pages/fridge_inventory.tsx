@@ -10,6 +10,7 @@ import {
   MdUnarchive,
   MdCancel,
   MdCameraAlt,
+  MdCameraswitch,
 } from 'react-icons/md'
 import { loginAdmin, checkAdminSession } from '../utils/adminAuth'
 
@@ -149,17 +150,21 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 function CameraCapture({
   onCapture,
   onClose,
+  defaultFacingMode = 'environment',
 }: {
   onCapture: (data: string) => void
   onClose: () => void
+  defaultFacingMode?: 'user' | 'environment'
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>(defaultFacingMode)
 
   useEffect(() => {
     let cancelled = false
+    streamRef.current?.getTracks().forEach((t) => t.stop())
     navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: 'environment' } })
+      .getUserMedia({ video: { facingMode } })
       .then((stream) => {
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop())
@@ -173,7 +178,7 @@ function CameraCapture({
       cancelled = true
       streamRef.current?.getTracks().forEach((t) => t.stop())
     }
-  }, [])
+  }, [facingMode])
 
   const capture = () => {
     const video = videoRef.current
@@ -198,7 +203,16 @@ function CameraCapture({
         onClick={(e) => e.stopPropagation()}
       >
         <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg bg-black" />
-        <div className="flex gap-4 mt-4 justify-center">
+        <div className="flex justify-center mt-2">
+          <button
+            className="w-10 h-10 rounded-full border border-[#444] bg-transparent text-[#ccc] text-xl cursor-pointer flex items-center justify-center hover:text-white hover:border-[#666]"
+            onClick={() => setFacingMode((m) => (m === 'user' ? 'environment' : 'user'))}
+            title="Switch camera"
+          >
+            <MdCameraswitch />
+          </button>
+        </div>
+        <div className="flex gap-4 mt-3 justify-center">
           <button
             className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
             onClick={onClose}
@@ -553,6 +567,7 @@ function ItemsTab({
 
       {showCamera && (
         <CameraCapture
+          defaultFacingMode="user"
           onCapture={(data) => {
             setNewUserPhoto(data)
             setShowCamera(false)
