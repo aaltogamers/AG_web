@@ -90,7 +90,7 @@ const resizeImage = (file: Blob): Promise<string> =>
         canvas.width = width
         canvas.height = height
         const ctx = canvas.getContext('2d')!
-        ctx.fillStyle = '#ffffff'
+        ctx.fillStyle = '#1a1a22'
         ctx.fillRect(0, 0, width, height)
         ctx.drawImage(img, 0, 0, width, height)
         resolve(canvas.toDataURL('image/jpeg', 0.8))
@@ -367,7 +367,7 @@ function ItemsTab({
               <img
                 src={item.photo}
                 alt={item.name}
-                className="w-full aspect-square object-cover rounded-lg bg-white"
+                className="w-full aspect-square object-cover rounded-lg bg-[#1a1a22]"
               />
             ) : (
               <div className="w-full aspect-square rounded-lg bg-[#2a2a35] flex items-center justify-center text-[clamp(1.5rem,5vw,2.5rem)] font-semibold text-[#666]">
