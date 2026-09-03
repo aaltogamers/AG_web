@@ -90,6 +90,8 @@ const resizeImage = (file: Blob): Promise<string> =>
         canvas.width = width
         canvas.height = height
         const ctx = canvas.getContext('2d')!
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, width, height)
         ctx.drawImage(img, 0, 0, width, height)
         resolve(canvas.toDataURL('image/jpeg', 0.8))
       }
@@ -354,7 +356,7 @@ function ItemsTab({
       </div>
 
       {/* Items grid */}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {activeItems.map((item) => (
           <button
             key={item.id}
@@ -365,15 +367,15 @@ function ItemsTab({
               <img
                 src={item.photo}
                 alt={item.name}
-                className="w-20 h-20 object-cover rounded-lg"
+                className="w-full aspect-square object-cover rounded-lg bg-white"
               />
             ) : (
-              <div className="w-20 h-20 rounded-lg bg-[#2a2a35] flex items-center justify-center text-2xl font-semibold text-[#666]">
+              <div className="w-full aspect-square rounded-lg bg-[#2a2a35] flex items-center justify-center text-[clamp(1.5rem,5vw,2.5rem)] font-semibold text-[#666]">
                 {item.name[0]}
               </div>
             )}
-            <div className="font-medium text-sm">{item.name}</div>
-            <div className="text-[#6366f1] font-semibold text-[0.85rem]">
+            <div className="font-medium text-[clamp(0.75rem,2.5vw,1rem)]">{item.name}</div>
+            <div className="text-[#6366f1] font-semibold text-[clamp(0.7rem,2vw,0.95rem)]">
               {formatCents(item.price_cents)}
             </div>
           </button>
