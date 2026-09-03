@@ -150,7 +150,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 function CameraCapture({
   onCapture,
   onClose,
-  defaultFacingMode = 'environment',
+  defaultFacingMode = 'user',
 }: {
   onCapture: (data: string) => void
   onClose: () => void
@@ -567,7 +567,6 @@ function ItemsTab({
 
       {showCamera && (
         <CameraCapture
-          defaultFacingMode="user"
           onCapture={(data) => {
             setNewUserPhoto(data)
             setShowCamera(false)
