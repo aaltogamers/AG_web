@@ -742,6 +742,11 @@ function TabsTab({
   const [payAmount, setPayAmount] = useState('')
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [profileUser, setProfileUser] = useState<FridgeUser | null>(null)
+  const [showNewUser, setShowNewUser] = useState(false)
+  const [newUserName, setNewUserName] = useState('')
+  const [newUserPhoto, setNewUserPhoto] = useState<string | null>(null)
+  const [showNewUserCamera, setShowNewUserCamera] = useState(false)
+  const newUserFileRef = useRef<HTMLInputElement>(null)
 
   const loadHistory = useCallback(async (userId: number) => {
     setLoadingHistory(true)
@@ -779,6 +784,27 @@ function TabsTab({
       onRefreshUsers()
       if (selectedUser) loadHistory(selectedUser.id)
     }
+  }
+
+  const createUser = async () => {
+    if (!newUserName.trim()) return
+    const res = await adminPost('/api/fridge/users', {
+      name: newUserName.trim(),
+      photo: newUserPhoto,
+    })
+    if (res.ok) {
+      onRefreshUsers()
+    }
+    setShowNewUser(false)
+    setNewUserName('')
+    setNewUserPhoto(null)
+  }
+
+  const handleNewUserFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const data = await resizeImage(file)
+    setNewUserPhoto(data)
   }
 
   const sortedUsers = [...users].sort((a, b) => a.balance_cents - b.balance_cents)
@@ -969,7 +995,107 @@ function TabsTab({
         {sortedUsers.length === 0 && (
           <p className="text-[#666] text-center py-8">No users yet</p>
         )}
+        <button
+          className="flex items-center gap-3 px-4 py-3 bg-transparent border border-dashed border-[#2a2a35] rounded-xl cursor-pointer transition-[border-color] duration-150 w-full text-left text-[#888] hover:border-[#6366f1]"
+          onClick={() => setShowNewUser(true)}
+        >
+          <div className="w-11 h-11 rounded-full bg-[#2a2a35] flex items-center justify-center text-xl text-[#888] shrink-0">
+            <MdAdd />
+          </div>
+          <div className="flex-1 font-medium">Add User</div>
+        </button>
       </div>
+
+      {showNewUser && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4"
+          onClick={() => {
+            setShowNewUser(false)
+            setNewUserName('')
+            setNewUserPhoto(null)
+          }}
+        >
+          <div
+            className="bg-[#1a1a22] rounded-2xl p-6 w-full max-w-[500px] max-h-[85dvh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg">New User</h2>
+              <button
+                className="bg-transparent border-none text-[#888] text-[1.4rem] cursor-pointer flex p-1"
+                onClick={() => {
+                  setShowNewUser(false)
+                  setNewUserName('')
+                  setNewUserPhoto(null)
+                }}
+              >
+                <MdClose />
+              </button>
+            </div>
+            <div className="flex flex-col gap-4">
+              <input
+                type="text"
+                placeholder="Name"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+                autoFocus
+                className="px-4 py-3 rounded-lg border border-[#333] bg-[#0f0f13] text-[#e8e8eb] text-base"
+              />
+              <div className="flex gap-4 items-center">
+                {newUserPhoto ? (
+                  <img
+                    src={newUserPhoto}
+                    alt="preview"
+                    className="w-20 h-20 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-lg bg-[#2a2a35] flex items-center justify-center text-xs text-[#666]">
+                    No photo
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <button
+                    className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
+                    onClick={() => setShowNewUserCamera(true)}
+                  >
+                    <MdCameraAlt /> Camera
+                  </button>
+                  <button
+                    className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
+                    onClick={() => newUserFileRef.current?.click()}
+                  >
+                    Upload
+                  </button>
+                  <input
+                    ref={newUserFileRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleNewUserFile}
+                    hidden
+                  />
+                </div>
+              </div>
+              <button
+                className="px-6 py-3 rounded-lg border-none bg-[#6366f1] text-white text-[0.95rem] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-default"
+                onClick={createUser}
+                disabled={!newUserName.trim()}
+              >
+                Create User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNewUserCamera && (
+        <CameraCapture
+          onCapture={(data) => {
+            setNewUserPhoto(data)
+            setShowNewUserCamera(false)
+          }}
+          onClose={() => setShowNewUserCamera(false)}
+        />
+      )}
 
       {profileUser && (
         <UserProfileModal
