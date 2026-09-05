@@ -11,6 +11,7 @@ import {
   MdCancel,
   MdCameraAlt,
   MdCameraswitch,
+  MdEdit,
 } from 'react-icons/md'
 import { loginAdmin, checkAdminSession } from '../utils/adminAuth'
 
@@ -811,7 +812,12 @@ function SettingsTab({
   const [showCamera, setShowCamera] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [editingPhotoItem, setEditingPhotoItem] = useState<CatalogItem | null>(null)
+  const [editPhoto, setEditPhoto] = useState<string | null>(null)
+  const [showEditCamera, setShowEditCamera] = useState(false)
+  const [savingPhoto, setSavingPhoto] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const editFileInputRef = useRef<HTMLInputElement>(null)
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -842,6 +848,25 @@ function SettingsTab({
     if (!file) return
     const data = await resizeImage(file)
     setPhoto(data)
+  }
+
+  const handleEditFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const data = await resizeImage(file)
+    setEditPhoto(data)
+  }
+
+  const savePhoto = async () => {
+    if (!editingPhotoItem) return
+    setSavingPhoto(true)
+    const res = await adminPatch(`/api/fridge/items/${editingPhotoItem.id}`, { photo: editPhoto })
+    if (res.ok) {
+      onRefreshItems()
+      setEditingPhotoItem(null)
+      setEditPhoto(null)
+    }
+    setSavingPhoto(false)
   }
 
   const activeItems = items.filter((i) => !i.archived)
@@ -934,6 +959,16 @@ function SettingsTab({
               <div className="text-[#888] text-xs">{formatCents(item.price_cents)}</div>
             </div>
             <button
+              className="bg-transparent border-none text-[#888] text-[1.3rem] cursor-pointer flex p-1 hover:text-[#6366f1]"
+              onClick={() => {
+                setEditingPhotoItem(item)
+                setEditPhoto(item.photo)
+              }}
+              title="Change photo"
+            >
+              <MdEdit />
+            </button>
+            <button
               className="bg-transparent border-none text-[#888] text-[1.3rem] cursor-pointer flex p-1 hover:text-[#f87171]"
               onClick={() => toggleArchive(item)}
               title="Archive"
@@ -978,6 +1013,16 @@ function SettingsTab({
                     <div className="text-[#888] text-xs">{formatCents(item.price_cents)}</div>
                   </div>
                   <button
+                    className="bg-transparent border-none text-[#888] text-[1.3rem] cursor-pointer flex p-1 hover:text-[#6366f1]"
+                    onClick={() => {
+                      setEditingPhotoItem(item)
+                      setEditPhoto(item.photo)
+                    }}
+                    title="Change photo"
+                  >
+                    <MdEdit />
+                  </button>
+                  <button
                     className="bg-transparent border-none text-[#888] text-[1.3rem] cursor-pointer flex p-1 hover:text-[#f87171]"
                     onClick={() => toggleArchive(item)}
                     title="Unarchive"
@@ -989,6 +1034,92 @@ function SettingsTab({
             </div>
           )}
         </>
+      )}
+
+      {editingPhotoItem && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4"
+          onClick={() => {
+            setEditingPhotoItem(null)
+            setEditPhoto(null)
+          }}
+        >
+          <div
+            className="bg-[#1a1a22] rounded-2xl p-6 w-full max-w-[500px] max-h-[85dvh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg">Change Photo — {editingPhotoItem.name}</h2>
+              <button
+                className="bg-transparent border-none text-[#888] text-[1.4rem] cursor-pointer flex p-1"
+                onClick={() => {
+                  setEditingPhotoItem(null)
+                  setEditPhoto(null)
+                }}
+              >
+                <MdClose />
+              </button>
+            </div>
+            <div className="flex gap-4 items-center mb-4">
+              {editPhoto ? (
+                <img src={editPhoto} alt="preview" className="w-20 h-20 object-cover rounded-lg" />
+              ) : (
+                <div className="w-20 h-20 rounded-lg bg-[#2a2a35] flex items-center justify-center text-xs text-[#666]">
+                  No photo
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
+                  onClick={() => setShowEditCamera(true)}
+                >
+                  <MdCameraAlt /> Camera
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
+                  onClick={() => editFileInputRef.current?.click()}
+                >
+                  Upload
+                </button>
+                <input
+                  ref={editFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditFileSelect}
+                  hidden
+                />
+                {editPhoto && (
+                  <button
+                    type="button"
+                    className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#f87171] text-sm cursor-pointer"
+                    onClick={() => setEditPhoto(null)}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+            <button
+              className="w-full px-6 py-3 rounded-lg border-none bg-[#6366f1] text-white text-[0.95rem] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-default"
+              onClick={savePhoto}
+              disabled={savingPhoto}
+            >
+              {savingPhoto ? 'Saving…' : 'Save Photo'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showEditCamera && (
+        <CameraCapture
+          onCapture={(data) => {
+            setEditPhoto(data)
+            setShowEditCamera(false)
+          }}
+          onClose={() => setShowEditCamera(false)}
+        />
       )}
 
       {showCamera && (
