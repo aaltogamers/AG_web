@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { parseJsonBody } from '../../../utils/apiUtils'
+import { logFridgeEvent } from '../../../utils/fridgeLog'
 
 export const config = { api: { bodyParser: { sizeLimit: '5mb' } } }
 
@@ -35,6 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `INSERT INTO fridge_users (name, photo) VALUES ($1, $2) RETURNING *`,
       [body.name, body.photo ?? null]
     )
+    await logFridgeEvent(`User created: "${body.name}"`)
     return res.json({ user: rows[0] })
   }
 

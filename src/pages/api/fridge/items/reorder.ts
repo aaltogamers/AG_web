@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../../utils/adminSession'
 import { parseJsonBody } from '../../../../utils/apiUtils'
+import { logFridgeEvent } from '../../../../utils/fridgeLog'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!isAdminAuthorized(req)) return res.status(401).json({ error: 'Unauthorized' })
@@ -35,6 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       client.release()
     }
 
+    await logFridgeEvent('Catalog items reordered')
     return res.json({ ok: true })
   }
 

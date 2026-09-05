@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { parseJsonBody } from '../../../utils/apiUtils'
+import { logFridgeEvent } from '../../../utils/fridgeLog'
 
 export const config = { api: { bodyParser: { sizeLimit: '5mb' } } }
 
@@ -32,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
        VALUES ($1, $2, $3) RETURNING *`,
       [body.name, body.price_cents, body.photo ?? null]
     )
+    await logFridgeEvent(`Item created: "${body.name}" at ${(body.price_cents / 100).toFixed(2)}€`)
     return res.status(201).json({ item: rows[0] })
   }
 
