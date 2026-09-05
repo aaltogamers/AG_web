@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const id = req.query.id
 
   if (req.method === 'PATCH') {
-    const body = parseJsonBody<{ archived?: boolean; photo?: string | null }>(req)
+    const body = parseJsonBody<{ archived?: boolean; photo?: string | null; name?: string }>(req)
     if (!body) return res.status(400).json({ error: 'Invalid body' })
 
     const sets: string[] = []
@@ -31,6 +31,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if ('photo' in body) {
       sets.push(`photo = $${idx++}`)
       params.push(body.photo ?? null)
+    }
+    if (typeof body.name === 'string' && body.name.trim()) {
+      sets.push(`name = $${idx++}`)
+      params.push(body.name.trim())
     }
 
     if (sets.length === 0) return res.status(400).json({ error: 'No valid fields to update' })

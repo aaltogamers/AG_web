@@ -19,6 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       item_id?: number
       quantity?: number
       amount_cents: number
+      message?: string
     }>(req)
 
     if (!body || !body.user_id || !body.type || typeof body.amount_cents !== 'number') {
@@ -30,9 +31,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO fridge_transactions (user_id, type, item_id, quantity, amount_cents)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [body.user_id, body.type, body.item_id ?? null, body.quantity ?? null, body.amount_cents]
+      `INSERT INTO fridge_transactions (user_id, type, item_id, quantity, amount_cents, message)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [body.user_id, body.type, body.item_id ?? null, body.quantity ?? null, body.amount_cents, body.message?.trim() || null]
     )
     return res.status(201).json({ transaction: rows[0] })
   }

@@ -42,6 +42,7 @@ type Transaction = {
   item_id: number | null
   quantity: number | null
   amount_cents: number
+  message: string | null
   created_at: string
   item_name: string | null
 }
@@ -302,11 +303,7 @@ function UserProfileModal({
         <div className="flex flex-col gap-4">
           <div className="flex justify-center">
             {photo ? (
-              <img
-                src={photo}
-                alt={name}
-                className="w-24 h-24 object-cover rounded-full"
-              />
+              <img src={photo} alt={name} className="w-24 h-24 object-cover rounded-full" />
             ) : (
               <div className="w-24 h-24 rounded-full bg-[#2a2a35] flex items-center justify-center text-3xl font-semibold text-[#888]">
                 {name[0] || '?'}
@@ -729,17 +726,12 @@ function ItemsTab({
 
 // ── Tabs Tab ──
 
-function TabsTab({
-  users,
-  onRefreshUsers,
-}: {
-  users: FridgeUser[]
-  onRefreshUsers: () => void
-}) {
+function TabsTab({ users, onRefreshUsers }: { users: FridgeUser[]; onRefreshUsers: () => void }) {
   const [selectedUser, setSelectedUser] = useState<FridgeUser | null>(null)
   const [history, setHistory] = useState<Transaction[]>([])
   const [showPay, setShowPay] = useState(false)
   const [payAmount, setPayAmount] = useState('')
+  const [payMessage, setPayMessage] = useState('')
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [profileUser, setProfileUser] = useState<FridgeUser | null>(null)
   const [showNewUser, setShowNewUser] = useState(false)
@@ -771,9 +763,11 @@ function TabsTab({
       user_id: selectedUser.id,
       type: 'payment',
       amount_cents: cents,
+      message: payMessage.trim() || undefined,
     })
     setShowPay(false)
     setPayAmount('')
+    setPayMessage('')
     onRefreshUsers()
     loadHistory(selectedUser.id)
   }
@@ -888,6 +882,16 @@ function TabsTab({
                   />
                   <span className="text-xl text-[#888]">€</span>
                 </div>
+                <div>
+                  <label className="text-sm text-[#888] mb-1 block">Message <span className="text-[#555]">(optional)</span></label>
+                  <input
+                    type="text"
+                    placeholder="Bought coffee to club room"
+                    value={payMessage}
+                    onChange={(e) => setPayMessage(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-[#333] bg-[#0f0f13] text-[#e8e8eb] text-base"
+                  />
+                </div>
                 <button
                   className="px-6 py-3 rounded-lg border-none bg-[#6366f1] text-white text-[0.95rem] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-default"
                   onClick={handlePay}
@@ -908,13 +912,17 @@ function TabsTab({
             {history.map((tx) => {
               const canCancel = Date.now() - new Date(tx.created_at).getTime() < CANCEL_WINDOW_MS
               return (
-                <div key={tx.id} className="flex items-center gap-3 px-3 py-2.5 bg-[#1a1a22] rounded-lg">
+                <div
+                  key={tx.id}
+                  className="flex items-center gap-3 px-3 py-2.5 bg-[#1a1a22] rounded-lg"
+                >
                   <div className="flex-1">
                     <div className="text-sm font-medium">
                       {tx.type === 'purchase'
                         ? `${tx.quantity}x ${tx.item_name || 'Unknown'}`
                         : 'Payment'}
                     </div>
+                    {tx.message && <div className="text-xs text-[#888] mt-0.5">{tx.message}</div>}
                     <div className="text-xs text-[#666] mt-0.5">
                       {new Date(tx.created_at).toLocaleString()}
                     </div>
@@ -992,9 +1000,7 @@ function TabsTab({
             </div>
           </button>
         ))}
-        {sortedUsers.length === 0 && (
-          <p className="text-[#666] text-center py-8">No users yet</p>
-        )}
+        {sortedUsers.length === 0 && <p className="text-[#666] text-center py-8">No users yet</p>}
         <button
           className="flex items-center gap-3 px-4 py-3 bg-transparent border border-dashed border-[#2a2a35] rounded-xl cursor-pointer transition-[border-color] duration-150 w-full text-left text-[#888] hover:border-[#6366f1]"
           onClick={() => setShowNewUser(true)}
@@ -1123,10 +1129,11 @@ function SettingsTab({
   const [showCamera, setShowCamera] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [editingPhotoItem, setEditingPhotoItem] = useState<CatalogItem | null>(null)
+  const [editingItem, setEditingItem] = useState<CatalogItem | null>(null)
+  const [editName, setEditName] = useState('')
   const [editPhoto, setEditPhoto] = useState<string | null>(null)
   const [showEditCamera, setShowEditCamera] = useState(false)
-  const [savingPhoto, setSavingPhoto] = useState(false)
+  const [savingEdit, setSavingEdit] = useState(false)
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -1170,16 +1177,20 @@ function SettingsTab({
     setEditPhoto(data)
   }
 
-  const savePhoto = async () => {
-    if (!editingPhotoItem) return
-    setSavingPhoto(true)
-    const res = await adminPatch(`/api/fridge/items/${editingPhotoItem.id}`, { photo: editPhoto })
-    if (res.ok) {
+  const saveEdit = async () => {
+    if (!editingItem || !editName.trim()) return
+    setSavingEdit(true)
+    const body: { name?: string; photo?: string | null } = {}
+    if (editName.trim() !== editingItem.name) body.name = editName.trim()
+    if (editPhoto !== editingItem.photo) body.photo = editPhoto
+    if (Object.keys(body).length > 0) {
+      await adminPatch(`/api/fridge/items/${editingItem.id}`, body)
       onRefreshItems()
-      setEditingPhotoItem(null)
-      setEditPhoto(null)
     }
-    setSavingPhoto(false)
+    setEditingItem(null)
+    setEditName('')
+    setEditPhoto(null)
+    setSavingEdit(false)
   }
 
   const activeItems = items.filter((i) => !i.archived)
@@ -1216,10 +1227,7 @@ function SettingsTab({
   return (
     <div className="max-w-[900px] mx-auto relative">
       <h2 className="text-lg text-[#ccc] mb-3">Add Catalog Item</h2>
-      <form
-        onSubmit={handleAdd}
-        className="flex flex-col gap-3 p-4 bg-[#1a1a22] rounded-xl mb-6"
-      >
+      <form onSubmit={handleAdd} className="flex flex-col gap-3 p-4 bg-[#1a1a22] rounded-xl mb-6">
         <input
           type="text"
           placeholder="Item name"
@@ -1319,7 +1327,8 @@ function SettingsTab({
             <button
               className="bg-transparent border-none text-[#888] text-[1.3rem] cursor-pointer flex p-1 hover:text-[#6366f1]"
               onClick={() => {
-                setEditingPhotoItem(item)
+                setEditingItem(item)
+                setEditName(item.name)
                 setEditPhoto(item.photo)
               }}
               title="Change photo"
@@ -1335,9 +1344,7 @@ function SettingsTab({
             </button>
           </div>
         ))}
-        {activeItems.length === 0 && (
-          <p className="text-[#666] text-center py-8">No items yet</p>
-        )}
+        {activeItems.length === 0 && <p className="text-[#666] text-center py-8">No items yet</p>}
       </div>
 
       {archivedItems.length > 0 && (
@@ -1373,10 +1380,11 @@ function SettingsTab({
                   <button
                     className="bg-transparent border-none text-[#888] text-[1.3rem] cursor-pointer flex p-1 hover:text-[#6366f1]"
                     onClick={() => {
-                      setEditingPhotoItem(item)
+                      setEditingItem(item)
+                      setEditName(item.name)
                       setEditPhoto(item.photo)
                     }}
-                    title="Change photo"
+                    title="Edit item"
                   >
                     <MdEdit />
                   </button>
@@ -1394,11 +1402,12 @@ function SettingsTab({
         </>
       )}
 
-      {editingPhotoItem && (
+      {editingItem && (
         <div
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4"
           onClick={() => {
-            setEditingPhotoItem(null)
+            setEditingItem(null)
+            setEditName('')
             setEditPhoto(null)
           }}
         >
@@ -1407,65 +1416,79 @@ function SettingsTab({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg">Change Photo — {editingPhotoItem.name}</h2>
+              <h2 className="text-lg">Edit Item</h2>
               <button
                 className="bg-transparent border-none text-[#888] text-[1.4rem] cursor-pointer flex p-1"
                 onClick={() => {
-                  setEditingPhotoItem(null)
+                  setEditingItem(null)
+                  setEditName('')
                   setEditPhoto(null)
                 }}
               >
                 <MdClose />
               </button>
             </div>
-            <div className="flex gap-4 items-center mb-4">
-              {editPhoto ? (
-                <img src={editPhoto} alt="preview" className="w-20 h-20 object-cover rounded-lg" />
-              ) : (
-                <div className="w-20 h-20 rounded-lg bg-[#2a2a35] flex items-center justify-center text-xs text-[#666]">
-                  No photo
-                </div>
-              )}
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
-                  onClick={() => setShowEditCamera(true)}
-                >
-                  <MdCameraAlt /> Camera
-                </button>
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
-                  onClick={() => editFileInputRef.current?.click()}
-                >
-                  Upload
-                </button>
-                <input
-                  ref={editFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleEditFileSelect}
-                  hidden
-                />
-                {editPhoto && (
+            <div className="flex flex-col gap-4">
+              <input
+                type="text"
+                placeholder="Item name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="px-4 py-3 rounded-lg border border-[#333] bg-[#0f0f13] text-[#e8e8eb] text-base"
+              />
+              <div className="flex gap-4 items-center">
+                {editPhoto ? (
+                  <img
+                    src={editPhoto}
+                    alt="preview"
+                    className="w-20 h-20 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-lg bg-[#2a2a35] flex items-center justify-center text-xs text-[#666]">
+                    No photo
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
                   <button
                     type="button"
-                    className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#f87171] text-sm cursor-pointer"
-                    onClick={() => setEditPhoto(null)}
+                    className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
+                    onClick={() => setShowEditCamera(true)}
                   >
-                    Remove
+                    <MdCameraAlt /> Camera
                   </button>
-                )}
+                  <button
+                    type="button"
+                    className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
+                    onClick={() => editFileInputRef.current?.click()}
+                  >
+                    Upload
+                  </button>
+                  <input
+                    ref={editFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleEditFileSelect}
+                    hidden
+                  />
+                  {editPhoto && (
+                    <button
+                      type="button"
+                      className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#f87171] text-sm cursor-pointer"
+                      onClick={() => setEditPhoto(null)}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
+              <button
+                className="w-full px-6 py-3 rounded-lg border-none bg-[#6366f1] text-white text-[0.95rem] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-default"
+                onClick={saveEdit}
+                disabled={savingEdit || !editName.trim()}
+              >
+                {savingEdit ? 'Saving…' : 'Save'}
+              </button>
             </div>
-            <button
-              className="w-full px-6 py-3 rounded-lg border-none bg-[#6366f1] text-white text-[0.95rem] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-default"
-              onClick={savePhoto}
-              disabled={savingPhoto}
-            >
-              {savingPhoto ? 'Saving…' : 'Save Photo'}
-            </button>
           </div>
         </div>
       )}

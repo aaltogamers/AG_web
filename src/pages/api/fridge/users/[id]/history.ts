@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     const userId = req.query.id
     const { rows } = await pool.query(
-      `SELECT t.id, t.type, t.item_id, t.quantity, t.amount_cents, t.created_at,
+      `SELECT t.id, t.type, t.item_id, t.quantity, t.amount_cents, t.message, t.created_at,
               i.name AS item_name
        FROM fridge_transactions t
        LEFT JOIN fridge_catalog_items i ON i.id = t.item_id
