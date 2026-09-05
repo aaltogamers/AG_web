@@ -12,6 +12,7 @@ import {
   MdCameraAlt,
   MdCameraswitch,
   MdEdit,
+  MdDragHandle,
 } from 'react-icons/md'
 import { loginAdmin, checkAdminSession } from '../utils/adminAuth'
 
@@ -23,6 +24,7 @@ type CatalogItem = {
   price_cents: number
   photo: string | null
   archived: boolean
+  sort_order: number
   created_at: string
 }
 
@@ -68,6 +70,13 @@ const adminPatch = (url: string, body?: unknown) =>
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
+  })
+
+const adminPut = (url: string, body: unknown) =>
+  adminFetch(url, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
   })
 
 const adminDelete = (url: string) => adminFetch(url, { method: 'DELETE' })
@@ -234,6 +243,135 @@ function CameraCapture({
   )
 }
 
+// ── User Profile Modal ──
+
+function UserProfileModal({
+  user,
+  onClose,
+  onSaved,
+}: {
+  user: FridgeUser
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [name, setName] = useState(user.name)
+  const [photo, setPhoto] = useState<string | null>(user.photo)
+  const [showCamera, setShowCamera] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const data = await resizeImage(file)
+    setPhoto(data)
+  }
+
+  const handleSave = async () => {
+    if (!name.trim()) return
+    setSaving(true)
+    const body: { name?: string; photo?: string | null } = {}
+    if (name.trim() !== user.name) body.name = name.trim()
+    if (photo !== user.photo) body.photo = photo
+    if (Object.keys(body).length > 0) {
+      await adminPatch(`/api/fridge/users/${user.id}`, body)
+    }
+    setSaving(false)
+    onSaved()
+    onClose()
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#1a1a22] rounded-2xl p-6 w-full max-w-[500px] max-h-[85dvh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg">Edit Profile</h2>
+          <button
+            className="bg-transparent border-none text-[#888] text-[1.4rem] cursor-pointer flex p-1"
+            onClick={onClose}
+          >
+            <MdClose />
+          </button>
+        </div>
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-center">
+            {photo ? (
+              <img
+                src={photo}
+                alt={name}
+                className="w-24 h-24 object-cover rounded-full"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-[#2a2a35] flex items-center justify-center text-3xl font-semibold text-[#888]">
+                {name[0] || '?'}
+              </div>
+            )}
+          </div>
+          <div className="flex gap-3 justify-center">
+            <button
+              className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
+              onClick={() => setShowCamera(true)}
+            >
+              <MdCameraAlt /> Camera
+            </button>
+            <button
+              className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#ccc] text-sm cursor-pointer flex items-center gap-1"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Upload
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              hidden
+            />
+            {photo && (
+              <button
+                className="px-4 py-2 rounded-lg border border-[#444] bg-transparent text-[#f87171] text-sm cursor-pointer"
+                onClick={() => setPhoto(null)}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="px-4 py-3 rounded-lg border border-[#333] bg-[#0f0f13] text-[#e8e8eb] text-base"
+          />
+          <button
+            className="px-6 py-3 rounded-lg border-none bg-[#6366f1] text-white text-[0.95rem] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-default"
+            onClick={handleSave}
+            disabled={saving || !name.trim()}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+
+      {showCamera && (
+        <CameraCapture
+          onCapture={(data) => {
+            setPhoto(data)
+            setShowCamera(false)
+          }}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
+    </div>
+  )
+}
+
 // ── Items Tab ──
 
 function ItemsTab({
@@ -254,6 +392,7 @@ function ItemsTab({
   const [newUserPhoto, setNewUserPhoto] = useState<string | null>(null)
   const [showCamera, setShowCamera] = useState(false)
   const [showManage, setShowManage] = useState(false)
+  const [profileUser, setProfileUser] = useState<FridgeUser | null>(null)
   const [recentPurchases, setRecentPurchases] =
     useState<{ id: number; label: string; time: number }[]>()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -346,16 +485,6 @@ function ItemsTab({
         </div>
       )}
 
-      <div className="fixed top-0 right-0 z-10">
-        <button
-          className="bg-transparent border-none text-[#555] text-xl cursor-pointer p-0.5 flex hover:text-[#888]"
-          onClick={() => setShowManage(true)}
-          title="Manage Catalog"
-        >
-          <MdSettings />
-        </button>
-      </div>
-
       {/* Items grid */}
       <div className="grid grid-cols-3 gap-3">
         {activeItems.map((item) => (
@@ -382,6 +511,15 @@ function ItemsTab({
           </button>
         ))}
       </div>
+
+      {/* Settings button — bottom right */}
+      <button
+        className="fixed bottom-4 right-4 z-10 w-12 h-12 rounded-full bg-[#1a1a22] border border-[#2a2a35] text-[#888] text-xl cursor-pointer flex items-center justify-center hover:text-[#ccc] hover:border-[#444] shadow-lg"
+        onClick={() => setShowManage(true)}
+        title="Manage Catalog"
+      >
+        <MdSettings />
+      </button>
 
       {/* Manage catalog modal */}
       {showManage && (
@@ -577,18 +715,33 @@ function ItemsTab({
           onClose={() => setShowCamera(false)}
         />
       )}
+
+      {profileUser && (
+        <UserProfileModal
+          user={profileUser}
+          onClose={() => setProfileUser(null)}
+          onSaved={onRefreshUsers}
+        />
+      )}
     </div>
   )
 }
 
 // ── Tabs Tab ──
 
-function TabsTab({ users, onRefreshUsers }: { users: FridgeUser[]; onRefreshUsers: () => void }) {
+function TabsTab({
+  users,
+  onRefreshUsers,
+}: {
+  users: FridgeUser[]
+  onRefreshUsers: () => void
+}) {
   const [selectedUser, setSelectedUser] = useState<FridgeUser | null>(null)
   const [history, setHistory] = useState<Transaction[]>([])
   const [showPay, setShowPay] = useState(false)
   const [payAmount, setPayAmount] = useState('')
   const [loadingHistory, setLoadingHistory] = useState(false)
+  const [profileUser, setProfileUser] = useState<FridgeUser | null>(null)
 
   const loadHistory = useCallback(async (userId: number) => {
     setLoadingHistory(true)
@@ -644,17 +797,22 @@ function TabsTab({ users, onRefreshUsers }: { users: FridgeUser[]; onRefreshUser
           ← Back
         </button>
         <div className="flex items-center gap-4 mb-4">
-          {currentUser.photo ? (
-            <img
-              src={currentUser.photo}
-              alt={currentUser.name}
-              className="w-16 h-16 object-cover rounded-full"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-[#2a2a35] flex items-center justify-center text-2xl font-semibold text-[#888]">
-              {currentUser.name[0]}
-            </div>
-          )}
+          <button
+            className="bg-transparent border-none p-0 cursor-pointer"
+            onClick={() => setProfileUser(currentUser)}
+          >
+            {currentUser.photo ? (
+              <img
+                src={currentUser.photo}
+                alt={currentUser.name}
+                className="w-16 h-16 object-cover rounded-full hover:ring-2 hover:ring-[#6366f1] transition-shadow"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-[#2a2a35] flex items-center justify-center text-2xl font-semibold text-[#888] hover:ring-2 hover:ring-[#6366f1] transition-shadow">
+                {currentUser.name[0]}
+              </div>
+            )}
+          </button>
           <div>
             <h2 className="text-xl">{currentUser.name}</h2>
             <div
@@ -736,7 +894,7 @@ function TabsTab({ users, onRefreshUsers }: { users: FridgeUser[]; onRefreshUser
                     </div>
                   </div>
                   <div
-                    className={`font-semibold text-sm whitespace-nowrap ${tx.amount_cents >= 0 ? 'text-[#4ade80]' : 'text-[#f87171]'}`}
+                    className={`font-semibold text-sm whitespace-nowrap ${tx.amount_cents > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'}`}
                   >
                     {formatCents(tx.amount_cents)}
                   </div>
@@ -756,6 +914,17 @@ function TabsTab({ users, onRefreshUsers }: { users: FridgeUser[]; onRefreshUser
             )}
           </div>
         )}
+
+        {profileUser && (
+          <UserProfileModal
+            user={profileUser}
+            onClose={() => setProfileUser(null)}
+            onSaved={() => {
+              onRefreshUsers()
+              if (selectedUser) loadHistory(selectedUser.id)
+            }}
+          />
+        )}
       </div>
     )
   }
@@ -770,17 +939,25 @@ function TabsTab({ users, onRefreshUsers }: { users: FridgeUser[]; onRefreshUser
             className="flex items-center gap-3 px-4 py-3 bg-[#1a1a22] border border-[#2a2a35] rounded-xl cursor-pointer transition-[border-color] duration-150 w-full text-left text-[#e8e8eb] hover:border-[#6366f1]"
             onClick={() => selectUser(user)}
           >
-            {user.photo ? (
-              <img
-                src={user.photo}
-                alt={user.name}
-                className="w-11 h-11 object-cover rounded-full shrink-0"
-              />
-            ) : (
-              <div className="w-11 h-11 rounded-full bg-[#2a2a35] flex items-center justify-center font-semibold text-[#888] shrink-0">
-                {user.name[0]}
-              </div>
-            )}
+            <div
+              className="shrink-0"
+              onClick={(e) => {
+                e.stopPropagation()
+                setProfileUser(user)
+              }}
+            >
+              {user.photo ? (
+                <img
+                  src={user.photo}
+                  alt={user.name}
+                  className="w-11 h-11 object-cover rounded-full hover:ring-2 hover:ring-[#6366f1] transition-shadow cursor-pointer"
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-[#2a2a35] flex items-center justify-center font-semibold text-[#888] hover:ring-2 hover:ring-[#6366f1] transition-shadow cursor-pointer">
+                  {user.name[0]}
+                </div>
+              )}
+            </div>
             <div className="flex-1 font-medium">{user.name}</div>
             <div
               className={`font-semibold text-[0.95rem] ${user.balance_cents < 0 ? 'text-[#f87171]' : 'text-[#4ade80]'}`}
@@ -793,6 +970,14 @@ function TabsTab({ users, onRefreshUsers }: { users: FridgeUser[]; onRefreshUser
           <p className="text-[#666] text-center py-8">No users yet</p>
         )}
       </div>
+
+      {profileUser && (
+        <UserProfileModal
+          user={profileUser}
+          onClose={() => setProfileUser(null)}
+          onSaved={onRefreshUsers}
+        />
+      )}
     </div>
   )
 }
@@ -816,13 +1001,15 @@ function SettingsTab({
   const [editPhoto, setEditPhoto] = useState<string | null>(null)
   const [showEditCamera, setShowEditCamera] = useState(false)
   const [savingPhoto, setSavingPhoto] = useState(false)
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const editFileInputRef = useRef<HTMLInputElement>(null)
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     const cents = Math.round(parseFloat(price) * 100)
-    if (!name.trim() || isNaN(cents) || cents <= 0) return
+    if (!name.trim() || isNaN(cents) || cents < 0) return
     setSubmitting(true)
     const res = await adminPost('/api/fridge/items', {
       name: name.trim(),
@@ -871,6 +1058,34 @@ function SettingsTab({
 
   const activeItems = items.filter((i) => !i.archived)
   const archivedItems = items.filter((i) => i.archived)
+
+  const handleDragStart = (idx: number) => {
+    setDraggedIdx(idx)
+  }
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault()
+    setDragOverIdx(idx)
+  }
+
+  const handleDrop = async (idx: number) => {
+    if (draggedIdx === null || draggedIdx === idx) {
+      setDraggedIdx(null)
+      setDragOverIdx(null)
+      return
+    }
+    const reordered = [...activeItems]
+    const [moved] = reordered.splice(draggedIdx, 1)
+    reordered.splice(idx, 0, moved)
+    setDraggedIdx(null)
+    setDragOverIdx(null)
+    await adminPut('/api/fridge/items/reorder', { order: reordered.map((i) => i.id) })
+    onRefreshItems()
+  }
+
+  const handleTouchStart = (idx: number) => {
+    setDraggedIdx(idx)
+  }
 
   return (
     <div className="max-w-[900px] mx-auto relative">
@@ -933,7 +1148,7 @@ function SettingsTab({
         <button
           type="submit"
           className="px-6 py-3 rounded-lg border-none bg-[#6366f1] text-white text-[0.95rem] font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-default"
-          disabled={submitting || !name.trim() || !price}
+          disabled={submitting || !name.trim() || price === ''}
         >
           {submitting ? 'Adding…' : 'Add Item'}
         </button>
@@ -941,8 +1156,25 @@ function SettingsTab({
 
       <h2 className="text-lg text-[#ccc] mb-3">Catalog Items</h2>
       <div className="flex flex-col gap-2 mb-4">
-        {activeItems.map((item) => (
-          <div key={item.id} className="flex items-center gap-3 px-3 py-2.5 bg-[#1a1a22] rounded-lg">
+        {activeItems.map((item, idx) => (
+          <div
+            key={item.id}
+            draggable
+            onDragStart={() => handleDragStart(idx)}
+            onDragOver={(e) => handleDragOver(e, idx)}
+            onDrop={() => handleDrop(idx)}
+            onDragEnd={() => {
+              setDraggedIdx(null)
+              setDragOverIdx(null)
+            }}
+            onTouchStart={() => handleTouchStart(idx)}
+            className={`flex items-center gap-3 px-3 py-2.5 bg-[#1a1a22] rounded-lg transition-opacity ${
+              draggedIdx === idx ? 'opacity-40' : ''
+            } ${dragOverIdx === idx && draggedIdx !== idx ? 'ring-2 ring-[#6366f1]' : ''}`}
+          >
+            <div className="text-[#555] cursor-grab active:cursor-grabbing touch-none flex items-center">
+              <MdDragHandle className="text-xl" />
+            </div>
             {item.photo ? (
               <img
                 src={item.photo}
@@ -1207,18 +1439,7 @@ export default function FridgeInventoryPage() {
         <title>Fridge Inventory</title>
       </Head>
       <div className="flex flex-col h-dvh bg-[#0f0f13] text-[#e8e8eb] font-[-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,sans-serif] [&_*]:box-border [-webkit-tap-highlight-color:transparent]">
-        <div className="flex-1 overflow-y-auto p-4">
-          {activeTab === 'catalog' && (
-            <ItemsTab
-              items={items}
-              users={users}
-              onRefreshUsers={loadUsers}
-              onRefreshItems={loadItems}
-            />
-          )}
-          {activeTab === 'tabs' && <TabsTab users={users} onRefreshUsers={loadUsers} />}
-        </div>
-        <nav className="flex border-t border-[#2a2a35] bg-[#1a1a22] shrink-0 pb-[env(safe-area-inset-bottom,0)]">
+        <nav className="flex border-b border-[#2a2a35] bg-[#1a1a22] shrink-0 pt-[env(safe-area-inset-top,0)]">
           <button
             className={`flex-1 flex flex-col items-center gap-1 py-3 border-none bg-transparent text-sm cursor-pointer transition-colors duration-150 [&>svg]:text-3xl ${activeTab === 'catalog' ? 'text-[#6366f1]' : 'text-[#666]'}`}
             onClick={() => setActiveTab('catalog')}
@@ -1234,6 +1455,17 @@ export default function FridgeInventoryPage() {
             <span>Tabs</span>
           </button>
         </nav>
+        <div className="flex-1 overflow-y-auto p-4">
+          {activeTab === 'catalog' && (
+            <ItemsTab
+              items={items}
+              users={users}
+              onRefreshUsers={loadUsers}
+              onRefreshItems={loadItems}
+            />
+          )}
+          {activeTab === 'tabs' && <TabsTab users={users} onRefreshUsers={loadUsers} />}
+        </div>
       </div>
     </>
   )

@@ -16,8 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const { rows } = await pool.query(
-      `SELECT id, name, price_cents, photo, archived, created_at
-       FROM fridge_catalog_items ORDER BY created_at DESC`
+      `SELECT id, name, price_cents, photo, archived, sort_order, created_at
+       FROM fridge_catalog_items ORDER BY sort_order ASC, created_at ASC`
     )
     return res.json({ items: rows })
   }
