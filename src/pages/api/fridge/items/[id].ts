@@ -44,5 +44,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.json({ item: rows[0] })
   }
 
+  if (req.method === 'DELETE') {
+    const { rowCount } = await pool.query(
+      `DELETE FROM fridge_catalog_items WHERE id = $1`,
+      [id]
+    )
+    if (rowCount === 0) return res.status(404).json({ error: 'Not found' })
+    return res.json({ deleted: true })
+  }
+
   return res.status(405).json({ error: 'Method not allowed' })
 }
