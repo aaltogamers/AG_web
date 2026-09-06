@@ -28,6 +28,7 @@ export class MainMenu extends Scene {
   players: {
     sprite?: Phaser.Physics.Matter.Image
     state: PlayerState
+    joystick: { x: 0; y: 0; force: 0 }
   }[] = []
   hitboxes: Phaser.GameObjects.Rectangle[] = []
   hitboxCords = [
@@ -80,6 +81,7 @@ export class MainMenu extends Scene {
   pauseTextObject: Phaser.GameObjects.Text | undefined = undefined
   shield: Phaser.Physics.Matter.Image | undefined = undefined
   playerShields: Map<string, Phaser.GameObjects.Image> = new Map()
+  playerSync: boolean = true
 
   constructor() {
     super('MainMenu')
@@ -404,6 +406,27 @@ export class MainMenu extends Scene {
     }
   }
 
+  playerNetworkSync() {
+    if (isHost()) {
+      for (const player of this.players) {
+        if (!player?.sprite) return
+
+        if (player.sprite.active) {
+          const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
+          player.joystick = { x: joystick.x, y: joystick.y, force: joystick.force }
+          player.state.setState(
+            'pos',
+            {
+              x: player.sprite.x,
+              y: player.sprite.y,
+            },
+            false
+          )
+        }
+      }
+    }
+  }
+
   init() {
     setMainMenuRef(this)
     if (!myPlayer().getState('spectator')) {
@@ -524,7 +547,7 @@ export class MainMenu extends Scene {
           .setCollisionCategory(this.playerCollisionGroup)
           .setName(playerState.id)
 
-        this.players.push({ sprite, state: playerState })
+        this.players.push({ sprite, state: playerState, joystick: { x: 0, y: 0, force: 0 } })
       }
     })
 
@@ -563,6 +586,13 @@ export class MainMenu extends Scene {
         if (!getState(myPlayer().id)) this.disconnect()
       },
     })
+    this.time.addEvent({
+      loop: true,
+      delay: 1,
+      callback: () => {
+        this.playerNetworkSync()
+      },
+    })
   }
 
   update(_: number, delta: number) {
@@ -580,16 +610,10 @@ export class MainMenu extends Scene {
           shield.setPosition(player?.sprite?.x, player?.sprite?.y)
         }
         if (player.sprite.active) {
-          const joystick = player.state.getState('joystick') || { x: 0, y: 0, force: 0 }
-
           player.sprite.setVelocity(
-            Phaser.Math.Clamp(2 * joystick.x * joystick.force, -10, 10),
-            Phaser.Math.Clamp(-2 * joystick.y * joystick.force, -10, 10)
+            Phaser.Math.Clamp(2 * player.joystick.x * player.joystick.force, -10, 10),
+            Phaser.Math.Clamp(-2 * player.joystick.y * player.joystick.force, -10, 10)
           )
-          player.state.setState('pos', {
-            x: player.sprite.x,
-            y: player.sprite.y,
-          })
         }
       }
 
