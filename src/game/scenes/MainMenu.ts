@@ -25,10 +25,11 @@ export class MainMenu extends Scene {
   doOnce: boolean = false
   joystick: nipplejs.JoystickManager | undefined = undefined
   playerStates: PlayerState[] = []
+  localJoystick: { x: number; y: number; force: number } = { x: 0, y: 0, force: 0 }
   players: {
     sprite?: Phaser.Physics.Matter.Image
     state: PlayerState
-    joystick: { x: 0; y: 0; force: 0 }
+    joystick: { x: number; y: number; force: number }
   }[] = []
   hitboxes: Phaser.GameObjects.Rectangle[] = []
   hitboxCords = [
@@ -407,6 +408,9 @@ export class MainMenu extends Scene {
   }
 
   playerNetworkSync() {
+    if (this.joystick) {
+      myPlayer()?.setState('joystick', this.localJoystick)
+    }
     if (isHost()) {
       for (const player of this.players) {
         if (!player?.sprite) return
@@ -468,11 +472,10 @@ export class MainMenu extends Scene {
     } else {
       this.joystick?.on('move', (_, data) => {
         const angle = radToXY(data.angle.radian)
-        myPlayer()?.setState('joystick', { ...angle, force: data.force })
+        this.localJoystick = { ...angle, force: data.force }
       })
       this.joystick?.on('end', () => {
-        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
-        myPlayer()?.setState('joystick', { x: 0, y: 0, force: 0 })
+        this.localJoystick = { x: 0, y: 0, force: 0 }
       })
     }
 
@@ -588,7 +591,7 @@ export class MainMenu extends Scene {
     })
     this.time.addEvent({
       loop: true,
-      delay: 1,
+      delay: 50,
       callback: () => {
         this.playerNetworkSync()
       },
