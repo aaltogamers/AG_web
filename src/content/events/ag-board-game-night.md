@@ -9,7 +9,7 @@ image: /images/Black-ag.png
 visibleOnCalendar: true
 visibleOnEventsPage: false
 location: Village Living room, Jämeräntaival 5 A
-description: TBA
+description: Fun boardgaming
 tldr: |-
   ### WHEN?
 
@@ -21,11 +21,11 @@ tldr: |-
 
   ### WHY?
 
-  TBA
+  To have fun
 
   ### SIGN-UP
 
-  TBA
+  Signup is not mandatory but highly recommended
 recordings: []
 ---
-TBA
+Ever wanted to touch grass and meet some people offline? Now's the perfect chance for it! Join us at Kylän olohuone on friday 18.9 for some chill boardgames and hanging out. Signup is optional but recommended to find games and friends! (we can't promise space and snacks for everyone)
