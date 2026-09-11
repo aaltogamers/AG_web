@@ -11,6 +11,54 @@ export function markdownToTelegramHtml(text: string): string {
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>')
 }
 
+const blockComponents: Components = {
+  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+  a: ({ children, href }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="underline"
+      style={{ color: 'var(--tg-theme-link-color, #2481cc)' }}
+    >
+      {children}
+    </a>
+  ),
+  strong: ({ children }) => <strong>{children}</strong>,
+  em: ({ children }) => <em>{children}</em>,
+  del: ({ children }) => <s>{children}</s>,
+  code: ({ children }) => (
+    <code
+      className="px-1 rounded"
+      style={{ backgroundColor: 'var(--tg-theme-secondary-bg-color, #f0f0f0)' }}
+    >
+      {children}
+    </code>
+  ),
+  ul: ({ children }) => <ul className="list-disc list-inside my-1">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal list-inside my-1">{children}</ol>,
+  li: ({ children }) => <li className="mb-0.5">{children}</li>,
+  pre: ({ children }) => (
+    <pre
+      className="rounded p-2 my-2 overflow-x-auto text-sm"
+      style={{ backgroundColor: 'var(--tg-theme-secondary-bg-color, #1a1b23)' }}
+    >
+      {children}
+    </pre>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote
+      className="border-l-2 pl-3 my-2 opacity-80"
+      style={{ borderColor: 'var(--tg-theme-hint-color, #AAABAD)' }}
+    >
+      {children}
+    </blockquote>
+  ),
+  h1: ({ children }) => <h1 className="text-sm font-bold mb-1">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-sm font-semibold mb-1">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-sm font-medium mb-1">{children}</h3>,
+}
+
 const components: Components = {
   p: ({ children }) => <span>{children}</span>,
   a: ({ children, href }) => (
@@ -142,6 +190,22 @@ export function DescriptionMarkdown({ text }: { text: string }) {
           <TableBlock key={i} content={seg.content} />
         ) : (
           <ReactMarkdown key={i} components={components}>{seg.content}</ReactMarkdown>
+        )
+      )}
+    </>
+  )
+}
+
+export function BlockMarkdown({ text }: { text: string }) {
+  const segments = splitByTables(text)
+
+  return (
+    <>
+      {segments.map((seg, i) =>
+        seg.type === 'table' ? (
+          <TableBlock key={i} content={seg.content} />
+        ) : (
+          <ReactMarkdown key={i} components={blockComponents}>{seg.content}</ReactMarkdown>
         )
       )}
     </>

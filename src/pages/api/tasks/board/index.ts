@@ -7,6 +7,8 @@ type TaskRow = {
   id: string
   name: string
   description: string | null
+  ai_context: string | null
+  ai_context_confidence: string | null
   deadline: Date | null
   start_time: Date | null
   state: TaskState
@@ -33,6 +35,8 @@ const rowToTask = (row: TaskRow, assignees: TaskAssignee[]): Task => ({
   id: row.id,
   name: row.name,
   description: row.description ?? undefined,
+  aiContext: row.ai_context ?? undefined,
+  aiContextConfidence: row.ai_context_confidence ?? undefined,
   deadline: toISOOrUndefined(row.deadline),
   startTime: toISOOrUndefined(row.start_time),
   state: row.state,
@@ -63,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const tasksResult = stateFilter && stateFilter.length > 0
     ? await pool.query<TaskRow>(
-        `SELECT id, name, description, deadline, start_time, state,
+        `SELECT id, name, description, ai_context, ai_context_confidence, deadline, start_time, state,
                 created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
          FROM tasks
          WHERE state = ANY($1)
@@ -71,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         [stateFilter]
       )
     : await pool.query<TaskRow>(
-        `SELECT id, name, description, deadline, start_time, state,
+        `SELECT id, name, description, ai_context, ai_context_confidence, deadline, start_time, state,
                 created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
          FROM tasks
          ORDER BY position ASC, created_at ASC`

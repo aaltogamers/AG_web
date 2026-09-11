@@ -8,6 +8,8 @@ import type { TaskState } from '../../../../types/types'
 type CreateTaskBody = {
   name: string
   description?: string
+  aiContext?: string
+  aiContextConfidence?: string
   deadline?: string
   startTime?: string
   state?: TaskState
@@ -47,14 +49,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const nextPos = maxPosResult.rows[0].next_pos
 
     const taskResult = await client.query(
-      `INSERT INTO tasks (name, description, deadline, start_time, state,
+      `INSERT INTO tasks (name, description, ai_context, ai_context_confidence, deadline, start_time, state,
                           created_by_tg_id, created_by_tg_name, position, done_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING id, name, description, deadline, start_time, state,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING id, name, description, ai_context, ai_context_confidence, deadline, start_time, state,
                  created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at`,
       [
         body.name.trim(),
         body.description?.trim() || null,
+        body.aiContext?.trim() || null,
+        body.aiContextConfidence?.trim() || null,
         body.deadline || null,
         body.startTime || null,
         state,
@@ -113,6 +117,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: task.id,
         name: task.name,
         description: task.description ?? undefined,
+        aiContext: task.ai_context ?? undefined,
+        aiContextConfidence: task.ai_context_confidence ?? undefined,
         deadline: task.deadline ? task.deadline.toISOString() : undefined,
         startTime: task.start_time ? task.start_time.toISOString() : undefined,
         state: task.state,

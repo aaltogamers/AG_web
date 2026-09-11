@@ -329,6 +329,8 @@ export type Task = {
   createdAt: string
   updatedAt: string
   doneAt?: string
+  aiContext?: string
+  aiContextConfidence?: string
 }
 
 export type TgUser = {

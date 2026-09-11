@@ -8,6 +8,8 @@ const VALID_STATES: readonly string[] = ['someday', 'todo', 'in_progress', 'done
 type UpdateTaskBody = {
   name?: string
   description?: string | null
+  aiContext?: string | null
+  aiContextConfidence?: string | null
   deadline?: string | null
   startTime?: string | null
   state?: TaskState
@@ -26,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const taskResult = await pool.query(
-      `SELECT id, name, description, deadline, start_time, state,
+      `SELECT id, name, description, ai_context, ai_context_confidence, deadline, start_time, state,
               created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
        FROM tasks WHERE id = $1`,
       [taskId]
@@ -46,6 +48,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: t.id,
         name: t.name,
         description: t.description ?? undefined,
+        aiContext: t.ai_context ?? undefined,
+        aiContextConfidence: t.ai_context_confidence ?? undefined,
         deadline: t.deadline ? t.deadline.toISOString() : undefined,
         startTime: t.start_time ? t.start_time.toISOString() : undefined,
         state: t.state,
@@ -80,6 +84,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (body.description !== undefined) {
       sets.push(`description = $${paramIdx++}`)
       params.push(body.description)
+    }
+    if (body.aiContext !== undefined) {
+      sets.push(`ai_context = $${paramIdx++}`)
+      params.push(body.aiContext)
+    }
+    if (body.aiContextConfidence !== undefined) {
+      sets.push(`ai_context_confidence = $${paramIdx++}`)
+      params.push(body.aiContextConfidence)
     }
     if (body.deadline !== undefined) {
       sets.push(`deadline = $${paramIdx++}`)
@@ -137,7 +149,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await client.query('COMMIT')
 
       const updated = await pool.query(
-        `SELECT id, name, description, deadline, start_time, state,
+        `SELECT id, name, description, ai_context, ai_context_confidence, deadline, start_time, state,
                 created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
          FROM tasks WHERE id = $1`,
         [taskId]
@@ -153,6 +165,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           id: t.id,
           name: t.name,
           description: t.description ?? undefined,
+          aiContext: t.ai_context ?? undefined,
+          aiContextConfidence: t.ai_context_confidence ?? undefined,
           deadline: t.deadline ? t.deadline.toISOString() : undefined,
           startTime: t.start_time ? t.start_time.toISOString() : undefined,
           state: t.state,

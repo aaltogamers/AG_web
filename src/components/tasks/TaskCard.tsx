@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import type { Task, TaskState } from '../../types/types'
-import { DescriptionMarkdown } from '../../utils/markdownLinks'
+import { BlockMarkdown } from '../../utils/markdownLinks'
 import TaskForm from './TaskForm'
 import StatusDropdown from './StatusDropdown'
 
@@ -35,6 +35,16 @@ const getAssigneeDisplayName = (a: {
 }) => {
   if (a.firstName) return `${a.firstName}${a.lastName ? ' ' + a.lastName : ''}`
   return a.tgUserName
+}
+
+const confidenceColor = (confidence: string): string => {
+  switch (confidence) {
+    case 'Very High': return '#22c55e'
+    case 'High': return '#84cc16'
+    case 'Medium': return '#eab308'
+    case 'Low': return '#ef4444'
+    default: return 'inherit'
+  }
 }
 
 export default function TaskCard({
@@ -126,7 +136,7 @@ export default function TaskCard({
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tg-hint">
           <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
-          {task.description && (
+          {(task.description || task.aiContext) && (
             <svg
               width="14"
               height="14"
@@ -167,7 +177,7 @@ export default function TaskCard({
         <StatusDropdown currentState={task.state} onChangeState={handleStateChange} />
         <span className="text-left font-medium tg-text text-lg break-all min-w-0">{task.name}</span>
         <span className="flex items-center justify-center">
-          {task.description && (
+          {(task.description || task.aiContext) && (
             <svg
               width="14"
               height="14"
@@ -210,9 +220,37 @@ export default function TaskCard({
         </button>
       </div>
 
-      {expanded && task.description && (
-        <div className="mt-2 text-sm md:text-base tg-hint whitespace-pre-wrap break-all">
-          <DescriptionMarkdown text={task.description} />
+      {expanded && (task.description || task.aiContext) && (
+        <div className="mt-2 text-sm md:text-base tg-hint break-all">
+          {task.description && (
+            <div className="prose-sm">
+              <p className="text-sm font-bold mb-1 opacity-60">Description</p>
+              <BlockMarkdown text={task.description} />
+            </div>
+          )}
+          {task.aiContext && (
+            <div
+              className="mt-2 pt-2 border-t prose-sm"
+              style={{ borderColor: 'var(--tg-theme-section-separator-color, rgba(0,0,0,0.1))' }}
+            >
+              <p className="text-sm font-bold mb-1 opacity-60">
+                Additional context (AI generated)
+                {task.aiContextConfidence && (
+                  <span
+                    className="ml-2 inline-block px-1.5 py-0.5 rounded-full text-[10px] leading-tight font-semibold"
+                    style={{
+                      color: confidenceColor(task.aiContextConfidence),
+                      backgroundColor: confidenceColor(task.aiContextConfidence) + '18',
+                      border: `1px solid ${confidenceColor(task.aiContextConfidence)}40`,
+                    }}
+                  >
+                    confidence: {task.aiContextConfidence}
+                  </span>
+                )}
+              </p>
+              <BlockMarkdown text={task.aiContext} />
+            </div>
+          )}
         </div>
       )}
     </div>
