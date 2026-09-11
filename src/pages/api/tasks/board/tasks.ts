@@ -102,7 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (task.description) lines.push(markdownToTelegramHtml(task.description))
       if (task.deadline) lines.push(`📅 Deadline: ${formatDate(task.deadline.toISOString())}`)
       if (task.start_time) lines.push(`🗓 Start: ${formatDate(task.start_time.toISOString())}`)
-      lines.push(`\nCreated by ${body.createdByTgName || 'someone'}`)
+      if (body.createdByTgName) lines.push(`\nCreated by ${body.createdByTgName}`)
       const message = lines.join('\n')
 
       void Promise.allSettled(
