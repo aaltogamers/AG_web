@@ -7,28 +7,12 @@ export const getLycheeAlbums = async (): Promise<LycheeAlbum[]> => {
     const initCookies = parseSetCookieHeaders(initResponse)
     const xsrfToken = decodeURIComponent(initCookies['XSRF-TOKEN'])
 
-    const loginResponse = await fetch(`${LYCHEE_BASE_URL}/api/v2/Auth::login`, {
-      method: 'POST',
+    const albumsResponse = await fetch(`${LYCHEE_BASE_URL}/api/v2/Albums`, {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
         'X-XSRF-TOKEN': xsrfToken,
         Cookie: formatCookies(initCookies),
-      },
-    })
-
-    const loginCookies = parseSetCookieHeaders(loginResponse)
-    const allCookies = { ...initCookies, ...loginCookies }
-    const newXsrfToken = loginCookies['XSRF-TOKEN']
-      ? decodeURIComponent(loginCookies['XSRF-TOKEN'])
-      : xsrfToken
-
-    const albumsResponse = await fetch(`${LYCHEE_BASE_URL}/api/v2/Albums`, {
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-XSRF-TOKEN': newXsrfToken,
-        Cookie: formatCookies(allCookies),
       },
     })
 
