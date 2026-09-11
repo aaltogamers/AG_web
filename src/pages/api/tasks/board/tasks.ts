@@ -100,6 +100,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const lines = [`📋 <b>New task assigned to you</b>\n\n<b>${task.name}</b>`]
       if (task.description) lines.push(markdownToTelegramHtml(task.description))
+      if (task.ai_context) {
+        const confidence = task.ai_context_confidence ? ` (${task.ai_context_confidence})` : ''
+        lines.push(`\n🤖 <b>Context (ai generated)</b>${confidence}\n${markdownToTelegramHtml(task.ai_context)}`)
+      }
       if (task.deadline) lines.push(`📅 Deadline: ${formatDate(task.deadline.toISOString())}`)
       if (task.start_time) lines.push(`🗓 Start: ${formatDate(task.start_time.toISOString())}`)
       if (body.createdByTgName) lines.push(`\nCreated by ${body.createdByTgName}`)
