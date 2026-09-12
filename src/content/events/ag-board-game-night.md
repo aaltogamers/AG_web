@@ -7,7 +7,7 @@ otherTimes:
 durationHours: 6
 image: /images/board-game-night-2026-fall.png
 visibleOnCalendar: true
-visibleOnEventsPage: false
+visibleOnEventsPage: true
 location: Village Living room, Jämeräntaival 5 A
 description: >-
   Need some plans for Friday? 👀 Come hang out with **Aalto Gamers** for a cozy
