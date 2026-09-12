@@ -24,7 +24,7 @@ description: >-
 tldr: |-
   ### WHEN?
 
-  17.9, 17:00 onwards
+  18.9, 17:00 onwards
 
   ### WHERE?
 
