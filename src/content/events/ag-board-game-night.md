@@ -1,10 +1,10 @@
 ---
 name: AG Board Game Night
-time: 2026-09-18T16:00:00
+time: 2026-09-18T17:00:00
 otherTimes:
   - time: 2026-12-04T16:00:00
   - time: 2026-10-16T16:00:00
-durationHours: 6
+durationHours: 5
 image: /images/board-game-night-2026-fall.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
