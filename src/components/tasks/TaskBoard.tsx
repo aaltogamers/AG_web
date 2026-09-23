@@ -27,6 +27,7 @@ export default function TaskBoard() {
   const [hiddenStates, setHiddenStates] = useState<Set<TaskState>>(new Set())
   const [completedCollapsed, setCompletedCollapsed] = useState(false)
   const [somedayCollapsed, setSomedayCollapsed] = useState(true)
+  const [futureCollapsed, setFutureCollapsed] = useState(true)
   const [assignFilter, setAssignFilter] = useState<AssignFilter>('all')
   const formOpen = showForm || editingTaskId !== null
 
@@ -96,8 +97,17 @@ export default function TaskBoard() {
     setTasks((prev) => prev.filter((t) => t.id !== taskId))
   }
 
+  const isOverAWeekAway = (dateStr: string) => {
+    const oneWeek = 7 * 24 * 60 * 60 * 1000
+    return new Date(dateStr).getTime() - Date.now() > oneWeek
+  }
+
   const sortActiveTasks = (list: Task[]) => {
     return [...list].sort((a, b) => {
+      const stateOrder = a.state === 'in_progress' ? 1 : 0
+      const stateOrderB = b.state === 'in_progress' ? 1 : 0
+      if (stateOrder !== stateOrderB) return stateOrder - stateOrderB
+
       const dateA = a.deadline || a.startTime
       const dateB = b.deadline || b.startTime
       if (dateA && !dateB) return -1
@@ -139,7 +149,10 @@ export default function TaskBoard() {
     return filtered
   }
 
-  const activeTasks = sortActiveTasks(applyFilters(tasks.filter((t) => t.state !== 'done' && t.state !== 'someday')))
+  const activeFiltered = applyFilters(tasks.filter((t) => t.state !== 'done' && t.state !== 'someday'))
+  const futureTasks = activeFiltered.filter((t) => t.startTime && isOverAWeekAway(t.startTime))
+  const visibleActive = activeFiltered.filter((t) => !t.startTime || !isOverAWeekAway(t.startTime))
+  const activeTasks = sortActiveTasks(visibleActive)
   const somedayTasks = applyFilters(tasks.filter((t) => t.state === 'someday'))
   const doneTasks = hiddenStates.has('done')
     ? []
@@ -322,6 +335,30 @@ export default function TaskBoard() {
           <p className="text-sm tg-hint text-center py-4 opacity-50">No tasks</p>
         )}
       </div>
+
+      {futureTasks.length > 0 && (
+        <>
+          <div
+            className="flex items-center gap-3 my-3 cursor-pointer select-none"
+            onClick={() => setFutureCollapsed((v) => !v)}
+          >
+            <div className="flex-1 border-t tg-separator" />
+            <span className="text-xs md:text-sm tg-hint">
+              {futureCollapsed
+                ? `${futureTasks.length} future hidden`
+                : `Future (${futureTasks.length})`}
+            </span>
+            <div className="flex-1 border-t tg-separator" />
+          </div>
+          {!futureCollapsed && (
+            <div className="flex flex-col gap-2">
+              {sortActiveTasks(futureTasks).map((task) => (
+                <TaskCard key={task.id} task={task} currentUserId={currentUserId} onUpdate={updateTask} onDelete={deleteTask} onEditingChange={(editing) => setEditingTaskId(editing ? task.id : null)} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       {doneTasks.length > 0 && (
         <>
