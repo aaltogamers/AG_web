@@ -7,13 +7,7 @@ import TaskForm from './TaskForm'
 import Settings from './Settings'
 import { useTelegram } from './TelegramProvider'
 
-type AssignFilter = 'all' | 'mine' | 'mine_unassigned'
-
-const ASSIGN_FILTER_LABELS: Record<AssignFilter, string> = {
-  all: 'All',
-  mine: 'Mine',
-  mine_unassigned: 'Mine + Unassigned',
-}
+type AssignFilter = 'all' | 'mine' | 'mine_unassigned' | 'unassigned' | string
 
 export default function TaskBoard() {
   const { user, ready, isTelegram } = useTelegram()
@@ -139,15 +133,44 @@ export default function TaskBoard() {
 
   const applyFilters = (list: Task[]) => {
     let filtered = list.filter((t) => !hiddenStates.has(t.state))
-    if (assignFilter === 'mine' && currentUserId) {
+    if (assignFilter === 'all') {
+      // no filter
+    } else if (assignFilter === 'mine' && currentUserId) {
       filtered = filtered.filter((t) => t.assignees.some((a) => a.tgUserId === currentUserId))
     } else if (assignFilter === 'mine_unassigned' && currentUserId) {
       filtered = filtered.filter(
         (t) => t.assignees.length === 0 || t.assignees.some((a) => a.tgUserId === currentUserId)
       )
+    } else if (assignFilter === 'unassigned') {
+      filtered = filtered.filter((t) => t.assignees.length === 0)
+    } else if (assignFilter.startsWith('user:')) {
+      const userId = assignFilter.slice(5)
+      filtered = filtered.filter((t) => t.assignees.some((a) => a.tgUserId === userId))
     }
     return filtered
   }
+
+  const activeTotalTasks = tasks.filter((t) => t.state !== 'done')
+
+  const assigneeOptions = React.useMemo(() => {
+    const active = tasks.filter((t) => t.state !== 'done')
+    const counts = new Map<string, { name: string; count: number }>()
+    for (const t of active) {
+      for (const a of t.assignees) {
+        const existing = counts.get(a.tgUserId)
+        if (existing) {
+          existing.count++
+        } else {
+          counts.set(a.tgUserId, { name: a.tgUserName || a.firstName || a.tgUserId, count: 1 })
+        }
+      }
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1].count - a[1].count)
+      .map(([id, { name, count }]) => ({ id, name, count }))
+  }, [tasks])
+
+  const unassignedCount = activeTotalTasks.filter((t) => t.assignees.length === 0).length
 
   const activeFiltered = applyFilters(tasks.filter((t) => t.state !== 'done' && t.state !== 'someday'))
   const futureTasks = activeFiltered.filter((t) => t.startTime && isOverAWeekAway(t.startTime))
@@ -210,7 +233,7 @@ export default function TaskBoard() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="p-1.5 rounded-lg transition-colors hover:opacity-80"
-              style={{ backgroundColor: (hiddenStates.size > 0 || assignFilter !== 'all') ? 'var(--tg-theme-button-color, #F32929)' : 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05))' }}
+              style={{ backgroundColor: (hiddenStates.size > 0 || assignFilter !== 'all') ? 'var(--tg-theme-button-color, #F32929)' : 'var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.1))' }}
               title="Filters"
             >
               <svg
@@ -218,7 +241,7 @@ export default function TaskBoard() {
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke={(hiddenStates.size > 0 || assignFilter !== 'all') ? 'var(--tg-theme-button-text-color, #fff)' : 'var(--tg-theme-hint-color)'}
+                stroke={(hiddenStates.size > 0 || assignFilter !== 'all') ? 'var(--tg-theme-button-text-color, #fff)' : 'var(--tg-theme-hint-color, #AAABAD)'}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -251,14 +274,14 @@ export default function TaskBoard() {
         <div
           className="mb-4 rounded-xl p-3 border flex flex-col gap-3"
           style={{
-            backgroundColor: 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.03))',
-            borderColor: 'var(--tg-theme-section-separator-color, rgba(0,0,0,0.1))',
+            backgroundColor: 'var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.05))',
+            borderColor: 'var(--tg-theme-section-separator-color, rgba(255,255,255,0.15))',
           }}
         >
           <div>
             <span className="text-xs tg-hint block mb-1.5">Status</span>
             <div className="flex flex-wrap gap-1.5">
-              {(['todo', 'in_progress', 'done'] as const).map((s) => (
+              {(['someday', 'todo', 'in_progress', 'done'] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => toggleState(s)}
@@ -268,14 +291,14 @@ export default function TaskBoard() {
                       ? 'transparent'
                       : 'var(--tg-theme-button-color, #F32929)',
                     color: hiddenStates.has(s)
-                      ? 'var(--tg-theme-hint-color)'
+                      ? 'var(--tg-theme-hint-color, #AAABAD)'
                       : 'var(--tg-theme-button-text-color, #fff)',
                     border: hiddenStates.has(s)
-                      ? '1px solid var(--tg-theme-section-separator-color, rgba(0,0,0,0.15))'
+                      ? '1px solid var(--tg-theme-section-separator-color, rgba(255,255,255,0.15))'
                       : '1px solid transparent',
                   }}
                 >
-                  {{ todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[s]}
+                  {{ todo: 'To Do', in_progress: 'In Progress', someday: 'Someday', done: 'Done' }[s]}
                 </button>
               ))}
             </div>
@@ -287,11 +310,25 @@ export default function TaskBoard() {
               onChange={(e) => setAssignFilter(e.target.value as AssignFilter)}
               className="tg-input text-sm !py-1.5"
             >
-              {(Object.keys(ASSIGN_FILTER_LABELS) as AssignFilter[]).map((k) => (
-                <option key={k} value={k}>
-                  {ASSIGN_FILTER_LABELS[k]}
-                </option>
-              ))}
+              <option value="all">All</option>
+              {isTelegram && currentUserId && (
+                <>
+                  <option value="mine">Mine</option>
+                  <option value="mine_unassigned">Mine + Unassigned</option>
+                </>
+              )}
+              {!isTelegram && (
+                <>
+                  {unassignedCount > 0 && (
+                    <option value="unassigned">Unassigned ({unassignedCount})</option>
+                  )}
+                  {assigneeOptions.map((a) => (
+                    <option key={a.id} value={`user:${a.id}`}>
+                      {a.name} ({a.count})
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
         </div>
