@@ -62,7 +62,7 @@ const ParticipantTable = ({
           </td>
         ))}
         <td className="p-4 pl-0 text-sm text-lightgray">
-          {new Date(p.created_at).toLocaleString()}
+          {new Date(p.created_at).toLocaleString('en-GB')}
         </td>
         {allowEdit && (
           <td>

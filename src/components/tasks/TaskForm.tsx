@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import DateInput from '../DateInput'
 import type { Task, TaskState, TgUser } from '../../types/types'
 import { TASK_STATES, TASK_STATE_LABELS } from '../../types/types'
 import { useTelegram } from './TelegramProvider'
@@ -197,8 +198,7 @@ export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm tg-hint mb-1">Start Date (optional)</label>
-          <input
-            type="date"
+          <DateInput
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
             className="tg-input"
@@ -206,8 +206,7 @@ export default function TaskForm({ task, onSubmit, onCancel, onDelete }: Props) 
         </div>
         <div>
           <label className="block text-sm tg-hint mb-1">Deadline (optional)</label>
-          <input
-            type="date"
+          <DateInput
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
             className="tg-input"

@@ -98,6 +98,7 @@ collections:
           name: 'time',
           widget: 'datetime',
           format: 'YYYY-MM-DDTHH:mm:ss',
+          date_format: 'DD/MM/YYYY',
           required: false,
         }
       - label: 'Other times for calendar'
@@ -113,6 +114,7 @@ collections:
               name: 'time',
               widget: 'datetime',
               format: 'YYYY-MM-DDTHH:mm:ss',
+              date_format: 'DD/MM/YYYY',
               required: true,
             }
           - { label: Name, name: name, widget: string, required: false }

@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 import { fetchAdmin } from '../utils/adminAuth'
+import DateInput from './DateInput'
 
 ChartJS.register(
   CategoryScale,
@@ -208,8 +209,7 @@ const SiteStatistics = () => {
         </div>
         <div>
           <label className="block text-sm mb-1">From</label>
-          <input
-            type="date"
+          <DateInput
             value={from}
             onChange={(e) => updateQuery({ from: e.target.value })}
             className="bg-white text-black p-2 rounded border border-neutral-300"
@@ -217,8 +217,7 @@ const SiteStatistics = () => {
         </div>
         <div>
           <label className="block text-sm mb-1">To</label>
-          <input
-            type="date"
+          <DateInput
             value={to}
             onChange={(e) => updateQuery({ to: e.target.value })}
             className="bg-white text-black p-2 rounded border border-neutral-300"
@@ -272,7 +271,7 @@ const SiteStatistics = () => {
               <Line
                 data={{
                   labels: series.series.map(({ bucket }) =>
-                    new Date(bucket).toLocaleDateString()
+                    new Date(bucket).toLocaleDateString('en-GB')
                   ),
                   datasets: [
                     {

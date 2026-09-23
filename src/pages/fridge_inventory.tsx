@@ -924,7 +924,7 @@ function TabsTab({ users, onRefreshUsers }: { users: FridgeUser[]; onRefreshUser
                     </div>
                     {tx.message && <div className="text-xs text-[#888] mt-0.5">{tx.message}</div>}
                     <div className="text-xs text-[#666] mt-0.5">
-                      {new Date(tx.created_at).toLocaleString()}
+                      {new Date(tx.created_at).toLocaleString('en-GB')}
                     </div>
                   </div>
                   <div

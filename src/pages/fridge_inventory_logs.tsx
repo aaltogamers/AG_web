@@ -144,7 +144,7 @@ export default function FridgeInventoryLogsPage() {
                   <div className="flex-1">
                     <div className="text-sm">{log.event}</div>
                     <div className="text-xs text-[#666] mt-0.5">
-                      {new Date(log.created_at).toLocaleString()}
+                      {new Date(log.created_at).toLocaleString('en-GB')}
                     </div>
                   </div>
                 </div>
