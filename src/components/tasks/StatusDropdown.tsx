@@ -11,24 +11,24 @@ type Props = {
 
 const STATUS_ICONS: Record<TaskState, React.ReactNode> = {
   someday: (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
       <circle cx="8" cy="8" r="6.5" stroke="#9ca3af" strokeWidth="1.5" />
     </svg>
   ),
   todo: (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
       <circle cx="8" cy="8" r="6.5" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.5" />
       <path d="M8 1.5 A6.5 6.5 0 0 1 14.5 8 L8 8 Z" fill="#3b82f6" fillOpacity="0.5" />
     </svg>
   ),
   in_progress: (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
       <circle cx="8" cy="8" r="6.5" stroke="#d97706" strokeWidth="1.5" strokeOpacity="0.5" />
       <path d="M8 1.5 A6.5 6.5 0 0 1 8 14.5 V1.5Z" fill="#d97706" fillOpacity="0.5" />
     </svg>
   ),
   done: (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
       <circle cx="8" cy="8" r="7" fill="#22c55e" fillOpacity="0.5" />
     </svg>
   ),
@@ -57,10 +57,10 @@ export default function StatusDropdown({ currentState, onChangeState }: Props) {
           setOpen(!open)
         }}
         className="flex items-center gap-1.5 py-1 px-2 rounded-lg transition-colors hover:opacity-80"
-        style={{ backgroundColor: 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05))' }}
+        style={{ backgroundColor: 'var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.05))' }}
       >
         {STATUS_ICONS[currentState]}
-        <span className="text-xs md:text-sm" style={{ color: 'var(--tg-theme-hint-color)' }}>
+        <span className="text-sm md:text-base" style={{ color: 'var(--tg-theme-hint-color, #AAABAD)' }}>
           {TASK_STATE_LABELS[currentState]}
         </span>
       </button>
@@ -69,8 +69,8 @@ export default function StatusDropdown({ currentState, onChangeState }: Props) {
         <div
           className="absolute left-0 top-full mt-1 rounded-xl border shadow-lg z-10 py-1 min-w-[140px]"
           style={{
-            backgroundColor: 'var(--tg-theme-bg-color, #fff)',
-            borderColor: 'var(--tg-theme-section-separator-color, rgba(0,0,0,0.1))',
+            backgroundColor: 'var(--tg-theme-bg-color, #1a1a1a)',
+            borderColor: 'var(--tg-theme-section-separator-color, rgba(255,255,255,0.15))',
           }}
         >
           {TASK_STATES.map((s) => (
@@ -83,8 +83,8 @@ export default function StatusDropdown({ currentState, onChangeState }: Props) {
               }}
               className="flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors"
               style={{
-                color: 'var(--tg-theme-text-color)',
-                backgroundColor: s === currentState ? 'var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.05))' : 'transparent',
+                color: 'var(--tg-theme-text-color, #fff)',
+                backgroundColor: s === currentState ? 'var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.1))' : 'transparent',
               }}
             >
               {STATUS_ICONS[s]}
