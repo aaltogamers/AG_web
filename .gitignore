@@ -21,3 +21,6 @@ infra/bootstrap/terraform.tfvars
 .bootstrap.tfstate.lock.info
 *.tfvars
 *.tfvars.json
+# Compressed public/ output (CI build)
+public-compressed/
+public-compressed.manifest.json

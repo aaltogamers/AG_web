@@ -1,71 +1,26 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:24-alpine AS base
+# Packages an app that was already built on the CI runner (see
+# .github/workflows/build_and_deploy.yml). Expects these to exist:
+#   .next/standalone, .next/static  -> from `next build`
+#   public-compressed               -> from `node copyPublicAndCompressImages.js public public-compressed`
+# Debian-based (glibc) so native modules built on the ubuntu runner work.
+FROM node:24-slim
 
-# Install dependencies only when needed
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-
-# Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
-RUN --mount=type=cache,target=/root/.npm \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
-
-
-# Compress images in a separate stage — only rebuilds when public/ changes
-FROM base AS images
-WORKDIR /app
-RUN apk add --no-cache vips-dev
-COPY --from=deps /app/node_modules ./node_modules
-COPY public ./public
-COPY copyPublicAndCompressImages.js ./
-RUN node copyPublicAndCompressImages.js public public-compressed
-
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED=1
-
-RUN --mount=type=cache,target=/app/.next/cache \
-  if [ -f yarn.lock ]; then yarn run build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
-
-# Production image, copy all the files and run next
-FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 --gid nodejs nextjs
 
-COPY --from=images /app/public-compressed ./public
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --chown=nextjs:nodejs .next/standalone ./
+COPY --chown=nextjs:nodejs .next/static ./.next/static
+COPY --chown=nextjs:nodejs public-compressed ./public
 
 # Migrations are loaded from disk at runtime by node-pg-migrate (not traced
 # by Next.js), so they need to be copied into the image explicitly.
-COPY --from=builder --chown=nextjs:nodejs /app/migrations ./migrations
+COPY --chown=nextjs:nodejs migrations ./migrations
 
 USER nextjs
 
