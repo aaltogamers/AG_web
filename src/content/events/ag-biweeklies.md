@@ -1,5 +1,6 @@
 ---
 name: AG Biweeklies
+time: 2026-05-08T18:00:00
 otherTimes:
   - time: 2026-05-08T18:00:00
     name: AG Biweeklies
