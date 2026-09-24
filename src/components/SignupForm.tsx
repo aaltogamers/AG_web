@@ -174,6 +174,11 @@ const SignUp = ({ target, signupEvent }: Props) => {
                 name={POOL_FIELD}
                 displayName="Sign up as"
                 options={signupEvent.pools.map((p) => p.name)}
+                optionLabel={(name) =>
+                  signupEvent.pools.find((p) => p.name === name)?.private
+                    ? `${name} (private)`
+                    : name
+                }
                 required
                 isPublic
                 control={control}
@@ -189,6 +194,7 @@ const SignUp = ({ target, signupEvent }: Props) => {
                     : 'Sign-up password'
                 }
                 type="text"
+                hint="This private group needs a password to sign up in"
                 required
                 control={control}
               />

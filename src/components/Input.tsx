@@ -19,6 +19,10 @@ type Props = {
   onChangeDo?: (value: any) => void
   control: Control<any, any>
   isMulti?: boolean
+  // Small text shown under the label
+  hint?: string
+  // Display text for select options, when it differs from the stored value
+  optionLabel?: (option: string) => string
 }
 
 type OptionWithLabel = {
@@ -39,16 +43,22 @@ const TextInput = ({
   isPublic,
   control,
   isMulti,
+  hint,
+  optionLabel,
 }: Props) => {
   const inputSlug = slug(name)
   const commonMargins = 'mt-2 mb-8 md:m-4'
-  const optionsWithLabel: OptionWithLabel[] = options?.map((o) => ({ value: o, label: o })) || []
+  const optionsWithLabel: OptionWithLabel[] =
+    options?.map((o) => ({ value: o, label: optionLabel ? optionLabel(o) : o })) || []
 
   return (
     <>
-      <label className="flex items-center" htmlFor={inputSlug}>
-        {displayName + (isPublic ? ' (public)' : '')}
-        <span className="text-red">{required && '*'}</span>
+      <label className="flex flex-col justify-center" htmlFor={inputSlug}>
+        <span>
+          {displayName + (isPublic ? ' (public)' : '')}
+          <span className="text-red">{required && '*'}</span>
+        </span>
+        {hint && <span className="text-sm text-lightgray">{hint}</span>}
       </label>
       {options && options.length > 0 ? (
         <Controller
