@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import Header from './Header'
-import CmsEditLink from './CmsEditLink'
+import CmsEditLink, { AdminLinkButton } from './CmsEditLink'
 import Markdown from './Markdown'
 import PageWrapper from './PageWrapper'
 import AGImage from './AGImage'
@@ -56,6 +56,8 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
         targets.find((t) => !t.session || eventMoment(t.session.end).isAfter(now)))) ||
     targets[0]
   const selectedTarget = targets.find((t) => t.key === selectedKey) ?? defaultTarget
+  // Also link sign-ups that are enabled in the CMS but not yet created in the admin panel
+  const adminSignupKey = selectedTarget?.key ?? targetKeys.split(',')[0]
 
   return (
     <PageWrapper>
@@ -68,7 +70,14 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
           cmsPath={`collections/event/entries/${event.slug}`}
           label="Edit event"
           className="mt-4"
-        />
+        >
+          {adminSignupKey && (
+            <AdminLinkButton
+              href={`/admin/signups?event=${encodeURIComponent(adminSignupKey)}`}
+              label="Edit sign-up"
+            />
+          )}
+        </CmsEditLink>
       )}
       <div className="flex flex-col items-center">
         <div className="py-16 md:w-3/4">

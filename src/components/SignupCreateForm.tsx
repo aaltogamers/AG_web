@@ -1,6 +1,7 @@
 import moment from 'moment'
 import { useForm, SubmitHandler, Controller } from 'react-hook-form'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 import { FaEdit, FaExternalLinkAlt, FaLock, FaLockOpen, FaTrash } from 'react-icons/fa'
 import Input from './Input'
 import {
@@ -46,6 +47,7 @@ type Props = {
 const SignUpCreateForm = ({ events }: Props) => {
   const { register, handleSubmit, setValue, reset, resetField, control, getValues, watch } =
     useForm<Inputs>()
+  const router = useRouter()
   const [signupData, setSignupData] = useState<SignupEvent | null>(null)
   const [participants, setParticipants] = useState<SignupRow[]>([])
   const [editableInputs, setEditableInputs] = useState<EditableInputObj[]>([])
@@ -167,9 +169,22 @@ const SignUpCreateForm = ({ events }: Props) => {
   }
 
   useEffect(() => {
-    if (targetOptions[0]) loadEvent(targetOptions[0].label)
+    if (!router.isReady) return
+    // `?event=<sign-up key or event slug>` (from the event page) preselects that event once
+    const requested = typeof router.query.event === 'string' ? router.query.event : null
+    const requestedTarget = requested
+      ? (targets.find((t) => t.key === requested) ??
+        targets.find((t) => t.event.slug === requested))
+      : undefined
+    const initial = targetOptions.find((o) => o.key === requestedTarget?.key) ?? targetOptions[0]
+    if (initial) loadEvent(initial.label)
+    if (requested) {
+      const query = { ...router.query }
+      delete query.event
+      router.replace({ pathname: router.pathname, query }, undefined, { shallow: true })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [router.isReady])
 
   const watchedIds = watch(
     editableInputs.map(({ number }) => `${number}-id` as keyof Inputs)
