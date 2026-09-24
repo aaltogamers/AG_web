@@ -2,6 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import Header from './Header'
+import CmsEditLink from './CmsEditLink'
 import Markdown from './Markdown'
 import PageWrapper from './PageWrapper'
 import AGImage from './AGImage'
@@ -62,6 +63,13 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
         <title>{`${event.name} - Aalto Gamers`}</title>
       </Head>
       <Header>{event.name}</Header>
+      {showSignUp && (
+        <CmsEditLink
+          cmsPath={`collections/event/entries/${event.slug}`}
+          label="Edit event"
+          className="mt-4"
+        />
+      )}
       <div className="flex flex-col items-center">
         <div className="py-16 md:w-3/4">
           <div className="flex flex-col md:flex-row justify-center">

@@ -2,7 +2,6 @@ import Link from 'next/link'
 import React from 'react'
 import AdminNavLink from './AdminNavLink'
 import MobileNavBar from './MobileNavBar'
-import { NavBarAdminProvider } from './NavBarAdminProvider'
 import { HeaderLink } from '../types/types'
 import AGImage from './AGImage'
 
@@ -37,10 +36,10 @@ const NavBar = () => {
   ]
 
   return (
-    <NavBarAdminProvider>
+    <>
       <DesktopNavBar links={links} />
       <MobileNavBar links={links} />
-    </NavBarAdminProvider>
+    </>
   )
 }
 

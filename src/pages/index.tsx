@@ -6,6 +6,7 @@ import { AGEvent, LandingInfo } from '../types/types'
 import EventShowCase from '../components/EventShowCase'
 import ImageShowCase from '../components/ImageShowCase'
 import Calendar from '../components/Calendar'
+import CmsEditLink from '../components/CmsEditLink'
 
 type Props = {
   landingInfos: LandingInfo[]
@@ -24,6 +25,7 @@ const Home = ({ landingInfos, events, imageShowCase }: Props) => {
       <Banner />
       <div className="flex justify-center my-16">
         <main className="flex flex-col md:w-2/3">
+          <CmsEditLink cmsPath="collections/landinginfo" label="Edit landing infos" />
           {landingInfos.map((info, i) => (
             <SideInfoBox
               landingInfo={info}
@@ -35,8 +37,14 @@ const Home = ({ landingInfos, events, imageShowCase }: Props) => {
           ))}
           <hr className="bg-gray w-full md:my-16" />
           <ImageShowCase images={imageShowCase.images} />
+          <CmsEditLink
+            cmsPath="collections/pages/entries/imageshowcase"
+            label="Edit image showcase"
+            className="mt-4"
+          />
           <hr className="bg-gray w-full md:my-16" />
           <EventShowCase events={events} />
+          <CmsEditLink cmsPath="collections/event" label="Edit events" className="mb-4" />
           <Calendar events={events} />
         </main>
       </div>

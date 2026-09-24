@@ -6,6 +6,7 @@ import { getEvents } from '../utils/fileUtils'
 import { parseEvents } from '../utils/parseEvents'
 import Calendar from '../components/Calendar'
 import Header from '../components/Header'
+import CmsEditLink from '../components/CmsEditLink'
 import { getLycheeAlbums } from '../utils/lychee'
 import { getRelevantAlbumsForEvents } from '../utils/getAlbumRelevantToEvent'
 
@@ -22,6 +23,7 @@ const Events = ({ events }: Props) => {
       </Head>
       <div>
         <Header>Event Calendar</Header>
+        <CmsEditLink cmsPath="collections/event" label="Edit events" className="mt-4" />
         <Calendar events={events} />
         <EventList name="Events right now" events={todayEvents} />
         <EventList name="Upcoming events" events={upcomingEvents} />

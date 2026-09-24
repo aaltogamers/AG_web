@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import CmsEditLink from '../components/CmsEditLink'
 import Header from '../components/Header'
 import PageWrapper from '../components/PageWrapper'
 import Scoreboard from '../components/Scoreboard'
@@ -29,6 +30,11 @@ const LeaderBoard = ({ learderboard_entries }: Props) => {
         <title>Biweekly Leaderboard - Aalto Gamers</title>
       </Head>
       <Header>Biweekly Leaderboard</Header>
+      <CmsEditLink
+        cmsPath="collections/pages/entries/leaderboard"
+        label="Edit leaderboard"
+        className="mt-4"
+      />
       <Scoreboard entries={entries} placeholderText="Waiting for the start of the next season..." />
     </PageWrapper>
   )

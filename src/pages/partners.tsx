@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import CmsEditLink from '../components/CmsEditLink'
 import Header from '../components/Header'
 import Markdown from '../components/Markdown'
 import PageWrapper from '../components/PageWrapper'
@@ -19,6 +20,7 @@ const Partners = ({ partners, title, content }: Props) => {
         <title>Partners - Aalto Gamers</title>
       </Head>
       <Header>{title}</Header>
+      <CmsEditLink cmsPath="collections/partner" label="Edit partners" className="mt-4" />
       <div className="flex mt-20 flex-wrap justify-evenly">
         {partners.map((partner) => (
           <Partner partner={partner} key={partner.name} />
@@ -26,6 +28,11 @@ const Partners = ({ partners, title, content }: Props) => {
       </div>
       <div className="flex flex-col items-center text-center p-20">
         <Markdown>{content}</Markdown>
+        <CmsEditLink
+          cmsPath="collections/pages/entries/partners"
+          label="Edit partners text"
+          className="mt-4"
+        />
       </div>
     </PageWrapper>
   )

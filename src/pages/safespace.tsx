@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import BoardMember from '../components/BoardMember'
+import CmsEditLink from '../components/CmsEditLink'
 import Header from '../components/Header'
 import Markdown from '../components/Markdown'
 import PageWrapper from '../components/PageWrapper'
@@ -30,6 +31,11 @@ const SafeSpace = ({ title, content, boardMembers, contactPeopleNames }: Props) 
       <div className="flex justify-center">
         <div className="flex flex-col md:w-3/4 items-center">
           <Header>{title}</Header>
+          <CmsEditLink
+            cmsPath="collections/pages/entries/safespace"
+            label="Edit safer space policy"
+            className="mt-4"
+          />
           <div className="my-20">
             <Markdown>{content}</Markdown>
           </div>
