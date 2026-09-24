@@ -1,10 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
-import {
-  CS_ACTIVE_DUTY_MAPS,
-  VALORANT_ACTIVE_DUTY_MAPS,
-} from '../../../types/types'
+import { CS_ACTIVE_DUTY_MAPS, VALORANT_ACTIVE_DUTY_MAPS } from '../../../types/types'
 import { getQueryParam, parseJsonBody } from '../../../utils/apiUtils'
 import { publish } from '../../../utils/bus'
 
@@ -26,9 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'GET') {
-    const result = await pool.query(
-      'SELECT id, map, type, team, idx FROM mapbans ORDER BY idx ASC'
-    )
+    const result = await pool.query('SELECT id, map, type, team, idx FROM mapbans ORDER BY idx ASC')
     return res.status(200).json({
       mapBans: result.rows.map((r) => ({
         id: String(r.id),
@@ -58,9 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const infoRes = await client.query('SELECT game FROM mapban_info WHERE id = 1 FOR UPDATE')
       const game = infoRes.rows[0]?.game ?? 'CS 2'
       const allowedMaps: string[] =
-        game === 'Valorant'
-          ? [...VALORANT_ACTIVE_DUTY_MAPS]
-          : [...CS_ACTIVE_DUTY_MAPS]
+        game === 'Valorant' ? [...VALORANT_ACTIVE_DUTY_MAPS] : [...CS_ACTIVE_DUTY_MAPS]
       if (!allowedMaps.includes(body.map)) {
         await client.query('ROLLBACK')
         return res.status(400).json({ error: 'Map not in current pool' })

@@ -1,10 +1,10 @@
-import type { DataValue, SignupInput, SignupRow, SignUpData } from '../types/types'
+import type { DataValue, SignupInput, SignupPool, SignupRow, SignUpData } from '../types/types'
 
 export type AnswerMap = Record<string, DataValue>
 
 export type SignupEvent = {
   key: string
-  maxparticipants: number
+  pools: SignupPool[]
   openfrom: string
   openuntil: string
   inputs: SignupInput[]
@@ -81,13 +81,15 @@ export const listSignups = async (
 
 export const createSignup = async (
   signupKey: string,
-  answers: AnswerMap
+  answers: AnswerMap,
+  poolId: number,
+  poolPassword?: string
 ): Promise<{ id: string; submission_token: string; created_at: string }> => {
   const res = await fetch('/api/signups', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     credentials: 'same-origin',
-    body: JSON.stringify({ key: signupKey, answers }),
+    body: JSON.stringify({ key: signupKey, answers, poolId, poolPassword }),
   })
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { error?: string }
@@ -99,7 +101,9 @@ export const createSignup = async (
 export const updateSignup = async (
   id: string,
   answers: AnswerMap,
-  submissionToken: string
+  poolId: number,
+  submissionToken: string,
+  poolPassword?: string
 ): Promise<void> => {
   const res = await fetch(`/api/signups/${encodeURIComponent(id)}`, {
     method: 'PUT',
@@ -108,7 +112,7 @@ export const updateSignup = async (
       'x-submission-token': submissionToken,
     },
     credentials: 'same-origin',
-    body: JSON.stringify({ answers }),
+    body: JSON.stringify({ answers, poolId, poolPassword }),
   })
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { error?: string }
@@ -123,6 +127,18 @@ export const deleteSignup = async (id: string, submissionToken?: string): Promis
     method: 'DELETE',
     credentials: 'same-origin',
     headers,
+  })
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string }
+    throw new Error(err.error || `HTTP ${res.status}`)
+  }
+}
+
+// Deletes the sign-up form of an event together with all its sign-ups
+export const deleteSignupEvent = async (signupKey: string): Promise<void> => {
+  const res = await fetch(`/api/signup-events/${encodeURIComponent(signupKey)}`, {
+    method: 'DELETE',
+    credentials: 'same-origin',
   })
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { error?: string }

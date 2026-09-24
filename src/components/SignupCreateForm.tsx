@@ -1,12 +1,14 @@
 import moment from 'moment'
-import { useForm, SubmitHandler } from 'react-hook-form'
+import { useForm, SubmitHandler, Controller } from 'react-hook-form'
 import { useEffect, useState } from 'react'
+import { FaEdit, FaExternalLinkAlt, FaLock, FaLockOpen, FaTrash } from 'react-icons/fa'
 import Input from './Input'
 import {
   AGEvent,
   EditableInputObj,
   EditableInputType,
   SignupInput,
+  SignupPool,
   SignUpData,
   SignupRow,
 } from '../types/types'
@@ -19,12 +21,19 @@ import {
   SignupTarget,
 } from '../utils/eventUtils'
 import ParticipantTable from './ParticipantTable'
-import { getSignupEvent, listSignups, saveSignupEvent, SignupEvent } from '../utils/signupApi'
+import SignupTimePicker from './SignupTimePicker'
+import {
+  deleteSignupEvent,
+  getSignupEvent,
+  listSignups,
+  saveSignupEvent,
+  SignupEvent,
+} from '../utils/signupApi'
+import { defaultPools } from '../utils/signupPools'
 
 type Inputs = {
   // Label of the selected time & place
   target: string
-  maxparticipants: string
   openfrom: string
   openuntil: string
   inputs: EditableInputObj[]
@@ -40,6 +49,7 @@ const SignUpCreateForm = ({ events }: Props) => {
   const [signupData, setSignupData] = useState<SignupEvent | null>(null)
   const [participants, setParticipants] = useState<SignupRow[]>([])
   const [editableInputs, setEditableInputs] = useState<EditableInputObj[]>([])
+  const [pools, setPools] = useState<SignupPool[]>(defaultPools())
   const [message, setMessage] = useState<string | null>(null)
 
   const getNextFieldId = (): number => {
@@ -71,7 +81,24 @@ const SignUpCreateForm = ({ events }: Props) => {
   const resetForm = () => {
     reset()
     setEditableInputs([])
+    setPools(defaultPools())
   }
+
+  const updatePool = (id: number, changes: Partial<SignupPool>) => {
+    setPools((old) => old.map((p) => (p.id === id ? { ...p, ...changes } : p)))
+  }
+
+  const addPool = () => {
+    const nextId = Math.max(0, ...pools.map((p) => p.id)) + 1
+    setPools((old) => [...old, { id: nextId, name: '', size: 0 }])
+  }
+
+  const removePool = (id: number) => {
+    setPools((old) => old.filter((p) => p.id !== id))
+  }
+
+  const poolNames = pools.map((p) => p.name.trim().toLowerCase())
+  const hasDuplicatePoolNames = new Set(poolNames).size !== poolNames.length
 
   // Only events with sign-ups enabled in the CMS, newest first
   const startOf = (target: SignupTarget) => {
@@ -91,6 +118,10 @@ const SignUpCreateForm = ({ events }: Props) => {
   })
   const keyForLabel = (label: string) => targetOptions.find((o) => o.label === label)?.key
 
+  const selectedTarget = targets.find((t) => t.key === keyForLabel(watch('target')))
+  // Presets in the time pickers are relative to this, in the browser's local time
+  const selectedStart = selectedTarget ? (startOf(selectedTarget)?.clone().local() ?? null) : null
+
   const loadParticipants = async (signupKey: string) => {
     const { signups } = await listSignups(signupKey)
     setParticipants(signups)
@@ -106,7 +137,7 @@ const SignUpCreateForm = ({ events }: Props) => {
       setParticipants([])
       return
     }
-    setValue('maxparticipants', event.maxparticipants.toString())
+    setPools(event.pools)
     setValue('openfrom', moment(event.openfrom).format('YYYY-MM-DDTHH:mm'))
     setValue('openuntil', moment(event.openuntil).format('YYYY-MM-DDTHH:mm'))
     event.inputs.forEach(({ type, ...rest }, i) => {
@@ -160,6 +191,10 @@ const SignUpCreateForm = ({ events }: Props) => {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     if (hasDuplicateIds) {
       setMessage('Error: field IDs must be unique.')
+      return
+    }
+    if (hasDuplicatePoolNames) {
+      setMessage('Error: pool names must be unique.')
       return
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -228,9 +263,14 @@ const SignUpCreateForm = ({ events }: Props) => {
       return
     }
 
+    if (!data.openfrom || !data.openuntil) {
+      setMessage('Error: choose when sign-up opens and closes.')
+      return
+    }
+
     const payload: SignUpData = {
       key: signupKey,
-      maxparticipants: parseInt(data.maxparticipants.toString(), 10) || 0,
+      pools: pools.map((p) => ({ ...p, name: p.name.trim() })),
       openfrom: new Date(data.openfrom).toISOString(),
       openuntil: new Date(data.openuntil).toISOString(),
       inputs,
@@ -239,7 +279,34 @@ const SignUpCreateForm = ({ events }: Props) => {
     try {
       const saved = await saveSignupEvent(payload)
       setSignupData(saved)
+      setPools(saved.pools)
       setMessage('Saved!')
+      setTimeout(() => setMessage(null), 2000)
+    } catch (e) {
+      setMessage(`Error: ${e instanceof Error ? e.message : e}`)
+    }
+  }
+
+  const deleteEvent = async () => {
+    if (!signupData) return
+    const label = getValues('target')
+    const count = participants.length
+    if (
+      !window.confirm(
+        `Delete the whole sign-up for "${label}"? This removes all fields, pools and ${count} sign-up(s).`
+      )
+    ) {
+      return
+    }
+    const answer = window.prompt('This cannot be undone. Type DELETE to confirm.')
+    if (answer?.trim().toUpperCase() !== 'DELETE') return
+    try {
+      await deleteSignupEvent(signupData.key)
+      resetForm()
+      setValue('target', label)
+      setSignupData(null)
+      setParticipants([])
+      setMessage('Sign-up deleted.')
       setTimeout(() => setMessage(null), 2000)
     } catch (e) {
       setMessage(`Error: ${e instanceof Error ? e.message : e}`)
@@ -299,31 +366,136 @@ const SignUpCreateForm = ({ events }: Props) => {
             control={control}
             required
           />
-          <Input
-            register={register}
-            name="maxparticipants"
-            displayName="Maximum participants"
-            placeHolder="ex. 24"
-            type="number"
+          {selectedTarget && (
+            <>
+              <div />
+              <div className="flex gap-2 -mt-6 mb-8 md:mx-4 md:mt-0 text-sm">
+                <a
+                  href={`/events/${selectedTarget.event.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 border border-lightgray rounded-md px-3 py-1 hover:border-red"
+                >
+                  <FaExternalLinkAlt size={12} />
+                  Event page
+                </a>
+                <a
+                  href={`/cms/#/collections/event/entries/${selectedTarget.event.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 border border-lightgray rounded-md px-3 py-1 hover:border-red"
+                >
+                  <FaEdit size={12} />
+                  Edit event info
+                </a>
+              </div>
+            </>
+          )}
+          <label className="flex items-center">
+            Sign-up open from
+            <span className="text-red">*</span>
+          </label>
+          <Controller
             control={control}
-            required
-          />
-          <Input
-            register={register}
             name="openfrom"
-            displayName="Sign-up open from"
-            type="datetime-local"
-            control={control}
-            required
+            render={({ field: { value, onChange } }) => (
+              <SignupTimePicker
+                value={value ?? ''}
+                onChange={onChange}
+                eventStart={selectedStart}
+                commonMargins="mt-2 mb-8 md:m-4"
+              />
+            )}
           />
-          <Input
-            register={register}
+          <label className="flex items-center">
+            Sign-up open until
+            <span className="text-red">*</span>
+          </label>
+          <Controller
+            control={control}
             name="openuntil"
-            displayName="Sign-up open until"
-            type="datetime-local"
-            control={control}
-            required
+            render={({ field: { value, onChange } }) => (
+              <SignupTimePicker
+                value={value ?? ''}
+                onChange={onChange}
+                eventStart={selectedStart}
+                commonMargins="mt-2 mb-8 md:m-4"
+              />
+            )}
           />
+          <div className="flex flex-col justify-center">
+            <div>
+              Participant pools
+              <span className="text-red">*</span>
+            </div>
+            <div className="text-sm text-lightgray">
+              With more than one pool, participants choose which pool to sign up to.
+            </div>
+          </div>
+          <div className="mt-2 mb-8 md:m-4 flex flex-col gap-2">
+            {pools.map((p) => (
+              <div className="flex flex-col gap-1" key={p.id}>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={p.name}
+                    onChange={(e) => updatePool(p.id, { name: e.target.value })}
+                    placeholder="Pool name"
+                    className="p-2 rounded-md bg-white text-black flex-1 min-w-0"
+                    required
+                  />
+                  <input
+                    value={p.size}
+                    onChange={(e) => updatePool(p.id, { size: parseInt(e.target.value, 10) || 0 })}
+                    type="number"
+                    min={0}
+                    step={1}
+                    title="Size"
+                    aria-label="Size"
+                    className="p-2 rounded-md bg-white text-black w-20"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className={p.private ? 'text-red' : 'text-lightgray hover:text-red'}
+                    onClick={() =>
+                      updatePool(p.id, { private: !p.private, password: p.password ?? '' })
+                    }
+                    title={p.private ? 'Private: needs a password' : 'Public: anyone can join'}
+                    aria-label={p.private ? 'Make pool public' : 'Make pool private'}
+                  >
+                    {p.private ? <FaLock size={14} /> : <FaLockOpen size={14} />}
+                  </button>
+                  {pools.length > 1 && (
+                    <button
+                      type="button"
+                      className="text-lightgray hover:text-red"
+                      onClick={() => removePool(p.id)}
+                      aria-label="Remove pool"
+                    >
+                      <FaTrash size={14} />
+                    </button>
+                  )}
+                </div>
+                {p.private && (
+                  <input
+                    value={p.password ?? ''}
+                    onChange={(e) => updatePool(p.id, { password: e.target.value })}
+                    placeholder={`Password for ${p.name || 'this pool'}`}
+                    className="p-2 rounded-md bg-white text-black text-base"
+                    required
+                  />
+                )}
+              </div>
+            ))}
+            {hasDuplicatePoolNames && (
+              <div className="text-red text-sm">Pool names must be unique.</div>
+            )}
+            <div className="text-sm">
+              <button type="button" className="link" onClick={addPool}>
+                + Add pool
+              </button>
+            </div>
+          </div>
         </div>
         <div className="flex flex-col md:flex-row w-full">
           <div className="w-full md:w-1/2">
@@ -380,9 +552,18 @@ const SignUpCreateForm = ({ events }: Props) => {
                   Two or more fields share the same ID. IDs must be unique.
                 </div>
               )}
-              <button type="submit" className="mainbutton" disabled={hasDuplicateIds}>
+              <button
+                type="submit"
+                className="mainbutton"
+                disabled={hasDuplicateIds || hasDuplicatePoolNames}
+              >
                 Save changes
               </button>
+              {signupData && (
+                <button type="button" className="borderbutton mt-8 text-base" onClick={deleteEvent}>
+                  Delete entire sign-up
+                </button>
+              )}
             </div>
           </div>
           <div className="flex flex-col w-full md:w-1/2">

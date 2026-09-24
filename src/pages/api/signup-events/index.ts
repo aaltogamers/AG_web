@@ -2,11 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { parseJsonBody } from '../../../utils/apiUtils'
-import type { SignupInput } from '../../../types/types'
+import type { SignupInput, SignupPool } from '../../../types/types'
+import { normalizePools, publicPools } from '../../../utils/signupPools'
 
 type SignupEventBody = {
   key: string
-  maxparticipants: number | string
+  pools: SignupPool[]
   openfrom: string
   openuntil: string
   inputs: SignupInput[]
@@ -32,13 +33,13 @@ const ensureInputIds = (inputs: SignupInput[]): SignupInput[] => {
 
 const rowToSignupEvent = (row: {
   signup_key: string
-  maxparticipants: number
+  pools: SignupPool[]
   openfrom: Date
   openuntil: Date
   inputs: SignupInput[]
 }) => ({
   key: row.signup_key,
-  maxparticipants: row.maxparticipants,
+  pools: normalizePools(row.pools),
   openfrom: row.openfrom instanceof Date ? row.openfrom.toISOString() : row.openfrom,
   openuntil: row.openuntil instanceof Date ? row.openuntil.toISOString() : row.openuntil,
   inputs: row.inputs,
@@ -54,9 +55,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const result = await pool.query(
-      'SELECT signup_key, maxparticipants, openfrom, openuntil, inputs FROM signup_events ORDER BY signup_key ASC'
+      'SELECT signup_key, pools, openfrom, openuntil, inputs FROM signup_events ORDER BY signup_key ASC'
     )
-    return res.status(200).json({ events: result.rows.map(rowToSignupEvent) })
+    const events = result.rows.map(rowToSignupEvent)
+    const isAdmin = isAdminAuthorized(req)
+    return res.status(200).json({
+      events: events.map((e) => (isAdmin ? e : { ...e, pools: publicPools(e.pools) })),
+    })
   }
 
   if (req.method === 'POST') {
@@ -69,27 +74,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid body' })
     }
 
-    const maxparticipants =
-      typeof body.maxparticipants === 'number'
-        ? body.maxparticipants
-        : parseInt(String(body.maxparticipants), 10) || 0
+    const pools = normalizePools(body.pools)
+    const poolNames = pools.map((p) => p.name.toLowerCase())
+    if (new Set(poolNames).size !== poolNames.length) {
+      return res.status(400).json({ error: 'Pool names must be unique' })
+    }
+    if (pools.some((p) => p.private && !p.password)) {
+      return res.status(400).json({ error: 'Private pools need a password' })
+    }
 
     const inputs = Array.isArray(body.inputs) ? ensureInputIds(body.inputs) : []
 
     const sql = `
-      INSERT INTO signup_events (signup_key, maxparticipants, openfrom, openuntil, inputs, updated_at)
-      VALUES ($1, $2, $3, $4, $5::jsonb, now())
+      INSERT INTO signup_events (signup_key, pools, openfrom, openuntil, inputs, updated_at)
+      VALUES ($1, $2::jsonb, $3, $4, $5::jsonb, now())
       ON CONFLICT (signup_key) DO UPDATE SET
-        maxparticipants = EXCLUDED.maxparticipants,
+        pools = EXCLUDED.pools,
         openfrom = EXCLUDED.openfrom,
         openuntil = EXCLUDED.openuntil,
         inputs = EXCLUDED.inputs,
         updated_at = now()
-      RETURNING signup_key, maxparticipants, openfrom, openuntil, inputs
+      RETURNING signup_key, pools, openfrom, openuntil, inputs
     `
     const result = await pool.query(sql, [
       body.key,
-      maxparticipants,
+      JSON.stringify(pools),
       body.openfrom,
       body.openuntil,
       JSON.stringify(inputs),

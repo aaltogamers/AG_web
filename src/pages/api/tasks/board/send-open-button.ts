@@ -16,9 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     chat_id: chatId,
     text: 'Open the tasks board in Telegram:',
     reply_markup: {
-      inline_keyboard: [
-        [{ text: 'Open Tasks App', url: webAppUrl }],
-      ],
+      inline_keyboard: [[{ text: 'Open Tasks App', url: webAppUrl }]],
     },
   }
 
@@ -35,7 +33,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!tgRes.ok) {
       const error = await tgRes.text()
-      return res.status(200).json({ sent: false, telegramStatus: tgRes.status, telegramError: error })
+      return res
+        .status(200)
+        .json({ sent: false, telegramStatus: tgRes.status, telegramError: error })
     }
 
     return res.status(200).json({ sent: true })

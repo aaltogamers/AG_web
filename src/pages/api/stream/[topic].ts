@@ -12,8 +12,7 @@ export const config = {
 
 const ALLOWED: readonly BusTopic[] = ['mapbans', 'polls', 'votes'] as const
 
-const isAllowed = (t: string): t is BusTopic =>
-  (ALLOWED as readonly string[]).includes(t)
+const isAllowed = (t: string): t is BusTopic => (ALLOWED as readonly string[]).includes(t)
 
 type Snapshot = unknown
 
@@ -21,9 +20,7 @@ const getSnapshot = async (topic: BusTopic): Promise<Snapshot> => {
   switch (topic) {
     case 'mapbans': {
       const [bansRes, infoRes] = await Promise.all([
-        pool.query(
-          'SELECT id, map, type, team, idx FROM mapbans ORDER BY idx ASC'
-        ),
+        pool.query('SELECT id, map, type, team, idx FROM mapbans ORDER BY idx ASC'),
         pool.query('SELECT team1, team2, game FROM mapban_info WHERE id = 1'),
       ])
       return {

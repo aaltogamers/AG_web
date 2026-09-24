@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
+import { normalizePools, publicPools } from '../../../utils/signupPools'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -16,15 +17,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const result = await pool.query(
-      'SELECT signup_key, maxparticipants, openfrom, openuntil, inputs FROM signup_events WHERE signup_key = $1',
+      'SELECT signup_key, pools, openfrom, openuntil, inputs FROM signup_events WHERE signup_key = $1',
       [key]
     )
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' })
     const row = result.rows[0]
+    const pools = normalizePools(row.pools)
     return res.status(200).json({
       event: {
         key: row.signup_key,
-        maxparticipants: row.maxparticipants,
+        pools: isAdminAuthorized(req) ? pools : publicPools(pools),
         openfrom: row.openfrom instanceof Date ? row.openfrom.toISOString() : row.openfrom,
         openuntil: row.openuntil instanceof Date ? row.openuntil.toISOString() : row.openuntil,
         inputs: row.inputs,

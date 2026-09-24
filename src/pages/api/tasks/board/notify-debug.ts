@@ -83,7 +83,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       state: string
       deadline: Date | null
       start_time: Date | null
-    }>(`
+    }>(
+      `
       SELECT t.id AS task_id, t.name, t.state, t.deadline, t.start_time
       FROM tasks t
       JOIN task_assignees ta ON ta.task_id = t.id
@@ -91,26 +92,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         AND ta.tg_user_id = $1
         AND (t.deadline IS NOT NULL OR t.start_time IS NOT NULL)
       ORDER BY t.id
-    `, [tgUserId])
+    `,
+      [tgUserId]
+    )
 
     const { rows: settingsRows } = await pool.query(
       'SELECT * FROM task_notification_settings WHERE tg_user_id = $1',
       [tgUserId]
     )
 
-    const s: UserSettings = settingsRows.length > 0
-      ? {
-          deadlineDays: settingsRows[0].deadline_days,
-          startDateDays: settingsRows[0].start_date_days,
-          notifyBeforeDeadline: settingsRows[0].notify_before_deadline,
-          notifyBeforeStart: settingsRows[0].notify_before_start,
-          notifyOnDeadline: settingsRows[0].notify_on_deadline,
-          notifyOnStart: settingsRows[0].notify_on_start,
-          notifyPastDeadline: settingsRows[0].notify_past_deadline,
-          notifyPastStart: settingsRows[0].notify_past_start,
-          skipInProgress: settingsRows[0].skip_in_progress,
-        }
-      : DEFAULT_SETTINGS
+    const s: UserSettings =
+      settingsRows.length > 0
+        ? {
+            deadlineDays: settingsRows[0].deadline_days,
+            startDateDays: settingsRows[0].start_date_days,
+            notifyBeforeDeadline: settingsRows[0].notify_before_deadline,
+            notifyBeforeStart: settingsRows[0].notify_before_start,
+            notifyOnDeadline: settingsRows[0].notify_on_deadline,
+            notifyOnStart: settingsRows[0].notify_on_start,
+            notifyPastDeadline: settingsRows[0].notify_past_deadline,
+            notifyPastStart: settingsRows[0].notify_past_start,
+            skipInProgress: settingsRows[0].skip_in_progress,
+          }
+        : DEFAULT_SETTINGS
 
     const formatDate = (d: Date) => toHelsinkiDate(d)
     const todayStr = toHelsinkiDate(new Date())
@@ -193,9 +197,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (row.start_time) {
         const startDate = new Date(toHelsinkiDate(row.start_time) + 'T00:00:00')
-        const diffDays = Math.round(
-          (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-        )
+        const diffDays = Math.round((startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
         let wouldNotify = false
         let reason: string

@@ -18,7 +18,12 @@ type CreateTaskBody = {
   createdByTgName?: string
 }
 
-const VALID_STATES: readonly string[] = ['someday', 'todo', 'in_progress', 'done'] satisfies readonly TaskState[]
+const VALID_STATES: readonly string[] = [
+  'someday',
+  'todo',
+  'in_progress',
+  'done',
+] satisfies readonly TaskState[]
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -87,7 +92,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     )
     if (notifyAssignees.length > 0) {
       const formatDate = (iso: string) =>
-        new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        new Date(iso).toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
 
       const settingsResult = await pool.query(
         `SELECT tg_user_id, notify_creation FROM task_notification_settings
@@ -95,14 +104,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         [notifyAssignees.map((a) => a.tgUserId)]
       )
       const settingsMap = new Map(
-        settingsResult.rows.map((r: { tg_user_id: string; notify_creation: boolean }) => [r.tg_user_id, r.notify_creation])
+        settingsResult.rows.map((r: { tg_user_id: string; notify_creation: boolean }) => [
+          r.tg_user_id,
+          r.notify_creation,
+        ])
       )
 
       const lines = [`📋 <b>New task assigned to you</b>\n\n<b>${task.name}</b>`]
       if (task.description) lines.push(markdownToTelegramHtml(task.description))
       if (task.ai_context) {
         const confidence = task.ai_context_confidence ? ` (${task.ai_context_confidence})` : ''
-        lines.push(`\n🤖 <b>Context (ai generated)</b>${confidence}\n${markdownToTelegramHtml(task.ai_context)}`)
+        lines.push(
+          `\n🤖 <b>Context (ai generated)</b>${confidence}\n${markdownToTelegramHtml(task.ai_context)}`
+        )
       }
       if (task.deadline) lines.push(`📅 Deadline: ${formatDate(task.deadline.toISOString())}`)
       if (task.start_time) lines.push(`🗓 Start: ${formatDate(task.start_time.toISOString())}`)

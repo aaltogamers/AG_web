@@ -4,6 +4,12 @@ import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { getHeader, getQueryParam, parseJsonBody } from '../../../utils/apiUtils'
 import type { DataValue, SignupInput } from '../../../types/types'
+import {
+  isPoolPasswordValid,
+  normalizePools,
+  pickPoolId,
+  resolvePoolId,
+} from '../../../utils/signupPools'
 
 type AnswerMap = Record<string, DataValue>
 
@@ -37,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!key) return res.status(400).json({ error: 'Missing key' })
 
     const eventRes = await pool.query(
-      'SELECT id, inputs FROM signup_events WHERE signup_key = $1',
+      'SELECT id, inputs, pools FROM signup_events WHERE signup_key = $1',
       [key]
     )
     if (eventRes.rows.length === 0) {
@@ -47,9 +53,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       id: string
       inputs: SignupInput[]
     }
+    const pools = normalizePools(eventRes.rows[0].pools)
 
     const signupsRes = await pool.query(
-      'SELECT id, answers, created_at FROM signups WHERE event_id = $1 ORDER BY created_at ASC',
+      'SELECT id, pool_id, answers, created_at FROM signups WHERE event_id = $1 ORDER BY created_at ASC',
       [eventId]
     )
 
@@ -73,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const canSeeAll = isAdmin || id === ownSignupId
       return {
         id,
+        pool_id: resolvePoolId(pools, row.pool_id),
         created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
         answers: canSeeAll ? answers : filterPublicAnswers(answers, inputs),
       }
@@ -82,7 +90,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
-    const body = parseJsonBody<{ key: string; answers: AnswerMap }>(req)
+    const body = parseJsonBody<{
+      key: string
+      answers: AnswerMap
+      poolId?: number
+      poolPassword?: string
+    }>(req)
     if (!body || typeof body.key !== 'string' || !body.key) {
       return res.status(400).json({ error: 'Invalid body' })
     }
@@ -91,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const eventRes = await pool.query(
-      'SELECT id, openfrom, openuntil FROM signup_events WHERE signup_key = $1',
+      'SELECT id, openfrom, openuntil, pools FROM signup_events WHERE signup_key = $1',
       [body.key]
     )
     if (eventRes.rows.length === 0) {
@@ -106,6 +119,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       openfrom: Date
       openuntil: Date
     }
+    const pools = normalizePools(eventRes.rows[0].pools)
+    const poolId = pickPoolId(pools, body.poolId)
+    if (poolId === null) {
+      return res.status(400).json({ error: 'Invalid pool' })
+    }
+    const chosenPool = pools.find((p) => p.id === poolId)!
+    if (!isAdminAuthorized(req) && !isPoolPasswordValid(chosenPool, body.poolPassword)) {
+      return res.status(403).json({ error: 'Wrong password' })
+    }
 
     // Signup window enforcement (admins still blocked here; they edit via PUT).
     const now = Date.now()
@@ -117,10 +139,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const submissionToken = crypto.randomBytes(32).toString('hex')
     const insert = await pool.query(
-      `INSERT INTO signups (event_id, answers, submission_token)
-       VALUES ($1, $2::jsonb, $3)
+      `INSERT INTO signups (event_id, pool_id, answers, submission_token)
+       VALUES ($1, $2, $3::jsonb, $4)
        RETURNING id, created_at`,
-      [eventId, JSON.stringify(body.answers), submissionToken]
+      [eventId, poolId, JSON.stringify(body.answers), submissionToken]
     )
     const row = insert.rows[0]
     return res.status(201).json({

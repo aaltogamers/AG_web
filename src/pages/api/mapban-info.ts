@@ -19,9 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'GET') {
-    const result = await pool.query(
-      'SELECT team1, team2, game FROM mapban_info WHERE id = 1'
-    )
+    const result = await pool.query('SELECT team1, team2, game FROM mapban_info WHERE id = 1')
     const row = result.rows[0] ?? { team1: '', team2: '', game: 'CS 2' }
     return res.status(200).json({ mapBanInfo: row })
   }
@@ -54,10 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await pool.connect()
     try {
       await client.query('BEGIN')
-      await client.query(
-        `UPDATE mapban_info SET ${updates.join(', ')} WHERE id = 1`,
-        params
-      )
+      await client.query(`UPDATE mapban_info SET ${updates.join(', ')} WHERE id = 1`, params)
       if (typeof body.game === 'string') {
         // Switching games invalidates the ban list.
         await client.query('DELETE FROM mapbans')

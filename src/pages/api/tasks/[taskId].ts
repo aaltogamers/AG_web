@@ -3,7 +3,12 @@ import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { parseJsonBody } from '../../../utils/apiUtils'
 import type { TaskState } from '../../../types/types'
 
-const VALID_STATES: readonly string[] = ['someday', 'todo', 'in_progress', 'done'] satisfies readonly TaskState[]
+const VALID_STATES: readonly string[] = [
+  'someday',
+  'todo',
+  'in_progress',
+  'done',
+] satisfies readonly TaskState[]
 
 type UpdateTaskBody = {
   name?: string

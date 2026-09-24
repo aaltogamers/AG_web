@@ -28,8 +28,7 @@ type AssigneeRow = {
   last_name: string | null
 }
 
-const toISOOrUndefined = (d: Date | null): string | undefined =>
-  d ? d.toISOString() : undefined
+const toISOOrUndefined = (d: Date | null): string | undefined => (d ? d.toISOString() : undefined)
 
 const rowToTask = (row: TaskRow, assignees: TaskAssignee[]): Task => ({
   id: row.id,
@@ -62,24 +61,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const stateParam = typeof req.query.state === 'string' ? req.query.state : undefined
   const stateFilter = stateParam
-    ? stateParam.split(',').filter((s): s is TaskState => (TASK_STATES as readonly string[]).includes(s))
+    ? stateParam
+        .split(',')
+        .filter((s): s is TaskState => (TASK_STATES as readonly string[]).includes(s))
     : null
 
-  const tasksResult = stateFilter && stateFilter.length > 0
-    ? await pool.query<TaskRow>(
-        `SELECT id, name, description, ai_context, ai_context_confidence, deadline, start_time, state,
+  const tasksResult =
+    stateFilter && stateFilter.length > 0
+      ? await pool.query<TaskRow>(
+          `SELECT id, name, description, ai_context, ai_context_confidence, deadline, start_time, state,
                 created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
          FROM tasks
          WHERE state = ANY($1)
          ORDER BY position ASC, created_at ASC`,
-        [stateFilter]
-      )
-    : await pool.query<TaskRow>(
-        `SELECT id, name, description, ai_context, ai_context_confidence, deadline, start_time, state,
+          [stateFilter]
+        )
+      : await pool.query<TaskRow>(
+          `SELECT id, name, description, ai_context, ai_context_confidence, deadline, start_time, state,
                 created_by_tg_id, created_by_tg_name, position, created_at, updated_at, done_at
          FROM tasks
          ORDER BY position ASC, created_at ASC`
-      )
+        )
 
   const taskIds = tasksResult.rows.map((r) => r.id)
   let assigneesByTask: Record<string, TaskAssignee[]> = {}

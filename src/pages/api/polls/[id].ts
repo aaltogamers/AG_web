@@ -135,8 +135,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const winningPicks = votesRes.rows.filter(
             (v: { picked_option: string }) => v.picked_option === body.correctOption
           ).length
-          const pointsForWin =
-            winningPicks > 0 ? Math.round((total / winningPicks) * 100) : 0
+          const pointsForWin = winningPicks > 0 ? Math.round((total / winningPicks) * 100) : 0
 
           params.push(body.correctOption)
           updates.push(`correct_option = $${params.length}`)

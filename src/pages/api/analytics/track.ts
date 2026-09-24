@@ -15,10 +15,7 @@ const takeToken = (key: string): boolean => {
     return true
   }
   const elapsedSec = (now - existing.updatedAt) / 1000
-  const refilled = Math.min(
-    BUCKET_CAPACITY,
-    existing.tokens + elapsedSec * BUCKET_REFILL_PER_SEC
-  )
+  const refilled = Math.min(BUCKET_CAPACITY, existing.tokens + elapsedSec * BUCKET_REFILL_PER_SEC)
   if (refilled < 1) {
     existing.tokens = refilled
     existing.updatedAt = now

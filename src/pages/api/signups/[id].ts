@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { getHeader, parseJsonBody } from '../../../utils/apiUtils'
+import { isPoolPasswordValid, normalizePools, pickPoolId } from '../../../utils/signupPools'
 import type { DataValue } from '../../../types/types'
 
 type AnswerMap = Record<string, DataValue>
@@ -20,9 +21,7 @@ const canAct = async (
   if (isAdmin) return { ok: true, isAdmin }
   const submissionToken = getHeader(req, 'x-submission-token')
   if (!submissionToken) return { ok: false, isAdmin }
-  const res = await pool.query('SELECT submission_token FROM signups WHERE id = $1', [
-    signupId,
-  ])
+  const res = await pool.query('SELECT submission_token FROM signups WHERE id = $1', [signupId])
   if (res.rows.length === 0) return { ok: false, isAdmin }
   const stored = res.rows[0].submission_token as string
   return { ok: timingSafeEqualStr(stored, submissionToken), isAdmin }
@@ -44,28 +43,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { ok } = await canAct(req, id)
     if (!ok) return res.status(401).json({ error: 'Unauthorized' })
     const result = await pool.query(
-      'SELECT id, answers, created_at FROM signups WHERE id = $1',
+      'SELECT id, pool_id, answers, created_at FROM signups WHERE id = $1',
       [id]
     )
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' })
     const row = result.rows[0]
     return res.status(200).json({
       id: String(row.id),
+      pool_id: row.pool_id,
       answers: row.answers,
-      created_at:
-        row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+      created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
     })
   }
 
   if (req.method === 'PUT') {
-    const { ok } = await canAct(req, id)
+    const { ok, isAdmin } = await canAct(req, id)
     if (!ok) return res.status(401).json({ error: 'Unauthorized' })
-    const body = parseJsonBody<{ answers: AnswerMap }>(req)
+    const body = parseJsonBody<{ answers: AnswerMap; poolId?: number; poolPassword?: string }>(req)
     if (!body || typeof body.answers !== 'object') {
       return res.status(400).json({ error: 'Invalid body' })
     }
-    await pool.query('UPDATE signups SET answers = $1::jsonb WHERE id = $2', [
+    const eventRes = await pool.query(
+      'SELECT e.pools, s.pool_id FROM signups s JOIN signup_events e ON e.id = s.event_id WHERE s.id = $1',
+      [id]
+    )
+    if (eventRes.rows.length === 0) return res.status(404).json({ error: 'Not found' })
+    const pools = normalizePools(eventRes.rows[0].pools)
+    const poolId = pickPoolId(pools, body.poolId)
+    if (poolId === null) return res.status(400).json({ error: 'Invalid pool' })
+    // The password is only needed when moving into a private pool
+    const chosenPool = pools.find((p) => p.id === poolId)!
+    const isMoving = poolId !== eventRes.rows[0].pool_id
+    if (!isAdmin && isMoving && !isPoolPasswordValid(chosenPool, body.poolPassword)) {
+      return res.status(403).json({ error: 'Wrong password' })
+    }
+    await pool.query('UPDATE signups SET answers = $1::jsonb, pool_id = $2 WHERE id = $3', [
       JSON.stringify(body.answers),
+      poolId,
       id,
     ])
     return res.status(204).end()

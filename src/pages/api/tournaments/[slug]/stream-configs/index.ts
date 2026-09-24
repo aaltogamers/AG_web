@@ -19,10 +19,7 @@ const rowToConfig = (r: Row): StreamConfig => ({
 })
 
 const lookupTournamentId = async (slug: string): Promise<string | null> => {
-  const res = await pool.query<{ id: string }>(
-    'SELECT id FROM tournaments WHERE slug = $1',
-    [slug]
-  )
+  const res = await pool.query<{ id: string }>('SELECT id FROM tournaments WHERE slug = $1', [slug])
   return res.rows[0]?.id ?? null
 }
 

@@ -37,7 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (sets.length === 0) return res.status(400).json({ error: 'No valid fields to update' })
 
     const { rows: oldRows } = await pool.query(
-      'SELECT name, photo FROM fridge_users WHERE id = $1', [id]
+      'SELECT name, photo FROM fridge_users WHERE id = $1',
+      [id]
     )
     if (oldRows.length === 0) return res.status(404).json({ error: 'Not found' })
     const old = oldRows[0]

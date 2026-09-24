@@ -23,10 +23,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       await client.query('BEGIN')
       for (let i = 0; i < body.order.length; i++) {
-        await client.query(
-          'UPDATE fridge_catalog_items SET sort_order = $1 WHERE id = $2',
-          [i, body.order[i]]
-        )
+        await client.query('UPDATE fridge_catalog_items SET sort_order = $1 WHERE id = $2', [
+          i,
+          body.order[i],
+        ])
       }
       await client.query('COMMIT')
     } catch (err) {

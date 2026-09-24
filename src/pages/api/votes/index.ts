@@ -75,10 +75,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid body' })
     }
 
-    const pollRes = await pool.query(
-      `SELECT options, is_votable FROM polls WHERE id = $1`,
-      [body.poll]
-    )
+    const pollRes = await pool.query(`SELECT options, is_votable FROM polls WHERE id = $1`, [
+      body.poll,
+    ])
     if (pollRes.rows.length === 0) return res.status(404).json({ error: 'Poll not found' })
     const poll = pollRes.rows[0] as { options: string[]; is_votable: boolean }
     if (!poll.is_votable) return res.status(403).json({ error: 'Betting closed' })

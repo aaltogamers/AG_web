@@ -118,10 +118,19 @@ export type SignupInput = {
   options?: string[]
   multi?: boolean
 }
+export type SignupPool = {
+  id: number
+  name: string
+  size: number
+  // Private pools need a password to sign up to. The password is only sent to admins.
+  private?: boolean
+  password?: string
+}
+
 // Only use lowercase for keys
 export type SignUpData = {
   key: string
-  maxparticipants: number
+  pools: SignupPool[]
   openfrom: string
   openuntil: string
   inputs: SignupInput[]
@@ -130,6 +139,7 @@ export type SignUpData = {
 // A participant row as returned by /api/signups. `answers` is keyed by field id.
 export type SignupRow = {
   id: string
+  pool_id: number
   created_at: string
   answers: Record<string, DataValue>
 }

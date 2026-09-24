@@ -50,15 +50,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'User not found' })
     }
 
-    const tgRes = await fetch(
-      `https://api.telegram.org/bot${botToken}/getChatMember`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: body.chatId, user_id: Number(body.tgUserId) }),
-        signal: AbortSignal.timeout(5000),
-      }
-    )
+    const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/getChatMember`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: body.chatId, user_id: Number(body.tgUserId) }),
+      signal: AbortSignal.timeout(5000),
+    })
 
     if (!tgRes.ok) {
       return res.status(404).json({ error: 'User not found' })
@@ -76,12 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
        ON CONFLICT (tg_user_id) DO UPDATE
          SET first_name = $2, last_name = $3, username = $4, updated_at = now()
        RETURNING id, tg_user_id, first_name, last_name, username`,
-      [
-        String(tgUser.id),
-        tgUser.first_name,
-        tgUser.last_name || null,
-        tgUser.username || null,
-      ]
+      [String(tgUser.id), tgUser.first_name, tgUser.last_name || null, tgUser.username || null]
     )
 
     const row = result.rows[0]

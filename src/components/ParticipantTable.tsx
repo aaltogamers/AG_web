@@ -1,10 +1,11 @@
-import { DataValue, SignupInput, SignupRow } from '../types/types'
+import { DataValue, SignupInput, SignupPool, SignupRow } from '../types/types'
 import { deleteSignup } from '../utils/signupApi'
+import { resolvePoolId } from '../utils/signupPools'
 
 type Props = {
   participants: SignupRow[]
   signupData: {
-    maxparticipants: number
+    pools: SignupPool[]
     inputs: SignupInput[]
   }
   showPrivateData?: boolean
@@ -40,8 +41,8 @@ const ParticipantTable = ({
     return ta - tb
   })
 
-  const madeIt = sorted.slice(0, signupData.maxparticipants)
-  const reserve = sorted.slice(signupData.maxparticipants)
+  const { pools } = signupData
+  const isMultiPool = pools.length > 1
 
   const deleteParticipant = async (p: SignupRow) => {
     const firstAnswer = visibleInputs.length ? p.answers[String(visibleInputs[0].id)] : undefined
@@ -74,44 +75,55 @@ const ParticipantTable = ({
     )
   }
 
-  return (
-    <div>
-      <h3 className="mt-4">
-        Signed up ({madeIt.length} / {signupData.maxparticipants})
-      </h3>
-
-      <div className="overflow-x-auto max-w-[90vw]">
-        <table className="table-auto">
-          <thead>
-            <tr>
-              {visibleInputs.map((input) => (
-                <th className="text-left p-2 pl-0" key={input.id}>
-                  {input.title}
-                </th>
-              ))}
-              <th className="text-left p-2 pl-0">Signed up at</th>
-              {allowEdit && <th />}
-            </tr>
-          </thead>
-
-          <tbody>
-            {madeIt.map((p) => rowFor(p))}
-            {reserve.length > 0 && (
-              <>
-                <tr>
-                  <td colSpan={visibleInputs.length + 1}>
-                    <h5 className="mt-4">On reserve list ({reserve.length})</h5>
-                    <hr className="bg-gray w-full mt-2 mb-0" />
-                  </td>
-                </tr>
-                {reserve.map((p) => rowFor(p))}
-              </>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+  const header = (
+    <thead>
+      <tr>
+        {visibleInputs.map((input) => (
+          <th className="text-left p-2 pl-0" key={input.id}>
+            {input.title}
+          </th>
+        ))}
+        <th className="text-left p-2 pl-0">Signed up at</th>
+        {allowEdit && <th />}
+      </tr>
+    </thead>
   )
+
+  const poolSection = (pool: SignupPool) => {
+    const inPool = sorted.filter((p) => resolvePoolId(pools, p.pool_id) === pool.id)
+    const madeIt = inPool.slice(0, pool.size)
+    const reserve = inPool.slice(pool.size)
+    return (
+      <div key={pool.id}>
+        <h3 className="mt-4">
+          {isMultiPool ? pool.name : 'Signed up'} ({madeIt.length} / {pool.size})
+        </h3>
+
+        <div className="overflow-x-auto max-w-[90vw]">
+          <table className="table-auto">
+            {header}
+
+            <tbody>
+              {madeIt.map((p) => rowFor(p))}
+              {reserve.length > 0 && (
+                <>
+                  <tr>
+                    <td colSpan={visibleInputs.length + 1}>
+                      <h5 className="mt-4">On reserve list ({reserve.length})</h5>
+                      <hr className="bg-gray w-full mt-2 mb-0" />
+                    </td>
+                  </tr>
+                  {reserve.map((p) => rowFor(p))}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return <div>{pools.map(poolSection)}</div>
 }
 
 export default ParticipantTable

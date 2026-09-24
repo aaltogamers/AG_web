@@ -170,9 +170,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           await client.query('ROLLBACK')
           return res.status(400).json({ error: 'Invalid teams' })
         }
-        const teams = (body.teams as unknown[]).filter(
-          (t): t is string => typeof t === 'string'
-        )
+        const teams = (body.teams as unknown[]).filter((t): t is string => typeof t === 'string')
         params.push(JSON.stringify(teams))
         updates.push(`teams = $${params.length}::jsonb`)
       }

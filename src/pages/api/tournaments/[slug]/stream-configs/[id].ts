@@ -17,10 +17,7 @@ const rowToConfig = (r: Row): StreamConfig => ({
 })
 
 const lookupTournamentId = async (slug: string): Promise<string | null> => {
-  const res = await pool.query<{ id: string }>(
-    'SELECT id FROM tournaments WHERE slug = $1',
-    [slug]
-  )
+  const res = await pool.query<{ id: string }>('SELECT id FROM tournaments WHERE slug = $1', [slug])
   return res.rows[0]?.id ?? null
 }
 
@@ -90,10 +87,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'DELETE') {
-    await pool.query(
-      `DELETE FROM tournament_stream_configs WHERE tournament_id = $1 AND id = $2`,
-      [tournamentId, id]
-    )
+    await pool.query(`DELETE FROM tournament_stream_configs WHERE tournament_id = $1 AND id = $2`, [
+      tournamentId,
+      id,
+    ])
     return res.status(204).end()
   }
 

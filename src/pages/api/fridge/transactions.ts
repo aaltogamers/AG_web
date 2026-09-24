@@ -34,16 +34,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { rows } = await pool.query(
       `INSERT INTO fridge_transactions (user_id, type, item_id, quantity, amount_cents, message)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [body.user_id, body.type, body.item_id ?? null, body.quantity ?? null, body.amount_cents, body.message?.trim() || null]
+      [
+        body.user_id,
+        body.type,
+        body.item_id ?? null,
+        body.quantity ?? null,
+        body.amount_cents,
+        body.message?.trim() || null,
+      ]
     )
     const userRes = await pool.query('SELECT name FROM fridge_users WHERE id = $1', [body.user_id])
     const userName = userRes.rows[0]?.name ?? `user #${body.user_id}`
     if (body.type === 'purchase') {
-      const itemRes = await pool.query('SELECT name FROM fridge_catalog_items WHERE id = $1', [body.item_id])
+      const itemRes = await pool.query('SELECT name FROM fridge_catalog_items WHERE id = $1', [
+        body.item_id,
+      ])
       const itemName = itemRes.rows[0]?.name ?? `item #${body.item_id}`
-      await logFridgeEvent(`Purchase: ${userName} bought ${body.quantity}x ${itemName} (${(Math.abs(body.amount_cents) / 100).toFixed(2)}€)`)
+      await logFridgeEvent(
+        `Purchase: ${userName} bought ${body.quantity}x ${itemName} (${(Math.abs(body.amount_cents) / 100).toFixed(2)}€)`
+      )
     } else {
-      await logFridgeEvent(`Payment recorded: ${userName} paid ${(body.amount_cents / 100).toFixed(2)}€${body.message ? ` — ${body.message.trim()}` : ''}`)
+      await logFridgeEvent(
+        `Payment recorded: ${userName} paid ${(body.amount_cents / 100).toFixed(2)}€${body.message ? ` — ${body.message.trim()}` : ''}`
+      )
     }
     return res.status(201).json({ transaction: rows[0] })
   }

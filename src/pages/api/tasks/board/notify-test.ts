@@ -36,7 +36,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!tgUserId) return res.status(404).json({ error: `User not found for "${userParam}"` })
 
   try {
-    const { rows } = await pool.query<TaskNotificationRow>(`
+    const { rows } = await pool.query<TaskNotificationRow>(
+      `
       SELECT t.id AS task_id, t.name, t.description, t.state, t.deadline, t.start_time
       FROM tasks t
       JOIN task_assignees ta ON ta.task_id = t.id
@@ -44,20 +45,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         AND ta.tg_user_id = $1
         AND (t.deadline IS NOT NULL OR t.start_time IS NOT NULL)
       ORDER BY t.id
-    `, [tgUserId])
+    `,
+      [tgUserId]
+    )
 
     if (rows.length === 0) {
-      return res.status(200).json({ sent: false, message: 'No tasks with dates assigned to this user' })
+      return res
+        .status(200)
+        .json({ sent: false, message: 'No tasks with dates assigned to this user' })
     }
 
     const taskIds = rows.map((r) => r.task_id)
-    const { rows: assigneeRows } = await pool.query<AssigneeRow>(`
+    const { rows: assigneeRows } = await pool.query<AssigneeRow>(
+      `
       SELECT ta.task_id, ta.tg_user_name,
              tu.first_name, tu.last_name
       FROM task_assignees ta
       LEFT JOIN tg_users tu ON ta.tg_user_id = tu.tg_user_id
       WHERE ta.task_id = ANY($1)
-    `, [taskIds])
+    `,
+      [taskIds]
+    )
 
     const assigneeNamesByTask = buildAssigneeNamesMap(assigneeRows)
 
@@ -66,19 +74,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       [tgUserId]
     )
 
-    const s: UserSettings = settingsRows.length > 0
-      ? {
-          deadlineDays: settingsRows[0].deadline_days,
-          startDateDays: settingsRows[0].start_date_days,
-          notifyBeforeDeadline: settingsRows[0].notify_before_deadline,
-          notifyBeforeStart: settingsRows[0].notify_before_start,
-          notifyOnDeadline: settingsRows[0].notify_on_deadline,
-          notifyOnStart: settingsRows[0].notify_on_start,
-          notifyPastDeadline: settingsRows[0].notify_past_deadline,
-          notifyPastStart: settingsRows[0].notify_past_start,
-          skipInProgress: settingsRows[0].skip_in_progress,
-        }
-      : DEFAULT_SETTINGS
+    const s: UserSettings =
+      settingsRows.length > 0
+        ? {
+            deadlineDays: settingsRows[0].deadline_days,
+            startDateDays: settingsRows[0].start_date_days,
+            notifyBeforeDeadline: settingsRows[0].notify_before_deadline,
+            notifyBeforeStart: settingsRows[0].notify_before_start,
+            notifyOnDeadline: settingsRows[0].notify_on_deadline,
+            notifyOnStart: settingsRows[0].notify_on_start,
+            notifyPastDeadline: settingsRows[0].notify_past_deadline,
+            notifyPastStart: settingsRows[0].notify_past_start,
+            skipInProgress: settingsRows[0].skip_in_progress,
+          }
+        : DEFAULT_SETTINGS
 
     const todayStr = toHelsinkiDate(new Date())
     const today = new Date(todayStr + 'T00:00:00')
@@ -90,14 +99,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (blocks.length === 0) {
-      return res.status(200).json({ sent: false, message: 'No notifications to send based on current settings and dates' })
+      return res
+        .status(200)
+        .json({
+          sent: false,
+          message: 'No notifications to send based on current settings and dates',
+        })
     }
 
     const message = blocks.join('\n\n')
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN
     if (!botToken) {
-      return res.status(200).json({ sent: false, error: 'TELEGRAM_BOT_TOKEN not configured', message, blockCount: blocks.length })
+      return res
+        .status(200)
+        .json({
+          sent: false,
+          error: 'TELEGRAM_BOT_TOKEN not configured',
+          message,
+          blockCount: blocks.length,
+        })
     }
 
     try {
@@ -109,12 +130,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (!tgRes.ok) {
         const body = await tgRes.text()
-        return res.status(200).json({ sent: false, telegramStatus: tgRes.status, telegramError: body, message, blockCount: blocks.length })
+        return res
+          .status(200)
+          .json({
+            sent: false,
+            telegramStatus: tgRes.status,
+            telegramError: body,
+            message,
+            blockCount: blocks.length,
+          })
       }
 
       return res.status(200).json({ sent: true, message, blockCount: blocks.length })
     } catch (err) {
-      return res.status(200).json({ sent: false, error: err instanceof Error ? err.message : String(err), message, blockCount: blocks.length })
+      return res
+        .status(200)
+        .json({
+          sent: false,
+          error: err instanceof Error ? err.message : String(err),
+          message,
+          blockCount: blocks.length,
+        })
     }
   } catch (err) {
     console.error('[notify-test] failed:', err)

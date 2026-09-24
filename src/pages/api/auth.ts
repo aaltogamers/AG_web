@@ -1,6 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { App } from 'octokit'
-import { isAdminAuthorized, setAdminSessionCookie, verifyAdminPassword } from '../../utils/adminSession'
+import {
+  isAdminAuthorized,
+  setAdminSessionCookie,
+  verifyAdminPassword,
+} from '../../utils/adminSession'
 
 const passwordForm = (text: string) => `
   <!DOCTYPE html>
