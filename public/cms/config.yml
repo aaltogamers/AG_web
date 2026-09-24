@@ -90,7 +90,7 @@ collections:
     folder: 'src/content/events'
     create: true
     identifier_field: name
-    sortable_fields: ['time', 'name']
+    sortable_fields: [{ field: 'time', default_sort: desc }, 'name']
     fields:
       - { label: 'Name', name: 'name', widget: 'string' }
       - {

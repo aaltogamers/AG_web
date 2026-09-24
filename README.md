@@ -1,6 +1,6 @@
 ## Aalto Gamers Website 2.0
 
-Made using React, Next.js and Netlify CMS
+Made using React, Next.js and Decap CMS
 
 Node.js version 18+
 
@@ -69,3 +69,19 @@ docker compose down -v
 Signups, map bans, and bets live in Postgres. Live updates to `/mapban`,
 `/bet`, and `/betboard` use Server-Sent Events streamed from
 `/api/stream/:topic` (`mapbans`, `polls`, `votes`).
+
+### Content manager (Decap CMS)
+
+The CMS at `/cms` is Decap CMS **3.16.3**, served from prebuilt files in
+`public/cms/` (it is not an npm dependency). `config.yml` holds the CMS
+config. To upgrade, run `npm pack decap-cms@<version>` and copy from its
+`package/dist/`: `decap-cms.js`, all `*.decap-cms.js` chunks, the `*.wasm`
+files and `decap-cms.js.LICENSE.txt`. Delete the old chunks first, since
+their names change between versions.
+
+`decap-cms.js` is patched: GitHub App tokens fail Decap's write-access check
+("Your GitHub user account does not have access to this repo."), so that
+check is disabled by changing
+`&&!this.bypassWriteAccessCheckForAppTokens)throw` to
+`&&this.bypassWriteAccessCheckForAppTokens)throw`. Re-apply this after
+upgrading.
