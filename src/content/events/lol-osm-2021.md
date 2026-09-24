@@ -1,40 +1,40 @@
 ---
 name: League of Legends OSM 2021
-time: 2021-05-15T12:00:00
-durationHours: 7
+sessions:
+  - name: Finals
+    start: 2021-05-22T12:00:00
+    end: 2021-05-22T19:00:00
+    location: Online
+    id: 3zwkcxlg
+  - name: Qualifiers
+    start: 2021-05-15T12:00:00
+    end: 2021-05-15T19:00:00
+    location: Online
+    id: 1vzpt5jt
+signupMode: none
 image: /images/lol-osm-2021.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Online
-isRecurring: false
 description: >-
-  League of Legends Finnish Student Championships 2021 organized by Aalto Gamers! This tournament determines who has the skills, the stamina and the teamwork to get to the top.
+  League of Legends Finnish Student Championships 2021 organized by Aalto
+  Gamers! This tournament determines who has the skills, the stamina and the
+  teamwork to get to the top.
 
 
   €2600+ prize pool with 1st place receiving €1400, 2nd place €800, and 3rd-4th €100 each. MVP receives a Secretlab League of Legends gaming chair worth €400!
-tldr: >-
-  ### WHEN?
-
-  Qualifiers on Saturday 15.5.2021 starting at 12:00, Finals on Saturday 22.5.2021 starting at 12:00
-
-
-  ### WHERE?
-
-  Online - Tournament communication: Discord, Watch party: Twitch
-
-
-  ### WHO?
-
-  All team members must be higher education students (university / university of applied sciences) in Finland. No need to be from the same school. International students also welcome!
-
-
-  ### PRIZES
-
-  - 1st place: €1400
-  - 2nd place: €800
-  - 3rd-4th: €100
-  - MVP: Secretlab League of Legends gaming chair (€400 value)
 ---
+
+### WHERE?
+Online - Tournament communication: Discord, Watch party: Twitch
+
+### WHO?
+All team members must be higher education students (university / university of applied sciences) in Finland. No need to be from the same school. International students also welcome!
+
+### PRIZES
+- 1st place: €1400
+- 2nd place: €800
+- 3rd-4th: €100
+- MVP: Secretlab League of Legends gaming chair (€400 value)
 
 ---
 

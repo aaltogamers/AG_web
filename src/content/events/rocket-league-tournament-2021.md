@@ -1,37 +1,30 @@
 ---
 name: AG Rocket League Tournament 2021
-time: 2021-11-13T12:00:00
-durationHours: 3
+sessions:
+  - start: 2021-11-13T12:00:00
+    end: 2021-11-13T15:00:00
+    location: Online (Discord)
+    id: 1vjj02sp
+signupMode: none
 image: /images/rocket-league-2021.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Online (Discord)
-isRecurring: false
 description: >-
-  Aalto Gamers Rocket League Tournament 2021! A duos tournament with group stage and knockout rounds.
+  Aalto Gamers Rocket League Tournament 2021! A duos tournament with group stage
+  and knockout rounds.
 
 
   €10 Steam gift cards for the winning duo! Players can sign up solo or as premade duos.
-tldr: >-
-  ### WHEN?
-
-  Saturday 13.11.2021 at 12:00-15:00 (Lock-in period 30 minutes before)
-
-
-  ### WHERE?
-
-  Online & AG Discord
-
-
-  ### WHO?
-
-  All Rocket League enjoyers
-
-
-  ### PRIZES
-
-  €10 Steam gift cards for the winning duo!
 ---
+
+### LOCK-IN
+Lock-in period starts 30 minutes before the tournament
+
+### WHO?
+All Rocket League enjoyers
+
+### PRIZES
+€10 Steam gift cards for the winning duo!
 
 ---
 

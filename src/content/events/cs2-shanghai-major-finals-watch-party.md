@@ -1,32 +1,25 @@
 ---
 name: CS2 Shanghai Major Finals Watch Party
-time: 2024-12-15T10:00:00
-durationHours: 6
+sessions:
+  - start: 2024-12-15T10:00:00
+    end: 2024-12-15T16:00:00
+    location: Design Factory, Puumiehenkuja 5, Espoo
+    id: bfe4daro
+signupMode: none
+image: /images/cs2-shanghai-watch-party-24.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Design Factory, Puumiehenkuja 5, Espoo
-image: /images/cs2-shanghai-watch-party-24.jpg
 description: |-
   *Missed your early flight to Shanghai❓️ Don't worry, we got you covered 💨🥷* 
 
   **Aalto Gamers is hosting a CS2 Shanghai Major Finals Watch Party‼️**
-tldr: |-
-  ### WHEN?
-
-  Sunday, 15.12. from 10:00
-
-  ### WHERE?
-
-  Design Factory, Puumiehenkuja 5
-
-  ### WHY?
-
-  Free snacks, CS2, Great company
-
-  ### SIGN-UP
-
-  No sign-up required
 ---
+
+### WHY?
+Free snacks, CS2, Great company
+
+### SIGN-UP
+No sign-up required
 
 _Missed your early flight to Shanghai❓️ Don't worry, we got you covered 💨🥷_
 

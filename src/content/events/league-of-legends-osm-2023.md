@@ -1,12 +1,20 @@
 ---
 name: League of Legends OSM 2023
-time: 2023-05-27T12:00:00
-durationHours: 8
+sessions:
+  - name: Finals
+    start: 2023-05-27T12:00:00
+    end: 2023-05-27T20:00:00
+    location: Design Factory, Otaniemi
+    id: esi8t7l0
+  - name: Qualifiers
+    start: 2023-05-13T12:00:00
+    end: 2023-05-13T20:00:00
+    location: Online
+    id: 2svgt4d7
+signupMode: none
+image: /images/lol-osm-2023.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Design Factory, Otaniemi
-image: /images/lol-osm-2023.jpg
-isRecurring: false
 description: >-
   League of Legends players, are you ready⁉️
 
@@ -18,22 +26,6 @@ description: >-
 
 
   For more information visit the tournament website: [osm.aaltogamers.fi](https://osm.aaltogamers.fi/)
-tldr: |-
-  ### WHEN
-
-  Qualifiers 13.05. and Finals 27.05l.
-
-  ### WHERE?
-
-  Qualifiers Online and Finals at Design Factory, Otaniemi
-
-  ### WHO?
-
-  All people interested in quality LoL.
-
-  ### More?
-
-  Read more at [osm.aaltogamers.fi](https://osm.aaltogamers.fi/)
 recordings:
   - name: Finals recording
     url: https://www.youtube.com/watch?v=QoqA48XjxXE
@@ -42,5 +34,11 @@ recordings:
   - name: Qualifiers recording (Part 1)
     url: https://www.youtube.com/watch?v=LN4WCXTxWtM
 ---
+
+### WHO?
+All people interested in quality LoL.
+
+### MORE?
+Read more at [osm.aaltogamers.fi](https://osm.aaltogamers.fi/)
 
 For more information visit the tournament website: [osm.aaltogamers.fi](https://osm.aaltogamers.fi/)

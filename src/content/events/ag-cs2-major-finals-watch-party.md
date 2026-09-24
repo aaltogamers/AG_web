@@ -1,31 +1,19 @@
 ---
 name: AG CS2 Major Finals Watch Party Shanghai 2026
-time: 2026-12-13T11:00:00
-durationHours: 8
+sessions:
+  - start: 2026-12-13T11:00:00
+    end: 2026-12-13T19:00:00
+    location: TBA
+    id: dgvasu5w
+signupMode: none
 image: /images/Black-ag.png
 visibleOnCalendar: true
 visibleOnEventsPage: false
 description: TBA
-tldr: >-
-  Sun 13.12. starting at  11:00
-
-
-  ### WHERE?
-
-
-  TBA
-
-
-  ### WHY?
-
-
-  Cheer on your favorite finalist team, eat some FREE SNACKS, and hang out with the best company!
-
-
-  ### SIGN-UP
-
-
-  TBA
 recordings: []
 ---
+
+### WHY?
+Cheer on your favorite finalist team, eat some FREE SNACKS, and hang out with the best company!
+
 TBA

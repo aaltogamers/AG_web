@@ -1,32 +1,25 @@
 ---
 name: Mario Kart Blue Shell Open 2025
-time: 2025-11-08T12:00:00
-durationHours: 6
+sessions:
+  - start: 2025-11-08T12:00:00
+    end: 2025-11-08T18:00:00
+    location: Super Bario, Helsinki
+    id: sjum81qs
+signupMode: none
+image: /images/blue_shell_open.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Super Bario, Helsinki
-image: /images/blue_shell_open.png
 description: Ready to grab the wheel and prove you’re the fastest racer on
   campus? Join the Mario Kart Tournament where honor, prizes, and the legendary
   Blue Shell Cup are at stake! 🎮
-tldr: >-
-  ### WHEN?
-
-   12-18 on Saturday November 8
-
-  ### WHERE?
-
-   [Super Bario](https://maps.app.goo.gl/QeLJnAyxGNVqSTU67), Helsinki
-
-  ### WHY?
-
-   Free Red Bull! Great time! Mario Kart! Honor, prizes, and the legendary Blue Shell Cup are at stake.
-
-  ### SIGN-UP
-
-   [LINK](https://kide.app/events/91035be1-49cd-46df-838b-5d85c6a9dc53)
-   Open from Sunday 19.10 to Friday 7.11
 ---
+
+### WHY?
+Free Red Bull! Great time! Mario Kart! Honor, prizes, and the legendary Blue Shell Cup are at stake.
+
+### SIGN-UP
+[LINK](https://kide.app/events/91035be1-49cd-46df-838b-5d85c6a9dc53)
+Open from Sunday 19.10 to Friday 7.11
 
 **🚗💨 Mario Kart Tournament – Blue Shell Cup 🎮**
 

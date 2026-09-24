@@ -1,11 +1,14 @@
 ---
 name: AG Welcome Evening 2026
-time: 2026-09-07T18:00:00
-durationHours: 5
+sessions:
+  - start: 2026-09-07T18:00:00
+    end: 2026-09-07T23:00:00
+    location: Game Cave Otaniemi
+    id: ycy1zq5s
+signupMode: none
 image: /images/photo_2026-08-25_21-26-23.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Game Cave Otaniemi
 description: >-
   **Welcome Evening 2026 is here! 🎉**
 
@@ -17,24 +20,12 @@ description: >-
 
 
   Come hang out, meet the community, and see what Aalto Gamers is all about! 🙌
-tldr: |-
-  ### WHEN?
-
-  Monday 7.9. 18:00 - 23:00
-
-  ### WHERE?
-
-  Otaniemi Game Cave, Kivimiehentie 2 Espoo
-
-  ### WHY?
-
-  Play your favorite games, meet new friends and get to know Aalto Gamers!
-
-  ### SIGN-UP
-
-  Opens 2.9. at 12:00, at the bottom of this page.
 recordings: []
 ---
+
+### WHY?
+Play your favorite games, meet new friends and get to know Aalto Gamers!
+
 **Welcome Evening 2026 is here!** 🎉
 
 Join us **LIVE** at **Otaniemi Game Cave, Kivimiehentie 2, Espoo, on Monday 7.9**., and kick off the new semester with Aalto Gamers! 🎮 Meet new people, play your favorite games, and discover what the AG community is all about. 🤝

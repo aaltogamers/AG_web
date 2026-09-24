@@ -1,38 +1,27 @@
 ---
 name: Minecraft Server Opening
-time: 2025-03-15T12:00:00
-durationHours: 8
+sessions:
+  - start: 2025-03-15T12:00:00
+    end: 2025-03-15T20:00:00
+    location: AG Discord server
+    id: c9s4ze6k
+signupMode: none
+image: /images/minecraft_server_opening.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
-image: /images/minecraft_server_opening.jpg
 description: A brand-new world awaits! Come test your skills and prove your
   speedrun mastery (But not the usual way 😉), or chill and explore at your own
   pace, you decide! 🏡✨
-tldr: >-
-  ### WHEN?
-
-
-  Saturday 15.3
-
-
-  ### WHERE?
-
-   Online, [Aalto Gamers Discord](https://discord.gg/aaltogamers)
-
-  ### WHY?
-
-   A brand-new world awaits! Come test your skills and prove your speedrun mastery (But not the usual way 😉), or chill and explore at your own pace, you decide! 🏡✨
-
-  ### Whitelist
-
-   [SIGN UP HERE](<>)
-
-  ### Address
-
-
-  [mc.aaltogamers.fi](mc.aaltogamers.fi)
 ---
+
+### WHY?
+A brand-new world awaits! Come test your skills and prove your speedrun mastery (But not the usual way 😉), or chill and explore at your own pace, you decide! 🏡✨
+
+### WHITELIST
+[SIGN UP HERE](<>)
+
+### ADDRESS
+[mc.aaltogamers.fi](mc.aaltogamers.fi)
 
 **⛏️ AG Minecraft March ⛏️**
 

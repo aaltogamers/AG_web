@@ -1,11 +1,20 @@
 ---
 name: League of Legends OSM 2025
-time: 2025-05-24T12:00:00
-durationHours: 8
+sessions:
+  - name: Finals
+    start: 2025-05-24T12:00:00
+    end: 2025-05-24T20:00:00
+    location: Design Factory, Puumiehenkuja 5a, Espoo
+    id: bwikv0mm
+  - name: Qualifiers
+    start: 2025-05-17T12:00:00
+    end: 2025-05-17T20:00:00
+    location: Online, streamed at twitch.tv/aaltogamers
+    id: sd7tnns0
+signupMode: none
+image: /images/img_20250422_115109_393.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Design Factory, Puumiehenkuja 5, Espoo
-image: /images/img_20250422_115109_393.jpg
 description: >-
   **⚔️ Prove your strength! Aalto Gamers proudly presents League of Legends OSM
   2025!  ⚔️**
@@ -17,32 +26,18 @@ description: >-
 
 
   Read More on [osm.aaltogamers.fi](https://osm.aaltogamers.fi)!
-tldr: |-
-  ### WHEN?
-
-  Q﻿ualifiers - 17.05.
-  Finals - 24.05.
-
-  ### WHERE?
-
-  Q﻿ualifiers Online[](https://m.twitch.tv/aaltogamers)
-  F﻿inals LIVE @ Design Factory, Puumiehenkuja 5a, Espoo
-
-  (Both streamed @ [twitch.tv/aaltogamers)](<>)
-
-  ### TEAM SIGN-UP
-
-  [HERE](https://forms.gle/kUEEqGchkA1JepYd6)
-
-  ### FINALS TICKETS
-
-  [Kide.app](https://kide.app/events/bebd5407-6832-4493-9068-c1066d0da262)
 recordings:
   - name: Finals recording
     url: https://www.youtube.com/watch?v=oCJ6HurIwD8
   - name: Qualifiers recording
     url: https://youtu.be/Yxo8lM2qyss
 ---
+
+### TEAM SIGN-UP
+[HERE](https://forms.gle/kUEEqGchkA1JepYd6)
+
+### FINALS TICKETS
+[Kide.app](https://kide.app/events/bebd5407-6832-4493-9068-c1066d0da262)
 
 **_English below:_**
 

@@ -1,36 +1,26 @@
 ---
 name: AG Easter TFT Tournament 2022
-time: 2022-04-16T12:00:00
-durationHours: 4
+sessions:
+  - start: 2022-04-16T12:00:00
+    end: 2022-04-16T16:00:00
+    location: Online (Discord)
+    id: 2cz1t5hr
+signupMode: none
 image: /images/easter-tft-2022.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Online (Discord)
-isRecurring: false
-description: >-
-  Aalto Gamers Easter TFT Tournament 2022! Three rounds with randomized groups, then top 8 players continued to finals for a total of five games. Little Legend Eggs bundles as prizes!
-tldr: >-
-  ### WHEN?
-
-  Saturday 16.4.2022 from 12:00 to 16:00
-
-
-  ### WHERE?
-
-  Online in Aalto Gamers Discord
-
-
-  ### WHO?
-
-  Casual and competitive TFT players
-
-
-  ### PRIZES
-
-  - 1st place: 10+1 Little Legend Eggs bundle of your choice
-  - 2nd place: 5 Little Legend Eggs bundle of your choice
-  - 3rd place: 3 Little Legend Eggs of your choice
+description: Aalto Gamers Easter TFT Tournament 2022! Three rounds with
+  randomized groups, then top 8 players continued to finals for a total of five
+  games. Little Legend Eggs bundles as prizes!
 ---
+
+### WHO?
+Casual and competitive TFT players
+
+### PRIZES
+- 1st place: 10+1 Little Legend Eggs bundle of your choice
+- 2nd place: 5 Little Legend Eggs bundle of your choice
+- 3rd place: 3 Little Legend Eggs of your choice
 
 ---
 

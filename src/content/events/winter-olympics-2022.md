@@ -1,38 +1,28 @@
 ---
 name: Aalto Gamers Winter Olympics 2022
-time: 2022-02-19T16:00:00
-durationHours: 4
+sessions:
+  - start: 2022-02-19T16:00:00
+    end: 2022-02-19T20:00:00
+    location: Online (Discord)
+    id: d6fuv0ow
+signupMode: none
 image: /images/winter-olympics-2022.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Online (Discord)
-isRecurring: false
-description: >-
-  Aalto Gamers Winter Olympics 2022! Compete with and against other people in 5 awesome PC games and win some amazing prizes! All games are beginner-friendly and no prior gaming experience is needed.
-tldr: >-
-  ### WHEN?
-
-  19th of February 2022 from 16:00 onwards
-
-
-  ### WHERE?
-
-  Aalto Gamers Discord server
-
-
-  ### WHO?
-
-  Everyone - come by yourself or grab a friend!
-
-
-  ### GAMES
-
-  - Jackbox party pack
-  - Among Us
-  - A video game quiz!
-  - Skribbl.io
-  - And a surprise final game!
+description: Aalto Gamers Winter Olympics 2022! Compete with and against other
+  people in 5 awesome PC games and win some amazing prizes! All games are
+  beginner-friendly and no prior gaming experience is needed.
 ---
+
+### WHO?
+Everyone - come by yourself or grab a friend!
+
+### GAMES
+- Jackbox party pack
+- Among Us
+- A video game quiz!
+- Skribbl.io
+- And a surprise final game!
 
 ---
 

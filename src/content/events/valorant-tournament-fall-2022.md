@@ -1,39 +1,26 @@
 ---
 name: AG Valorant Tournament Fall 2022
-time: 2022-10-23T12:00:00
-durationHours: 6
+sessions:
+  - start: 2022-10-23T12:00:00
+    end: 2022-10-23T18:00:00
+    location: Online (Discord)
+    id: di5lsrez
+signupMode: none
 image: /images/valorant-fall-2022.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Online (Discord)
-isRecurring: false
-description: >-
-  Aalto Gamers Valorant Tournament Fall 2022! €100 prize pool for the winning team (€20 per member). Games are streamed at twitch.tv/aaltogamers.
-tldr: >-
-  ### WHEN?
-
-  Sunday 23.10.2022 from 12:00 to 18:00
-
-
-  ### WHERE?
-
-  Online in Aalto Gamers Discord
-
-
-  ### WHO?
-
-  Anyone!
-
-
-  ### PRIZES
-
-  Winning team: €100 (€20 per member)
-
-
-  ### STREAM
-
-  Games are streamed at twitch.tv/aaltogamers
+description: Aalto Gamers Valorant Tournament Fall 2022! €100 prize pool for the
+  winning team (€20 per member). Games are streamed at twitch.tv/aaltogamers.
 ---
+
+### WHO?
+Anyone!
+
+### PRIZES
+Winning team: €100 (€20 per member)
+
+### STREAM
+Games are streamed at twitch.tv/aaltogamers
 
 ---
 

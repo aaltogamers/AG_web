@@ -1,35 +1,26 @@
 ---
 name: AG Among us Tournament
-time: 2023-04-15T13:00:00
-durationHours: 5
+sessions:
+  - start: 2023-04-15T13:00:00
+    end: 2023-04-15T18:00:00
+    location: AG Discord server
+    id: cibuxc6u
+signupMode: none
+image: /images/amogus.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
-image: /images/amogus.jpg
-isRecurring: false
 description: Aalto Gamers is proud to present our 🚀Among Us🚀 Tournament held
   on Saturday April 15 starting at 13:00 in Aalto Gamers Discord Server🚨
-tldr: |-
-  #### WHEN?  
-
-  Saturday April 15 from 13:00 onwards.  
-
-  #### WHERE?
-
-  Aalto Gamers Discord Channel
-
-  #### WHY?
-
-  Prizes for the top 5. Sweatiest level of Among Us.
-
-  #### SIGN-UP
-
-  <https://forms.gle/c7dZ4FQDXjek9F2TA>
-
-  #### AMOGUS?
-
-  amogus.
 ---
+
+### WHY?
+Prizes for the top 5. Sweatiest level of Among Us.
+
+### SIGN-UP
+<https://forms.gle/c7dZ4FQDXjek9F2TA>
+
+### AMOGUS?
+amogus.
 
 Aalto Gamers is proud to present our 🚀Among Us🚀 Tournament held on Saturday April 15 starting at 13:00🚨
 

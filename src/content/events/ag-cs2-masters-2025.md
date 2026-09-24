@@ -1,38 +1,34 @@
 ---
 name: AG CS2 Masters 2025
-time: 2025-11-22T12:00:00
-durationHours: 8
+sessions:
+  - name: Finals
+    start: 2025-11-29T12:00:00
+    end: 2025-11-29T19:30:00
+    location: AG Discord server
+    id: b1jj150m
+  - name: Qualifiers
+    start: 2025-11-22T12:00:00
+    end: 2025-11-22T18:00:00
+    location: AG Discord server
+    id: 61mc3kky
+signupMode: none
 image: /images/cs2_masters_final_compressed.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
 description: Gather a team of friends and get ready to compete against the best
   teams in the Finnish student *Counter Strike* scene for your share of the
   **800€ prize pool! 🏆**
-tldr: >-
-  ### WHEN?
-
-  Qualifiers - Saturday, 22.11.   
-
-  Finals - Saturday, 29.11.  
-
-
-  ### WHERE?
-
-  Online, on [AG Discord](https://aaltogamers.fi/link/discord)
-
-
-  ### SIGN-UP
-
-  Team signup: [https://forms.gle/nQZNzpxS3u2vjiWs9](https://forms.gle/nQZNzpxS3u2vjiWs9)  
-
-  DL. 17.11. or when 32 teams have signed up
 recordings:
   - name: Finals recording
     url: https://www.youtube.com/watch?v=MJnrpGrQQTY
   - name: Qualifiers recording
     url: https://www.youtube.com/watch?v=IKoz3agl8xk&t=14689s
 ---
+
+### SIGN-UP
+Team signup: [https://forms.gle/nQZNzpxS3u2vjiWs9](https://forms.gle/nQZNzpxS3u2vjiWs9)  
+
+DL. 17.11. or when 32 teams have signed up
 
 ### Prizes
 

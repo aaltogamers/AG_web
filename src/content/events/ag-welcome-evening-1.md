@@ -1,11 +1,14 @@
 ---
 name: AG Welcome Evening 2024
-time: 2024-09-12T18:00:00
-durationHours: 5
+sessions:
+  - start: 2024-09-12T18:00:00
+    end: 2024-09-12T23:00:00
+    location: Arkade Bar, Kalevankatu 30, Helsinki
+    id: w3y33gm5
+signupMode: none
+image: /images/ag_welcome_evening.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Arkade Bar, Kalevankatu 30, Helsinki
-image: /images/ag_welcome_evening.jpg
 description: >+
   A warm welcome to the Aalto Gamers community wouldn't be complete without our
   first event of the year: the Welcome Evening 🎉
@@ -13,21 +16,10 @@ description: >+
 
   If you would like to get to know Aalto Gamers a bit more, make sure to join our evening full of fun, games and good times while meeting new friends! 🫶
 
-tldr: |-
-  ### WHEN?
-
-   12.9.2024, starting at 18:00
-
-  ### WHERE?
-
-  [Arkade Bar](https://www.arkade.fi/), Kalevankatu 30, Helsinki
-
-  ### WHY?
-  Get to know AG, meet new people and play games
-
-  ### SIGN-UP
-  Down below
 ---
+
+### WHY?
+Get to know AG, meet new people and play games
 
 A warm welcome to the Aalto Gamers community wouldn't be complete without our first event of the year: the Welcome Evening
 

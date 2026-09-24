@@ -1,35 +1,28 @@
 ---
 name: Minecraft Hunger Games Tournament
-time: 2025-03-08T14:00:00
-durationHours: 4
+sessions:
+  - start: 2025-03-08T14:00:00
+    end: 2025-03-08T18:00:00
+    location: AG Discord server
+    id: af9k6ea9
+signupMode: none
+image: /images/minecraft_hungergames.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
-image: /images/minecraft_hungergames.jpg
 description: |-
   ⚔️ 8.3 at 14:00 - Minecraft Hunger Games Tournament!
 
   Fight your way to victory in the Hunger Games - only one can survive! 🏆🔥
-tldr: |-
-  ### WHEN?
-
-   Saturday 8.3 from 14:00
-
-  ### WHERE?
-
-  Online, [Aalto Gamers Discord](https://discord.gg/aaltogamers)
-
-  ### WHY?
-
-  Fight your way to victory in the Hunger Games - only one can survive! 🏆🔥
-
-  ### SIGN-UP
-
-   [HERE](https://forms.gle/z8JUiocLzrnVuvet9)
 recordings:
   - name: Recording
     url: https://www.youtube.com/watch?v=c36JgtbW3xs
 ---
+
+### WHY?
+Fight your way to victory in the Hunger Games - only one can survive! 🏆🔥
+
+### SIGN-UP
+[HERE](https://forms.gle/z8JUiocLzrnVuvet9)
 
 **⛏️ AG Minecraft March ⛏️**
 

@@ -1,11 +1,14 @@
 ---
 name: AG Welcome Evening 2023
-time: 2023-09-14T18:00:00
-durationHours: 5
+sessions:
+  - start: 2023-09-14T18:00:00
+    end: 2023-09-14T23:00:00
+    location: Arkade Gaming Bar, Kalevankatu 30, Helsinki
+    id: za2i6loj
+signupMode: none
 image: /images/welcome-evening-2023.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Arkade Gaming Bar, Kalevankatu 30, Helsinki
 description: >-
   Join us live at Arkade Gaming Bar on Thursday September 14, for the perfect
   chance to play your favorite games, meet new friends and familiarize yourself
@@ -16,19 +19,10 @@ description: >-
 
 
   Signup opens 8.9. at 12:00 here at the AG website. Seats are limited so be fast!
-tldr: |-
-  #### WHERE?
-
-  Arkade Gaming Bar, Kalevankatu 30, Helsinki
-
-  #### WHEN?
-
-  Sep 14, starting at 18
-
-  #### WHY?
-
-  Chill gaming and new friends
 ---
+
+### WHY?
+Chill gaming and new friends
 
 Welcome Evening 2023 is here🎉
 

@@ -1,12 +1,20 @@
 ---
 name: AG CS:GO Fall Tournament 2022
-time: 2022-11-03T12:00:00
-durationHours: 8
+sessions:
+  - name: Finals
+    start: 2022-12-03T12:00:00
+    end: 2022-12-03T20:00:00
+    location: Design Factory, Puumiehenkuja 5a, Espoo
+    id: al1e6xm2
+  - name: Qualifiers
+    start: 2022-11-27T12:00:00
+    end: 2022-11-27T20:00:00
+    location: Online
+    id: ryeefebt
+signupMode: none
 image: /images/csgo-fall-2022.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Design Factory, Puumiehenkuja 5a, Espoo
-isRecurring: false
 description: >-
   The CS:GO announcements just keep coming! This time, it's our biggest
   tournament of the fall season. Behold the Aalto Gamers CS:GO Fall tournament
@@ -14,28 +22,13 @@ description: >-
 
 
   Gather up your team of young (or old) hitters to compete for a prize pool of a 1000€ or come just to have fun with your best mates! Online qualifiers will be held on Sunday 27.11. and the four best teams will face off in live finals at Design factory on Saturday 3.12.
-tldr: >-
-  ### WHEN?
-
-  Qualifiers will be held on Sunday 27.11. Finals will be held live in Design factory on Saturday 3.12.
-
-  [GET YOUR FINALS TICKETS HERE](https://kide.app/events/39ccfcd6-e6b5-42ff-99f3-152d2112e9bc)!
-
-  ### WHERE?
-
-  Qualifiers online, finals live in Design factory!!
-
-
-  ### WHO?
-
-  Either full teams or individual players can sign up for the tournament. Also, AT LEAST 3 OUT OF 5 PLAYERS IN THE PLAYING ROSTER MUST BE CURRENTLY STUDYING AND ENROLLED AT A UNIVERSITY/UNIVERSITY OF APPLIED SCIENCES.
-
-  ### SIGN-UP
-
-  Sign up links: SIGN UP CLOSED.
-
-  We will send you confirmation and information about the tournament closer to the event.
 ---
+
+### TICKETS
+[GET YOUR FINALS TICKETS HERE](https://kide.app/events/39ccfcd6-e6b5-42ff-99f3-152d2112e9bc)!
+
+### WHO?
+Either full teams or individual players can sign up for the tournament. Also, AT LEAST 3 OUT OF 5 PLAYERS IN THE PLAYING ROSTER MUST BE CURRENTLY STUDYING AND ENROLLED AT A UNIVERSITY/UNIVERSITY OF APPLIED SCIENCES.
 
 ---
 

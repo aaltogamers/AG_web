@@ -1,11 +1,14 @@
 ---
 name: AG TFT Tournament
-time: 2024-02-25T14:00:00
-durationHours: 6
+sessions:
+  - start: 2024-02-25T14:00:00
+    end: 2024-02-25T20:00:00
+    location: AG Discord server
+    id: ctvbr7s0
+signupMode: none
+image: /images/tft-2024.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
-image: /images/tft-2024.png
 description: >-
   Ready up your champions, prepare your cheese pocket strats and show them off
   in the Aalto Gamers Teamfight Tactics Tournament! 🏆
@@ -18,23 +21,13 @@ description: >-
 
 
   All skill levels, all team comps, all off-meta strategies welcome! See you there 💥
-tldr: |-
-  #### WHERE?
-
-  Aalto Gamers Discord Channel
-
-  #### WHEN?
-
-  Sunday February 25th from 14:00 onwards.
-
-  #### WHY?
-
-  Fun TFT gaming
-
-  #### SIGN-UP
-
-  <https://forms.gle/segTT4Xfgrt4PHsy8>
 ---
+
+### WHY?
+Fun TFT gaming
+
+### SIGN-UP
+<https://forms.gle/segTT4Xfgrt4PHsy8>
 
 Ready up your champions, prepare your cheese pocket strats and show them off in the Aalto Gamers Teamfight Tactics Tournament! 🏆
 

@@ -1,40 +1,26 @@
 ---
 name: Aalto Gamers' ARAM Tournament
-time: 2024-10-12T13:37:00
-durationHours: 4
+sessions:
+  - start: 2024-10-12T13:37:00
+    end: 2024-10-12T17:37:00
+    location: AG Discord server
+    id: 3uvfe0ia
+signupMode: none
+image: /images/aram-tournament.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
-image: /images/aram-tournament.jpg
 description: >-
   ⚔️ Dust off your strat books, gather your team... SIKE! ⚔️
 
 
   🎲 Aalto Gamers' ARAM Tournament is here! Embrace true randomness (spiced with a bit of chaos) - no planning, no premade strats possible, just a show of true skill (?) on the Howling Abyss! 🎲
-tldr: >-
-  ### WHEN?
-
-
-  Saturday, 12.10 from 13:37 onward (estimated duration: ±3.5 hours)
-
-
-  ### WHERE?
-
-
-  Howling Abyss (Online, AG Discord)
-
-
-  ### WHY?
-
-
-  Why farm minion when can farm enemy???
-
-
-  ### SIGN-UP
-
-
-  ✏️ All skill levels welcome, the only requirement is an EU West League account! Sign-up is SOLO ONLY, you'll get matched with random teammates. Link [here](https://forms.gle/35TzEquGEEihhsnR9) 👈
 ---
+
+### WHY?
+Why farm minion when can farm enemy???
+
+### SIGN-UP
+✏️ All skill levels welcome, the only requirement is an EU West League account! Sign-up is SOLO ONLY, you'll get matched with random teammates. Link [here](https://forms.gle/35TzEquGEEihhsnR9) 👈
 
 ⚔️ Dust off your strat books, gather your team... SIKE! ⚔️
 

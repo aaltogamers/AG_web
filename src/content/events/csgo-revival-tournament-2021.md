@@ -1,40 +1,40 @@
 ---
 name: AG CS:GO Revival Tournament 2021
-time: 2021-03-19T17:00:00
-durationHours: 6
+sessions:
+  - name: Finals
+    start: 2021-03-20T13:00:00
+    end: 2021-03-20T19:30:00
+    location: Online
+    id: ejogujhh
+  - name: Group stage
+    start: 2021-03-19T17:00:00
+    end: 2021-03-19T23:30:00
+    location: Online
+    id: ngh4dqbb
+signupMode: none
 image: /images/csgo-revival_2021.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Online
-isRecurring: false
 description: >-
-  It's time for the first major tournament of 2021! There hasn't been a CS:GO tournament in a while, but now we raise from the ashes – revive – and return bigger and better than ever before.
+  It's time for the first major tournament of 2021! There hasn't been a CS:GO
+  tournament in a while, but now we raise from the ashes – revive – and return
+  bigger and better than ever before.
 
 
   Tournament is for ALL students of higher education & friends, and for all levels. €525 prize pool plus ENCE merch!
-tldr: >-
-  ### WHEN?
-
-  Friday (preliminary) and Saturday (Finals, top 4 teams) 19.-20.3.2021
-
-
-  ### WHERE?
-
-  Tournament platform: Challengermode, Communication: Discord, Watch party: Twitch
-
-
-  ### WHO?
-
-  All students of higher education and their friends (3/5 playing members must be students)
-
-
-  ### PRIZES
-
-  - 1st place: €300 + ENCE merch package
-  - 2nd place: €150
-  - 3rd place: €75
-  - MVP: Logitech G ENCE Edition XL mouse pad
 ---
+
+### WHERE?
+Tournament platform: Challengermode, Communication: Discord, Watch party: Twitch
+
+### WHO?
+All students of higher education and their friends (3/5 playing members must be students)
+
+### PRIZES
+- 1st place: €300 + ENCE merch package
+- 2nd place: €150
+- 3rd place: €75
+- MVP: Logitech G ENCE Edition XL mouse pad
 
 ---
 

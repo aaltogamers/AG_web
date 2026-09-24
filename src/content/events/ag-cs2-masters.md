@@ -1,11 +1,20 @@
 ---
 name: AG CS2 Masters 2023
-time: 2023-11-25T12:00:00
-durationHours: 8
+sessions:
+  - name: Finals
+    start: 2023-11-25T12:00:00
+    end: 2023-11-25T20:00:00
+    location: Online, AG Discord
+    id: jjwl5bhl
+  - name: Qualifiers
+    start: 2023-11-18T12:00:00
+    end: 2023-11-18T20:00:00
+    location: Online, AG Discord
+    id: t4d2mvne
+signupMode: none
+image: /images/cs2_ag.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
-image: /images/cs2_ag.jpg
 description: >-
   ⚪️AG CS2 Masters🟠
 
@@ -14,36 +23,22 @@ description: >-
 
 
   Gather a team of friends or join a flex team to compete for your portion of the whopping 1000€ prize pool and the title of the AG CS2 Masters champion🏆
-tldr: >-
-  #### WHEN?
-
-  Qualifiers on Saturday 18.11. 12-\
-
-  Finals on Saturday 25.11. 12-
-
-  #### WHERE?
-
-  Played online, and streamed on the [AG Twitch channel](https://www.twitch.tv/aaltogamers)
-
-
-  #### WHY?
-
-  Chance to compete for a portion of the whopping 1000€ prize pool and the title of the AG CS2 Masters champion🏆
-
-
-  #### SIGN-UP
-
-  FULL TEAM [HERE](https://forms.gle/7XCN5trD9WMAwev38)  
-
-  FLEX (1-4 players) [HERE](https://forms.gle/RCsp8ShwbYKazC5h7)  
-
-  Open until 14.11. 16:00 or when spots are filled (32 teams)
 recordings:
   - name: Finals recording
     url: https://www.youtube.com/watch?v=s4opigE9zT4
   - name: Qualifiers recording
     url: https://www.youtube.com/watch?v=vf1Kwz4iSkU
 ---
+
+### WHY?
+Chance to compete for a portion of the whopping 1000€ prize pool and the title of the AG CS2 Masters champion🏆
+
+### SIGN-UP
+FULL TEAM [HERE](https://forms.gle/7XCN5trD9WMAwev38)  
+
+FLEX (1-4 players) [HERE](https://forms.gle/RCsp8ShwbYKazC5h7)  
+
+Open until 14.11. 16:00 or when spots are filled (32 teams)
 
 It's time for Aalto Gamers' biggest tournament of the Fall semester and that's of course the AG CS2 Masters!
 

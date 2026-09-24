@@ -1,35 +1,28 @@
 ---
 name: AG Valorant Tournament 2023
-time: 2023-10-22T13:00:00
-durationHours: 6
+sessions:
+  - start: 2023-10-22T13:00:00
+    end: 2023-10-22T19:00:00
+    location: AG Discord server
+    id: x2qyo3ix
+signupMode: none
+image: /images/agvalo.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
-image: /images/agvalo.png
 description: >-
   It’s time for the first real competition of the Fall semester and that’s of
   course the Valorant Tournament🏆
 
 
   Gather a group of friends or join a flex team to compete against others in this epic battle for cash and glory!
-tldr: |-
-  #### WHERE?
-
-  Aalto Gamers Discord Channel
-
-  #### WHEN?
-
-  Sunday October 22. starting at 13:00
-
-  #### WHY?
-
-  Cash and glory! 300€ Prize pool.
-
-  #### SIGN-UP
-
-  * FULL TEAM: [HERE](https://forms.gle/3Ew5YMC3BZw6fe1f6)
-  * FLEX (1-4 players): [HERE](https://forms.gle/E3ssUxCCuN9m3sHb6)
 ---
+
+### WHY?
+Cash and glory! 300€ Prize pool.
+
+### SIGN-UP
+* FULL TEAM: [HERE](https://forms.gle/3Ew5YMC3BZw6fe1f6)
+* FLEX (1-4 players): [HERE](https://forms.gle/E3ssUxCCuN9m3sHb6)
 
 **ARE YOU READYYY?**
 

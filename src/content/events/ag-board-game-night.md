@@ -1,14 +1,22 @@
 ---
 name: AG Board Game Night
-time: 2026-09-18T17:00:00
-otherTimes:
-  - time: 2026-12-04T16:00:00
-  - time: 2026-10-16T16:00:00
-durationHours: 5
+sessions:
+  - start: 2026-12-04T16:00:00
+    end: 2026-12-04T21:00:00
+    location: Village Living room, Jämeräntaival 5 A
+    id: ezc43axg
+  - start: 2026-10-16T16:00:00
+    end: 2026-10-16T21:00:00
+    location: Village Living room, Jämeräntaival 5 A
+    id: lmazyj88
+  - start: 2026-09-18T17:00:00
+    end: 2026-09-18T22:00:00
+    location: Village Living room, Jämeräntaival 5 A
+    id: 7uqsmhxm
+signupMode: session
 image: /images/board-game-night-2026-fall.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Village Living room, Jämeräntaival 5 A
 description: >-
   Need some plans for Friday? 👀 Come hang out with **Aalto Gamers** for a cozy
   evening full of games, snacks, and good company! 🫶
@@ -21,24 +29,15 @@ description: >-
   📍 **Kylän olohuone, Jämeräntaival 5 A**
 
   🕕 **Friday, September 18th @ 17:00[](https://aaltogamers.fi/events/ag-board-game-night#:~:text=Space%20Policy.-,Sign%20up,-AG%20Board%20Game)**
-tldr: |-
-  ### WHEN?
-
-  18.9, 17:00 onwards
-
-  ### WHERE?
-
-  Kylän Olohuone/Living room of the Teekkari Village, Jämeräntaival 5A, Otaniemi
-
-  ### WHY?
-
-  To have fun
-
-  ### SIGN-UP
-
-  Signup is not mandatory but highly recommended
 recordings: []
 ---
+
+### WHY?
+To have fun
+
+### SIGN-UP
+Signup is not mandatory but highly recommended
+
 🕹️ **NEW QUEST UNLOCKED: BOARD GAMES NIGHT!** 🎮✨
 
 Aalto Gamers is getting together for an evening of **board games, Nintendo Switch, party games, and good company!** 🎲🎮

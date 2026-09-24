@@ -1,11 +1,14 @@
 ---
 name: AG Mario Kart Sauna
-time: 2024-04-07T18:00:00
-durationHours: 5
+sessions:
+  - start: 2024-04-07T18:00:00
+    end: 2024-04-08T02:00:00
+    location: Rantasauna
+    id: 1nt1vrze
+signupMode: none
+image: /images/ag-mario-kart-sauna-teekkari.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Rantasauna
-image: /images/ag-mario-kart-sauna-teekkari.png
 description: >-
   🏁🍄🌟 Slippery bananas, revving engines and tide-turning shells with high
   steamy sauna heat?! Welcome to Aalto Gamers' Mario Kart Sauna! 🌟🍄🏁
@@ -15,23 +18,13 @@ description: >-
 
 
   During the evening you'll have the opportunity to relax and prepare for the next race in a sauna, hot tub or even the sea ❄️ Don't miss the chance to join the only event where drinking and driving is allowed 👀
-tldr: |-
-  ### WHEN?    
-  07.04. at 18:00  
-  (Tournament games approx. 18-21:30, space open till 2am)
-
-  ### WHERE?
-
-   Rantasauna
-
-  ### PRICE?
-
-   Free
-
-  ### SIGN-UP
-
-  Sign-up opens on 24.03.
 ---
+
+### SCHEDULE
+Tournament games approx. 18:00–21:30, space open till 2am
+
+### PRICE?
+Free
 
 🏁🍄🌟 Slippery bananas, revving engines and tide-turning shells with high steamy sauna heat?! Welcome to Aalto Gamers' Mario Kart Sauna! 🌟🍄🏁
 

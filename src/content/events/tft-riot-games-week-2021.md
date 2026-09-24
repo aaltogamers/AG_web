@@ -1,39 +1,29 @@
 ---
 name: AG TFT Riot Games Week Tournament 2021
-time: 2021-10-04T18:00:00
-durationHours: 4
+sessions:
+  - start: 2021-10-04T18:00:00
+    end: 2021-10-04T22:00:00
+    location: Online (Discord)
+    id: ehrh3dmh
+signupMode: none
 image: /images/tft_2021.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Online (Discord)
-isRecurring: false
 description: >-
-  Aalto Gamers Riot Games Week TFT Tournament! Part of the Riot Games Week event series in Fall 2021.
+  Aalto Gamers Riot Games Week TFT Tournament! Part of the Riot Games Week event
+  series in Fall 2021.
 
 
   Three rounds with randomized groups, then top 8 players continue to finals with two more games. Prizes include Little Legends for top 3 placements.
-tldr: >-
-  ### WHEN?
-
-  Monday 4.10.2021 from 18:00 to 22:00
-
-
-  ### WHERE?
-
-  Online in Aalto Gamers Discord
-
-
-  ### WHO?
-
-  Casual and competitive TFT players
-
-
-  ### PRIZES
-
-  - 1st place: Little Legend of your choice
-  - 2nd place: Little Legend of your choice
-  - 3rd place: Little Legend egg of your choice
 ---
+
+### WHO?
+Casual and competitive TFT players
+
+### PRIZES
+- 1st place: Little Legend of your choice
+- 2nd place: Little Legend of your choice
+- 3rd place: Little Legend egg of your choice
 
 ---
 

@@ -1,37 +1,36 @@
 ---
 name: AG CS:GO Fall Tournament 2021
-time: 2021-11-19T17:00:00
-durationHours: 6
+sessions:
+  - name: Finals
+    start: 2021-11-20T14:00:00
+    end: 2021-11-20T18:00:00
+    location: Online
+    id: nhij86fy
+  - name: Qualifiers
+    start: 2021-11-19T17:00:00
+    end: 2021-11-19T23:30:00
+    location: Online
+    id: 9gh3l9nw
+signupMode: none
 image: /images/csgo-fall-2021.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: Online
-isRecurring: false
 description: >-
-  The Aalto Gamers Fall 2021 CS:GO Tournament! Double elimination format with a €500 prize pool for 1st place.
+  The Aalto Gamers Fall 2021 CS:GO Tournament! Double elimination format with a
+  €500 prize pool for 1st place.
 
 
   Qualifiers on 19.11. starting at 17:00 and finals on 20.11. starting at 13:00. Tournament platform is Challengermode with games streamed on Twitch.
-tldr: >-
-  ### WHEN?
-
-  Qualifiers on Friday 19.11. starting at 17:00, Finals on Saturday 20.11. starting at 13:00
-
-
-  ### WHERE?
-
-  Online - Tournament platform: Challengermode, Communication: Discord, Watch party: Twitch
-
-
-  ### WHO?
-
-  Everyone (don't need to be a student)
-
-
-  ### PRIZES
-
-  1st place: €500
 ---
+
+### WHERE?
+Online - Tournament platform: Challengermode, Communication: Discord, Watch party: Twitch
+
+### WHO?
+Everyone (don't need to be a student)
+
+### PRIZES
+1st place: €500
 
 ---
 

@@ -1,11 +1,14 @@
 ---
 name: AG Minecraft Server
-time: 2024-03-28T18:00:00
-durationHours: 5
+sessions:
+  - start: 2024-03-28T18:00:00
+    end: 2024-03-28T23:00:00
+    location: AG Discord server
+    id: p1gzo6km
+signupMode: none
+image: /images/ag-minecraft-server.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
-image: /images/ag-minecraft-server.png
 description: >-
   🌍 Are you an urban architect with mindblowing build ideas, a PhD in Redstone
   Engineering or you just like vibing in the wilderness? All of these (and way
@@ -22,30 +25,17 @@ description: >-
 
 
   Register now to secure your spot! 🔥
-tldr: >-
-  ### WHEN?
-
-  Opening on 28.3. at 18
-
-
-  ### WHERE?
-
-  IP: mc.aaltogamers.fi
-
-  You can discuss the server on the [AG Discord](https://discord.gg/aaltogamers)
-
-
-  ### WHY?
-
-
-  To play Minecraft with other students
-
-
-  ### SIGN UP
-
-
-  Fill [this form](https://docs.google.com/forms/d/e/1FAIpQLSfkZKpP-TRVOw3MJ5WgdDQSrG5x5_XiSWNYG6JXf5LzX5JIXw/viewform) to get on the whitelist
 ---
+
+### SERVER
+IP: mc.aaltogamers.fi\
+You can discuss the server on the [AG Discord](https://discord.gg/aaltogamers)
+
+### WHY?
+To play Minecraft with other students
+
+### SIGN UP
+Fill [this form](https://docs.google.com/forms/d/e/1FAIpQLSfkZKpP-TRVOw3MJ5WgdDQSrG5x5_XiSWNYG6JXf5LzX5JIXw/viewform) to get on the whitelist
 
 🌍 Are you an urban architect with mindblowing build ideas, a PhD in Redstone Engineering or you just like vibing in the wilderness? All of these (and way more!) are possible on the fresh Aalto Gamers Minecraft Server! 🌍
 

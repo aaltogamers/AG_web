@@ -1,12 +1,14 @@
 ---
 name: AG Easter TFT Tournament
-time: 2023-04-01T11:00:00
-durationHours: 6
+sessions:
+  - start: 2023-04-01T11:00:00
+    end: 2023-04-01T17:00:00
+    location: AG Discord server
+    id: f5vb9ioz
+signupMode: none
+image: /images/tft321341225346364.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-location: AG Discord server
-image: /images/tft321341225346364.jpg
-isRecurring: false
 description: >-
   🎉 Hey there, TFT fans! 🎉
 
@@ -15,25 +17,13 @@ description: >-
 
 
   (And no, this isn’t an April Fool's joke - we promise 😉)
-tldr: |-
-  **TL;DR**
-
-  * **WHERE?**
-
-  Aalto Gamers Discord server
-
-  * **WHEN?**
-
-  Saturday, April 1st starting at 11:00 (Not an April Fools Joke)
-
-  * **WHY?**
-
-  Compete with other players and win some Eastery prizes
-
-  * **SIGN-UP**
-
-  <https://forms.gle/TRKRQ74D1qf7eufL6>
 ---
+
+### WHY?
+Compete with other players and win some Eastery prizes
+
+### SIGN-UP
+<https://forms.gle/TRKRQ74D1qf7eufL6>
 
 🎉 Hey there, TFT fans! 🎉
 
