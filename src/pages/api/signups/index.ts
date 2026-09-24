@@ -15,10 +15,7 @@ const publicFieldIds = (inputs: SignupInput[]): Set<string> => {
   return ids
 }
 
-const filterPublicAnswers = (
-  answers: AnswerMap,
-  inputs: SignupInput[]
-): AnswerMap => {
+const filterPublicAnswers = (answers: AnswerMap, inputs: SignupInput[]): AnswerMap => {
   const publicIds = publicFieldIds(inputs)
   const out: AnswerMap = {}
   Object.entries(answers).forEach(([k, v]) => {
@@ -36,12 +33,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'GET') {
-    const eventName = getQueryParam(req, 'event')
-    if (!eventName) return res.status(400).json({ error: 'Missing event' })
+    const key = getQueryParam(req, 'key')
+    if (!key) return res.status(400).json({ error: 'Missing key' })
 
     const eventRes = await pool.query(
-      'SELECT id, inputs FROM signup_events WHERE name = $1',
-      [eventName]
+      'SELECT id, inputs FROM signup_events WHERE signup_key = $1',
+      [key]
     )
     if (eventRes.rows.length === 0) {
       return res.status(200).json({ signups: [] })
@@ -76,10 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const canSeeAll = isAdmin || id === ownSignupId
       return {
         id,
-        created_at:
-          row.created_at instanceof Date
-            ? row.created_at.toISOString()
-            : row.created_at,
+        created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
         answers: canSeeAll ? answers : filterPublicAnswers(answers, inputs),
       }
     })
@@ -88,8 +82,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
-    const body = parseJsonBody<{ event: string; answers: AnswerMap }>(req)
-    if (!body || typeof body.event !== 'string' || !body.event) {
+    const body = parseJsonBody<{ key: string; answers: AnswerMap }>(req)
+    if (!body || typeof body.key !== 'string' || !body.key) {
       return res.status(400).json({ error: 'Invalid body' })
     }
     if (!body.answers || typeof body.answers !== 'object') {
@@ -97,13 +91,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const eventRes = await pool.query(
-      'SELECT id, openfrom, openuntil FROM signup_events WHERE name = $1',
-      [body.event]
+      'SELECT id, openfrom, openuntil FROM signup_events WHERE signup_key = $1',
+      [body.key]
     )
     if (eventRes.rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' })
     }
-    const { id: eventId, openfrom, openuntil } = eventRes.rows[0] as {
+    const {
+      id: eventId,
+      openfrom,
+      openuntil,
+    } = eventRes.rows[0] as {
       id: string
       openfrom: Date
       openuntil: Date
@@ -128,8 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(201).json({
       id: String(row.id),
       submission_token: submissionToken,
-      created_at:
-        row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+      created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
     })
   }
 

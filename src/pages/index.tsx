@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { getFile, getFolder } from '../utils/fileUtils'
+import { getEvents, getFile, getFolder } from '../utils/fileUtils'
 import Banner from '../components/Banner'
 import SideInfoBox from '../components/SideInfoBox'
 import { AGEvent, LandingInfo } from '../types/types'
@@ -49,7 +49,7 @@ export default Home
 export const getStaticProps = () => ({
   props: {
     landingInfos: getFolder('landingInfos'),
-    events: getFolder('events'),
+    events: getEvents(),
     imageShowCase: getFile('imageShowCase'),
   },
 })

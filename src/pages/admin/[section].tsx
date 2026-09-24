@@ -6,7 +6,7 @@ import PageWrapper from '../../components/PageWrapper'
 import AdminLoginForm from '../../components/AdminLoginForm'
 import AdminDashboard from '../../components/AdminDashboard'
 import { AGEvent } from '../../types/types'
-import { getFolder } from '../../utils/fileUtils'
+import { getEvents } from '../../utils/fileUtils'
 import { checkAdminSession, logoutAdmin } from '../../utils/adminAuth'
 import { ADMIN_SECTIONS, AdminSection, isAdminSection } from '../../utils/adminSections'
 
@@ -68,7 +68,7 @@ export const getStaticProps: GetStaticProps<Props, Params> = ({ params }) => {
   }
   return {
     props: {
-      events: getFolder('events') as AGEvent[],
+      events: getEvents(),
       section: raw,
     },
   }

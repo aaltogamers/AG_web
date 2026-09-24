@@ -3,7 +3,7 @@ import Head from 'next/head'
 import { ImageUrlOverrides } from '../../components/AGImage'
 import EventCard from '../../components/Event'
 import EventPage from '../../components/EventPage'
-import { AGEvent } from '../../types/types'
+import { normalizeEvent } from '../../utils/eventUtils'
 
 // Rendered inside the Decap CMS preview pane (see public/cms/index.html).
 // The CMS posts the entry being edited here, and it is rendered with the same
@@ -11,7 +11,7 @@ import { AGEvent } from '../../types/types'
 
 type PreviewMessage = {
   type: 'ag-cms-preview'
-  event: AGEvent
+  event: Record<string, unknown>
   imageUrls: Record<string, string>
 }
 
@@ -40,16 +40,18 @@ const EventPreview = () => {
 
   if (!preview) return null
 
+  const event = normalizeEvent(preview.event)
+
   return (
     <ImageUrlOverrides.Provider value={preview.imageUrls}>
       <Head>
         <meta name="robots" content="noindex" />
       </Head>
       <PreviewLabel>Event page</PreviewLabel>
-      <EventPage event={preview.event} showSignUp={false} />
+      <EventPage event={event} showSignUp={false} />
       <PreviewLabel>Card on the events page</PreviewLabel>
       <div className="flex flex-col w-full items-center px-8 pb-16">
-        <EventCard event={preview.event} />
+        <EventCard event={event} />
       </div>
     </ImageUrlOverrides.Provider>
   )

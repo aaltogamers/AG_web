@@ -1,32 +1,33 @@
-import { AGEvent } from '../types/types'
 import moment from 'moment'
+import { AGEvent } from '../types/types'
+import { eventMoment, getRelevantSession } from './eventUtils'
 
 export const parseEvents = (events: AGEvent[]) => {
-  const recurringEvents: AGEvent[] = []
   const upcomingEvents: AGEvent[] = []
   const todayEvents: AGEvent[] = []
   const pastEvents: AGEvent[] = []
   const nowMoment = moment()
+  const distanceFromNow = (event: AGEvent) => {
+    const session = getRelevantSession(event, nowMoment)
+    return session ? Math.abs(nowMoment.diff(eventMoment(session.start))) : 0
+  }
   events
-    .sort((event1, event2) => {
-      const event1Moment = moment(event1.time)
-      const event2Moment = moment(event2.time)
-      return Math.abs(nowMoment.diff(event1Moment)) > Math.abs(nowMoment.diff(event2Moment))
-        ? 1
-        : -1
-    })
+    .sort((event1, event2) => distanceFromNow(event1) - distanceFromNow(event2))
     .forEach((event) => {
-      const { isRecurring, visibleOnEventsPage } = event
+      const { visibleOnEventsPage, sessions } = event
       if (!visibleOnEventsPage) {
         return
       }
 
-      const eventMoment = isRecurring ? nowMoment : moment(event.time)
-      const isToday = eventMoment.isSame(nowMoment, 'day')
-      const isInFuture = eventMoment.isAfter(nowMoment)
-      if (isRecurring) {
-        recurringEvents.push(event)
-      } else if (isToday) {
+      const isToday = sessions.some(
+        ({ start, end }) =>
+          eventMoment(start).isSame(nowMoment, 'day') ||
+          nowMoment.isBetween(eventMoment(start), eventMoment(end))
+      )
+      // Events without sessions have no date yet
+      const isInFuture =
+        !sessions.length || sessions.some(({ start }) => eventMoment(start).isAfter(nowMoment))
+      if (isToday) {
         todayEvents.push(event)
       } else if (isInFuture) {
         upcomingEvents.push(event)
@@ -34,5 +35,5 @@ export const parseEvents = (events: AGEvent[]) => {
         pastEvents.push(event)
       }
     })
-  return { recurringEvents, upcomingEvents, todayEvents, pastEvents }
+  return { upcomingEvents, todayEvents, pastEvents }
 }

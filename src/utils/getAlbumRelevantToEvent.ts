@@ -23,7 +23,8 @@ export const getRelevantAlbumsForEvents = (events: AGEvent[], albums: LycheeAlbu
       .replace('tournament', '')
       .replace(/\b(20\d{2})\b/, '') // year, e.g. 2021
 
-    const eventYear = event.time ? new Date(event.time).getFullYear().toString() : null
+    const firstSession = event.sessions[0]
+    const eventYear = firstSession ? new Date(firstSession.start).getFullYear().toString() : null
 
     if (!eventYear) {
       return

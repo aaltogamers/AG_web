@@ -5,7 +5,7 @@ import { parseJsonBody } from '../../../utils/apiUtils'
 import type { SignupInput } from '../../../types/types'
 
 type SignupEventBody = {
-  name: string
+  key: string
   maxparticipants: number | string
   openfrom: string
   openuntil: string
@@ -31,13 +31,13 @@ const ensureInputIds = (inputs: SignupInput[]): SignupInput[] => {
 }
 
 const rowToSignupEvent = (row: {
-  name: string
+  signup_key: string
   maxparticipants: number
   openfrom: Date
   openuntil: Date
   inputs: SignupInput[]
 }) => ({
-  name: row.name,
+  key: row.signup_key,
   maxparticipants: row.maxparticipants,
   openfrom: row.openfrom instanceof Date ? row.openfrom.toISOString() : row.openfrom,
   openuntil: row.openuntil instanceof Date ? row.openuntil.toISOString() : row.openuntil,
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const result = await pool.query(
-      'SELECT name, maxparticipants, openfrom, openuntil, inputs FROM signup_events ORDER BY name ASC'
+      'SELECT signup_key, maxparticipants, openfrom, openuntil, inputs FROM signup_events ORDER BY signup_key ASC'
     )
     return res.status(200).json({ events: result.rows.map(rowToSignupEvent) })
   }
@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const body = parseJsonBody<SignupEventBody>(req)
-    if (!body || typeof body.name !== 'string' || !body.name) {
+    if (!body || typeof body.key !== 'string' || !body.key) {
       return res.status(400).json({ error: 'Invalid body' })
     }
 
@@ -77,18 +77,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const inputs = Array.isArray(body.inputs) ? ensureInputIds(body.inputs) : []
 
     const sql = `
-      INSERT INTO signup_events (name, maxparticipants, openfrom, openuntil, inputs, updated_at)
+      INSERT INTO signup_events (signup_key, maxparticipants, openfrom, openuntil, inputs, updated_at)
       VALUES ($1, $2, $3, $4, $5::jsonb, now())
-      ON CONFLICT (name) DO UPDATE SET
+      ON CONFLICT (signup_key) DO UPDATE SET
         maxparticipants = EXCLUDED.maxparticipants,
         openfrom = EXCLUDED.openfrom,
         openuntil = EXCLUDED.openuntil,
         inputs = EXCLUDED.inputs,
         updated_at = now()
-      RETURNING name, maxparticipants, openfrom, openuntil, inputs
+      RETURNING signup_key, maxparticipants, openfrom, openuntil, inputs
     `
     const result = await pool.query(sql, [
-      body.name,
+      body.key,
       maxparticipants,
       body.openfrom,
       body.openuntil,

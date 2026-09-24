@@ -15,7 +15,7 @@ const Event = ({ event }: Props) => {
       <hr className="bg-gray w-full my-16" />
       <div className="md:grid md:grid-cols-event md:flex-row text-center md:text-left items-center">
         <AGImage
-          src={event.image || '/images/ag-white.png'}
+          src={event.image}
           alt={event.name}
           className="max-h-96 object-contain aspect-square"
         />

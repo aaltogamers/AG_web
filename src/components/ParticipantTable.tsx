@@ -4,7 +4,6 @@ import { deleteSignup } from '../utils/signupApi'
 type Props = {
   participants: SignupRow[]
   signupData: {
-    name: string
     maxparticipants: number
     inputs: SignupInput[]
   }

@@ -1,7 +1,7 @@
 import { GetStaticPropsContext } from 'next'
 import EventPage from '../../components/EventPage'
 import { AGEvent } from '../../types/types'
-import { getFile, getFolder } from '../../utils/fileUtils'
+import { getEvent, getFolder } from '../../utils/fileUtils'
 import { getRelevantAlbumsForEvents } from '../../utils/getAlbumRelevantToEvent'
 import { getLycheeAlbums } from '../../utils/lychee'
 
@@ -23,7 +23,7 @@ export async function getStaticPaths() {
 }
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const event = getFile(`events/${context?.params?.pid}`) as unknown as AGEvent
+  const event = getEvent(String(context?.params?.pid))
   const albums = await getLycheeAlbums()
 
   getRelevantAlbumsForEvents([event], albums)

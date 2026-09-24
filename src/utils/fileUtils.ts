@@ -1,6 +1,8 @@
 import matter from 'gray-matter'
 import fs from 'fs'
 import jsYaml from 'js-yaml'
+import { AGEvent } from '../types/types'
+import { normalizeEvent } from './eventUtils'
 
 export const getFolder = (folder: string) => {
   const filesInFolder = fs.readdirSync(`./src/content/${folder}`)
@@ -38,3 +40,9 @@ export const getFile = (fileName: string, folder: string = './src/content/') => 
     slug: fileName,
   }
 }
+
+export const getEvents = (): AGEvent[] =>
+  getFolder('events').map((raw) => normalizeEvent(raw as Record<string, unknown>))
+
+export const getEvent = (slug: string): AGEvent =>
+  normalizeEvent({ ...getFile(`events/${slug}`), slug })

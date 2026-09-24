@@ -11,16 +11,19 @@ import {
   SignupRow,
 } from '../types/types'
 import EditableInput from './EditableInput'
-import ParticipantTable from './ParticipantTable'
 import {
-  getSignupEvent,
-  listSignups,
-  saveSignupEvent,
-  SignupEvent,
-} from '../utils/signupApi'
+  eventMoment,
+  getSignupTargetLabel,
+  getSignupTargets,
+  getSignupTargetStart,
+  SignupTarget,
+} from '../utils/eventUtils'
+import ParticipantTable from './ParticipantTable'
+import { getSignupEvent, listSignups, saveSignupEvent, SignupEvent } from '../utils/signupApi'
 
 type Inputs = {
-  name: string
+  // Label of the selected time & place
+  target: string
   maxparticipants: string
   openfrom: string
   openuntil: string
@@ -70,31 +73,42 @@ const SignUpCreateForm = ({ events }: Props) => {
     setEditableInputs([])
   }
 
-  const loadParticipants = async (eventName: string) => {
-    const { signups } = await listSignups(eventName)
+  // Only events with sign-ups enabled in the CMS, newest first
+  const startOf = (target: SignupTarget) => {
+    const start = getSignupTargetStart(target)
+    return start ? eventMoment(start) : null
+  }
+  const targets = events
+    .flatMap(getSignupTargets)
+    .sort((a, b) => (startOf(b)?.valueOf() ?? 0) - (startOf(a)?.valueOf() ?? 0))
+  const targetOptions = targets.map((target) => {
+    const label = getSignupTargetLabel(target)
+    const isDuplicate = targets.filter((t) => getSignupTargetLabel(t) === label).length > 1
+    return {
+      key: target.key,
+      label: isDuplicate ? `${label} ${startOf(target)?.format('HH:mm') ?? ''}` : label,
+    }
+  })
+  const keyForLabel = (label: string) => targetOptions.find((o) => o.label === label)?.key
+
+  const loadParticipants = async (signupKey: string) => {
+    const { signups } = await listSignups(signupKey)
     setParticipants(signups)
   }
 
-  const loadEvent = async (eventName: string) => {
-    const event = await getSignupEvent(eventName)
+  const loadEvent = async (label: string) => {
+    const signupKey = keyForLabel(label)
+    const event = signupKey ? await getSignupEvent(signupKey) : null
+    resetForm()
+    setValue('target', label)
     if (!event) {
-      resetForm()
-      setValue('name', eventName)
       setSignupData(null)
       setParticipants([])
       return
     }
-    resetForm()
-    setValue('name', event.name)
     setValue('maxparticipants', event.maxparticipants.toString())
-    setValue(
-      'openfrom',
-      moment(event.openfrom).format('YYYY-MM-DDTHH:mm')
-    )
-    setValue(
-      'openuntil',
-      moment(event.openuntil).format('YYYY-MM-DDTHH:mm')
-    )
+    setValue('openfrom', moment(event.openfrom).format('YYYY-MM-DDTHH:mm'))
+    setValue('openuntil', moment(event.openuntil).format('YYYY-MM-DDTHH:mm'))
     event.inputs.forEach(({ type, ...rest }, i) => {
       const number = i + 1
       addEditableInput(type, number)
@@ -118,20 +132,11 @@ const SignUpCreateForm = ({ events }: Props) => {
       })
     })
     setSignupData(event)
-    await loadParticipants(event.name)
+    await loadParticipants(event.key)
   }
 
-  const nowMoment = moment()
-  const eventValuesSorted = events
-    .sort((event1, event2) => {
-      const event1Moment = moment(event1.time || nowMoment, 'DD-MM-YYYY')
-      const event2Moment = moment(event2.time || nowMoment, 'DD-MM-YYYY')
-      return event1Moment.isBefore(event2Moment) ? 1 : -1
-    })
-    .map((event) => event.name)
-
   useEffect(() => {
-    if (eventValuesSorted[0]) loadEvent(eventValuesSorted[0])
+    if (targetOptions[0]) loadEvent(targetOptions[0].label)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -217,8 +222,14 @@ const SignUpCreateForm = ({ events }: Props) => {
       return base
     })
 
+    const signupKey = keyForLabel(data.target)
+    if (!signupKey) {
+      setMessage('Error: choose a time & place.')
+      return
+    }
+
     const payload: SignUpData = {
-      name: data.name,
+      key: signupKey,
       maxparticipants: parseInt(data.maxparticipants.toString(), 10) || 0,
       openfrom: new Date(data.openfrom).toISOString(),
       openuntil: new Date(data.openuntil).toISOString(),
@@ -267,15 +278,23 @@ const SignUpCreateForm = ({ events }: Props) => {
     })
   }
 
+  if (!targets.length) {
+    return (
+      <p className="text-center">
+        No events have sign-ups enabled. Choose a sign-up option for an event in the CMS.
+      </p>
+    )
+  }
+
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center text-xl">
         <div className="grid grid-cols-input w-2/3">
           <Input
             register={register}
-            name="name"
+            name="target"
             displayName="Event"
-            options={eventValuesSorted}
+            options={targetOptions.map((o) => o.label)}
             onChangeDo={(value) => loadEvent(value)}
             control={control}
             required
@@ -315,8 +334,7 @@ const SignUpCreateForm = ({ events }: Props) => {
               </h5>
               {editableInputs.map((thisObj, i) => {
                 const rawId = Number(watchedIds[i])
-                const duplicate =
-                  Number.isFinite(rawId) && rawId > 0 && duplicateIdSet.has(rawId)
+                const duplicate = Number.isFinite(rawId) && rawId > 0 && duplicateIdSet.has(rawId)
                 return (
                   <EditableInput
                     thisObj={thisObj}
@@ -362,11 +380,7 @@ const SignUpCreateForm = ({ events }: Props) => {
                   Two or more fields share the same ID. IDs must be unique.
                 </div>
               )}
-              <button
-                type="submit"
-                className="mainbutton"
-                disabled={hasDuplicateIds}
-              >
+              <button type="submit" className="mainbutton" disabled={hasDuplicateIds}>
                 Save changes
               </button>
             </div>
@@ -378,7 +392,7 @@ const SignUpCreateForm = ({ events }: Props) => {
                 participants={participants}
                 showPrivateData
                 allowEdit
-                onChange={() => loadParticipants(signupData.name)}
+                onChange={() => loadParticipants(signupData.key)}
               />
             )}
           </div>

@@ -22,7 +22,7 @@
 
       var getImageUrls = function (data, getAsset) {
         var paths = [data.image]
-        ;[data.description, data.tldr, data.body].forEach(function (text) {
+        ;[data.description, data.body].forEach(function (text) {
           var match
           markdownImagePattern.lastIndex = 0
           while (text && (match = markdownImagePattern.exec(text))) paths.push(match[1])
@@ -58,7 +58,6 @@
           var data = this.props.entry.get('data').toJS()
           var event = Object.assign({}, data, {
             description: data.description || '',
-            tldr: data.tldr || '',
             content: data.body || '',
             slug: this.props.entry.get('slug') || 'new-event',
           })
@@ -82,6 +81,31 @@
       })
 
       CMS.registerPreviewTemplate('event', EventPreview)
+
+      // Sign-ups are tied to each time & place by a random id, so they survive edits
+      // to its name or time. Existing ids are kept.
+      var randomId = function () {
+        var bytes = new Uint8Array(8)
+        crypto.getRandomValues(bytes)
+        return Array.from(bytes, function (b) {
+          return (b % 36).toString(36)
+        }).join('')
+      }
+
+      CMS.registerEventListener({
+        name: 'preSave',
+        handler: function (args) {
+          var data = args.entry.get('data')
+          var sessions = args.entry.get('collection') === 'event' && data.get('sessions')
+          if (!sessions) return data
+          return data.set(
+            'sessions',
+            sessions.map(function (session) {
+              return session.get('id') ? session : session.set('id', randomId())
+            }),
+          )
+        },
+      })
     </script>
   </body>
 </html>

@@ -3,34 +3,34 @@ import type { DataValue, SignupInput, SignupRow, SignUpData } from '../types/typ
 export type AnswerMap = Record<string, DataValue>
 
 export type SignupEvent = {
-  name: string
+  key: string
   maxparticipants: number
   openfrom: string
   openuntil: string
   inputs: SignupInput[]
 }
 
-const tokenKey = (eventName: string) => `signupToken-${eventName}`
-const idKey = (eventName: string) => `signupId-${eventName}`
+const tokenKey = (signupKey: string) => `signupToken-${signupKey}`
+const idKey = (signupKey: string) => `signupId-${signupKey}`
 
-export const getStoredSignup = (eventName: string): { id: string; token: string } | null => {
+export const getStoredSignup = (signupKey: string): { id: string; token: string } | null => {
   if (typeof window === 'undefined') return null
-  const id = localStorage.getItem(idKey(eventName))
-  const token = localStorage.getItem(tokenKey(eventName))
+  const id = localStorage.getItem(idKey(signupKey))
+  const token = localStorage.getItem(tokenKey(signupKey))
   if (!id || !token) return null
   return { id, token }
 }
 
-export const setStoredSignup = (eventName: string, id: string, token: string): void => {
+export const setStoredSignup = (signupKey: string, id: string, token: string): void => {
   if (typeof window === 'undefined') return
-  localStorage.setItem(idKey(eventName), id)
-  localStorage.setItem(tokenKey(eventName), token)
+  localStorage.setItem(idKey(signupKey), id)
+  localStorage.setItem(tokenKey(signupKey), token)
 }
 
-export const clearStoredSignup = (eventName: string): void => {
+export const clearStoredSignup = (signupKey: string): void => {
   if (typeof window === 'undefined') return
-  localStorage.removeItem(idKey(eventName))
-  localStorage.removeItem(tokenKey(eventName))
+  localStorage.removeItem(idKey(signupKey))
+  localStorage.removeItem(tokenKey(signupKey))
 }
 
 export const listSignupEvents = async (): Promise<SignupEvent[]> => {
@@ -40,8 +40,8 @@ export const listSignupEvents = async (): Promise<SignupEvent[]> => {
   return data.events
 }
 
-export const getSignupEvent = async (eventName: string): Promise<SignupEvent | null> => {
-  const res = await fetch(`/api/signup-events/${encodeURIComponent(eventName)}`, {
+export const getSignupEvent = async (signupKey: string): Promise<SignupEvent | null> => {
+  const res = await fetch(`/api/signup-events/${encodeURIComponent(signupKey)}`, {
     credentials: 'same-origin',
   })
   if (res.status === 404) return null
@@ -66,12 +66,12 @@ export const saveSignupEvent = async (event: SignUpData): Promise<SignupEvent> =
 }
 
 export const listSignups = async (
-  eventName: string,
+  signupKey: string,
   submissionToken?: string
 ): Promise<{ signups: SignupRow[]; ownSignupId: string | null }> => {
   const headers: Record<string, string> = {}
   if (submissionToken) headers['x-submission-token'] = submissionToken
-  const res = await fetch(`/api/signups?event=${encodeURIComponent(eventName)}`, {
+  const res = await fetch(`/api/signups?key=${encodeURIComponent(signupKey)}`, {
     credentials: 'same-origin',
     headers,
   })
@@ -80,14 +80,14 @@ export const listSignups = async (
 }
 
 export const createSignup = async (
-  eventName: string,
+  signupKey: string,
   answers: AnswerMap
 ): Promise<{ id: string; submission_token: string; created_at: string }> => {
   const res = await fetch('/api/signups', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     credentials: 'same-origin',
-    body: JSON.stringify({ event: eventName, answers }),
+    body: JSON.stringify({ key: signupKey, answers }),
   })
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { error?: string }

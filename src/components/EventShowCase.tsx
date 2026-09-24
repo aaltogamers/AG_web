@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { AGEvent } from '../types/types'
+import { DEFAULT_EVENT_IMAGE } from '../utils/eventUtils'
 import { parseEvents } from '../utils/parseEvents'
 import AGImage from './AGImage'
 import SmallHeader from './SmallHeader'
@@ -9,11 +10,12 @@ type Props = {
 }
 
 const EventShowCase = ({ events }: Props) => {
-  const { upcomingEvents, todayEvents, pastEvents, recurringEvents } = parseEvents(events)
-  const sortedEvents = [...recurringEvents, ...todayEvents, ...upcomingEvents, ...pastEvents]
+  const { upcomingEvents, todayEvents, pastEvents } = parseEvents(events)
+  const sortedEvents = [...todayEvents, ...upcomingEvents, ...pastEvents]
   const exessEvents = sortedEvents.length % 4
+  // Events without their own image would just repeat the logo
   const shownEvents = sortedEvents
-    .filter((item): item is AGEvent & { image: string } => !!item.image)
+    .filter((event) => event.image !== DEFAULT_EVENT_IMAGE)
     .slice(0, sortedEvents.length - exessEvents)
 
   return (

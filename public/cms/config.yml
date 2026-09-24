@@ -90,44 +90,60 @@ collections:
     folder: 'src/content/events'
     create: true
     identifier_field: name
-    sortable_fields: [{ field: 'time', default_sort: desc }, 'name']
+    sortable_fields: [{ field: 'sessions.0.start', label: 'Time', default_sort: desc }, 'name']
     fields:
       - { label: 'Name', name: 'name', widget: 'string' }
-      - {
-          label: 'Time',
-          name: 'time',
-          widget: 'datetime',
-          format: 'YYYY-MM-DDTHH:mm:ss',
-          date_format: 'DD/MM/YYYY',
-          required: false,
-        }
-      - label: 'Other times for calendar'
-        name: 'otherTimes'
+      - label: 'Times and places'
+        name: 'sessions'
         widget: 'list'
-        summary: '{{fields.time}} {{fields.name}}'
+        summary: "{{fields.start | date('DD/MM/YYYY HH:mm')}} {{fields.name}} @ {{fields.location}}"
+        hint: 'One entry per day or part of the event, e.g. Qualifiers and Finals. Leave empty if the time is not known yet.'
         required: false
         add_to_top: true
         collapsed: true
         fields:
           - {
-              label: 'Time',
-              name: 'time',
+              label: 'Name',
+              name: 'name',
+              widget: 'string',
+              required: false,
+              hint: 'Optional, e.g. "Qualifiers" or "Finals"',
+            }
+          - {
+              label: 'Start',
+              name: 'start',
               widget: 'datetime',
               format: 'YYYY-MM-DDTHH:mm:ss',
               date_format: 'DD/MM/YYYY',
               required: true,
             }
-          - { label: Name, name: name, widget: string, required: false }
-
+          - {
+              label: 'End',
+              name: 'end',
+              widget: 'datetime',
+              format: 'YYYY-MM-DDTHH:mm:ss',
+              date_format: 'DD/MM/YYYY',
+              required: true,
+            }
+          - { label: 'Location', name: 'location', widget: 'string', required: true }
+          # Filled with a random id on save (see preSave in index.html); sign-ups are tied to it
+          - { label: 'ID', name: 'id', widget: 'hidden', required: false }
+      - label: 'Sign-up'
+        name: 'signupMode'
+        widget: 'select'
+        default: 'none'
+        hint: 'The sign-up form itself is created in the admin panel (Admin → Signups). Changing this after sign-ups have opened starts new, empty sign-up lists.'
+        options:
+          - { label: 'No sign-up', value: 'none' }
+          - { label: 'One sign-up for the whole event', value: 'event' }
+          - { label: 'Separate sign-up for each time & place', value: 'session' }
       - {
-          label: 'Duration (hours)',
-          name: 'durationHours',
-          widget: 'number',
-          value_type: 'int',
-          min: 0,
-          default: 8,
+          label: 'Image',
+          name: 'image',
+          widget: 'image',
+          required: false,
+          hint: 'If left empty, the AG logo is shown',
         }
-      - { label: 'Image', name: 'image', widget: 'image' }
       - {
           label: 'Visible on calendar',
           name: 'visibleOnCalendar',
@@ -140,8 +156,6 @@ collections:
           widget: 'boolean',
           default: true,
         }
-      - { label: 'Location', name: 'location', widget: 'string', required: false }
-      - { label: 'Recurring', name: 'isRecurring', widget: 'boolean', 'required': false }
       - {
           label: 'Short Description',
           name: 'description',
@@ -149,27 +163,11 @@ collections:
           hint: 'This will be shown in the event list',
         }
       - {
-          label: 'TLDR',
-          name: 'tldr',
-          widget: 'markdown',
-          hint: 'This will be shown at the top of the event page',
-          default: "
-            ### WHEN?\n
-            XX-XX on XX\n\n
-            ### WHERE?\n
-            XX\n\n
-            ### WHY?\n
-            To Win XX, to have fun with friends, etc.\n\n
-            ### SIGN-UP\n
-            LINK\n
-            Open from XX to XX
-            ",
-        }
-      - {
           label: 'Long Description',
           name: 'body',
           widget: 'markdown',
-          hint: 'This will be shown at the bottom of the event page. ',
+          required: false,
+          hint: 'This will be shown on the event page, below the times and places. If left empty, the short description is shown there instead.',
         }
       - label: 'Recordings (e.g. Youtube link)'
         name: 'recordings'
