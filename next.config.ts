@@ -45,6 +45,19 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  async rewrites() {
+    return {
+      // Production only ships .webp versions of images (see copyPublicAndCompressImages.js),
+      // but content and the CMS refer to the original paths. Fallback rewrites only
+      // apply when no file matches, so locally the originals are still served.
+      fallback: [
+        {
+          source: '/images/:path(.*)\\.:ext(png|PNG|jpg|JPG|jpeg|JPEG)',
+          destination: '/images/:path.webp',
+        },
+      ],
+    }
+  },
 }
 
 export default nextConfig
