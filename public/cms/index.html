@@ -16,5 +16,72 @@
     </script>
     <!-- Include the script that builds the page and powers Decap CMS -->
     <script src="decap-cms.js"></script>
+    <!-- Event preview: shows /cms-preview/event, which renders the entry with the site's own components -->
+    <script>
+      var markdownImagePattern = /!\[[^\]]*\]\(\s*<?([^\s)>]+)/g
+
+      var getImageUrls = function (data, getAsset) {
+        var paths = [data.image]
+        ;[data.description, data.tldr, data.body].forEach(function (text) {
+          var match
+          markdownImagePattern.lastIndex = 0
+          while (text && (match = markdownImagePattern.exec(text))) paths.push(match[1])
+        })
+        var urls = {}
+        paths.forEach(function (path) {
+          var asset = path && getAsset(path)
+          var url = asset && asset.toString()
+          if (url && url !== path) urls[path] = url
+        })
+        return urls
+      }
+
+      var EventPreview = createClass({
+        componentDidMount: function () {
+          var self = this
+          this.onMessage = function (e) {
+            if (e.source === self.frame.contentWindow && e.data && e.data.type === 'ag-cms-preview-ready') {
+              self.ready = true
+              self.send()
+            }
+          }
+          this.frame.ownerDocument.defaultView.addEventListener('message', this.onMessage)
+        },
+        componentWillUnmount: function () {
+          this.frame.ownerDocument.defaultView.removeEventListener('message', this.onMessage)
+        },
+        componentDidUpdate: function () {
+          this.send()
+        },
+        send: function () {
+          if (!this.ready || !this.frame.contentWindow) return
+          var data = this.props.entry.get('data').toJS()
+          var event = Object.assign({}, data, {
+            description: data.description || '',
+            tldr: data.tldr || '',
+            content: data.body || '',
+            slug: this.props.entry.get('slug') || 'new-event',
+          })
+          delete event.body
+          this.frame.contentWindow.postMessage(
+            { type: 'ag-cms-preview', event: event, imageUrls: getImageUrls(data, this.props.getAsset) },
+            window.location.origin,
+          )
+        },
+        render: function () {
+          var self = this
+          return h('iframe', {
+            ref: function (el) {
+              self.frame = el
+            },
+            src: '/cms-preview/event',
+            title: 'Event preview',
+            style: { position: 'fixed', inset: 0, width: '100%', height: '100%', border: 0 },
+          })
+        },
+      })
+
+      CMS.registerPreviewTemplate('event', EventPreview)
+    </script>
   </body>
 </html>
