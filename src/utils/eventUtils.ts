@@ -65,25 +65,15 @@ export const getRelevantSession = (event: AGEvent, now: Moment = moment()) =>
   event.sessions.find((s) => eventMoment(s.end).isAfter(now)) ??
   event.sessions[event.sessions.length - 1]
 
-export const formatSessionTime = ({ start, end }: EventSession) => {
+/** e.g. "Tue 21.5. 12:00–14:00" or "Fri 16.10. 16:00 – Sat 17.10. 21:00"; the year only if it isn't this one */
+export const formatSessionTime = ({ start, end }: EventSession, now: Moment = moment()) => {
   const startMoment = eventMoment(start)
   const endMoment = eventMoment(end)
-  if (!endMoment.isAfter(startMoment)) {
-    return startMoment.format('ddd D.M.YYYY HH:mm')
-  }
-  if (startMoment.isSame(endMoment, 'day')) {
-    return `${startMoment.format('ddd D.M.YYYY HH:mm')}–${endMoment.format('HH:mm')}`
-  }
-  return `${startMoment.format('ddd D.M. HH:mm')} – ${endMoment.format('ddd D.M.YYYY HH:mm')}`
-}
-
-export const formatSessionDate = ({ start, end }: EventSession) => {
-  const startMoment = eventMoment(start)
-  const endMoment = eventMoment(end)
-  if (!endMoment.isAfter(startMoment) || startMoment.isSame(endMoment, 'day')) {
-    return startMoment.format('ddd D.M.YYYY')
-  }
-  return `${startMoment.format('ddd D.M.')} – ${endMoment.format('ddd D.M.YYYY')}`
+  const date = (m: Moment) => m.format(m.isSame(now, 'year') ? 'ddd D.M.' : 'ddd D.M.YYYY')
+  const startText = `${date(startMoment)} ${startMoment.format('HH:mm')}`
+  if (!endMoment.isAfter(startMoment)) return startText
+  if (startMoment.isSame(endMoment, 'day')) return `${startText}–${endMoment.format('HH:mm')}`
+  return `${startText} – ${date(endMoment)} ${endMoment.format('HH:mm')}`
 }
 
 export const formatSignupTime = (time: Moment) => time.format('D.M.YYYY HH:mm')

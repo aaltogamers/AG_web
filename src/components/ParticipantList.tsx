@@ -79,8 +79,13 @@ const ParticipantList = ({ participants, pools, inputs, ownSignupId }: Props) =>
         const { taken } = poolFill(pool, inPool.length)
         return (
           <div key={pool.id} className="flex flex-col gap-4">
-            {pools.length > 1 && <h4>{pool.name}</h4>}
-            <CapacityBar taken={taken} size={pool.size} reserve={reserve.length} />
+            <CapacityBar
+              taken={taken}
+              size={pool.size}
+              reserve={reserve.length}
+              label={pools.length > 1 ? pool.name : undefined}
+              largeLabel
+            />
             {!inPool.length && <div className="text-lightgray">No one has signed up yet.</div>}
             {/* Without public fields there's nothing to list besides the count */}
             {publicInputs.length > 0 && inPlaces.length > 0 && list(inPlaces)}

@@ -1,10 +1,10 @@
 import moment, { Moment } from 'moment'
 import { ReactNode, useState } from 'react'
-import { FaChevronDown, FaMapMarkerAlt, FaRegCalendar, FaRegClock } from 'react-icons/fa'
+import { FaChevronDown, FaMapMarkerAlt, FaRegCalendar } from 'react-icons/fa'
 import { AGEvent, EventSession } from '../types/types'
 import {
   eventMoment,
-  formatSessionDate,
+  formatSessionTime,
   formatSignupTime,
   getSignupStatus,
   getSignupTargets,
@@ -32,7 +32,7 @@ type Props = {
 
 // Same accent as the red bars under headers
 const Card = ({ children }: { children: ReactNode }) => (
-  <div className="flex flex-col bg-darkgray border-l-4 border-red px-6 py-5">{children}</div>
+  <div className="flex flex-col bg-darkgray border-l-4 border-red px-5 py-4">{children}</div>
 )
 
 const Label = ({ children }: { children: ReactNode }) => (
@@ -40,20 +40,11 @@ const Label = ({ children }: { children: ReactNode }) => (
 )
 
 const Detail = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
-  <div className="flex gap-3 items-center text-lightgray">
-    <span className="shrink-0 text-base">{icon}</span>
+  <div className="flex gap-3 items-baseline text-lightgray">
+    <span className="shrink-0 text-base relative top-0.5">{icon}</span>
     <span>{children}</span>
   </div>
 )
-
-const getDateAndTime = (session: EventSession) => {
-  const startMoment = eventMoment(session.start)
-  const endMoment = eventMoment(session.end)
-  const time = endMoment.isAfter(startMoment)
-    ? `${startMoment.format('HH:mm')}–${endMoment.format('HH:mm')}`
-    : startMoment.format('HH:mm')
-  return { date: formatSessionDate(session), time }
-}
 
 export const scrollToSignups = () =>
   document.getElementById('signups')?.scrollIntoView({ behavior: 'smooth' })
@@ -124,23 +115,19 @@ const SignupPanel = ({
   )
 }
 
-const SessionCard = ({ session, children }: { session: EventSession; children?: ReactNode }) => {
-  const { date, time } = getDateAndTime(session)
-  return (
-    <Card>
-      {session.name && <Label>{session.name}</Label>}
-      <div className="flex gap-3 items-center mb-2">
-        <FaRegCalendar className="shrink-0 text-base text-lightgray" />
-        <span className="text-2xl">{date}</span>
+const SessionCard = ({ session, children }: { session: EventSession; children?: ReactNode }) => (
+  <Card>
+    {session.name && <Label>{session.name}</Label>}
+    <div className="flex flex-col gap-1">
+      <div className="flex gap-3 items-baseline">
+        <FaRegCalendar className="shrink-0 text-base text-lightgray relative top-0.5" />
+        <span className="text-xl">{formatSessionTime(session)}</span>
       </div>
-      <div className="flex flex-col gap-1">
-        <Detail icon={<FaRegClock />}>{time}</Detail>
-        {session.location && <Detail icon={<FaMapMarkerAlt />}>{session.location}</Detail>}
-      </div>
-      {children}
-    </Card>
-  )
-}
+      {session.location && <Detail icon={<FaMapMarkerAlt />}>{session.location}</Detail>}
+    </div>
+    {children}
+  </Card>
+)
 
 /** A collapsed session, opened into a card by clicking it */
 const SessionRow = ({
@@ -156,24 +143,17 @@ const SessionRow = ({
   isPast: boolean
   onClick: () => void
 }) => {
-  const start = eventMoment(session.start)
   const fill = summary && totalFill(summary.pools, summary.counts)
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center justify-between gap-4 bg-darkgray border-l-4 border-gray-600 hover:border-red px-4 py-3 text-left transition-colors ${
+      className={`w-full flex items-center justify-between gap-3 bg-darkgray border-l-4 border-gray-600 hover:border-red px-4 py-3 text-left transition-colors ${
         isPast ? 'text-lightgray' : ''
       }`}
     >
       <div className="min-w-0">
-        <div className="text-lg">
-          {start.format('ddd D.M.')}
-          <span className="text-lightgray whitespace-nowrap">
-            {' '}
-            · {getDateAndTime(session).time}
-          </span>
-        </div>
+        <div className="text-lg">{formatSessionTime(session)}</div>
         {(session.name || session.location) && (
           <div className="text-base text-lightgray truncate">
             {[session.name, session.location].filter(Boolean).join(' · ')}
@@ -185,7 +165,7 @@ const SessionRow = ({
           <div className="flex flex-col items-end gap-1.5">
             <SignupStatusTag summary={summary} now={now} />
             {fill && fill.size > 0 && (
-              <div className="w-20">
+              <div className="w-16">
                 <CapacityBar taken={fill.taken} size={fill.size} compact />
               </div>
             )}
@@ -197,7 +177,7 @@ const SessionRow = ({
   )
 }
 
-/** Times, places and sign-ups of an event, shown next to its image */
+/** Times, places and sign-ups of an event, shown in a sidebar next to its image and description */
 const EventDetails = ({
   event,
   summaries,
@@ -231,7 +211,7 @@ const EventDetails = ({
   const eventSignupCard = eventTarget && (
     <Card>
       <Label>Sign-up</Label>
-      <div className="text-2xl">
+      <div className="text-xl">
         {sessions.length > 1 ? 'One sign-up for all dates' : 'Sign up for the event'}
       </div>
       {signupPanel(eventTarget, true)}
@@ -242,7 +222,7 @@ const EventDetails = ({
     return (
       <div className="flex flex-col gap-4 text-lg text-left">
         <Card>
-          <div className="text-2xl">Time and place to be announced</div>
+          <div className="text-xl">Time and place to be announced</div>
         </Card>
         {eventSignupCard}
       </div>
@@ -306,7 +286,7 @@ const EventDetails = ({
     <div className="flex flex-col gap-2 text-lg text-left">
       {!upcoming.length && (
         <Card>
-          <div className="text-2xl">No upcoming dates</div>
+          <div className="text-xl">No upcoming dates</div>
         </Card>
       )}
       {visibleUpcoming.map(renderSession)}
