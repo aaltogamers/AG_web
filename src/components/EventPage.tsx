@@ -158,7 +158,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
           <AGImage
             src={event.image}
             alt={event.name}
-            className="max-h-[500px] w-full object-scale-down aspect-square md:col-start-1 md:row-start-1"
+            className="max-h-[500px] md:max-h-[380px] w-full object-scale-down aspect-square md:col-start-1 md:row-start-1"
           />
           <div className="md:col-start-2 md:row-start-1 md:row-span-2" ref={detailsRef}>
             <EventDetails

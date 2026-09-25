@@ -21,7 +21,7 @@ interface MarkdownProps {
   className?: string
 }
 
-const P = ({ children }: ComponentProps) => <p className="mt-4 mb-8">{children}</p>
+const P = ({ children }: ComponentProps) => <p className="mt-3 mb-5">{children}</p>
 const H1 = ({ children }: ComponentProps) => <h1 className="text-white">{children}</h1>
 const H2 = ({ children }: ComponentProps) => <h2 className="text-white">{children}</h2>
 const H3 = ({ children }: ComponentProps) => <h3 className="text-white">{children}</h3>
@@ -34,10 +34,10 @@ const A = ({ children, href }: AProps) => (
   </a>
 )
 const Ul = ({ children }: ComponentProps) => (
-  <ul className="list-disc list-inside mt-4 mb-8">{children}</ul>
+  <ul className="list-disc list-inside mt-3 mb-5">{children}</ul>
 )
 const Ol = ({ children }: ComponentProps) => (
-  <ol className="list-decimal list-inside mt-4 mb-8">{children}</ol>
+  <ol className="list-decimal list-inside mt-3 mb-5">{children}</ol>
 )
 
 const Li = ({ children }: ComponentProps) => <li className="mb-2">{children}</li>
