@@ -6,7 +6,7 @@ sessions:
     location: Village Living room, Jämeräntaival 5 A
     id: ezc43axg
   - start: 2026-10-16T16:00:00
-    end: 2026-10-16T21:00:00
+    end: 2026-10-17T21:00:00
     location: Village Living room, Jämeräntaival 5 A
     id: lmazyj88
   - start: 2026-09-18T17:00:00
@@ -31,13 +31,6 @@ description: >-
   🕕 **Friday, September 18th @ 17:00[](https://aaltogamers.fi/events/ag-board-game-night#:~:text=Space%20Policy.-,Sign%20up,-AG%20Board%20Game)**
 recordings: []
 ---
-
-### WHY?
-To have fun
-
-### SIGN-UP
-Signup is not mandatory but highly recommended
-
 🕹️ **NEW QUEST UNLOCKED: BOARD GAMES NIGHT!** 🎮✨
 
 Aalto Gamers is getting together for an evening of **board games, Nintendo Switch, party games, and good company!** 🎲🎮
