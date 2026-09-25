@@ -6,7 +6,7 @@ sessions:
     location: Village Living room, Jämeräntaival 5 A
     id: ezc43axg
   - start: 2026-10-16T16:00:00
-    end: 2026-10-17T21:00:00
+    end: 2026-10-16T21:00:00
     location: Village Living room, Jämeräntaival 5 A
     id: lmazyj88
   - start: 2026-09-18T17:00:00
