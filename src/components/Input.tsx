@@ -23,6 +23,8 @@ type Props = {
   hint?: string
   // Display text for select options, when it differs from the stored value
   optionLabel?: (option: string) => string
+  // Label above the field, for narrow containers instead of the two-column grid
+  stacked?: boolean
 }
 
 type OptionWithLabel = {
@@ -45,9 +47,10 @@ const TextInput = ({
   isMulti,
   hint,
   optionLabel,
+  stacked,
 }: Props) => {
   const inputSlug = slug(name)
-  const commonMargins = 'mt-2 mb-8 md:m-4'
+  const commonMargins = stacked ? 'mt-2 mb-6' : 'mt-2 mb-8 md:m-4'
   const optionsWithLabel: OptionWithLabel[] =
     options?.map((o) => ({ value: o, label: optionLabel ? optionLabel(o) : o })) || []
 

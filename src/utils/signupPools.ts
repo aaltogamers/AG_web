@@ -56,3 +56,25 @@ export const pickPoolId = (pools: SignupPool[], requested: unknown): number | nu
   const id = Number(requested)
   return pools.some((p) => p.id === id) ? id : null
 }
+
+// Sign-ups beyond a pool's size go to its reserve list
+export const poolFill = (pool: SignupPool, count: number) => ({
+  taken: Math.min(count, pool.size),
+  reserve: Math.max(0, count - pool.size),
+  isFull: count >= pool.size,
+})
+
+// Places and sign-ups over all pools, for showing a sign-up's fill as one bar
+export const totalFill = (pools: SignupPool[], counts: Record<number, number>) =>
+  pools.reduce(
+    (total, pool) => {
+      const { taken, reserve, isFull } = poolFill(pool, counts[pool.id] ?? 0)
+      return {
+        taken: total.taken + taken,
+        size: total.size + pool.size,
+        reserve: total.reserve + reserve,
+        isFull: total.isFull && isFull,
+      }
+    },
+    { taken: 0, size: 0, reserve: 0, isFull: true }
+  )

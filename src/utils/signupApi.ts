@@ -10,6 +10,9 @@ export type SignupEvent = {
   inputs: SignupInput[]
 }
 
+// A sign-up form with the number of sign-ups in each pool, keyed by pool id
+export type SignupSummary = SignupEvent & { counts: Record<number, number> }
+
 const tokenKey = (signupKey: string) => `signupToken-${signupKey}`
 const idKey = (signupKey: string) => `signupId-${signupKey}`
 
@@ -48,6 +51,15 @@ export const getSignupEvent = async (signupKey: string): Promise<SignupEvent | n
   if (!res.ok) return null
   const data = (await res.json()) as { event: SignupEvent }
   return data.event
+}
+
+export const getSignupSummaries = async (signupKeys: string[]): Promise<SignupSummary[]> => {
+  if (!signupKeys.length) return []
+  const keys = signupKeys.map(encodeURIComponent).join(',')
+  const res = await fetch(`/api/signup-summaries?keys=${keys}`, { credentials: 'same-origin' })
+  if (!res.ok) return []
+  const data = (await res.json()) as { summaries: SignupSummary[] }
+  return data.summaries
 }
 
 export const saveSignupEvent = async (event: SignUpData): Promise<SignupEvent> => {
