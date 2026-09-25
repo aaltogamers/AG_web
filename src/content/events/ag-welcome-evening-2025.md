@@ -16,9 +16,6 @@ description: >-
   Join us **LIVE** for the perfect chance to play your favorite games, meet new friends and **get to know Aalto Gamers**!
 ---
 
-### WHY?
-Play your favorite games, meet new friends and get to know Aalto Gamers!
-
 **Welcome Evening 2025 is here! 🎉**
 
 Join us LIVE at Otaniemi Game Cave, Kivimiehentie 2 Espoo, for the perfect chance to play your favorite games 🎮, meet new friends 🤝 and **get to know Aalto Gamers!**

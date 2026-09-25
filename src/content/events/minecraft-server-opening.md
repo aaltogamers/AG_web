@@ -14,9 +14,6 @@ description: A brand-new world awaits! Come test your skills and prove your
   pace, you decide! 🏡✨
 ---
 
-### WHY?
-A brand-new world awaits! Come test your skills and prove your speedrun mastery (But not the usual way 😉), or chill and explore at your own pace, you decide! 🏡✨
-
 ### WHITELIST
 [SIGN UP HERE](<>)
 

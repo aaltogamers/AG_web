@@ -14,9 +14,6 @@ description: Ready to grab the wheel and prove you’re the fastest racer on
   Blue Shell Cup are at stake! 🎮
 ---
 
-### WHY?
-Free Red Bull! Great time! Mario Kart! Honor, prizes, and the legendary Blue Shell Cup are at stake.
-
 ### SIGN-UP
 [LINK](https://kide.app/events/91035be1-49cd-46df-838b-5d85c6a9dc53)
 Open from Sunday 19.10 to Friday 7.11

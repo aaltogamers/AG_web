@@ -23,9 +23,6 @@ description: >-
 recordings: []
 ---
 
-### WHY?
-⚒️ Bring friends, build dumb bases, and fall into lava.
-
 ### SIGN-UP
 Sign up for a whitelist [HERE](https://aaltogamers.fi/whitelist)
 

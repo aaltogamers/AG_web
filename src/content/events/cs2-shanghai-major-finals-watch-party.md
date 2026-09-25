@@ -15,9 +15,6 @@ description: |-
   **Aalto Gamers is hosting a CS2 Shanghai Major Finals Watch Party‼️**
 ---
 
-### WHY?
-Free snacks, CS2, Great company
-
 ### SIGN-UP
 No sign-up required
 

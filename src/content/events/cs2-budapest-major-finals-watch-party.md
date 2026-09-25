@@ -16,9 +16,6 @@ description: >-
   Join us to **cheer on your favorite finalist team**, eat some **FREE SNACKS**, and hang out with fellow CS2/Snack enjoyers **LIVE** 🎮
 ---
 
-### WHY?
-Cheer on your favorite finalist team, eat some FREE SNACKS, and hang out with the best company!
-
 ### SIGN-UP
 No sign-up required!
 

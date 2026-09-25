@@ -19,9 +19,6 @@ recordings:
     url: https://www.youtube.com/watch?v=w8Rl8yuusS0
 ---
 
-### WHY?
-👼 Will your team be a match made in heaven?
-
 ### SIGN-UP
 [LINK](https://forms.gle/vsj9pE4fHjN6ri4B7) (Full team)
 Open until Wednesday 12.2

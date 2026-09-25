@@ -15,9 +15,6 @@ description: 🏛 Civilization fans, mark your calendars because Aalto Gamers wi
   Civilization franchise!
 ---
 
-### WHY?
-Come hang out with fellow Civ enthusiasts, chill, and see how far your empire takes you.
-
 ### SIGN-UP
 Sign-up [HERE](https://forms.gle/Z5UHq3vA2YQUFBr97)
 

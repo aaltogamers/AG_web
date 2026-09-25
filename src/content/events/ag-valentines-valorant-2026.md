@@ -13,9 +13,6 @@ description: AG Valentines Valorant tournament!
 recordings: []
 ---
 
-### WHY?
-Because Valentine's day ❤️
-
 ### SIGN-UP
 [Signup here!](https://forms.gle/5JX29orG5AhfD2Vg6)
 

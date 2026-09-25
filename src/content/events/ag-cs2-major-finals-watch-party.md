@@ -13,7 +13,4 @@ description: TBA
 recordings: []
 ---
 
-### WHY?
-Cheer on your favorite finalist team, eat some FREE SNACKS, and hang out with the best company!
-
 TBA

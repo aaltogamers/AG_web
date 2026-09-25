@@ -12,9 +12,6 @@ visibleOnEventsPage: true
 description: Aalto Gamers is proud to present our 🚀Among Us🚀 Tournament!🚨
 ---
 
-### WHY?
-Prizes for the top 5. Sweatiest level of Among Us.
-
 ### SIGN-UP
 <https://forms.gle/c7dZ4FQDXjek9F2TA>
 

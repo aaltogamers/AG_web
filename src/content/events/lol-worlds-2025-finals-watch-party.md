@@ -16,9 +16,6 @@ description: >-
   Join us for the AG League of Legends Worlds 2025 Finals Watch Party!
 ---
 
-### WHY?
-Enjoy world-class gameplay with the best company, eat some FREE breakfast and participate in our fun watch party activities!!
-
 ### SIGN-UP
 **No sign-up needed!**
 

@@ -18,9 +18,6 @@ recordings:
     url: https://www.youtube.com/watch?v=c36JgtbW3xs
 ---
 
-### WHY?
-Fight your way to victory in the Hunger Games - only one can survive! 🏆🔥
-
 ### SIGN-UP
 [HERE](https://forms.gle/z8JUiocLzrnVuvet9)
 

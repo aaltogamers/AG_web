@@ -17,9 +17,6 @@ description: >-
   Gather a group of friends or join a flex team to compete against others in this epic battle for cash and glory!
 ---
 
-### WHY?
-Cash and glory! 300€ Prize pool.
-
 ### SIGN-UP
 * FULL TEAM: [HERE](https://forms.gle/3Ew5YMC3BZw6fe1f6)
 * FLEX (1-4 players): [HERE](https://forms.gle/E3ssUxCCuN9m3sHb6)

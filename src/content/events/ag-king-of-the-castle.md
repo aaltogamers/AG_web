@@ -22,9 +22,6 @@ description: >-
 recordings: []
 ---
 
-### WHY?
-To scheme 😈
-
 King of the Castle is a fun social strategy game where one player is the ruler while everyone else plays as nobles in the kingdom. Players vote on decisions, alliances form, and things can get chaotic quite quickly.🔥
 
 Will you support the crown 👑 or quietly start a rebellion? ⚔️

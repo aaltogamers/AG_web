@@ -16,9 +16,6 @@ description: >-
   🎲 Aalto Gamers' ARAM Tournament is here! Embrace true randomness (spiced with a bit of chaos) - no planning, no premade strats possible, just a show of true skill (?) on the Howling Abyss! 🎲
 ---
 
-### WHY?
-Why farm minion when can farm enemy???
-
 ### SIGN-UP
 ✏️ All skill levels welcome, the only requirement is an EU West League account! Sign-up is SOLO ONLY, you'll get matched with random teammates. Link [here](https://forms.gle/35TzEquGEEihhsnR9) 👈
 

@@ -14,9 +14,6 @@ description: 🃏 It's once again time for the most **RANDOM** *League of Legend
   pure show of skill(?) **on the Bridge**‼️
 ---
 
-### WHY?
-No tournament has ever been this random!
-
 ### SIGN-UP
 [LINK](https://forms.gle/cCXxmNXHC1P511Fb8)
 Open from Sun 5.10 to Thu 16.10

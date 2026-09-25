@@ -23,9 +23,6 @@ description: >-
   All skill levels, all team comps, all off-meta strategies welcome! See you there 💥
 ---
 
-### WHY?
-Fun TFT gaming
-
 ### SIGN-UP
 <https://forms.gle/segTT4Xfgrt4PHsy8>
 

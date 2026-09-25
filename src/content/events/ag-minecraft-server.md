@@ -31,9 +31,6 @@ description: >-
 IP: mc.aaltogamers.fi\
 You can discuss the server on the [AG Discord](https://discord.gg/aaltogamers)
 
-### WHY?
-To play Minecraft with other students
-
 ### SIGN UP
 Fill [this form](https://docs.google.com/forms/d/e/1FAIpQLSfkZKpP-TRVOw3MJ5WgdDQSrG5x5_XiSWNYG6JXf5LzX5JIXw/viewform) to get on the whitelist
 

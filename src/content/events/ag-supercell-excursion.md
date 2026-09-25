@@ -17,9 +17,6 @@ description: >-
   Come meet the amazing people making your favorite mobile games 💥 discuss the recent developments of the Finnish gaming industry, and take part in a surprise activity! 😉
 ---
 
-### WHY?
-Meet the amazing people making your favorite mobile games discuss the recent developments of the Finnish gaming industry, and take part in a surprise activity!
-
 ### SIGN-UP
 [LINK](https://forms.gle/K4naXAh6thBdpG8A8)
 Open from 2.10 to 16.10

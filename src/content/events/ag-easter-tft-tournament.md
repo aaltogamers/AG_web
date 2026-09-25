@@ -19,9 +19,6 @@ description: >-
   (And no, this isn’t an April Fool's joke - we promise 😉)
 ---
 
-### WHY?
-Compete with other players and win some Eastery prizes
-
 ### SIGN-UP
 <https://forms.gle/TRKRQ74D1qf7eufL6>
 

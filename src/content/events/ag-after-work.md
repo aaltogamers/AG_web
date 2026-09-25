@@ -21,9 +21,6 @@ description: >-
   The gaming chairs are limited so be fast to secure your seat by signing up!
 ---
 
-### WHY?
-Chill time, gaming and grilling with buddies. Free snacks.
-
 ### FREE?
 Free.
 

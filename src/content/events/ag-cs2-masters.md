@@ -30,9 +30,6 @@ recordings:
     url: https://www.youtube.com/watch?v=vf1Kwz4iSkU
 ---
 
-### WHY?
-Chance to compete for a portion of the whopping 1000€ prize pool and the title of the AG CS2 Masters champion🏆
-
 ### SIGN-UP
 FULL TEAM [HERE](https://forms.gle/7XCN5trD9WMAwev38)  
 

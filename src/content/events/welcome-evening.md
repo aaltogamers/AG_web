@@ -23,9 +23,6 @@ description: >-
 recordings: []
 ---
 
-### WHY?
-Play your favorite games, meet new friends and get to know Aalto Gamers!
-
 **Welcome Evening 2026 is here!** 🎉
 
 Join us **LIVE** at **Otaniemi Game Cave, Kivimiehentie 2, Espoo, on Monday 7.9**., and kick off the new semester with Aalto Gamers! 🎮 Meet new people, play your favorite games, and discover what the AG community is all about. 🤝

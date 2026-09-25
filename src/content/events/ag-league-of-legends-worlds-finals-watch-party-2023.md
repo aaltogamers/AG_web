@@ -19,9 +19,6 @@ description: >-
   Join us LIVE to cheer on your favourite team, eat some FREE snacks, and hang out with fellow finals enjoyers.
 ---
 
-### WHY?
-Come Cheer on your favourite team, eat some FREE snacks and hang out with fellow finals enjoyers!
-
 ### SIGN-UP?
 No sign-up!
 

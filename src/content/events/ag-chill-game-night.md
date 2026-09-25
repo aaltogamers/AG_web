@@ -21,9 +21,6 @@ description: >-
 recordings: []
 ---
 
-### WHY?
-To hang out and play games with old and new friends!
-
 Join us for a relaxed night of Jackbox, Nintendo Switch, and board games. 🎮 
 
 Whether you’re a seasoned board game veteran or just curious to try something new, there’s something for everyone. 💫 Come hang out, meet new people, and enjoy good games and company! Guaranteed good times for everyone! 💥We'll have some free snacks and drinks available too!
