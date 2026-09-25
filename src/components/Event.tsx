@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AGEvent } from '../types/types'
 import AGImage from './AGImage'
+import EventDetails from './EventDetails'
 import Markdown from './Markdown'
 import RecordingsDropdown from './RecordingsDropdown'
 import { LYCHEE_BASE_URL } from '../utils/constants'
@@ -22,6 +23,9 @@ const Event = ({ event }: Props) => {
         <div className="flex flex-col md:p-10 items-center md:items-start">
           <h3 className="mt-8 md:mt-0">{event.name}</h3>
           <Markdown>{event.description}</Markdown>
+          <div className="w-full max-w-md mb-8">
+            <EventDetails event={event} />
+          </div>
           <div className="flex flex-col gap-8 md:gap-16 md:flex-row">
             <Link href={`/events/${event.slug}`} className="mainbutton">
               Learn more

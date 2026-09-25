@@ -66,12 +66,10 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
     }
   }, [loadSummaries, targetKeys, showSignUp])
 
-  // Default to the first open sign-up, then the first one for an upcoming session
+  // Default to the next upcoming session, or the most recent one if all are past
   const defaultTarget =
-    (now &&
-      (targets.find((t) => getSignupStatus(summaries[t.key], now) === 'open') ??
-        targets.find((t) => !t.session || eventMoment(t.session.end).isAfter(now)))) ||
-    targets[0]
+    (now && targets.find((t) => !t.session || eventMoment(t.session.end).isAfter(now))) ||
+    targets[targets.length - 1]
   const selectedTarget = targets.find((t) => t.key === selectedKey) ?? defaultTarget
   const selectedSummary = selectedTarget && summaries[selectedTarget.key]
   const selectedTargetKey = selectedTarget?.key
@@ -166,8 +164,6 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
             <EventDetails
               event={event}
               summaries={summaries}
-              selectedSignupKey={selectedTargetKey ?? null}
-              onSelectSignup={setSelectedKey}
               onSignUp={openDialog}
               isSignedUp={isSignedUp}
             />
@@ -197,6 +193,37 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
                     </h5>
                   )}
                 </div>
+                {targets.length > 1 && (
+                  <div role="tablist" className="flex flex-wrap gap-2">
+                    {/* Furthest in the future first */}
+                    {[...targets].reverse().map((target) => {
+                      const isSelected = target.key === selectedTargetKey
+                      return (
+                        <button
+                          key={target.key}
+                          type="button"
+                          role="tab"
+                          aria-selected={isSelected}
+                          onClick={() => setSelectedKey(target.key)}
+                          className={`px-4 py-2 bg-darkgray border-b-4 text-base transition-colors ${
+                            isSelected
+                              ? 'border-red'
+                              : 'border-gray-600 text-lightgray hover:border-lightgray'
+                          }`}
+                        >
+                          {target.session
+                            ? [
+                                target.session.name,
+                                eventMoment(target.session.start).format('ddd D.M.'),
+                              ]
+                                .filter(Boolean)
+                                .join(' · ')
+                            : 'All dates'}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
                 {currentList ? (
                   <ParticipantList
                     participants={currentList.participants}

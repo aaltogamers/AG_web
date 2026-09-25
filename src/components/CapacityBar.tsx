@@ -8,6 +8,8 @@ type Props = {
   largeLabel?: boolean
   // A thin bar without numbers, for compact rows
   compact?: boolean
+  // Says what the numbers are with "Spots taken" before the label
+  showUnit?: boolean
 }
 
 /** How many of a sign-up's places are taken, with the reserve list as extra text */
@@ -18,6 +20,7 @@ const CapacityBar = ({
   label,
   largeLabel = false,
   compact = false,
+  showUnit = false,
 }: Props) => {
   const percent = size > 0 ? Math.min(100, (taken / size) * 100) : 100
   const bar = (
@@ -36,13 +39,14 @@ const CapacityBar = ({
     </div>
   )
   if (compact) return bar
+  const text = [showUnit && 'Spots taken', label].filter(Boolean).join(' · ')
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-4 text-base">
         {largeLabel ? (
-          <h4 className="truncate">{label}</h4>
+          <h4 className="truncate">{text}</h4>
         ) : (
-          <span className="text-lightgray truncate">{label}</span>
+          <span className="text-lightgray truncate">{text}</span>
         )}
         <span className="shrink-0 tabular-nums">
           {taken} / {size}

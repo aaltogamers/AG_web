@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { SubmitHandler, useForm } from 'react-hook-form'
+import { Controller, SubmitHandler, useForm } from 'react-hook-form'
 import { FaCheck, FaCircleNotch, FaLock } from 'react-icons/fa'
+import Select from 'react-select'
 import { DataValue, SignupPool, SignupRow } from '../types/types'
 import { formatSessionTime, SignupTarget } from '../utils/eventUtils'
 import {
@@ -19,6 +20,8 @@ import Dialog from './Dialog'
 import Input from './Input'
 
 const POOL_FIELD = 'pool'
+// More groups than this are picked from a dropdown instead of a list
+const MAX_POOL_OPTIONS = 4
 // Lowercase, since Input slugifies field names
 const POOL_PASSWORD_FIELD = 'poolpassword'
 // Above the mobile nav bar, since the dialog covers the whole screen on phones
@@ -199,6 +202,7 @@ const SignupDialog = ({
         taken={taken}
         size={pool.size}
         reserve={reserve}
+        showUnit
       />
     )
   }
@@ -214,7 +218,40 @@ const SignupDialog = ({
     >
       {subtitle}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col text-lg">
-        {pools.length > 1 && (
+        {pools.length > MAX_POOL_OPTIONS && (
+          <div className="flex flex-col gap-2 mb-6">
+            <label htmlFor={POOL_FIELD}>
+              Sign up as<span className="text-red">*</span>
+            </label>
+            <Controller
+              control={control}
+              name={POOL_FIELD}
+              render={({ field: { onChange, value, ref } }) => {
+                const options = pools.map((pool) => ({
+                  value: String(pool.id),
+                  label: `${pool.name}${pool.private ? ' (private)' : ''}`,
+                }))
+                return (
+                  <Select
+                    ref={ref}
+                    inputId={POOL_FIELD}
+                    value={options.find((o) => o.value === String(value))}
+                    onChange={(option) => option && onChange(option.value)}
+                    options={options}
+                    isSearchable={false}
+                    className="text-black"
+                    theme={(theme) => ({
+                      ...theme,
+                      colors: { ...theme.colors, primary25: 'lightgray', primary: 'red' },
+                    })}
+                  />
+                )
+              }}
+            />
+            {poolBar(selectedPool)}
+          </div>
+        )}
+        {pools.length > 1 && pools.length <= MAX_POOL_OPTIONS && (
           <fieldset className="flex flex-col gap-2 mb-6">
             <legend className="mb-2">
               Sign up as<span className="text-red">*</span>
