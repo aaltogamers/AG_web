@@ -69,6 +69,7 @@ resource "azurerm_linux_web_app" "main" {
       WEBSITES_ENABLE_APP_SERVICE_STORAGE = "false"
       DATABASE_URL                        = "postgresql://${azurerm_postgresql_flexible_server.main.administrator_login}:${var.postgresql_admin_password}@${azurerm_postgresql_flexible_server.main.fqdn}:5432/${azurerm_postgresql_flexible_server_database.app.name}?sslmode=require"
       ADMIN_PASSWORD                      = var.admin_password
+      AGENT_API_KEY                       = var.agent_api_key
       APP_ID                              = var.github_app_id
       PRIVATE_KEY                         = var.github_app_private_key_base64
       INSTALLATION_ID                     = var.github_app_installation_id

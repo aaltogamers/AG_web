@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { App } from 'octokit'
 import {
   isAdminAuthorized,
   setAdminSessionCookie,
   verifyAdminPassword,
 } from '../../utils/adminSession'
+import { mintInstallationToken } from '../../utils/github'
 
 const passwordForm = (text: string) => `
   <!DOCTYPE html>
@@ -24,40 +24,8 @@ const passwordForm = (text: string) => `
 `
 
 const mintGithubTokenScript = async (): Promise<string> => {
-  const appId = process.env.APP_ID
-  const privateKeyB64 = process.env.PRIVATE_KEY
-  const installationId = process.env.INSTALLATION_ID
-
-  const missing = [
-    !appId && 'APP_ID',
-    !privateKeyB64 && 'PRIVATE_KEY',
-    !installationId && 'INSTALLATION_ID',
-  ].filter(Boolean)
-  if (missing.length > 0) {
-    throw new Error(`Missing GitHub App env vars: ${missing.join(', ')}`)
-  }
-
-  let privateKey: string
-  try {
-    // Trim: secret stores often append a newline, which breaks base64 decode.
-    privateKey = Buffer.from((privateKeyB64 as string).trim(), 'base64').toString('utf8')
-  } catch (e) {
-    throw new Error(`PRIVATE_KEY is not valid base64: ${e instanceof Error ? e.message : e}`)
-  }
-  if (!privateKey.includes('BEGIN') || !privateKey.includes('PRIVATE KEY')) {
-    throw new Error(
-      'PRIVATE_KEY must be base64-encoded PEM file bytes (see infra/README.md). After decode, the value should contain BEGIN … PRIVATE KEY (e.g. RSA or PKCS#8).'
-    )
-  }
-
-  const oktoApp = new App({ appId: appId as string, privateKey })
-
-  const authRes = await oktoApp.octokit.request(
-    `POST /app/installations/${installationId}/access_tokens`
-  )
-
   const postMsgContent = {
-    token: authRes.data.token,
+    token: await mintInstallationToken(),
     provider: 'github',
   }
 

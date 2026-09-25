@@ -39,6 +39,13 @@ variable "admin_password" {
   sensitive   = true
 }
 
+variable "agent_api_key" {
+  description = "Key for the AI agent API (/api/agent/**). Empty disables the agent API."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "github_app_id" {
   description = "GitHub App ID used by Decap CMS to mint access tokens"
   type        = string

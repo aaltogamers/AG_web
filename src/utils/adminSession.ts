@@ -16,7 +16,7 @@ const base64url = (buf: Buffer): string =>
 const sign = (payload: string, secret: string): string =>
   base64url(crypto.createHmac('sha256', secret).update(payload).digest())
 
-const timingSafeEqualStr = (a: string, b: string): boolean => {
+export const timingSafeEqualStr = (a: string, b: string): boolean => {
   const ab = Buffer.from(a)
   const bb = Buffer.from(b)
   if (ab.length !== bb.length) return false

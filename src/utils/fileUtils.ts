@@ -4,15 +4,19 @@ import jsYaml from 'js-yaml'
 import { AGEvent } from '../types/types'
 import { normalizeEvent } from './eventUtils'
 
+// JSON schema keeps unquoted times like 2024-05-01T18:00:00 as strings
+export const parseMarkdown = (file: string) =>
+  matter(file, {
+    engines: {
+      yaml: (s) => jsYaml.load(s, { schema: jsYaml.JSON_SCHEMA }) as object,
+    },
+  })
+
 export const getFolder = (folder: string) => {
   const filesInFolder = fs.readdirSync(`./src/content/${folder}`)
   const values = filesInFolder.map((filename) => {
     const file = fs.readFileSync(`./src/content/${folder}/${filename}`, 'utf8')
-    const matterData = matter(file, {
-      engines: {
-        yaml: (s) => jsYaml.load(s, { schema: jsYaml.JSON_SCHEMA }) as object,
-      },
-    })
+    const matterData = parseMarkdown(file)
     const fields = matterData.data
     const { content } = matterData
     return {
@@ -27,11 +31,7 @@ export const getFolder = (folder: string) => {
 
 export const getFile = (fileName: string, folder: string = './src/content/') => {
   const file = fs.readFileSync(`${folder}${fileName}.md`, 'utf8')
-  const matterData = matter(file, {
-    engines: {
-      yaml: (s) => jsYaml.load(s, { schema: jsYaml.JSON_SCHEMA }) as object,
-    },
-  })
+  const matterData = parseMarkdown(file)
   const fields = matterData.data
   const { content } = matterData
   return {

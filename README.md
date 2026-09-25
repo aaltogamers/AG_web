@@ -60,6 +60,8 @@ docker compose down -v
 - `BET_BOT_SECRET` — shared secret the Twitch chat bot sends in the
   `x-bet-secret` header when POSTing to `/api/votes`. No one but the bot
   should know this.
+- `AGENT_API_KEY` — key for the AI agent API (see below). The agent API is
+  disabled if it is unset.
 - `RCON_IP`, `RCON_PASSWORD`, `RCON_PORT` — Minecraft whitelist endpoint.
 - `APP_ID`, `PRIVATE_KEY`, `INSTALLATION_ID` — GitHub App credentials for
   the Decap CMS auth handshake (`/api/auth`).
