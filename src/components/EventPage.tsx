@@ -137,7 +137,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
       <Head>
         <title>{`${event.name} - Aalto Gamers`}</title>
       </Head>
-      <Header className="mt-10">{event.name}</Header>
+      <Header className="mt-20 md:mt-10">{event.name}</Header>
       {showSignUp && (
         <CmsEditLink
           cmsPath={`collections/event/entries/${event.slug}`}
