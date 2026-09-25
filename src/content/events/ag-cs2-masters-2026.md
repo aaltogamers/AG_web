@@ -2,8 +2,8 @@
 name: AG CS2 Masters 2026
 sessions:
   - name: Finals
-    start: 2026-11-13T16:00:00
-    end: 2026-11-14T00:00:00
+    start: 2026-11-14T12:00:00
+    end: 2026-11-14T16:00:00
     location: TBA
     id: qw0ehzc6
   - name: Qualifiers
