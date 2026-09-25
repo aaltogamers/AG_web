@@ -21,7 +21,7 @@ const TASK_FIELDS = [
   'assigneeIds',
 ]
 
-// Only the given fields are returned; `null` or "" clears an optional field
+// Only the given fields are returned; `null` clears an optional field
 export const parseTaskInput = async (input: Record<string, unknown>): Promise<UpdateTaskInput> => {
   const unknown = Object.keys(input).filter((k) => !TASK_FIELDS.includes(k))
   if (unknown.length) {

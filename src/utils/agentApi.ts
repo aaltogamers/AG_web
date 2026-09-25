@@ -58,7 +58,13 @@ export const getBody = (req: NextApiRequest): Record<string, unknown> => {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     throw new AgentError(400, 'Body must be a JSON object')
   }
-  return body as Record<string, unknown>
+  // The n8n tools send every field, with "" for the ones the model left out, and
+  // can't send null. So "" means "not given" and "null" clears a field.
+  return Object.fromEntries(
+    Object.entries(body)
+      .filter(([, value]) => value !== '')
+      .map(([key, value]) => [key, value === 'null' ? null : value])
+  )
 }
 
 export const requireString = (value: unknown, name: string): string => {
