@@ -2,7 +2,7 @@ import moment from 'moment'
 import { useForm, SubmitHandler, Controller } from 'react-hook-form'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { FaEdit, FaExternalLinkAlt, FaLock, FaLockOpen, FaTrash } from 'react-icons/fa'
+import { FaCopy, FaEdit, FaExternalLinkAlt, FaLock, FaLockOpen, FaTrash } from 'react-icons/fa'
 import Input from './Input'
 import {
   AGEvent,
@@ -22,6 +22,7 @@ import {
   SignupTarget,
 } from '../utils/eventUtils'
 import ParticipantTable from './ParticipantTable'
+import CopySignupDialog from './CopySignupDialog'
 import SignupTimePicker from './SignupTimePicker'
 import {
   deleteSignupEvent,
@@ -53,6 +54,7 @@ const SignUpCreateForm = ({ events }: Props) => {
   const [editableInputs, setEditableInputs] = useState<EditableInputObj[]>([])
   const [pools, setPools] = useState<SignupPool[]>(defaultPools())
   const [message, setMessage] = useState<string | null>(null)
+  const [isCopyOpen, setIsCopyOpen] = useState(false)
 
   const getNextFieldId = (): number => {
     const used = new Set<number>()
@@ -384,7 +386,7 @@ const SignUpCreateForm = ({ events }: Props) => {
           {selectedTarget && (
             <>
               <div />
-              <div className="flex gap-2 -mt-6 mb-8 md:mx-4 md:mt-0 text-sm">
+              <div className="flex flex-wrap gap-2 -mt-6 mb-8 md:mx-4 md:mt-0 text-sm">
                 <a
                   href={`/events/${selectedTarget.event.slug}`}
                   target="_blank"
@@ -403,6 +405,14 @@ const SignUpCreateForm = ({ events }: Props) => {
                   <FaEdit size={12} />
                   Edit event info
                 </a>
+                <button
+                  type="button"
+                  onClick={() => setIsCopyOpen(true)}
+                  className="flex items-center gap-2 border border-lightgray rounded-md px-3 py-1 hover:border-red"
+                >
+                  <FaCopy size={12} />
+                  Copy sign-up from existing event
+                </button>
               </div>
             </>
           )}
@@ -594,6 +604,20 @@ const SignUpCreateForm = ({ events }: Props) => {
           </div>
         </div>
       </form>
+      {isCopyOpen && selectedTarget && (
+        <CopySignupDialog
+          targetKey={selectedTarget.key}
+          targetLabel={getValues('target')}
+          labels={targetOptions.map(({ key, label }) => ({ value: key, label }))}
+          participantCount={signupData ? participants.length : 0}
+          onClose={() => setIsCopyOpen(false)}
+          onCopied={async () => {
+            await loadEvent(getValues('target'))
+            setMessage('Sign-up copied!')
+            setTimeout(() => setMessage(null), 2000)
+          }}
+        />
+      )}
     </div>
   )
 }
