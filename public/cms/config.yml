@@ -99,7 +99,6 @@ collections:
         summary: "{{fields.start | date('DD/MM/YYYY HH:mm')}} {{fields.name}} @ {{fields.location}}"
         hint: 'One entry per day or part of the event, e.g. Qualifiers and Finals. Leave empty if the time is not known yet.'
         required: false
-        add_to_top: true
         collapsed: true
         fields:
           - {

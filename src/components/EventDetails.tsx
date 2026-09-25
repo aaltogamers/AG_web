@@ -209,7 +209,7 @@ const EventDetails = ({
 
   const isPast = (session: EventSession) => eventMoment(session.end).isBefore(now)
   const upcoming = sessions.filter((s) => !isPast(s))
-  const past = sessions.filter(isPast).reverse()
+  const past = sessions.filter(isPast)
   const moreUpcoming = upcoming.slice(VISIBLE_DATES)
   // A few past dates are shown as they are when there's nothing upcoming
   const showPastDirectly = !upcoming.length && past.length <= VISIBLE_DATES
