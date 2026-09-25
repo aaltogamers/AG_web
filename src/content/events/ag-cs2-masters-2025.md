@@ -1,16 +1,16 @@
 ---
 name: AG CS2 Masters 2025
 sessions:
-  - name: Finals
-    start: 2025-11-29T12:00:00
-    end: 2025-11-29T19:30:00
-    location: AG Discord server
-    id: b1jj150m
   - name: Qualifiers
     start: 2025-11-22T12:00:00
     end: 2025-11-22T18:00:00
     location: AG Discord server
     id: 61mc3kky
+  - name: Finals
+    start: 2025-11-29T12:00:00
+    end: 2025-11-29T19:30:00
+    location: AG Discord server
+    id: b1jj150m
 signupMode: none
 image: /images/cs2_masters_final_compressed.jpg
 visibleOnCalendar: true

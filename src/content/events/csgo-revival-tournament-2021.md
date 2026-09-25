@@ -1,16 +1,16 @@
 ---
 name: AG CS:GO Revival Tournament 2021
 sessions:
-  - name: Finals
-    start: 2021-03-20T13:00:00
-    end: 2021-03-20T19:30:00
-    location: Online
-    id: ejogujhh
   - name: Group stage
     start: 2021-03-19T17:00:00
     end: 2021-03-19T23:30:00
     location: Online
     id: ngh4dqbb
+  - name: Finals
+    start: 2021-03-20T13:00:00
+    end: 2021-03-20T19:30:00
+    location: Online
+    id: ejogujhh
 signupMode: none
 image: /images/csgo-revival_2021.jpg
 visibleOnCalendar: true

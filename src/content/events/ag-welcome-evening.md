@@ -10,12 +10,11 @@ image: /images/welcome-evening-2023.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
 description: >-
-  Join us live at Arkade Gaming Bar on Thursday September 14, for the perfect
-  chance to play your favorite games, meet new friends and familiarize yourself
+  Join us live for the perfect chance to play your favorite games, meet new friends and familiarize yourself
   with other AG members.
 
 
-  The event starts at 18. Taking part is completely FREE with the possibility to buy snacks and refreshments in the bar. 
+  Taking part is completely FREE with the possibility to buy snacks and refreshments in the bar. 
 
 
   Signup opens 8.9. at 12:00 here at the AG website. Seats are limited so be fast!

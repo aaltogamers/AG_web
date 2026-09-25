@@ -1,18 +1,18 @@
 ---
 name: AG Board Game Night
 sessions:
-  - start: 2026-12-04T16:00:00
-    end: 2026-12-04T21:00:00
-    location: Village Living room, Jämeräntaival 5 A
-    id: ezc43axg
-  - start: 2026-10-16T16:00:00
-    end: 2026-10-16T21:00:00
-    location: Village Living room, Jämeräntaival 5 A
-    id: lmazyj88
   - start: 2026-09-18T17:00:00
     end: 2026-09-18T22:00:00
     location: Village Living room, Jämeräntaival 5 A
     id: 7uqsmhxm
+  - start: 2026-10-16T16:00:00
+    end: 2026-10-16T21:00:00
+    location: Village Living room, Jämeräntaival 5 A
+    id: lmazyj88
+  - start: 2026-12-04T16:00:00
+    end: 2026-12-04T21:00:00
+    location: Village Living room, Jämeräntaival 5 A
+    id: ezc43axg
 signupMode: session
 image: /images/board-game-night-2026-fall.png
 visibleOnCalendar: true
@@ -24,11 +24,6 @@ description: >-
   \
 
   Grab your friends, challenge someone to a game, discover your new favorite, or come chill with us! There’s always room for one more at the table. 💥
-
-
-  📍 **Kylän olohuone, Jämeräntaival 5 A**
-
-  🕕 **Friday, September 18th @ 17:00[](https://aaltogamers.fi/events/ag-board-game-night#:~:text=Space%20Policy.-,Sign%20up,-AG%20Board%20Game)**
 recordings: []
 ---
 🕹️ **NEW QUEST UNLOCKED: BOARD GAMES NIGHT!** 🎮✨

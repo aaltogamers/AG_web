@@ -13,7 +13,7 @@ description: >-
   🎉 Hey there, TFT fans! 🎉
 
 
-  Aalto Gamers is thrilled to present our upcoming Teamfight Tactics tournament held online on Aalto Gamers Discord server on Saturday, April 1st 🎮 
+  Aalto Gamers is thrilled to present our upcoming Teamfight Tactics tournament 🎮 
 
 
   (And no, this isn’t an April Fool's joke - we promise 😉)

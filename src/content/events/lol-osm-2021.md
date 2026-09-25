@@ -1,16 +1,16 @@
 ---
 name: League of Legends OSM 2021
 sessions:
-  - name: Finals
-    start: 2021-05-22T12:00:00
-    end: 2021-05-22T19:00:00
-    location: Online
-    id: 3zwkcxlg
   - name: Qualifiers
     start: 2021-05-15T12:00:00
     end: 2021-05-15T19:00:00
     location: Online
     id: 1vzpt5jt
+  - name: Finals
+    start: 2021-05-22T12:00:00
+    end: 2021-05-22T19:00:00
+    location: Online
+    id: 3zwkcxlg
 signupMode: none
 image: /images/lol-osm-2021.png
 visibleOnCalendar: true

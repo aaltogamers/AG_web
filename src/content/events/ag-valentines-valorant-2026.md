@@ -9,7 +9,7 @@ signupMode: none
 image: /images/valentinesvalorantag.png
 visibleOnCalendar: true
 visibleOnEventsPage: true
-description: AG Valentines Valorant tournament on Sunday, February 22nd @ 13:00!
+description: AG Valentines Valorant tournament!
 recordings: []
 ---
 

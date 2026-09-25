@@ -1,25 +1,22 @@
 ---
 name: AG Minecraft Server Opening
 sessions:
-  - name: End Dimension Opening
-    start: 2026-03-07T14:00:00
-    end: 2026-03-07T20:00:00
-    location: Aalto Gamers Discord
-    id: s70z7v83
   - name: Server Opening
     start: 2026-03-01T13:00:00
     end: 2026-03-01T19:00:00
     location: Aalto Gamers Discord
     id: t88c691i
+  - name: End Dimension Opening
+    start: 2026-03-07T14:00:00
+    end: 2026-03-07T20:00:00
+    location: Aalto Gamers Discord
+    id: s70z7v83
 signupMode: none
 image: /images/ag-minecraft-march-square.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
 description: >-
-  Aalto Gamers is opening a brand new Minecraft server this March!
-
-
-  1.3 - Minecraft Server Opening! 
+  Aalto Gamers is opening a brand new Minecraft server!
 
 
   A brand-new world awaits! Come build your own home around a shared spawn area, creating a cozy village vibe that grows over time, or chill and explore at your own pace, you decide! 🏡✨

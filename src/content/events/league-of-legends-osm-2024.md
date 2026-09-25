@@ -1,16 +1,16 @@
 ---
 name: League of Legends OSM 2024
 sessions:
-  - name: Finals
-    start: 2024-05-26T12:00:00
-    end: 2024-05-26T20:00:00
-    location: Design Factory, Puumiehenkuja 5a, Espoo
-    id: ledzt6zy
   - name: Qualifiers
     start: 2024-05-18T12:00:00
     end: 2024-05-18T20:00:00
     location: Online
     id: zk91pkr6
+  - name: Finals
+    start: 2024-05-26T12:00:00
+    end: 2024-05-26T20:00:00
+    location: Design Factory, Puumiehenkuja 5a, Espoo
+    id: ledzt6zy
 signupMode: none
 image: /images/ag-osm-2024-main-post.png
 visibleOnCalendar: true

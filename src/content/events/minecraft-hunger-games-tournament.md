@@ -10,7 +10,7 @@ image: /images/minecraft_hungergames.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
 description: |-
-  ⚔️ 8.3 at 14:00 - Minecraft Hunger Games Tournament!
+  ⚔️ Minecraft Hunger Games Tournament!
 
   Fight your way to victory in the Hunger Games - only one can survive! 🏆🔥
 recordings:

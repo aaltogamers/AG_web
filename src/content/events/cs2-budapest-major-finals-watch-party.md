@@ -13,7 +13,7 @@ description: >-
   Missed your flight to Budapest❓️Don't worry, we got you covered 🙂‍↔️
 
 
-  Join us to **cheer on your favorite finalist team**, eat some **FREE SNACKS**, and hang out with fellow CS2/Snack enjoyers **LIVE at Design Factory** 🎮
+  Join us to **cheer on your favorite finalist team**, eat some **FREE SNACKS**, and hang out with fellow CS2/Snack enjoyers **LIVE** 🎮
 ---
 
 ### WHY?

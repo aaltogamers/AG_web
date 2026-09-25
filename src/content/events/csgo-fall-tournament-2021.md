@@ -1,16 +1,16 @@
 ---
 name: AG CS:GO Fall Tournament 2021
 sessions:
-  - name: Finals
-    start: 2021-11-20T14:00:00
-    end: 2021-11-20T18:00:00
-    location: Online
-    id: nhij86fy
   - name: Qualifiers
     start: 2021-11-19T17:00:00
     end: 2021-11-19T23:30:00
     location: Online
     id: 9gh3l9nw
+  - name: Finals
+    start: 2021-11-20T14:00:00
+    end: 2021-11-20T18:00:00
+    location: Online
+    id: nhij86fy
 signupMode: none
 image: /images/csgo-fall-2021.png
 visibleOnCalendar: true
@@ -20,7 +20,7 @@ description: >-
   €500 prize pool for 1st place.
 
 
-  Qualifiers on 19.11. starting at 17:00 and finals on 20.11. starting at 13:00. Tournament platform is Challengermode with games streamed on Twitch.
+  Tournament platform is Challengermode with games streamed on Twitch.
 ---
 
 ### WHERE?

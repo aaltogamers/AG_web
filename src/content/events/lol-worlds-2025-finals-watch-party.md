@@ -13,7 +13,7 @@ description: >-
   *Will **T1** rise once more to defend their title against **KT Rolster**?*
 
 
-  Join us at Aalto Design Factory this Sunday for the AG League of Legends Worlds 2025 Finals Watch Party!
+  Join us for the AG League of Legends Worlds 2025 Finals Watch Party!
 ---
 
 ### WHY?

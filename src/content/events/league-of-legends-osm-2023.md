@@ -1,16 +1,16 @@
 ---
 name: League of Legends OSM 2023
 sessions:
-  - name: Finals
-    start: 2023-05-27T12:00:00
-    end: 2023-05-27T20:00:00
-    location: Design Factory, Otaniemi
-    id: esi8t7l0
   - name: Qualifiers
     start: 2023-05-13T12:00:00
     end: 2023-05-13T20:00:00
     location: Online
     id: 2svgt4d7
+  - name: Finals
+    start: 2023-05-27T12:00:00
+    end: 2023-05-27T20:00:00
+    location: Design Factory, Otaniemi
+    id: esi8t7l0
 signupMode: none
 image: /images/lol-osm-2023.jpg
 visibleOnCalendar: true

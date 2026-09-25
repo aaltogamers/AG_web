@@ -9,8 +9,7 @@ signupMode: none
 image: /images/csgo-lan-spring-2022.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-description: Aalto Gamers CS:GO LAN party at Arkade gaming bar in central
-  Helsinki! Quality CS in-houses and mini-tournaments with a great group and
+description: Aalto Gamers CS:GO LAN party! Quality CS in-houses and mini-tournaments with a great group and
   atmosphere. The event is free of charge for all participants.
 ---
 

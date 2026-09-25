@@ -11,9 +11,7 @@ visibleOnCalendar: true
 visibleOnEventsPage: true
 description: >-
   Aalto Gamers is organizing a chill afterwork event with our partner
-  association: Heimo Esports. Join us LIVE at their Tribe Gamebase in Otahalli,
-  Otaranta 6 (starting at 18) on Wednesday August 16, for a prime chance to get
-  to play your favorite games, hang out with friends and even grill some food
+  association: Heimo Esports. Join us LIVE for a prime chance to get to play your favorite games, hang out with friends and even grill some food
   together!
 
 

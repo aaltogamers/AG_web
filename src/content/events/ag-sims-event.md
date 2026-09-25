@@ -16,12 +16,6 @@ description: |-
 
   Come hang out, show off your builds, and compete to win nice prizes!✨
 
-  📅 Saturday, April 11th
-
-  🕑 14:00 – 18:00
-
-  📍 Espoo Game Lab, A Grid, Otakaari 5, or attend online through Discord
-
   💻 Also streaming live on Twitch!!
 recordings: []
 ---

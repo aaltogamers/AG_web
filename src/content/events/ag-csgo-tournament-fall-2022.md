@@ -1,16 +1,16 @@
 ---
 name: AG CS:GO Fall Tournament 2022
 sessions:
-  - name: Finals
-    start: 2022-12-03T12:00:00
-    end: 2022-12-03T20:00:00
-    location: Design Factory, Puumiehenkuja 5a, Espoo
-    id: al1e6xm2
   - name: Qualifiers
     start: 2022-11-27T12:00:00
     end: 2022-11-27T20:00:00
     location: Online
     id: ryeefebt
+  - name: Finals
+    start: 2022-12-03T12:00:00
+    end: 2022-12-03T20:00:00
+    location: Design Factory, Puumiehenkuja 5a, Espoo
+    id: al1e6xm2
 signupMode: none
 image: /images/csgo-fall-2022.jpg
 visibleOnCalendar: true
@@ -21,7 +21,7 @@ description: >-
   2022. 
 
 
-  Gather up your team of young (or old) hitters to compete for a prize pool of a 1000€ or come just to have fun with your best mates! Online qualifiers will be held on Sunday 27.11. and the four best teams will face off in live finals at Design factory on Saturday 3.12.
+  Gather up your team of young (or old) hitters to compete for a prize pool of a 1000€ or come just to have fun with your best mates! The four best teams from the online qualifiers will face off in the live finals.
 ---
 
 ### TICKETS

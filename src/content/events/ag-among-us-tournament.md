@@ -9,8 +9,7 @@ signupMode: none
 image: /images/amogus.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
-description: Aalto Gamers is proud to present our 🚀Among Us🚀 Tournament held
-  on Saturday April 15 starting at 13:00 in Aalto Gamers Discord Server🚨
+description: Aalto Gamers is proud to present our 🚀Among Us🚀 Tournament!🚨
 ---
 
 ### WHY?

@@ -13,7 +13,7 @@ description: >-
   **Welcome Evening 2026 is here! 🎉**
 
 
-  Looking for games, good vibes, and new friends? 🎮👋 Come join Aalto Gamers at Otaniemi Game Cave on Monday 7.9. from 18:00!
+  Looking for games, good vibes, and new friends? 🎮👋 Come join Aalto Gamers!
 
 
   What will you play first? PC, console, board games, or darts? 👀 **The event is FREE!**

@@ -1,16 +1,16 @@
 ---
 name: AG CS2 Masters 2024
 sessions:
-  - name: Finals
-    start: 2024-11-16T12:00:00
-    end: 2024-11-16T20:00:00
-    location: AG Discord server
-    id: 3o2c02uh
   - name: Qualifiers
     start: 2024-11-09T12:00:00
     end: 2024-11-09T20:00:00
     location: AG Discord server
     id: wyv2q3fr
+  - name: Finals
+    start: 2024-11-16T12:00:00
+    end: 2024-11-16T20:00:00
+    location: AG Discord server
+    id: 3o2c02uh
 signupMode: none
 image: /images/cs2.jpg
 visibleOnCalendar: true

@@ -11,7 +11,7 @@ visibleOnCalendar: true
 visibleOnEventsPage: true
 description: >-
   Attention all CS:GO enjoyers! Aalto Gamers is excited to present our upcoming
-  Wingman tournament on Thursday 23.03 at 18:00 at Heimo Esports Tribe Gamebase.
+  Wingman tournament!
 
 
   This is your chance to showcase your skills and compete with other players in a thrilling live event, so sign up fast!

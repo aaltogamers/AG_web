@@ -13,7 +13,7 @@ description: >-
   **Welcome Evening 2025 is here!**
 
 
-  Join us **LIVE** at Otaniemi Game Cave, for the perfect chance to play your favorite games, meet new friends and **get to know Aalto Gamers**!
+  Join us **LIVE** for the perfect chance to play your favorite games, meet new friends and **get to know Aalto Gamers**!
 ---
 
 ### WHY?

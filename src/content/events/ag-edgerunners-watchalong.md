@@ -11,8 +11,7 @@ visibleOnCalendar: true
 visibleOnEventsPage: true
 description: >
   Watchalong of the hit series Cyberpunk: Edgerunners with fellow AG peeps.
-  Organized at Kinopoli, Otaniemi on the 11th of October at 17:00. Join us there
-  by signing up from the link below!
+  Join us by signing up from the link below!
 ---
 
 ### WHAT?

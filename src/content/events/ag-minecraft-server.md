@@ -18,7 +18,7 @@ description: >-
   We're inviting you to join us on our whitelist-only survival server with minimal modifications, aiming for a true cozy Minecraft experience 🌍⛏️
 
 
-  The server will be running on the latest release (1.20.2) and it will launch on 28.3.⏳
+  The server will be running on the latest release (1.20.2) ⏳
 
 
   However, whitelist sign-ups are already [available now](https://docs.google.com/forms/d/e/1FAIpQLSfkZKpP-TRVOw3MJ5WgdDQSrG5x5_XiSWNYG6JXf5LzX5JIXw/viewform) 👈 

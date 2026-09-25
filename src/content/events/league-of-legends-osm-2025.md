@@ -1,16 +1,16 @@
 ---
 name: League of Legends OSM 2025
 sessions:
-  - name: Finals
-    start: 2025-05-24T12:00:00
-    end: 2025-05-24T20:00:00
-    location: Design Factory, Puumiehenkuja 5a, Espoo
-    id: bwikv0mm
   - name: Qualifiers
     start: 2025-05-17T12:00:00
     end: 2025-05-17T20:00:00
     location: Online, streamed at twitch.tv/aaltogamers
     id: sd7tnns0
+  - name: Finals
+    start: 2025-05-24T12:00:00
+    end: 2025-05-24T20:00:00
+    location: Design Factory, Puumiehenkuja 5a, Espoo
+    id: bwikv0mm
 signupMode: none
 image: /images/img_20250422_115109_393.jpg
 visibleOnCalendar: true

@@ -1,16 +1,16 @@
 ---
 name: League of Legends OSM 2022
 sessions:
-  - name: Finals
-    start: 2022-05-21T12:00:00
-    end: 2022-05-21T20:00:00
-    location: Online (EU West)
-    id: b1qpb4hf
   - name: Qualifiers
     start: 2022-05-14T12:00:00
     end: 2022-05-14T20:00:00
     location: Online (EU West)
     id: io0nc6oi
+  - name: Finals
+    start: 2022-05-21T12:00:00
+    end: 2022-05-21T20:00:00
+    location: Online (EU West)
+    id: b1qpb4hf
 signupMode: none
 image: /images/lol-osm-2022.png
 visibleOnCalendar: true

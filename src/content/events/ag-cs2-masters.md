@@ -1,16 +1,16 @@
 ---
 name: AG CS2 Masters 2023
 sessions:
-  - name: Finals
-    start: 2023-11-25T12:00:00
-    end: 2023-11-25T20:00:00
-    location: Online, AG Discord
-    id: jjwl5bhl
   - name: Qualifiers
     start: 2023-11-18T12:00:00
     end: 2023-11-18T20:00:00
     location: Online, AG Discord
     id: t4d2mvne
+  - name: Finals
+    start: 2023-11-25T12:00:00
+    end: 2023-11-25T20:00:00
+    location: Online, AG Discord
+    id: jjwl5bhl
 signupMode: none
 image: /images/cs2_ag.jpg
 visibleOnCalendar: true

@@ -16,7 +16,7 @@ description: >-
   WHO WILL WIN THE WORLDS IN 2023?
 
 
-  Join us LIVE at the new Design Factory on Sunday, November 19, to cheer on your favourite team, eat some FREE snacks, and hang out with fellow finals enjoyers.
+  Join us LIVE to cheer on your favourite team, eat some FREE snacks, and hang out with fellow finals enjoyers.
 ---
 
 ### WHY?

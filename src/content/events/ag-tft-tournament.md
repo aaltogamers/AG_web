@@ -14,7 +14,7 @@ description: >-
   in the Aalto Gamers Teamfight Tactics Tournament! 🏆
 
 
-  Join us on the 25th of February on AG Discord for epic battles and/or total wipes, tons of fun moments and of course, interesting prizes for the best strategists 🔥
+  Join us for epic battles and/or total wipes, tons of fun moments and of course, interesting prizes for the best strategists 🔥
 
 
   Sign up [here](https://forms.gle/segTT4Xfgrt4PHsy8) before 23.02. to secure your spot in the tournament.
