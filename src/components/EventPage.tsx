@@ -14,7 +14,7 @@ import { AGEvent, SignupRow } from '../types/types'
 import { LYCHEE_BASE_URL } from '../utils/constants'
 import {
   eventMoment,
-  formatSessionTime,
+  formatSessionDate,
   getSignupStatus,
   getSignupTargets,
 } from '../utils/eventUtils'
@@ -190,7 +190,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
                 {selectedTarget.session && (
                   <h5 className="text-lightgray mt-1">
                     {selectedTarget.session.name ? `${selectedTarget.session.name} · ` : ''}
-                    {formatSessionTime(selectedTarget.session)}
+                    {formatSessionDate(selectedTarget.session)}
                   </h5>
                 )}
               </div>

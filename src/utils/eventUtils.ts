@@ -77,6 +77,15 @@ export const formatSessionTime = ({ start, end }: EventSession) => {
   return `${startMoment.format('ddd D.M. HH:mm')} – ${endMoment.format('ddd D.M.YYYY HH:mm')}`
 }
 
+export const formatSessionDate = ({ start, end }: EventSession) => {
+  const startMoment = eventMoment(start)
+  const endMoment = eventMoment(end)
+  if (!endMoment.isAfter(startMoment) || startMoment.isSame(endMoment, 'day')) {
+    return startMoment.format('ddd D.M.YYYY')
+  }
+  return `${startMoment.format('ddd D.M.')} – ${endMoment.format('ddd D.M.YYYY')}`
+}
+
 export const formatSignupTime = (time: Moment) => time.format('D.M.YYYY HH:mm')
 
 // Sign-ups

@@ -4,6 +4,7 @@ import { FaChevronDown, FaMapMarkerAlt, FaRegCalendar, FaRegClock } from 'react-
 import { AGEvent, EventSession } from '../types/types'
 import {
   eventMoment,
+  formatSessionDate,
   formatSignupTime,
   getSignupStatus,
   getSignupTargets,
@@ -45,20 +46,13 @@ const Detail = ({ icon, children }: { icon: ReactNode; children: ReactNode }) =>
   </div>
 )
 
-const getDateAndTime = ({ start, end }: EventSession) => {
-  const startMoment = eventMoment(start)
-  const endMoment = eventMoment(end)
-  if (!endMoment.isAfter(startMoment)) {
-    return { date: startMoment.format('ddd D.M.YYYY'), time: startMoment.format('HH:mm') }
-  }
-  const time = `${startMoment.format('HH:mm')}–${endMoment.format('HH:mm')}`
-  if (startMoment.isSame(endMoment, 'day')) {
-    return { date: startMoment.format('ddd D.M.YYYY'), time }
-  }
-  return {
-    date: `${startMoment.format('ddd D.M.')} – ${endMoment.format('ddd D.M.YYYY')}`,
-    time,
-  }
+const getDateAndTime = (session: EventSession) => {
+  const startMoment = eventMoment(session.start)
+  const endMoment = eventMoment(session.end)
+  const time = endMoment.isAfter(startMoment)
+    ? `${startMoment.format('HH:mm')}–${endMoment.format('HH:mm')}`
+    : startMoment.format('HH:mm')
+  return { date: formatSessionDate(session), time }
 }
 
 export const scrollToSignups = () =>
