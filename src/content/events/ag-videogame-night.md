@@ -26,7 +26,7 @@ Featuring 12 PCs, a variety of retro consoles, board games and more, you're sure
 
 😄 Bad at games? Good at games? Doesn't matter! Bring a positive attitude and enjoy some in-house games in good company.
 
-❤️Thank you to PolyGame for letting us use their space!
+❤️Thank you to PolyGame for letting us use their space! *Read more about them [here!](https://polygame.fi/)*
 
 📍 PolyGame Clubroom (Jämeräntaival 11 CD OtaHOAS)
 🕙 October 2nd 17:00
