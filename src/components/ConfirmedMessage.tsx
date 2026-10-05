@@ -13,7 +13,7 @@ type Props = {
 /** Shown to participants who got a place, e.g. with a link to the event's Telegram group */
 const ConfirmedMessage = ({ info: { message, link }, className = '' }: Props) => (
   <div
-    className={`flex flex-col gap-3 bg-red/15 border-2 border-red rounded px-5 py-4 text-left ${className}`}
+    className={`flex flex-col gap-3 border-2 border-red/70 rounded px-5 py-4 text-left ${className}`}
   >
     <div className="flex items-center gap-2 uppercase tracking-widest text-sm font-bold text-white">
       <FaCheckCircle className="shrink-0 text-red" size={18} />
