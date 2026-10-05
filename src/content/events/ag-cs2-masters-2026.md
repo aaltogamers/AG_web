@@ -25,110 +25,67 @@ recordings: []
 
 **1.1 Game:** Counter-Strike 2, latest version.
 
-**1.2 Team size:** 5 starting players, up to two substitutes if needed, and a coach. At least 3 of the 5 players in the playing roster must be currently studying at a university or university of applied sciences (UAS), or be recent graduates. A recent graduate is someone who graduated on or after 1.1.2025. Players' student status may be checked at any time during the tournament.
+**1.2 Team size:** 5 starting players, up to 2 substitutes, and a coach. At least 3 of the 5 players playing for the team at any time must be currently studying at a university or university of applied sciences (UAS), or have graduated during the current or previous calendar year. Players' student status may be checked at any time during the tournament.
 
-**1.3** A team may replace a maximum of two starting players with substitutes registered in advance.
+**1.3** An individual player or coach may only be part of one team during the tournament.
 
-**1.4** An individual player or coach may only be part of one team during the tournament.
+**1.4** Aalto Gamers provides a Discord server, which is mandatory to use for all communication with the tournament organizers and referees during the tournament.
 
-**1.5** In a multi-stage tournament (e.g. qualifiers and main event), a team must retain the majority of the starting players from its original roster until the end of the tournament.
+**1.5** Any software that modifies game files or provides an unfair advantage in the game is prohibited and constitutes grounds for immediate removal from the tournament.
 
-**1.6** Aalto Gamers provides a Discord server, which is mandatory to use for all communication during games.
+**1.6 Equipment**
 
-**1.7** Any software that modifies game files or provides an unfair advantage in the game is prohibited and constitutes grounds for immediate removal from the tournament.
+- **1.6.1** At offline tournaments, the tournament organizer will provide PCs, monitors and headphones. Players must bring their own keyboard, mouse and mousepad.
+- **1.6.2** At online tournaments, players arrange their own PCs, monitors, peripherals and internet connections and are responsible for their functionality. The tournament organizer is not responsible for any technical issues.
 
-**1.8** So-called "ghosting" is prohibited. The main stream has a delay, so watching it is allowed.
+**1.7** Players must have Prime Status on their personal Steam accounts, unless otherwise stated.
 
-**1.9** Players must play with their own peripherals (keyboard, mouse, mousepad, headset and in-ear earphones). At offline tournaments, the coach must use their own in-ear earphones.
+**1.8 Nicknames and images**
 
-- **1.9.1** At offline tournaments, the tournament organizer may provide the PCs and monitors to play on. The organizer may also provide noise-cancelling headphones.
-- **1.9.2** At online tournaments, players arrange their own PCs, monitors, peripherals and internet connections and are responsible for their functionality. The tournament organizer is not responsible for any technical issues.
+- **1.8.1** Teams and players must use non-offensive nicknames in the tournament and its matches, preferably their official ones. Team and player names must not feature sponsors related to alcohol or tobacco products, betting/gambling, adult entertainment, or anything else unsuitable or offensive.
+- **1.8.2** Players must use a broadcast-appropriate Steam avatar that is not offensive.
+- **1.8.3** In-game items (e.g. skins, name tags, stickers) must not feature anything prohibited under 1.8.1.
 
-**1.10** Players must own a CS2 license on their personal Steam accounts, unless otherwise stated.
+**1.9** A player with a Counter-Strike VAC (Valve Anti-Cheat) ban less than two years old on any of their game accounts may not participate or play in the tournament.
 
-**1.11 Nicknames and images**
+**1.10 Coaching**
 
-- **1.11.1** Teams and players must use only their official nicknames in the tournament and its matches. Team and player names must not feature sponsors related to alcohol or tobacco products, betting/gambling, adult entertainment, or anything else unsuitable or offensive.
-- **1.11.2** Players must use a broadcast-appropriate Steam avatar, that is not offensive.
-- **1.11.3** In-game items (e.g. skins, name tags, stickers) must not feature anything prohibited under 1.11.1.
+- **1.10.1** At offline tournaments, the team's coach is entitled to watch the match from behind the players, but may not communicate with the players in any way except during halftime, during a tactical timeout, or when calling a timeout.
+- **1.10.2** At online tournaments, the coach may communicate with the players at any time.
 
-**1.12** A player with a CS:GO or CS2 VAC (Valve Anti-Cheat) ban less than two years old on any of their game accounts may not participate or play in the tournament.
+**1.11** During an offline match, the team's players and coach may only communicate with persons involved in the match: the team's players, the team's coach, tournament organizers, referees (admins), and the opposing team via the in-game chat. Communication must comply with rule 7.1.
 
-**1.13 Coaching**
+**1.12 Schedule**
 
-- **1.13.1** At offline tournaments, the team's coach is entitled to watch the match from behind the players, but may not communicate with the players in any way except during halftime, during a tactical timeout, or when calling a timeout.
-- **1.13.2** At online tournaments, the coach may communicate with the players over VoIP at any time before, during and after a round.
+- **1.12.1** At offline tournaments, the whole team, including the coach, must be present 30 minutes before the official match start time to receive tournament and match information. Setting up the station and in-game settings must be completed before this, if the tournament schedule allows.
+- **1.12.2** At online tournaments, the team captain must be available on the Aalto Gamers Discord server 30 minutes before the official first match start time to receive tournament and match information.
+- **1.12.3** If a team is not ready when the match is scheduled to start, the team first receives a warning, followed by penalties as determined by the referee.
+- **1.12.4** The tournament organizer and referees must inform teams of the length of breaks between maps and between matches.
+- **1.12.5** The tournament organizer and referees reserve the right to change the times stated under rule 1.12 if circumstances require.
 
-**1.14** During a match, the team's players and coach may only communicate with persons involved in the match: the team's players, the team's coach, tournament organizers, referees (admins), and the opposing team via the in-game chat. Communication must comply with rule 7.1.
-
-**1.15 Schedule**
-
-- **1.15.1** At offline tournaments, the team captain, the whole team and its coach must be present 30 minutes before the official match start time to receive tournament and match information. Setting up the station and in-game settings must be completed before this, if the tournament schedule allows.
-- **1.15.2** At online tournaments, the team captain must be present and available on the Aalto Gamers Discord server 30 minutes before the official first match start time to receive tournament and match information. The map veto is done on ChallengerMode after the players have readied up (see 5.2.5).
-- **1.15.3** If a team is not ready when the match is scheduled to start, the team first receives a warning, followed by penalties as determined by the referee.
-- **1.15.4** The tournament organizer and referees must inform teams of the length of breaks between maps and between matches.
-- **1.15.4** The tournament organizer and referees reserve the right to change the times stated under rule 1.15 if circumstances require.
-
-**1.16** In extreme situations, the referees have the final say on all matters. The organizers reserve the right to apply and modify these rules as they see fit.
+**1.13** In extreme situations, the referees have the final say on all matters. The organizers reserve the right to apply and modify these rules as they see fit.
 
 ---
 
 #### 2. Match Rules
 
-**2.1 Format:** MR12.
-
-**2.2** A maximum of 24 rounds in regulation, with sides switching at halftime (after round 12).
-
-**2.3 Starting money:** $800.
-
-**2.4 Match timers**
-
-| Rule  | Setting                    | Value      | Console command                                   |
-| ----- | -------------------------- | ---------- | ------------------------------------------------- |
-| 2.4.1 | Round duration             | 1 min 55 s | `mp_roundtime_defuse 1.92`<br>`mp_roundtime 1.92` |
-| 2.4.2 | Freeze time                | 20 s       | `mp_freezetime 20`                                |
-| 2.4.3 | C4 timer                   | 40 s       | `mp_c4timer 40`                                   |
-| 2.4.4 | Round restart delay        | 5 s        | `mp_round_restart_delay 5`                        |
-| 2.4.5 | Halftime break             | 15 s       | `mp_halftime_duration 15`                         |
-| 2.4.6 | Halftime break in overtime | Disabled   | `mp_overtime_halftime_pausetimer 0`               |
-
-**2.5** The first team to win 13 rounds in regulation wins the map.
-
-**2.6** If the map ends in a tie (12–12), overtime is played.
-
-- **2.6.1** Teams continue on the same side they played in the second half of regulation.
-- **2.6.2** The first team to win four rounds in overtime wins the map.
-- **2.6.3** Format: MR3.
-- **2.6.4** Starting money: $10,000.
-- **2.6.5** Overtime is played until a winner is decided.
-
-**2.7 Side selection**
-
-Starting sides are determined by Valve's map pick & ban system (see 5.2.3) in both best-of-one and best-of-three matches.
+**2.1** Matches are played with the standard competitive settings of the tournament servers: MR12, with MR3 overtime played until a winner is decided.
 
 ---
 
 #### 3. Other Rules
 
-**3.1** Scripts (excluding buy binds, toggle binds, jump-throw binds and demo scripts) are prohibited. If you are unsure whether your script is allowed, ask a tournament referee before matches begin.
+**3.1** Binds that work in the unmodified game client are allowed. Macros, and external software or hardware that automate inputs, are prohibited. If you are unsure whether something is allowed, ask a tournament referee before matches begin.
 
 **3.2** External programs that affect the game state or perform actions within the game are prohibited.
 
 **3.3** Intentionally disconnecting during a match is prohibited.
 
-**3.4** Planting the bomb in a spot where it cannot be defused is prohibited.
+**3.4** Exploiting bugs or unintended game or map behavior is prohibited (e.g. spawn bugs, pixel walks, planting the bomb where it cannot be defused, or defusing through a wall without line of sight).
 
-**3.5** Defusing the bomb through an obstacle (e.g. a wall or ceiling) without line of sight is prohibited.
+**3.5** Boosting is allowed, except where game textures, walls, ceilings or floors become see-through or passable.
 
-**3.6** Exploiting bugs that alter the fundamentals of the game (e.g. spawn bugs) is prohibited.
-
-**3.7** Using so-called pixel walks is prohibited.
-
-**3.8** Boosting is allowed, except where game textures, walls, ceilings or floors become see-through or passable.
-
-**3.9 New positions**
-
-- **3.9.1** If a team or player has found a new position and is unsure whether it is allowed, they must contact a tournament referee before using that position to confirm that it complies with the rules.
+**3.6** If a team or player has found a new position and is unsure whether it is allowed, they must contact a tournament referee before using that position to confirm that it complies with the rules.
 
 ---
 
@@ -136,15 +93,12 @@ Starting sides are determined by Valve's map pick & ban system (see 5.2.3) in bo
 
 **4.1** Pausing the match is only allowed for a tactical timeout or a technical issue.
 
-- **4.1.1** Players must state the reason for the pause in the in-game chat before, or immediately after, calling the pause.
-- **4.1.2** At online tournaments, each team has a total of 10 minutes technical pause time, which may only be used in the case of technical difficulties. A disconnected player has the combined length of these pauses (10 minutes) to get back into the match. If the technical issue cannot be resolved within the given time, the team must use a stand-in, play with fewer players, or forfeit the map and/or match.
-- **4.1.3** Always contact an admin through Discord when using a technical pause.
+- **4.1.1** Players must state the reason for the pause in the in-game chat before, or immediately after, calling the pause. For a technical pause, also contact an admin through Discord.
+- **4.1.2** At online tournaments, each team has a total of 10 minutes of technical pause time, which may only be used in the case of technical difficulties, including a disconnected player. If the technical issue cannot be resolved within this time, the team must use a substitute player, play with fewer players, or forfeit the map and/or match.
 
 **4.2** The match resumes when both teams are ready, when the timeout timer runs out, or when the referee decides the match continues.
 
-**4.3** During a map, each team may call three tactical timeouts of 30 seconds each, using the `/pause` command. Timeouts not used in regulation do not carry over to overtime. Each team gets one extra tactical timeout for each of the first two overtimes.
-
-**4.4** Admins will choose the latest backup round from which the game is continued.
+**4.3** Admins will choose the latest backup round from which the game is continued, if needed.
 
 ---
 
@@ -152,12 +106,7 @@ Starting sides are determined by Valve's map pick & ban system (see 5.2.3) in bo
 
 **5.1 Map pool:** The current Active Duty map pool at the time of the games.
 
-**5.2 Map veto**
-
-- **5.2.1** The home team is the higher-seeded team (lower number, e.g. #1 is the highest seed, #16 the lowest). The home team is typically on the left of the match page or higher in the bracket.
-- **5.2.2** The team starting the veto (Team A) is either the team that lost the coin toss or the away team (lower seed).
-- **5.2.3** Both best-of-one (BO1) and best-of-three (BO3) matches use Valve's map pick & ban system.
-- **5.2.5 Start times:** The map veto begins on ChallengerMode after the players have readied up.
+**5.2 Map veto:** Matches use Valve's map pick & ban system inside the tournament platform (i.e. Challengermode), which also determines the starting sides. The veto begins after the players have readied up.
 
 ---
 
@@ -179,7 +128,7 @@ Starting sides are determined by Valve's map pick & ban system (see 5.2.3) in bo
 
 #### 7. Fair Play
 
-**7.1** Insulting, racism, mocking religion and all other behavior that harasses others is prohibited and will result in penalties from the tournament organizer. Trash talk that crosses the line of good taste is also prohibited and will result in a warning, followed by penalties if the behavior continues.
+**7.1** Racism, sexism, transphobia, and all other behavior that harasses others is prohibited and will result in penalties from the tournament organizer. Trash talk that crosses the line of good taste is also prohibited and will result in a warning, followed by penalties if the behavior continues.
 
 **7.2** Tournament participants must always communicate politely and respectfully with the tournament organizer and referees.
 
@@ -195,6 +144,6 @@ Starting sides are determined by Valve's map pick & ban system (see 5.2.3) in bo
 
 **8.2** The tournament organizer reserves the right to decide who may broadcast the tournament and its matches.
 
-**8.3** In online tournaments, players and teams may stream their own matches. We recommend a delay of at least 90 seconds, but this is not required.
+**8.3** In online tournaments, players and teams may stream their own matches. We recommend a delay of at least 90 seconds, but this is not required. Watching streams is allowed, so a team that streams without a delay does so at its own risk.
 
-**8.4** In offline tournament, players and teams may not stream their own matches.
+**8.4** In offline tournaments, players and teams may not stream their own matches.
