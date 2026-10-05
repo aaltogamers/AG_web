@@ -5,6 +5,7 @@ import { isAdminAuthorized } from '../../../utils/adminSession'
 import { getHeader, getQueryParam, parseJsonBody } from '../../../utils/apiUtils'
 import type { DataValue, SignupInput } from '../../../types/types'
 import {
+  getPlacement,
   isPoolPasswordValid,
   normalizePools,
   pickPoolId,
@@ -43,15 +44,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!key) return res.status(400).json({ error: 'Missing key' })
 
     const eventRes = await pool.query(
-      'SELECT id, inputs, pools FROM signup_events WHERE signup_key = $1',
+      'SELECT id, inputs, pools, confirmed_message, confirmed_link FROM signup_events WHERE signup_key = $1',
       [key]
     )
     if (eventRes.rows.length === 0) {
       return res.status(200).json({ signups: [] })
     }
-    const { id: eventId, inputs } = eventRes.rows[0] as {
+    const {
+      id: eventId,
+      inputs,
+      confirmed_message: confirmedMessage,
+      confirmed_link: confirmedLink,
+    } = eventRes.rows[0] as {
       id: string
       inputs: SignupInput[]
+      confirmed_message: string
+      confirmed_link: string
     }
     const pools = normalizePools(eventRes.rows[0].pools)
 
@@ -86,7 +94,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
 
-    return res.status(200).json({ signups, ownSignupId })
+    // Only for participants who got a place, not for those on a reserve list
+    const placement = ownSignupId && getPlacement(signups, pools, ownSignupId)
+    const hasPlace = !!placement && !placement.isReserve
+
+    return res.status(200).json({
+      signups,
+      ownSignupId,
+      ...(hasPlace && confirmedMessage && { confirmedMessage }),
+      ...(hasPlace && confirmedLink && { confirmedLink }),
+    })
   }
 
   if (req.method === 'POST') {

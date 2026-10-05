@@ -8,6 +8,9 @@ export type SignupEvent = {
   openfrom: string
   openuntil: string
   inputs: SignupInput[]
+  // Only sent to admins, see SignUpData
+  confirmedMessage?: string
+  confirmedLink?: string
 }
 
 // A sign-up form with the number of sign-ups in each pool, keyed by pool id
@@ -80,7 +83,12 @@ export const saveSignupEvent = async (event: SignUpData): Promise<SignupEvent> =
 export const listSignups = async (
   signupKey: string,
   submissionToken?: string
-): Promise<{ signups: SignupRow[]; ownSignupId: string | null }> => {
+): Promise<{
+  signups: SignupRow[]
+  ownSignupId: string | null
+  confirmedMessage?: string
+  confirmedLink?: string
+}> => {
   const headers: Record<string, string> = {}
   if (submissionToken) headers['x-submission-token'] = submissionToken
   const res = await fetch(`/api/signups?key=${encodeURIComponent(signupKey)}`, {
@@ -88,7 +96,12 @@ export const listSignups = async (
     headers,
   })
   if (!res.ok) return { signups: [], ownSignupId: null }
-  return (await res.json()) as { signups: SignupRow[]; ownSignupId: string | null }
+  return (await res.json()) as {
+    signups: SignupRow[]
+    ownSignupId: string | null
+    confirmedMessage?: string
+    confirmedLink?: string
+  }
 }
 
 export const createSignup = async (

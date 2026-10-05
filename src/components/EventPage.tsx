@@ -10,6 +10,7 @@ import CapacityBar from './CapacityBar'
 import EventDetails, { scrollToSignups } from './EventDetails'
 import ParticipantList from './ParticipantList'
 import SignupDialog from './SignupDialog'
+import { ConfirmedInfo } from './ConfirmedMessage'
 import { AGEvent, SignupRow } from '../types/types'
 import { LYCHEE_BASE_URL } from '../utils/constants'
 import {
@@ -28,11 +29,24 @@ type Props = {
   showSignUp?: boolean
 }
 
-type SignupList = { key: string; participants: SignupRow[]; ownSignupId: string | null }
+type SignupList = {
+  key: string
+  participants: SignupRow[]
+  ownSignupId: string | null
+  // Only sent when the own sign-up got a place
+  confirmed?: ConfirmedInfo
+}
 
 const fetchSignupList = async (key: string): Promise<SignupList> => {
-  const { signups, ownSignupId } = await listSignups(key, getStoredSignup(key)?.token)
-  return { key, participants: signups, ownSignupId }
+  const { signups, ownSignupId, confirmedMessage, confirmedLink } = await listSignups(
+    key,
+    getStoredSignup(key)?.token
+  )
+  const confirmed =
+    confirmedMessage || confirmedLink
+      ? { message: confirmedMessage, link: confirmedLink }
+      : undefined
+  return { key, participants: signups, ownSignupId, confirmed }
 }
 
 const EventPage = ({ event, showSignUp = true }: Props) => {
@@ -166,6 +180,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
               summaries={summaries}
               onSignUp={openDialog}
               isSignedUp={isSignedUp}
+              confirmed={(key) => (currentList?.key === key ? currentList.confirmed : undefined)}
             />
           </div>
           <div className="min-w-0 md:col-start-1 md:row-start-2">
@@ -282,6 +297,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
           summary={selectedSummary}
           participants={currentList.participants}
           ownSignupId={currentList.ownSignupId}
+          confirmed={currentList.confirmed}
           onClose={() => setIsDialogOpen(false)}
           onChanged={refresh}
         />

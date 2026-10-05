@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ensureMigrated } from '../../utils/db_pg'
 import { getQueryParam } from '../../utils/apiUtils'
-import { publicPools } from '../../utils/signupPools'
-import { getSignupSummaries } from '../../utils/signupForms'
+import { getSignupSummaries, publicSignupForm } from '../../utils/signupForms'
 
 // An event with a sign-up per session can have dozens of forms
 const MAX_KEYS = 200
@@ -27,6 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const summaries = await getSignupSummaries(keys)
   return res.status(200).json({
-    summaries: summaries.map((s) => ({ ...s, pools: publicPools(s.pools) })),
+    summaries: summaries.map(publicSignupForm),
   })
 }

@@ -78,3 +78,21 @@ export const totalFill = (pools: SignupPool[], counts: Record<number, number>) =
     },
     { taken: 0, size: 0, reserve: 0, isFull: true }
   )
+
+// Where a sign-up ended up: in one of its pool's places, or on its reserve list
+export const getPlacement = (
+  signups: { id: string; pool_id: number; created_at: string }[],
+  pools: SignupPool[],
+  signupId: string
+) => {
+  const own = signups.find((s) => s.id === signupId)
+  const pool = own && pools.find((p) => p.id === resolvePoolId(pools, own.pool_id))
+  if (!own || !pool) return null
+  const index = signups
+    .filter((s) => resolvePoolId(pools, s.pool_id) === pool.id)
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    .findIndex((s) => s.id === signupId)
+  return index < pool.size
+    ? { pool, isReserve: false, position: index + 1 }
+    : { pool, isReserve: true, position: index - pool.size + 1 }
+}

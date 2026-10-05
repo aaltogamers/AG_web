@@ -53,6 +53,8 @@ const SignUpCreateForm = ({ events }: Props) => {
   const [participants, setParticipants] = useState<SignupRow[]>([])
   const [editableInputs, setEditableInputs] = useState<EditableInputObj[]>([])
   const [pools, setPools] = useState<SignupPool[]>(defaultPools())
+  const [confirmedMessage, setConfirmedMessage] = useState('')
+  const [confirmedLink, setConfirmedLink] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [isCopyOpen, setIsCopyOpen] = useState(false)
 
@@ -86,6 +88,8 @@ const SignUpCreateForm = ({ events }: Props) => {
     reset()
     setEditableInputs([])
     setPools(defaultPools())
+    setConfirmedMessage('')
+    setConfirmedLink('')
   }
 
   const updatePool = (id: number, changes: Partial<SignupPool>) => {
@@ -142,6 +146,8 @@ const SignUpCreateForm = ({ events }: Props) => {
       return
     }
     setPools(event.pools)
+    setConfirmedMessage(event.confirmedMessage ?? '')
+    setConfirmedLink(event.confirmedLink ?? '')
     setValue('openfrom', moment(event.openfrom).format('YYYY-MM-DDTHH:mm'))
     setValue('openuntil', moment(event.openuntil).format('YYYY-MM-DDTHH:mm'))
     event.inputs.forEach(({ type, ...rest }, i) => {
@@ -291,6 +297,8 @@ const SignUpCreateForm = ({ events }: Props) => {
       openfrom: new Date(data.openfrom).toISOString(),
       openuntil: new Date(data.openuntil).toISOString(),
       inputs,
+      confirmedMessage,
+      confirmedLink,
     }
 
     try {
@@ -520,6 +528,29 @@ const SignUpCreateForm = ({ events }: Props) => {
                 + Add pool
               </button>
             </div>
+          </div>
+          <div className="flex flex-col justify-center">
+            <div>For participants</div>
+            <div className="text-sm text-lightgray">
+              Shown only to those who got a place, not to those on a reserve list.
+            </div>
+          </div>
+          <div className="mt-2 mb-8 md:m-4 flex flex-col gap-2">
+            <input
+              value={confirmedMessage}
+              onChange={(e) => setConfirmedMessage(e.target.value)}
+              placeholder="Message, e.g. Join the event Telegram group!"
+              aria-label="Message for participants"
+              className="p-2 rounded-md bg-white text-black text-base"
+            />
+            <input
+              value={confirmedLink}
+              onChange={(e) => setConfirmedLink(e.target.value)}
+              type="url"
+              placeholder="Link, e.g. https://t.me/+abc123"
+              aria-label="Link for participants"
+              className="p-2 rounded-md bg-white text-black text-base"
+            />
           </div>
         </div>
         <div className="flex flex-col md:flex-row w-full">

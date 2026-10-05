@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
-import { publicPools } from '../../../utils/signupPools'
-import { deleteSignupForms, getSignupForm } from '../../../utils/signupForms'
+import { deleteSignupForms, getSignupForm, publicSignupForm } from '../../../utils/signupForms'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -20,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const event = await getSignupForm(key)
     if (!event) return res.status(404).json({ error: 'Not found' })
     return res.status(200).json({
-      event: isAdminAuthorized(req) ? event : { ...event, pools: publicPools(event.pools) },
+      event: isAdminAuthorized(req) ? event : publicSignupForm(event),
     })
   }
 

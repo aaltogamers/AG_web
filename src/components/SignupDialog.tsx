@@ -14,8 +14,9 @@ import {
   SignupSummary,
   updateSignup,
 } from '../utils/signupApi'
-import { poolFill, resolvePoolId } from '../utils/signupPools'
+import { getPlacement, poolFill, resolvePoolId } from '../utils/signupPools'
 import CapacityBar from './CapacityBar'
+import ConfirmedMessage, { ConfirmedInfo } from './ConfirmedMessage'
 import Dialog from './Dialog'
 import Input from './Input'
 
@@ -32,23 +33,11 @@ type Props = {
   summary: SignupSummary
   participants: SignupRow[]
   ownSignupId: string | null
+  // Shown once the own sign-up has a place
+  confirmed?: ConfirmedInfo
   onClose: () => void
   // Reloads the participants and counts after a sign-up is saved or removed
   onChanged: () => Promise<void>
-}
-
-// Where a sign-up ended up: in one of the pool's places, or on its reserve list
-const getPlacement = (participants: SignupRow[], pools: SignupPool[], signupId: string) => {
-  const own = participants.find((p) => p.id === signupId)
-  const pool = own && pools.find((p) => p.id === resolvePoolId(pools, own.pool_id))
-  if (!own || !pool) return null
-  const index = participants
-    .filter((p) => resolvePoolId(pools, p.pool_id) === pool.id)
-    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    .findIndex((p) => p.id === signupId)
-  return index < pool.size
-    ? { pool, isReserve: false, position: index + 1 }
-    : { pool, isReserve: true, position: index - pool.size + 1 }
 }
 
 const SignupDialog = ({
@@ -56,6 +45,7 @@ const SignupDialog = ({
   summary,
   participants,
   ownSignupId,
+  confirmed,
   onClose,
   onChanged,
 }: Props) => {
@@ -179,6 +169,7 @@ const SignupDialog = ({
                   {pools.length > 1 && ` in ${placement.pool.name}`}
                 </div>
               )}
+              {confirmed && <ConfirmedMessage info={confirmed} className="w-full mt-4" />}
             </>
           )}
         </div>

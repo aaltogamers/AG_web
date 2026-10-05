@@ -1,5 +1,11 @@
 import type { NextApiRequest } from 'next'
-import { AgentError, agentHandler, getBody, parseAgentTime } from '../../../utils/agentApi'
+import {
+  AgentError,
+  agentHandler,
+  getBody,
+  optionalString,
+  parseAgentTime,
+} from '../../../utils/agentApi'
 import {
   describeForm,
   parseFields,
@@ -100,6 +106,8 @@ export default agentHandler({
       ...parseOpenTimes(body.openFrom, body.openUntil),
       pools: parsePools(body.pools),
       inputs: parseFields(body.fields),
+      confirmedMessage: optionalString(body.confirmedMessage, 'confirmedMessage'),
+      confirmedLink: optionalString(body.confirmedLink, 'confirmedLink'),
     })
     return { form: describeForm(form, target) }
   },
@@ -125,6 +133,15 @@ export default agentHandler({
       ...parseOpenTimes(body.openFrom ?? form.openfrom, body.openUntil ?? form.openuntil),
       pools,
       inputs: body.fields === undefined ? form.inputs : parseFields(body.fields),
+      // An empty string or null removes the message or link
+      confirmedMessage:
+        body.confirmedMessage === undefined
+          ? form.confirmedMessage
+          : optionalString(body.confirmedMessage, 'confirmedMessage'),
+      confirmedLink:
+        body.confirmedLink === undefined
+          ? form.confirmedLink
+          : optionalString(body.confirmedLink, 'confirmedLink'),
     })
     return { form: describeForm(updated) }
   },

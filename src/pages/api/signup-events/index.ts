@@ -3,8 +3,7 @@ import { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { parseJsonBody } from '../../../utils/apiUtils'
 import type { SignUpData } from '../../../types/types'
-import { publicPools } from '../../../utils/signupPools'
-import { listSignupForms, saveSignupForm } from '../../../utils/signupForms'
+import { listSignupForms, publicSignupForm, saveSignupForm } from '../../../utils/signupForms'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -18,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const events = await listSignupForms()
     const isAdmin = isAdminAuthorized(req)
     return res.status(200).json({
-      events: events.map((e) => (isAdmin ? e : { ...e, pools: publicPools(e.pools) })),
+      events: isAdmin ? events : events.map(publicSignupForm),
     })
   }
 

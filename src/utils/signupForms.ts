@@ -4,7 +4,7 @@
 import pool from './db_pg'
 import type { SignupInput, SignupPool, SignUpData } from '../types/types'
 import type { SignupEvent, SignupSummary } from './signupApi'
-import { normalizePools, resolvePoolId } from './signupPools'
+import { normalizePools, publicPools, resolvePoolId } from './signupPools'
 
 type SignupEventRow = {
   signup_key: string
@@ -12,7 +12,11 @@ type SignupEventRow = {
   openfrom: Date
   openuntil: Date
   inputs: SignupInput[]
+  confirmed_message: string
+  confirmed_link: string
 }
+
+const COLUMNS = 'signup_key, pools, openfrom, openuntil, inputs, confirmed_message, confirmed_link'
 
 const toISO = (d: Date | string) => (d instanceof Date ? d.toISOString() : d)
 
@@ -22,6 +26,8 @@ const rowToSignupEvent = (row: SignupEventRow): SignupEvent => ({
   openfrom: toISO(row.openfrom),
   openuntil: toISO(row.openuntil),
   inputs: row.inputs,
+  confirmedMessage: row.confirmed_message,
+  confirmedLink: row.confirmed_link,
 })
 
 // Ensure every input has a stable numeric id. Defaults to max+1 for new items,
@@ -44,14 +50,14 @@ const ensureInputIds = (inputs: SignupInput[]): SignupInput[] => {
 
 export const listSignupForms = async (): Promise<SignupEvent[]> => {
   const result = await pool.query<SignupEventRow>(
-    'SELECT signup_key, pools, openfrom, openuntil, inputs FROM signup_events ORDER BY signup_key ASC'
+    `SELECT ${COLUMNS} FROM signup_events ORDER BY signup_key ASC`
   )
   return result.rows.map(rowToSignupEvent)
 }
 
 export const getSignupForm = async (key: string): Promise<SignupEvent | null> => {
   const result = await pool.query<SignupEventRow>(
-    'SELECT signup_key, pools, openfrom, openuntil, inputs FROM signup_events WHERE signup_key = $1',
+    `SELECT ${COLUMNS} FROM signup_events WHERE signup_key = $1`,
     [key]
   )
   return result.rows[0] ? rowToSignupEvent(result.rows[0]) : null
@@ -78,17 +84,32 @@ export const saveSignupForm = async (
 
   const inputs = Array.isArray(data.inputs) ? ensureInputIds(data.inputs) : []
 
+  const confirmedLink = String(data.confirmedLink ?? '').trim()
+  if (confirmedLink && !/^https?:\/\/\S+$/i.test(confirmedLink)) {
+    return { error: 'The link for participants must start with https://' }
+  }
+
   const result = await pool.query<SignupEventRow>(
-    `INSERT INTO signup_events (signup_key, pools, openfrom, openuntil, inputs, updated_at)
-     VALUES ($1, $2::jsonb, $3, $4, $5::jsonb, now())
+    `INSERT INTO signup_events (${COLUMNS}, updated_at)
+     VALUES ($1, $2::jsonb, $3, $4, $5::jsonb, $6, $7, now())
      ON CONFLICT (signup_key) DO UPDATE SET
        pools = EXCLUDED.pools,
        openfrom = EXCLUDED.openfrom,
        openuntil = EXCLUDED.openuntil,
        inputs = EXCLUDED.inputs,
+       confirmed_message = EXCLUDED.confirmed_message,
+       confirmed_link = EXCLUDED.confirmed_link,
        updated_at = now()
-     RETURNING signup_key, pools, openfrom, openuntil, inputs`,
-    [data.key, JSON.stringify(pools), openfrom, openuntil, JSON.stringify(inputs)]
+     RETURNING ${COLUMNS}`,
+    [
+      data.key,
+      JSON.stringify(pools),
+      openfrom,
+      openuntil,
+      JSON.stringify(inputs),
+      String(data.confirmedMessage ?? '').trim(),
+      confirmedLink,
+    ]
   )
   return { event: rowToSignupEvent(result.rows[0]) }
 }
@@ -99,12 +120,22 @@ export const deleteSignupForms = async (keys: string[]): Promise<void> => {
   await pool.query('DELETE FROM signup_events WHERE signup_key = ANY($1)', [keys])
 }
 
-// Forms with the number of sign-ups in each pool. Pools include passwords;
-// strip them with publicPools before showing them to non-admins.
+// A form as shown to non-admins: without pool passwords and the message and
+// link for participants who got a place
+export const publicSignupForm = <T extends SignupEvent>(form: T): T => {
+  const rest = { ...form, pools: publicPools(form.pools) }
+  delete rest.confirmedMessage
+  delete rest.confirmedLink
+  return rest
+}
+
+// Forms with the number of sign-ups in each pool. They include pool passwords and
+// the confirmed message and link; strip them with publicSignupForm before showing them to
+// non-admins.
 export const getSignupSummaries = async (keys: string[]): Promise<SignupSummary[]> => {
   if (!keys.length) return []
   const eventsRes = await pool.query<SignupEventRow & { id: string }>(
-    'SELECT id, signup_key, pools, openfrom, openuntil, inputs FROM signup_events WHERE signup_key = ANY($1)',
+    `SELECT id, ${COLUMNS} FROM signup_events WHERE signup_key = ANY($1)`,
     [keys]
   )
   const countsRes = await pool.query<{ event_id: string; pool_id: number; count: number }>(

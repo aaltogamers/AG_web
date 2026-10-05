@@ -14,6 +14,7 @@ import { SignupSummary } from '../utils/signupApi'
 import { poolFill } from '../utils/signupPools'
 import { useNow } from '../utils/useNow'
 import CapacityBar from './CapacityBar'
+import ConfirmedMessage, { ConfirmedInfo } from './ConfirmedMessage'
 import SignupStatusTag from './SignupStatusTag'
 
 type Props = {
@@ -23,6 +24,8 @@ type Props = {
   // Opens the sign-up form
   onSignUp?: (key: string) => void
   isSignedUp?: (key: string) => boolean
+  // The message and link for participants who got a place, if the visitor got one
+  confirmed?: (key: string) => ConfirmedInfo | undefined
 }
 
 const noop = () => {}
@@ -52,6 +55,7 @@ const SignupPanel = ({
   now,
   isSignedUp,
   onSignUp,
+  confirmed,
   standalone = false,
 }: {
   target: SignupTarget
@@ -59,6 +63,7 @@ const SignupPanel = ({
   now: Moment | null
   isSignedUp: boolean
   onSignUp: (key: string) => void
+  confirmed?: ConfirmedInfo
   // On its own card, which already has a heading, rather than under a session
   standalone?: boolean
 }) => {
@@ -103,6 +108,7 @@ const SignupPanel = ({
           {isSignedUp ? 'Edit sign-up' : 'Sign up'}
         </button>
       )}
+      {confirmed && <ConfirmedMessage info={confirmed} />}
     </div>
   )
 }
@@ -142,6 +148,7 @@ const EventDetails = ({
   summaries: signupSummaries,
   onSignUp = noop,
   isSignedUp = () => false,
+  confirmed = () => undefined,
 }: Props) => {
   const now = useNow()
   const showSignups = !!signupSummaries
@@ -160,6 +167,7 @@ const EventDetails = ({
       now={now}
       isSignedUp={isSignedUp(target.key)}
       onSignUp={onSignUp}
+      confirmed={confirmed(target.key)}
       standalone={standalone}
     />
   )

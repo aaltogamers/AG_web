@@ -223,4 +223,7 @@ export const describeForm = (form: SignupSummary, target?: SignupTarget) => ({
     public: f.public,
     ...(f.type === 'select' && { options: f.options, multi: f.multi }),
   })),
+  // Shown only to participants who got a place, e.g. a Telegram group link
+  confirmedMessage: form.confirmedMessage || undefined,
+  confirmedLink: form.confirmedLink || undefined,
 })

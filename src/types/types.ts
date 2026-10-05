@@ -134,6 +134,10 @@ export type SignUpData = {
   openfrom: string
   openuntil: string
   inputs: SignupInput[]
+  // Shown to participants who got a place, not to those on a reserve list, e.g. a
+  // link to the event's Telegram group. Only sent to admins and to those participants.
+  confirmedMessage?: string
+  confirmedLink?: string
 }
 
 // A participant row as returned by /api/signups. `answers` is keyed by field id.
