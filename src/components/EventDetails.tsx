@@ -86,6 +86,17 @@ const SignupPanel = ({
         <div className="uppercase tracking-widest text-sm text-lightgray">Sign-up</div>
         {now && <SignupStatusTag summary={summary} now={now} />}
       </div>
+      {status === 'open' && (
+        <button
+          type="button"
+          className={`${isSignedUp ? 'borderbutton' : 'mainbutton'} !text-lg !py-2 !px-6`}
+          onClick={() => onSignUp(target.key)}
+        >
+          {isSignedUp ? 'Edit sign-up' : 'Sign up'}
+        </button>
+      )}
+      <div className="text-base text-lightgray">{statusText}</div>
+      {confirmed && <ConfirmedMessage info={confirmed} />}
       {pools.map((pool) => {
         const { taken, reserve } = poolFill(pool, counts[pool.id] ?? 0)
         return (
@@ -98,17 +109,6 @@ const SignupPanel = ({
           />
         )
       })}
-      <div className="text-base text-lightgray">{statusText}</div>
-      {status === 'open' && (
-        <button
-          type="button"
-          className={`${isSignedUp ? 'borderbutton' : 'mainbutton'} !text-lg !py-2 !px-6`}
-          onClick={() => onSignUp(target.key)}
-        >
-          {isSignedUp ? 'Edit sign-up' : 'Sign up'}
-        </button>
-      )}
-      {confirmed && <ConfirmedMessage info={confirmed} />}
     </div>
   )
 }
