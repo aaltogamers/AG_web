@@ -40,7 +40,7 @@ variable "admin_password" {
 }
 
 variable "agent_api_key" {
-  description = "Key for the AI agent API (/api/agent/**). Empty disables the agent API."
+  description = "Key for the AI agent MCP server (/api/mcp). Empty disables it."
   type        = string
   sensitive   = true
   default     = ""

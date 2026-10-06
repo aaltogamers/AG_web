@@ -1,5 +1,5 @@
 // Reads and writes event markdown files in the GitHub repo, the same way
-// Decap CMS does, so the AI agent API can manage events. Commits to the
+// Decap CMS does, so the AI agent MCP server can manage events. Commits to the
 // default branch trigger a new deployment, like publishing in the CMS.
 // In development the local files are used instead, like Decap's local_backend.
 import crypto from 'crypto'

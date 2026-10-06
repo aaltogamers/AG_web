@@ -1,13 +1,9 @@
-// Helpers for the AI agent API (/api/agent/**), which is meant to be called as
-// tools from n8n. See "AI agent API" in README.md.
-import type { NextApiRequest, NextApiResponse } from 'next'
+// Input parsing helpers for the AI agent MCP server (/api/mcp). See "AI agent
+// MCP server" in README.md.
 import moment from 'moment-timezone'
-import { ensureMigrated } from './db_pg'
-import { timingSafeEqualStr } from './adminSession'
-import { getHeader } from './apiUtils'
 import { EVENT_TIMEZONE } from './eventUtils'
 
-// Thrown by handlers to answer with an error message the agent can act on
+// Thrown by tools to answer with an error message the agent can act on
 export class AgentError extends Error {
   constructor(
     public status: number,
@@ -15,56 +11,6 @@ export class AgentError extends Error {
   ) {
     super(message)
   }
-}
-
-// `Authorization: Bearer <AGENT_API_KEY>`. The agent API is disabled if the key isn't set.
-const isAgentAuthorized = (req: NextApiRequest): boolean => {
-  const key = process.env.AGENT_API_KEY
-  const header = getHeader(req, 'authorization')
-  if (!key || !header?.startsWith('Bearer ')) return false
-  return timingSafeEqualStr(header.slice('Bearer '.length).trim(), key)
-}
-
-type Handlers = Partial<
-  Record<'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', (req: NextApiRequest) => Promise<unknown>>
->
-
-// Checks the key, runs the handler for the method and answers with its result as JSON
-export const agentHandler =
-  (handlers: Handlers) => async (req: NextApiRequest, res: NextApiResponse) => {
-    if (!isAgentAuthorized(req)) return res.status(401).json({ error: 'Unauthorized' })
-    const handle = handlers[req.method as keyof Handlers]
-    if (!handle) return res.status(405).json({ error: 'Method not allowed' })
-    try {
-      await ensureMigrated()
-      return res.status(200).json(await handle(req))
-    } catch (err) {
-      if (err instanceof AgentError) return res.status(err.status).json({ error: err.message })
-      console.error(`[agent] ${req.method} ${req.url} failed:`, err)
-      return res.status(500).json({ error: 'Internal error' })
-    }
-  }
-
-export const getBody = (req: NextApiRequest): Record<string, unknown> => {
-  let body = req.body
-  // A JSON object may also come in as a JSON string, e.g. when an LLM fills a json tool parameter
-  for (let i = 0; i < 2 && typeof body === 'string'; i++) {
-    try {
-      body = JSON.parse(body)
-    } catch {
-      throw new AgentError(400, 'Body must be JSON')
-    }
-  }
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    throw new AgentError(400, 'Body must be a JSON object')
-  }
-  // The n8n tools send every field, with "" for the ones the model left out, and
-  // can't send null. So "" means "not given" and "null" clears a field.
-  return Object.fromEntries(
-    Object.entries(body)
-      .filter(([, value]) => value !== '')
-      .map(([key, value]) => [key, value === 'null' ? null : value])
-  )
 }
 
 export const requireString = (value: unknown, name: string): string => {

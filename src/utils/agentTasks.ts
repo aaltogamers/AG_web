@@ -1,4 +1,4 @@
-// Task input and output of the AI agent API (/api/agent/tasks)
+// Task input and output of the AI agent MCP server (/api/mcp)
 import type { Task } from '../types/types'
 import {
   AgentError,

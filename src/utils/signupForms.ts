@@ -1,5 +1,5 @@
 // Sign-up form database access shared by the admin API (/api/signup-events,
-// /api/signup-summaries) and the AI agent API (/api/agent/signup-forms).
+// /api/signup-summaries) and the AI agent MCP server (/api/mcp).
 // Never returns participants' answers.
 import pool from './db_pg'
 import type { SignupInput, SignupPool, SignUpData } from '../types/types'

@@ -1,4 +1,4 @@
-// Event and sign-up form logic of the AI agent API (/api/agent/events, /api/agent/signup-forms)
+// Event and sign-up form input and output of the AI agent MCP server (/api/mcp)
 import moment from 'moment-timezone'
 import type { AGEvent, SignupInput, SignupMode, SignupPool } from '../types/types'
 import {

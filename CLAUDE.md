@@ -12,10 +12,10 @@ npm run lint
 
 There are no unit or E2E tests, and you should not add them.
 
-## AI agent API
+## AI agent MCP server
 
-`/api/agent/**` (see "AI agent API" in README.md) exposes events, sign-up forms and tasks to an n8n AI agent. Keep it in sync with the rest of the site:
+`/api/mcp` (see "AI agent MCP server" in README.md) is an MCP server that exposes events, sign-up forms and tasks to an AI agent. Its tools are in `src/utils/mcp/`. Keep it in sync with the rest of the site:
 
-- Put sign-up form and task database logic in `src/utils/signupForms.ts` and `src/utils/taskStore.ts`, which both the regular and the agent endpoints use, not in the route handlers.
-- When event fields change (`public/cms/config.yml`), update `src/utils/agentEvents.ts` and `src/utils/eventFiles.ts` (field order, session ids like the `preSave` handler in `public/cms/index.html`).
-- The agent API must never return participants' answers, only counts.
+- Put sign-up form and task database logic in `src/utils/signupForms.ts` and `src/utils/taskStore.ts`, which both the regular endpoints and the MCP tools use, not in the route handlers or tools.
+- When event fields change (`public/cms/config.yml`), update `src/utils/agentEvents.ts`, the tool schemas in `src/utils/mcp/eventTools.ts` and `src/utils/eventFiles.ts` (field order, session ids like the `preSave` handler in `public/cms/index.html`).
+- The MCP server must never return participants' answers, only counts.

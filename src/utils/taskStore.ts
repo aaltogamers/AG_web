@@ -1,5 +1,5 @@
 // Task database access shared by the Telegram task board API (/api/tasks/**)
-// and the AI agent API (/api/agent/tasks/**), so both behave the same.
+// and the AI agent MCP server (/api/mcp), so both behave the same.
 import pool from './db_pg'
 import { sendTelegramDM } from './telegram'
 import { markdownToTelegramHtml } from './markdownLinks'

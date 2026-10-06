@@ -1,7 +1,7 @@
 subscription_id           = "your-azure-subscription-id"
 postgresql_admin_password = "change-me-to-a-strong-password"
 admin_password            = "change-me-to-a-strong-password"
-# Optional: key for the AI agent API (/api/agent/**), e.g. `openssl rand -hex 32`
+# Optional: key for the AI agent MCP server (/api/mcp), e.g. `openssl rand -hex 32`
 agent_api_key             = ""
 
 # GitHub App credentials for Decap CMS (see infra/README.md).

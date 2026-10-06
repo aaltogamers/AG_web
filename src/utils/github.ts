@@ -1,5 +1,5 @@
 // GitHub App access to the site repo, used for the Decap CMS login (/api/auth)
-// and for editing CMS content from the AI agent API (/api/agent/events).
+// and for editing CMS content from the AI agent MCP server (/api/mcp).
 import { App } from 'octokit'
 
 // Same repo and branch as the backend in public/cms/config.yml

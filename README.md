@@ -60,8 +60,8 @@ docker compose down -v
 - `BET_BOT_SECRET` — shared secret the Twitch chat bot sends in the
   `x-bet-secret` header when POSTing to `/api/votes`. No one but the bot
   should know this.
-- `AGENT_API_KEY` — key for the AI agent API (see below). The agent API is
-  disabled if it is unset.
+- `AGENT_API_KEY` — key for the AI agent MCP server (see below). The MCP
+  server is disabled if it is unset.
 - `RCON_IP`, `RCON_PASSWORD`, `RCON_PORT` — Minecraft whitelist endpoint.
 - `APP_ID`, `PRIVATE_KEY`, `INSTALLATION_ID` — GitHub App credentials for
   the Decap CMS auth handshake (`/api/auth`).
@@ -71,6 +71,19 @@ docker compose down -v
 Signups, map bans, and bets live in Postgres. Live updates to `/mapban`,
 `/bet`, and `/betboard` use Server-Sent Events streamed from
 `/api/stream/:topic` (`mapbans`, `polls`, `votes`).
+
+### AI agent MCP server
+
+`/api/mcp` is an [MCP](https://modelcontextprotocol.io) server (Streamable
+HTTP transport, stateless, JSON responses) with tools for managing events,
+their sign-up forms and the task board. Clients authenticate with
+`Authorization: Bearer <AGENT_API_KEY>`. For example, in n8n use the MCP
+Client Tool with "HTTP Streamable" and Bearer auth; in Claude Code run
+`claude mcp add --transport http aaltogamers https://aaltogamers.fi/api/mcp --header "Authorization: Bearer <key>"`.
+
+Tools return participants' sign-up counts, never their answers. Event
+changes are committed to the repo, so they show on the site after the next
+rebuild. Tools are defined in `src/utils/mcp/`.
 
 ### Content manager (Decap CMS)
 
