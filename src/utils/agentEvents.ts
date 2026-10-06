@@ -193,8 +193,12 @@ export const parseFields = (raw: unknown): SignupInput[] =>
     return field
   })
 
+// Sign-up forms are shown on the event page. Form keys are `<slug>` or `<slug>:<session id>`.
+const signupUrl = (key: string) => `${eventUrl(key.split(':')[0])}#signups`
+
 export const describeForm = (form: SignupSummary, target?: SignupTarget) => ({
   key: form.key,
+  url: signupUrl(form.key),
   sessionId: target?.session?.id,
   sessionName: target?.session?.name,
   sessionStart: target?.session && formatAgentTime(eventMoment(target.session.start)),

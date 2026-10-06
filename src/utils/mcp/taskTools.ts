@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { TASK_STATES } from '../../types/types'
 import { AgentError } from '../agentApi'
+import { TASK_BOARD_URL } from '../constants'
 import { describeTask, parseTaskInput } from '../agentTasks'
 import {
   createTask,
@@ -63,6 +64,7 @@ export const registerTaskTools = (server: McpServer) => {
     },
     runTool('list_tasks', async ({ states }) => ({
       tasks: (await listTasks(states ?? [])).map(describeTask),
+      taskBoardUrl: TASK_BOARD_URL,
     }))
   )
 
@@ -76,7 +78,7 @@ export const registerTaskTools = (server: McpServer) => {
     runTool('get_task', async ({ taskId }) => {
       const task = await getTask(taskId)
       if (!task) throw notFound(taskId)
-      return { task: describeTask(task) }
+      return { task: describeTask(task), taskBoardUrl: TASK_BOARD_URL }
     })
   )
 
@@ -104,7 +106,7 @@ export const registerTaskTools = (server: McpServer) => {
         startTime: input.startTime ?? undefined,
         createdByTgName: 'AI agent',
       })
-      return { task: describeTask(task) }
+      return { task: describeTask(task), taskBoardUrl: TASK_BOARD_URL }
     })
   )
 
@@ -121,7 +123,7 @@ export const registerTaskTools = (server: McpServer) => {
       if (!hasTaskChanges(input)) throw new AgentError(400, 'Nothing to update')
       const task = await updateTask(taskId, input)
       if (!task) throw notFound(taskId)
-      return { task: describeTask(task) }
+      return { task: describeTask(task), taskBoardUrl: TASK_BOARD_URL }
     })
   )
 
