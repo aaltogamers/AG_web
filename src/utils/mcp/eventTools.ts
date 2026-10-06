@@ -148,7 +148,7 @@ export const registerEventTools = (server: McpServer) => {
           eventFromFile({ slug, data: fullData, body: body ?? '', sha: '' }),
           true
         ),
-        note: `Created. It appears on ${eventUrl(slug)} after the site has been rebuilt, in about 5 minutes. Sign-up forms can be created right away.`,
+        note: `Created. It appears on ${eventUrl(slug)} after the site has been rebuilt, in 2-3 minutes. Sign-up forms can be created right away.`,
       }
     })
   )
@@ -200,7 +200,7 @@ export const registerEventTools = (server: McpServer) => {
       return {
         event: describeEvent(newEvent, true),
         deletedEmptySignupForms: orphaned,
-        note: 'Saved. The change is visible on the site after it has been rebuilt, in about 5 minutes.',
+        note: 'Saved. The change is visible on the site after it has been rebuilt, in 2-3 minutes.',
       }
     })
   )
