@@ -1,5 +1,5 @@
 ---
-name: OTALAN? (TBA)
+name: OtaLAN
 sessions:
   - start: 2026-11-13T14:00:00
     end: 2026-11-15T20:00:00
