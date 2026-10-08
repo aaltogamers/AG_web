@@ -6,6 +6,7 @@ sessions:
     location: Otakaari 20
     id: vtsyu1gl
 signupMode: event
+image: /images/otakart.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: false
 description: TBA
