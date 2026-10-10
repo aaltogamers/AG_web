@@ -1052,9 +1052,17 @@ export const createPost = async (input: PostInput, actor: Actor): Promise<Post> 
 export const updatePost = async (
   id: string,
   input: PostInput,
-  actor: Actor
+  actor: Actor,
+  // The version the edit was made on, e.g. when the editor was opened
+  expectedVersion?: number
 ): Promise<{ post: Post; previousStatus: PostStatus }> => {
   const existing = await getPostOrThrow(id)
+  if (expectedVersion !== undefined && existing.version !== expectedVersion) {
+    throw new AgentError(
+      409,
+      `The post has been edited since you opened it (now v${existing.version}). Reload it and make your changes again.`
+    )
+  }
   if (existing.status === 'cancelled') {
     throw new AgentError(409, 'The post has been cancelled and can no longer be edited')
   }
@@ -1254,6 +1262,16 @@ export const claimDueWebsiteChanges = async (): Promise<DueWebsiteChange[]> => {
   return result.rows.map((r) => ({ postId: String(r.post_id), attempts: r.attempts }))
 }
 
+// Undoes a claim, e.g. when the post was edited after it was claimed. Approving
+// the post again schedules it.
+export const releaseWebsiteChangeClaim = async (postId: string) => {
+  await pool.query(
+    `UPDATE post_website_changes SET status = 'pending', attempts = GREATEST(attempts - 1, 0)
+     WHERE post_id = $1 AND status = 'sending'`,
+    [postId]
+  )
+}
+
 export const finishWebsiteChange = async (
   postId: string,
   result:
@@ -1355,6 +1373,15 @@ export const claimDueTargets = async (): Promise<DueTarget[]> => {
     channelId: String(r.channel_id),
     attempts: r.attempts,
   }))
+}
+
+// Undoes a claim, e.g. when the post was edited after it was claimed
+export const releaseTargetClaim = async (targetId: string) => {
+  await pool.query(
+    `UPDATE post_targets SET status = 'pending', attempts = GREATEST(attempts - 1, 0)
+     WHERE id = $1 AND status = 'sending'`,
+    [targetId]
+  )
 }
 
 export const finishTarget = async (

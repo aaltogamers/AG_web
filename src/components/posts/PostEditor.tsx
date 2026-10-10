@@ -137,7 +137,7 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
       setMessage({ text: result?.note ? `${done} ${result.note}` : done })
     } catch (e) {
       setMessage({ text: e instanceof Error ? e.message : String(e), isError: true })
-      if (postId) await load().catch(() => undefined)
+      if (postId && !(e as { keepDraft?: boolean }).keepDraft) await load().catch(() => undefined)
     } finally {
       setBusy(false)
     }
@@ -160,7 +160,20 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
         onSaved(created.id, saved)
         return
       }
-      return savePost(postId, input, approve)
+      if (!post) throw new Error('The post has not loaded yet')
+      // A failed save keeps the unsaved changes on screen (nothing was saved)
+      let saved: { post: Post; note?: string }
+      try {
+        saved = await savePost(postId, post.version, input)
+      } catch (e) {
+        throw Object.assign(e instanceof Error ? e : new Error(String(e)), { keepDraft: true })
+      }
+      if (!approve) return saved
+      try {
+        return { ...saved, post: await postAction(postId, 'approve', { version: saved.post.version }).then((r) => r.post) }
+      } catch (e) {
+        throw new Error(`Saved as a draft, but not approved: ${e instanceof Error ? e.message : e}`)
+      }
     }, approve ? 'Saved and approved.' : 'Saved.')
 
   const act = (action: PostAction, done: string, body: { comment?: string; newTime?: string | null } = {}) =>

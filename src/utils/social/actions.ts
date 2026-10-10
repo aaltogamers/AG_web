@@ -68,14 +68,14 @@ export const withdrawApproval = async (id: string, actor: Actor) => {
 }
 
 // Edits a post. The agent's edits of a post awaiting approval or approved send a
-// new review; the admin's edits take it back to draft, or approve it right away.
+// new review; the admin's edits take it back to draft. `version` is the version the edit was made on.
 export const editPost = async (
   id: string,
   input: PostInput,
   actor: Actor,
-  { approve = false }: { approve?: boolean } = {}
+  version?: number
 ) => {
-  const { post, previousStatus } = await updatePost(id, input, actor)
+  const { post, previousStatus } = await updatePost(id, input, actor, version)
   const wasInReview = previousStatus === 'awaiting_approval' || previousStatus === 'scheduled'
   let note: string | undefined
   if (actor === 'agent' && wasInReview) {
@@ -87,7 +87,6 @@ export const editPost = async (
   } else if (wasInReview) {
     await closeOpenMessages(post.id, `<i>✏️ Edited on the website (v${post.version})</i>`).catch(() => undefined)
   }
-  if (approve) return { post: await approvePost(id, post.version, actor), note }
   return { post, note }
 }
 

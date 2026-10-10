@@ -36,8 +36,9 @@ export const fetchPost = (id: string) =>
 
 export const createPost = (post: PostInput) => request<{ post: Post }>('/api/posts', 'POST', { post })
 
-export const savePost = (id: string, post: PostInput, approve = false) =>
-  request<{ post: Post; note?: string }>(`/api/posts/${id}`, 'PUT', { post, approve })
+// `version` is the version the editor loaded, so that edits made since aren't overwritten
+export const savePost = (id: string, version: number, post: PostInput) =>
+  request<{ post: Post; note?: string }>(`/api/posts/${id}`, 'PUT', { post, version })
 
 export const previewPost = (id: string | null, post: PostInput) =>
   request<{ preview: PostPreview }>('/api/posts/preview', 'POST', { id: id ?? undefined, post })

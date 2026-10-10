@@ -19,6 +19,8 @@ import {
   getSettings,
   getWebsiteChangeBase,
   markEventSaved,
+  releaseTargetClaim,
+  releaseWebsiteChangeClaim,
   saveInstagramTokenState,
   type DueTarget,
 } from '../postStore'
@@ -35,11 +37,21 @@ const MAX_ATTEMPTS = 3
 
 const errorText = (err: unknown) => (err instanceof Error ? err.message : String(err))
 
+// Posts are claimed before they are loaded, and the parts of a post run one by
+// one, so it may have been edited (taken off the schedule) since it was claimed.
+// Only the approved version may run.
+const isApproved = (post: Post | null): post is Post =>
+  !!post && post.status === 'scheduled' && post.version === post.approvedVersion
+
 const runWebsiteChanges = async () => {
   for (const { postId, attempts } of await claimDueWebsiteChanges()) {
     const post = await getPost(postId)
-    const change = post?.websiteChange
-    if (!post || !change) continue
+    if (!isApproved(post)) {
+      await releaseWebsiteChangeClaim(postId)
+      continue
+    }
+    const change = post.websiteChange
+    if (!change) continue
     try {
       const { base, eventSaved } = await getWebsiteChangeBase(postId)
       const commitSha = await runWebsiteChange(post, change, base, eventSaved, (sha) =>
@@ -68,7 +80,7 @@ const runWebsiteChanges = async () => {
   }
 }
 
-// The text each channel gets is rendered right before sending, from the approved version
+// The text each channel gets is rendered right before sending, from the approved version (isApproved)
 const sendTarget = async (due: DueTarget, post: Post): Promise<{ externalMessageId: string; warning?: string }> => {
   const target = post.targets.find((t) => t.id === due.targetId)
   const channel = await getChannel(due.channelId)
@@ -121,7 +133,10 @@ const sendDueTargets = async () => {
 
   for (const due of await claimDueTargets()) {
     const post = await getPost(due.postId)
-    if (!post) continue
+    if (!isApproved(post)) {
+      await releaseTargetClaim(due.targetId)
+      continue
+    }
     try {
       const { externalMessageId, warning } = await sendTarget(due, post)
       await finishTarget(due.targetId, { ok: true, externalMessageId })
