@@ -24,3 +24,6 @@ infra/bootstrap/terraform.tfvars
 # Compressed public/ output (CI build)
 public-compressed/
 public-compressed.manifest.json
+
+# Local planning documents
+/plans/
