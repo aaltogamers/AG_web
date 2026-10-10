@@ -4,7 +4,6 @@ import { AGEvent } from '../types/types'
 import SignUpCreateForm from './SignupCreateForm'
 import BetManagement from './BetManagement'
 import MapBanMangement from './MapBanManagement'
-import SiteStatistics from './SiteStatistics'
 import { AdminSection } from '../utils/adminSections'
 import { fetchPosts } from '../utils/social/postsClient'
 import PostsSection from './posts/PostsSection'
@@ -46,9 +45,6 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
         <Link href="/admin/mapbans" className={tabClass(section === 'mapbans')}>
           Map Bans
         </Link>
-        <Link href="/admin/stats" className={tabClass(section === 'stats')}>
-          Statistics
-        </Link>
         <Link href="/tournaments" className="text-4xl">
           Tournaments
         </Link>
@@ -69,10 +65,8 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
         <PostsSection events={events} />
       ) : section === 'bets' ? (
         <BetManagement />
-      ) : section === 'mapbans' ? (
-        <MapBanMangement />
       ) : (
-        <SiteStatistics />
+        <MapBanMangement />
       )}
     </div>
   )

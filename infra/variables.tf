@@ -34,7 +34,7 @@ variable "postgresql_admin_password" {
 }
 
 variable "admin_password" {
-  description = "Password required by the admin-only analytics API (/api/analytics/stats)"
+  description = "Password required by the admin panel and the CMS login"
   type        = string
   sensitive   = true
 }
