@@ -1,4 +1,4 @@
-export const ADMIN_SECTIONS = ['signups', 'bets', 'mapbans', 'stats'] as const
+export const ADMIN_SECTIONS = ['signups', 'posts', 'bets', 'mapbans', 'stats'] as const
 export type AdminSection = (typeof ADMIN_SECTIONS)[number]
 
 export function isAdminSection(s: string | undefined): s is AdminSection {

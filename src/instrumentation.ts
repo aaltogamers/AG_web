@@ -118,5 +118,10 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     setInterval(checkDailyNotifications, DAILY_CHECK_INTERVAL_MS)
     console.log('[task-notify] Daily notification check started — checking every 60 seconds')
+    // Scheduled posts: website changes and messages that are due
+    setInterval(async () => {
+      const { runSchedulerTick } = await import('./utils/social/scheduler')
+      await runSchedulerTick()
+    }, DAILY_CHECK_INTERVAL_MS)
   }
 }

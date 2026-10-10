@@ -102,11 +102,6 @@ export type HistoryEntry = {
 
 export type EditableInputType = 'text' | 'select' | 'info'
 
-export type EditableInputObj = {
-  number: number
-  type: EditableInputType
-}
-
 export type SignupInput = {
   id: number
   title: string

@@ -7,6 +7,7 @@ import { AgentError } from '../agentApi'
 import { getHeader } from '../apiUtils'
 import { ensureMigrated } from '../db_pg'
 import { registerEventTools } from './eventTools'
+import { registerPostTools } from './postTools'
 import { registerSignupFormTools } from './signupFormTools'
 import { registerTaskTools } from './taskTools'
 
@@ -48,14 +49,17 @@ export const createMcpServer = () => {
     { name: 'aaltogamers', title: 'Aalto Gamers', version: '1.0.0' },
     {
       instructions:
-        'Manages Aalto Gamers events, their sign-up forms and the task board. ' +
+        'Manages Aalto Gamers events, their sign-up forms, the task board and scheduled marketing posts. ' +
         'Times are Helsinki wall-clock times like 2026-10-24T18:00, unless they have an offset. ' +
         'Event changes are visible on aaltogamers.fi after the site has been rebuilt, in 2-3 minutes. ' +
-        'When telling the user about an event, sign-up form or task, link it with the url (or taskBoardUrl) from the tool result.',
+        'When telling the user about an event, sign-up form or task, link it with the url (or taskBoardUrl) from the tool result. ' +
+        'Marketing posts to Telegram, Discord and Instagram are written once in markdown with placeholders like {{event}}, {{signup}} and {{link:discord}}, filled in for each channel; their times are Helsinki times too. ' +
+        'The agent can only make drafts and ask for approval: only a human can approve, schedule or send a post.',
     }
   )
   registerEventTools(server)
   registerSignupFormTools(server)
   registerTaskTools(server)
+  registerPostTools(server)
   return server
 }

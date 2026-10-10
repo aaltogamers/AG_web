@@ -46,6 +46,48 @@ variable "agent_api_key" {
   default     = ""
 }
 
+variable "telegram_bot_token" {
+  description = "Token of the task board Telegram bot (task notifications)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "telegram_posts_bot_token" {
+  description = "Token of the Telegram bot that sends scheduled posts. Empty disables Telegram posts."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "telegram_posts_webhook_secret" {
+  description = "Secret Telegram sends to the posts bot webhook (/api/telegram/posts-webhook)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "discord_bot_token" {
+  description = "Token of the Discord bot that sends scheduled posts. Empty disables Discord posts."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "instagram_user_id" {
+  description = "Instagram account id for scheduled posts. Empty disables Instagram posts."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "instagram_access_token" {
+  description = "First long-lived Instagram token; renewed tokens are stored in the database"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "github_app_id" {
   description = "GitHub App ID used by Decap CMS to mint access tokens"
   type        = string

@@ -169,3 +169,42 @@ export const getSignupFormKeysOfEvent = async (slug: string): Promise<string[]> 
 
 export const totalSignups = (summary: SignupSummary): number =>
   Object.values(summary.counts).reduce((sum, n) => sum + n, 0)
+
+// How many sign-ups have answered each field of a form, keyed by field id. Only
+// counts, never the answers.
+export const countAnsweredFields = async (key: string): Promise<Record<number, number>> => {
+  const result = await pool.query<{ field_id: string; count: number }>(
+    `SELECT k AS field_id, COUNT(*)::int AS count
+     FROM signups s
+     JOIN signup_events e ON e.id = s.event_id
+     CROSS JOIN LATERAL jsonb_object_keys(s.answers) k
+     WHERE e.signup_key = $1
+     GROUP BY k`,
+    [key]
+  )
+  return Object.fromEntries(result.rows.map((r) => [Number(r.field_id), r.count]))
+}
+
+// Why a form with sign-ups can't be changed like this: pools with sign-ups and
+// fields with answers can't be removed. Null if the change is fine.
+export const formChangeError = async (
+  key: string,
+  data: Pick<SignUpData, 'pools' | 'inputs'>
+): Promise<string | null> => {
+  const [existing] = await getSignupSummaries([key])
+  if (!existing || totalSignups(existing) === 0) return null
+  const removedPools = existing.pools.filter(
+    (p) => (existing.counts[p.id] ?? 0) > 0 && !data.pools.some((n) => Number(n.id) === p.id)
+  )
+  if (removedPools.length) {
+    return `Sign-up form "${key}": pools with sign-ups can't be removed (${removedPools.map((p) => p.name).join(', ')})`
+  }
+  const answered = await countAnsweredFields(key)
+  const removedFields = existing.inputs.filter(
+    (f) => (answered[f.id] ?? 0) > 0 && !data.inputs.some((n) => Number(n.id) === f.id)
+  )
+  if (removedFields.length) {
+    return `Sign-up form "${key}": questions that already have answers can't be removed (${removedFields.map((f) => f.title).join(', ')})`
+  }
+  return null
+}

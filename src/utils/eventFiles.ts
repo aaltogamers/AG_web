@@ -13,9 +13,11 @@ import { parseMarkdown } from './fileUtils'
 import { getRepoOctokit, REPO_BRANCH, REPO_NAME, REPO_OWNER } from './github'
 
 const EVENTS_DIR = 'src/content/events'
+// Where the CMS puts uploaded images (media_folder in public/cms/config.yml)
+export const IMAGES_DIR = 'public/images'
 
 // Frontmatter keys in the order of the event fields in public/cms/config.yml
-const FIELD_ORDER = [
+export const FIELD_ORDER = [
   'name',
   'sessions',
   'signupMode',
@@ -133,18 +135,72 @@ const serialize = (data: Record<string, unknown>, body: string) => {
   return `---\n${frontmatter}---\n${body.trim() ? `\n${body.trim()}\n` : ''}`
 }
 
-// Creates the file, or updates it when `sha` is given
+export type ExtraFile = { path: string; content: Buffer }
+
+// Commits files together with the event file in one commit, e.g. an image used by the event
+const commitWithFiles = async (
+  slug: string,
+  content: string,
+  message: string,
+  extraFiles: ExtraFile[],
+  sha?: string
+): Promise<string> => {
+  const octokit = await getRepoOctokit()
+  const { data: ref } = await octokit.rest.git.getRef({ ...repo, ref: `heads/${REPO_BRANCH}` })
+  const { data: parent } = await octokit.rest.git.getCommit({ ...repo, commit_sha: ref.object.sha })
+  // Like createOrUpdateFileContents: refuse if the event changed since it was read
+  const current = await getEventFile(slug)
+  if ((current?.sha ?? undefined) !== sha) {
+    throw new AgentError(409, 'The event was changed by someone else at the same time, try again')
+  }
+  const blobs = await Promise.all(
+    [{ path: pathOf(slug), content: Buffer.from(content, 'utf8') }, ...extraFiles].map(
+      async (file) => {
+        const { data } = await octokit.rest.git.createBlob({
+          ...repo,
+          content: file.content.toString('base64'),
+          encoding: 'base64',
+        })
+        return { path: file.path, mode: '100644' as const, type: 'blob' as const, sha: data.sha }
+      }
+    )
+  )
+  const { data: tree } = await octokit.rest.git.createTree({
+    ...repo,
+    base_tree: parent.tree.sha,
+    tree: blobs,
+  })
+  const { data: commit } = await octokit.rest.git.createCommit({
+    ...repo,
+    message,
+    tree: tree.sha,
+    parents: [parent.sha],
+  })
+  await octokit.rest.git.updateRef({ ...repo, ref: `heads/${REPO_BRANCH}`, sha: commit.sha })
+  return commit.sha
+}
+
+// Creates the file, or updates it when `sha` is given. `extraFiles` (paths from
+// the repo root) are committed in the same commit. Returns the commit's sha.
 export const saveEventFile = async (
   slug: string,
   data: Record<string, unknown>,
   body: string,
   message: string,
-  sha?: string
-): Promise<void> => {
-  if (useLocalFiles) return fs.writeFile(pathOf(slug), serialize(data, body))
+  sha?: string,
+  extraFiles: ExtraFile[] = []
+): Promise<string | undefined> => {
+  if (useLocalFiles) {
+    await Promise.all(extraFiles.map((file) => fs.writeFile(file.path, file.content)))
+    await fs.writeFile(pathOf(slug), serialize(data, body))
+    return undefined
+  }
+  if (extraFiles.length) {
+    return commitWithFiles(slug, serialize(data, body), message, extraFiles, sha)
+  }
   const octokit = await getRepoOctokit()
   try {
-    await octokit.rest.repos.createOrUpdateFileContents({
+    const res = await octokit.rest.repos.createOrUpdateFileContents({
       ...repo,
       path: pathOf(slug),
       branch: REPO_BRANCH,
@@ -152,6 +208,7 @@ export const saveEventFile = async (
       content: Buffer.from(serialize(data, body), 'utf8').toString('base64'),
       ...(sha && { sha }),
     })
+    return res.data.commit.sha
   } catch (err) {
     if ((err as { status?: number })?.status === 409) {
       throw new AgentError(409, 'The event was changed by someone else at the same time, try again')

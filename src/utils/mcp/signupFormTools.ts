@@ -16,7 +16,7 @@ import { runTool } from './server'
 
 const TIME_HINT = 'Helsinki time, e.g. 2026-10-24T18:00'
 
-const poolSchema = z.object({
+export const poolSchema = z.object({
   id: z
     .number()
     .int()
@@ -35,7 +35,7 @@ const poolSchema = z.object({
     .describe('Password of a private pool. Leave it out to keep the current one.'),
 })
 
-const fieldSchema = z.object({
+export const fieldSchema = z.object({
   id: z
     .number()
     .int()

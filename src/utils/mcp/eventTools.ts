@@ -22,7 +22,7 @@ import { givenArgs, runTool } from './server'
 
 const TIME_HINT = 'Helsinki time, e.g. 2026-10-24T18:00'
 
-const sessionSchema = z.object({
+export const sessionSchema = z.object({
   id: z
     .string()
     .optional()

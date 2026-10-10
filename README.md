@@ -62,6 +62,9 @@ docker compose down -v
   should know this.
 - `AGENT_API_KEY` — key for the AI agent MCP server (see below). The MCP
   server is disabled if it is unset.
+- `TELEGRAM_POSTS_BOT_TOKEN`, `TELEGRAM_POSTS_WEBHOOK_SECRET` (any random
+  string), `DISCORD_BOT_TOKEN`, `INSTAGRAM_USER_ID`, `INSTAGRAM_ACCESS_TOKEN`
+  (the first long-lived token) — scheduled posts (see below).
 - `RCON_IP`, `RCON_PASSWORD`, `RCON_PORT` — Minecraft whitelist endpoint.
 - `APP_ID`, `PRIVATE_KEY`, `INSTALLATION_ID` — GitHub App credentials for
   the Decap CMS auth handshake (`/api/auth`).
@@ -84,6 +87,63 @@ Client Tool with "HTTP Streamable" and Bearer auth; in Claude Code run
 Tools return participants' sign-up counts, never their answers. Event
 changes are committed to the repo, so they show on the site after the next
 rebuild. Tools are defined in `src/utils/mcp/`.
+
+The post tools only make drafts and ask for approval; the agent can never
+approve, schedule or send a post.
+
+### Scheduled posts
+
+The "Posts" admin tab (`/admin/posts`) schedules posts to Telegram, Discord
+and Instagram channels. A post is written once in Markdown and rendered for
+each channel, with the placeholders `{{link:<name>}}` (a `/link/<name>`
+redirect), `{{event}}`, `{{signup}}` and `{{signup:<session name>}}`, all with
+`?ref=<channel ref>`. Each channel can have its own send time, footer or text.
+
+A post can include one website change (creating or changing an event and its
+sign-up forms), which runs before the messages (by default 10 minutes). If it
+fails, e.g. because the same fields were edited in the CMS, the messages wait
+until someone presses Retry (overwrites) or Send anyway.
+
+Only the approved version of a post is sent; any edit needs a new approval, on
+the website or with the posts bot's buttons in the review topic. The scheduler
+(`src/utils/social/scheduler.ts`) runs every 60 s, retries failed sends up to 3
+times and reports failures in the review topic. Messages more than 30 minutes
+late are reported instead of sent.
+
+Settings (`/admin/posts/settings`): the review chat, the approvers (Telegram
+users who can press the buttons), the Discord server, the base URL and the
+channels. Posts bot commands, for approvers:
+
+- `/review_here` — reviews go to this chat or topic.
+- `/register` — makes this chat or topic selectable as a channel (also chats
+  the bot is added to). In a channel, any admin can send it.
+
+#### Setting up
+
+In production, set the env variables as GitHub Actions secrets and run the
+"Infrastructure (OpenTofu)" workflow (see `infra/README.md`).
+
+1. Create the posts bot with @BotFather and set `TELEGRAM_POSTS_BOT_TOKEN` and
+   `TELEGRAM_POSTS_WEBHOOK_SECRET`.
+2. In the settings: "Connect bot" (sets the webhook to
+   `<base URL>/api/telegram/posts-webhook`, so the base URL must be public) and
+   add yourself as an approver by numeric user id (e.g. from @userinfobot).
+3. Add the bot to the review group, let it post, and send `/review_here` in the
+   review topic.
+4. Add the bot as an admin to each Telegram channel or group to post to, send
+   `/register` there (in the right topic), and add it as a channel.
+5. Discord: create a bot at discord.com/developers and invite it to the server
+   with View Channels, Send Messages, Embed Links and Attach Files. Set
+   `DISCORD_BOT_TOKEN`, enter the server id in the settings and add the
+   channels. "Test" checks the bot's permissions.
+6. Instagram: make the account a professional account. Create a Business app at
+   developers.facebook.com with the Instagram product ("API setup with
+   Instagram login"; development mode is fine), add the account as a tester,
+   generate a token with `instagram_business_basic` and
+   `instagram_business_content_publish`, and exchange it for a long-lived token.
+   Set `INSTAGRAM_USER_ID` and `INSTAGRAM_ACCESS_TOKEN`; the token is renewed
+   automatically. Instagram fetches the images from this site, so it must be
+   public.
 
 ### Content manager (Decap CMS)
 
