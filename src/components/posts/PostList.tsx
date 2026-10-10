@@ -1,5 +1,5 @@
 import moment from 'moment'
-import type { Channel, Post } from '../../utils/social/types'
+import type { Channel, Post, PostStatus } from '../../utils/social/types'
 import { POST_STATUS_LABELS } from '../../utils/social/types'
 
 const SHORT = { telegram: 'TG', discord: 'DC', instagram: 'IG' } as const
@@ -13,6 +13,20 @@ export const nextTime = (post: Post) => {
     .filter((t): t is string => !!t)
     .sort()
   return times.find((t) => new Date(t) > new Date()) ?? times[times.length - 1] ?? null
+}
+
+// Drafts and posts awaiting approval stand out from scheduled ones
+const ROW_CLASS: Partial<Record<PostStatus, string>> = {
+  draft: 'border-dashed border-lightgray text-lightgray italic',
+  awaiting_approval: 'border-yellow-400',
+}
+
+const BADGE_CLASS: Record<PostStatus, string> = {
+  draft: 'border border-dashed border-lightgray',
+  awaiting_approval: 'border border-yellow-400 text-yellow-400',
+  scheduled: 'bg-red text-white not-italic',
+  done: 'border border-lightgray/40',
+  cancelled: 'border border-lightgray/40 line-through',
 }
 
 type Props = {
@@ -34,10 +48,10 @@ const PostList = ({ posts, channels, onOpen }: Props) => {
             key={post.id}
             type="button"
             onClick={() => onOpen(post.id)}
-            className="text-left border border-lightgray/40 hover:border-red rounded-md p-3 flex flex-col md:flex-row md:items-center gap-2 md:gap-6"
+            className={`text-left border hover:border-red rounded-md p-3 flex flex-col md:flex-row md:items-center gap-2 md:gap-6 ${ROW_CLASS[post.status] ?? 'border-lightgray/40'}`}
           >
             <span className="md:w-40 text-sm">
-              {POST_STATUS_LABELS[post.status]}
+              <span className={`rounded-sm px-2 ${BADGE_CLASS[post.status]}`}>{POST_STATUS_LABELS[post.status]}</span>
               {problems > 0 && <span className="text-red"> · ❗ {problems}</span>}
             </span>
             <span className="flex-1 font-bold">{post.title || `Post #${post.id}`}</span>

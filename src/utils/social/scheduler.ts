@@ -69,31 +69,36 @@ const runWebsiteChanges = async () => {
 }
 
 // The text each channel gets is rendered right before sending, from the approved version
-const sendTarget = async (due: DueTarget, post: Post) => {
+const sendTarget = async (due: DueTarget, post: Post): Promise<{ externalMessageId: string; warning?: string }> => {
   const target = post.targets.find((t) => t.id === due.targetId)
   const channel = await getChannel(due.channelId)
-  if (!target || !channel) throw new Error('The channel no longer exists')
+  if (!target || !channel) throw new PermanentError('The channel no longer exists')
+  if (!channel.enabled) {
+    throw new PermanentError(`The channel was ${channel.deleted ? 'deleted' : 'disabled'} after the post was approved`)
+  }
   const preview = await buildPreview({ ...post, targets: [target] })
   const rendered = preview.texts[0]
-  const problems = rendered?.errors.filter((e) => e !== 'The channel is disabled') ?? ['Nothing to send']
+  const problems = rendered?.errors ?? ['Nothing to send']
   if (problems.length) throw new PermanentError(problems.join('; '))
 
   if (channel.platform === 'instagram') {
     const settings = await getSettings()
-    return publishInstagramPost(
+    const id = await publishInstagramPost(
       post.images.map((image) => publicImageUrl(image, settings.website.baseUrl)),
       rendered.text
     )
+    return { externalMessageId: id }
   }
   const images = await Promise.all(post.images.map(loadImage))
   if (channel.platform === 'telegram') {
     const { chatId, threadId } = channel.config
     if (!chatId) throw new PermanentError('The channel has no chat id')
-    return sendToTelegramChannel({ chatId, threadId }, rendered.text, images)
+    return { externalMessageId: await sendToTelegramChannel({ chatId, threadId }, rendered.text, images) }
   }
   const { channelId, crosspost } = channel.config
   if (!channelId) throw new PermanentError('The channel has no Discord channel')
-  return sendToDiscordChannel({ channelId, crosspost }, rendered.text, images)
+  const sent = await sendToDiscordChannel({ channelId, crosspost }, rendered.text, images)
+  return { externalMessageId: sent.id, warning: sent.warning }
 }
 
 class PermanentError extends Error {}
@@ -101,6 +106,11 @@ class PermanentError extends Error {}
 const reportTargetFailure = async (post: Post, channelId: string, error: string) => {
   const channel = await getChannel(channelId)
   await sendNotice(post, `❗ <b>Sending to ${esc(channel?.name ?? 'a channel')} failed</b>: ${esc(error)}`)
+}
+
+const reportTargetProblem = async (post: Post, channelId: string, problem: string) => {
+  const channel = await getChannel(channelId)
+  await sendNotice(post, `⚠️ <b>${esc(channel?.name ?? 'A channel')}</b>: ${esc(problem)}`)
 }
 
 const sendDueTargets = async () => {
@@ -113,13 +123,15 @@ const sendDueTargets = async () => {
     const post = await getPost(due.postId)
     if (!post) continue
     try {
-      const externalMessageId = await sendTarget(due, post)
+      const { externalMessageId, warning } = await sendTarget(due, post)
       await finishTarget(due.targetId, { ok: true, externalMessageId })
       console.log(`[posts] post #${post.id} sent to channel ${due.channelId}`)
+      if (warning) await reportTargetProblem(post, due.channelId, warning)
     } catch (err) {
       const error = errorText(err)
       console.error(`[posts] sending post #${post.id} to channel ${due.channelId} failed:`, err)
-      if (!(err instanceof PermanentError) && due.attempts < MAX_ATTEMPTS) {
+      const noRetry = err instanceof PermanentError || (err as { noRetry?: boolean }).noRetry
+      if (!noRetry && due.attempts < MAX_ATTEMPTS) {
         const retryAfter = (err as { retryAfter?: number }).retryAfter
         await finishTarget(due.targetId, {
           ok: false,

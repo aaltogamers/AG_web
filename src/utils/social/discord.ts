@@ -72,7 +72,7 @@ export const sendToDiscordChannel = async (
   config: DiscordChannelConfig,
   markdown: string,
   images: LoadedImage[]
-): Promise<string> => {
+): Promise<{ id: string; warning?: string }> => {
   const payload = {
     content: markdown,
     // Never ping anyone, even if the text has @everyone or a role mention
@@ -89,12 +89,18 @@ export const sendToDiscordChannel = async (
     { method: 'POST', body: form }
   )
   if (config.crosspost) {
-    // Publishes the message to servers following the announcement channel
-    await call(`/channels/${config.channelId}/messages/${message.id}/crosspost`, {
-      method: 'POST',
-    })
+    // Publishes the message to servers following the announcement channel. The
+    // message has been sent already, so a failure here must not send it again.
+    try {
+      await call(`/channels/${config.channelId}/messages/${message.id}/crosspost`, {
+        method: 'POST',
+      })
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err)
+      return { id: message.id, warning: `Sent, but publishing it to following servers failed: ${error}` }
+    }
   }
-  return message.id
+  return { id: message.id }
 }
 
 // Permission bits

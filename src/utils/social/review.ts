@@ -44,11 +44,17 @@ const openButton = (settings: SocialSettings, post: Post): InlineButton => ({
   url: postAdminUrl(settings, post.id),
 })
 
-// Telegram's limit is 4096 characters; long texts are cut as plain text
+// Telegram's limit is 4096 characters; long texts are cut as plain text. Cut
+// unescaped, so that an entity like &amp; isn't cut in half.
 const fit = (header: string, html: string) => {
   if (telegramLength(header + html) <= 4000) return header + html
-  const plain = html.replace(/<[^>]+>/g, '')
-  return `${header}${plain.slice(0, 3500)}… <i>(cut here in the review)</i>`
+  const plain = html
+    .replace(/<[^>]+>/g, '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+  return `${header}${esc(plain.slice(0, 3500))}… <i>(cut here in the review)</i>`
 }
 
 // A channel's text as Telegram can show it: Telegram channels exactly, the

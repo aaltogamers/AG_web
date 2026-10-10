@@ -202,7 +202,7 @@ export const registerPostTools = (server: McpServer) => {
       annotations: { idempotentHint: true },
     },
     runTool('update_post', async ({ postId, ...fields }) => {
-      const input = await parsePostArgs(givenArgs(fields))
+      const input = await parsePostArgs(givenArgs(fields), await getPostOrThrow(postId))
       if (!Object.keys(input).length) throw new AgentError(400, 'Nothing to update')
       const { post, note } = await editPost(postId, input, AGENT)
       return {

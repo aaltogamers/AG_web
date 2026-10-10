@@ -8,6 +8,7 @@ import {
   eventFromFile,
   getEventFile,
   getFreeSlug,
+  getLastEventCommit,
   IMAGES_DIR,
   saveEventFile,
 } from '../eventFiles'
@@ -356,19 +357,40 @@ export const previewWebsiteChange = async (
 
 export class WebsiteChangeConflict extends Error {}
 
+// In the commit message, so that a run interrupted after committing (before
+// markEventSaved) isn't mistaken for a conflict and committed again
+const commitMarker = (post: Post) => `(scheduled post #${post.id} v${post.version})`
+
+// The commit, if this version of the post was the last to change the event
+export const committedByPost = async (post: Post, slug: string) => {
+  const last = await getLastEventCommit(slug)
+  return last?.message.includes(commitMarker(post)) ? last.sha : null
+}
+
 // Runs the change: commits the event file (with an uploaded image), then saves
 // the sign-up forms. A conflict throws WebsiteChangeConflict, which is not retried.
 export const runWebsiteChange = async (
   post: Post,
   change: WebsiteChange,
   base: Record<string, unknown> | null,
-  eventSaved: boolean,
+  eventSavedBefore: boolean,
   onEventSaved: (commitSha: string | null) => Promise<void>
 ): Promise<string | null> => {
   const slug = change.eventSlug
   if (!slug) throw new WebsiteChangeConflict('The event has no slug; approve the post again')
   const file = await getEventFile(slug)
   let commitSha = change.commitSha ?? null
+  let eventSaved = eventSavedBefore
+
+  // An earlier run committed the event but was interrupted before it could record that
+  if (!eventSaved && file) {
+    const sha = await committedByPost(post, slug)
+    if (sha) {
+      commitSha = sha
+      await onEventSaved(sha)
+      eventSaved = true
+    }
+  }
 
   if (!eventSaved) {
     if (change.kind === 'create_event' && file) {
@@ -401,7 +423,7 @@ export const runWebsiteChange = async (
         slug,
         resolved.data,
         resolved.body,
-        `${verb} Event “${slug}” (scheduled post #${post.id})`,
+        `${verb} Event “${slug}” ${commitMarker(post)}`,
         file?.sha || undefined,
         extraFiles
       )) ?? null

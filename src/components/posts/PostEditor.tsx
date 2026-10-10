@@ -34,12 +34,17 @@ import {
 } from './postDraft'
 import WebsiteChangeEditor from './WebsiteChangeEditor'
 
+type Message = { text: string; isError?: boolean }
+
 type Props = {
   // null for a new post
   postId: string | null
   events: AGEvent[]
-  onSaved: (postId: string) => void
+  // A new post was saved; `message` is shown in its editor
+  onSaved: (postId: string, message: Message) => void
   onClose: () => void
+  // E.g. the result of saving a new post
+  initialMessage?: Message | null
 }
 
 const inputClass = 'p-2 rounded-md bg-white text-black w-full'
@@ -56,6 +61,9 @@ const TARGET_STATUS_LABELS: Record<string, string> = {
   cancelled: 'cancelled',
 }
 
+const UNSCHEDULE_CONFIRM =
+  'This post is approved. Saving it as a draft takes it off the schedule, so nothing more is sent until it is approved again. Save anyway?'
+
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col gap-3">
     <h3 className="text-2xl">{title}</h3>
@@ -63,7 +71,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 )
 
-const PostEditor = ({ postId, events, onSaved, onClose }: Props) => {
+const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }: Props) => {
   const [post, setPost] = useState<Post | null>(null)
   const [history, setHistory] = useState<PostHistoryEntry[]>([])
   const [channels, setChannels] = useState<Channel[]>([])
@@ -72,7 +80,7 @@ const PostEditor = ({ postId, events, onSaved, onClose }: Props) => {
   const [savedDraft, setSavedDraft] = useState<string>(JSON.stringify(emptyPostDraft()))
   const [preview, setPreview] = useState<PostPreview | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
-  const [message, setMessage] = useState<{ text: string; isError?: boolean } | null>(null)
+  const [message, setMessage] = useState<Message | null>(initialMessage)
   const [busy, setBusy] = useState(false)
   const [rejectComment, setRejectComment] = useState('')
   const [newTime, setNewTime] = useState('')
@@ -124,10 +132,8 @@ const PostEditor = ({ postId, events, onSaved, onClose }: Props) => {
     setMessage(null)
     try {
       const result = await work()
-      if (result?.post) {
-        if (!postId) onSaved(result.post.id)
-        else await load()
-      }
+      if (!postId) return
+      if (result?.post) await load()
       setMessage({ text: result?.note ? `${done} ${result.note}` : done })
     } catch (e) {
       setMessage({ text: e instanceof Error ? e.message : String(e), isError: true })
@@ -142,8 +148,17 @@ const PostEditor = ({ postId, events, onSaved, onClose }: Props) => {
       const input = draftToInput(draft)
       if (!postId) {
         const { post: created } = await createPost(input)
-        if (approve) await postAction(created.id, 'approve', { version: created.version })
-        return { post: created }
+        // The post exists now, so open it even if approving fails; saving again would make a copy
+        let saved: Message = { text: approve ? 'Saved and approved.' : 'Saved.' }
+        if (approve) {
+          try {
+            await postAction(created.id, 'approve', { version: created.version })
+          } catch (e) {
+            saved = { text: `Saved as a draft, but not approved: ${e instanceof Error ? e.message : e}`, isError: true }
+          }
+        }
+        onSaved(created.id, saved)
+        return
       }
       return savePost(postId, input, approve)
     }, approve ? 'Saved and approved.' : 'Saved.')
@@ -152,6 +167,7 @@ const PostEditor = ({ postId, events, onSaved, onClose }: Props) => {
     postId && post && run(() => postAction(postId, action, { version: post.version, ...body }), done)
 
   const status = post?.status ?? 'draft'
+  const unschedulesOnSave = status === 'scheduled'
   const editable = status !== 'cancelled'
   const hasHeld = post?.targets.some((t) => t.status === 'held') || post?.websiteChange?.status === 'failed'
   const errorCount =
@@ -428,9 +444,16 @@ const PostEditor = ({ postId, events, onSaved, onClose }: Props) => {
             </Section>
 
             <Section title="Approval">
+              {isDirty && unschedulesOnSave && (
+                <div className="border-2 border-yellow-400 rounded-md p-3 text-base">
+                  <div className="font-bold text-yellow-400">⚠️ This post is approved and scheduled</div>
+                  Saving your changes takes it off the schedule: nothing more is sent until it is approved
+                  again. Use &quot;Save and approve&quot; to keep it scheduled.
+                </div>
+              )}
               <div className="flex flex-wrap gap-3 text-base">
                 {editable && (
-                  <button type="button" className="borderbutton" disabled={busy || (!isDirty && !!postId)} onClick={() => save(false)}>
+                  <button type="button" className="borderbutton" disabled={busy || (!isDirty && !!postId)} onClick={() => (!unschedulesOnSave || window.confirm(UNSCHEDULE_CONFIRM)) && save(false)}>
                     Save as draft
                   </button>
                 )}
@@ -525,11 +548,6 @@ const PostEditor = ({ postId, events, onSaved, onClose }: Props) => {
                       ▶️ Send anyway
                     </button>
                   </div>
-                </div>
-              )}
-              {isDirty && post && post.status === 'scheduled' && (
-                <div className="text-yellow-400 text-sm">
-                  ⚠️ Saving takes the post off the schedule until it is approved again.
                 </div>
               )}
               {errorCount > 0 && <div className="text-red text-sm">Fix the problems in the preview before approving.</div>}

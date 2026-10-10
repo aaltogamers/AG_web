@@ -26,8 +26,11 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
   const [view, setView] = useState<'list' | 'calendar'>('list')
   const [posts, setPosts] = useState<Post[]>([])
   const [channels, setChannels] = useState<Channel[]>([])
+  const [leadMinutes, setLeadMinutes] = useState(10)
   const [awaiting, setAwaiting] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  // Shown in the editor of a post that was just created
+  const [savedMessage, setSavedMessage] = useState<{ text: string; isError?: boolean } | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -39,6 +42,7 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
       setPosts(sorted)
       setAwaiting(res.awaitingApproval)
       setChannels(settings.channels)
+      setLeadMinutes(settings.settings.website.leadMinutes)
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -53,6 +57,10 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
     router.push({ pathname: router.pathname, query: { ...router.query, id } }, undefined, {
       shallow: true,
     })
+  const openFromList = (id: string) => {
+    setSavedMessage(null)
+    open(id)
+  }
 
   if (openId) {
     return (
@@ -60,8 +68,13 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
         key={openId}
         postId={openId === 'new' ? null : openId}
         events={events}
-        onSaved={(id) => open(id)}
+        initialMessage={savedMessage}
+        onSaved={(id, message) => {
+          setSavedMessage(message)
+          open(id)
+        }}
         onClose={() => {
+          setSavedMessage(null)
           const query = { ...router.query }
           delete query.id
           router.push({ pathname: router.pathname, query }, undefined, { shallow: true })
@@ -73,7 +86,7 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap gap-3 items-center">
-        <button type="button" className="mainbutton" onClick={() => open('new')}>
+        <button type="button" className="mainbutton" onClick={() => openFromList('new')}>
           New post
         </button>
         <button type="button" className="borderbutton" onClick={() => setView(view === 'list' ? 'calendar' : 'list')}>
@@ -99,10 +112,10 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
               </button>
             ))}
           </div>
-          <PostList posts={posts} channels={channels} onOpen={open} />
+          <PostList posts={posts} channels={channels} onOpen={openFromList} />
         </>
       ) : (
-        <PostCalendar posts={posts} channels={channels} onOpen={open} />
+        <PostCalendar posts={posts} channels={channels} leadMinutes={leadMinutes} onOpen={openFromList} />
       )}
     </div>
   )

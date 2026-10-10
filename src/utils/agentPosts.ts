@@ -12,6 +12,7 @@ import {
 } from './agentApi'
 import { parseFields, parsePools } from './agentEvents'
 import { getSettings, type Actor } from './postStore'
+import { getSignupForm } from './signupForms'
 import { saveUploadedImage, MAX_UPLOAD_BYTES } from './social/media'
 import type {
   Channel,
@@ -25,6 +26,7 @@ import type {
   SignupFormChange,
   TextChoice,
 } from './social/types'
+import type { SignupPool } from '../types/types'
 
 const toIso = (value: unknown, name: string) =>
   value === null ? null : parseAgentTime(value, name).toISOString()
@@ -92,28 +94,51 @@ const parseEvent = (raw: unknown): EventChange => {
   return Object.fromEntries(Object.entries(event).filter(([, v]) => v !== undefined))
 }
 
-const parseForms = (raw: unknown): SignupFormChange[] =>
-  (optionalArray(raw, 'websiteChange.signupForms') ?? []).map((rawForm, i) => {
-    const f = asRecord(rawForm, `websiteChange.signupForms[${i}]`)
-    const openfrom = parseAgentTime(f.openFrom, `signupForms[${i}].openFrom`)
-    const openuntil = parseAgentTime(f.openUntil, `signupForms[${i}].openUntil`)
-    if (!openuntil.isAfter(openfrom)) throw new AgentError(400, `signupForms[${i}]: openUntil must be after openFrom`)
-    const sessionId = optionalString(f.sessionId, `signupForms[${i}].sessionId`)
-    return {
-      ...(sessionId && { sessionId }),
-      form: {
-        openfrom: openfrom.toISOString(),
-        openuntil: openuntil.toISOString(),
-        pools: parsePools(f.pools),
-        inputs: parseFields(f.fields),
-        confirmedMessage: optionalString(f.confirmedMessage, 'confirmedMessage') ?? '',
-        confirmedLink: optionalString(f.confirmedLink, 'confirmedLink') ?? '',
-      },
-    }
-  })
+// Private pools keep their current password unless a new one is given: the one
+// in the post's website change, or the existing sign-up form's
+const currentPools = async (
+  existing: Post | null,
+  eventSlug: string | null,
+  sessionId?: string
+): Promise<SignupPool[]> => {
+  const inPost = existing?.websiteChange?.signupForms.find((f) => (f.sessionId ?? '') === (sessionId ?? ''))
+  if (inPost) return inPost.form.pools
+  if (!eventSlug) return []
+  return (await getSignupForm(sessionId ? `${eventSlug}:${sessionId}` : eventSlug))?.pools ?? []
+}
 
-// Turns the arguments of create_post / update_post into a PostInput. Only given fields are set.
-export const parsePostArgs = async (args: Record<string, unknown>): Promise<PostInput> => {
+const parseForms = async (
+  raw: unknown,
+  existing: Post | null,
+  eventSlug: string | null
+): Promise<SignupFormChange[]> =>
+  Promise.all(
+    (optionalArray(raw, 'websiteChange.signupForms') ?? []).map(async (rawForm, i) => {
+      const f = asRecord(rawForm, `websiteChange.signupForms[${i}]`)
+      const openfrom = parseAgentTime(f.openFrom, `signupForms[${i}].openFrom`)
+      const openuntil = parseAgentTime(f.openUntil, `signupForms[${i}].openUntil`)
+      if (!openuntil.isAfter(openfrom)) throw new AgentError(400, `signupForms[${i}]: openUntil must be after openFrom`)
+      const sessionId = optionalString(f.sessionId, `signupForms[${i}].sessionId`)
+      return {
+        ...(sessionId && { sessionId }),
+        form: {
+          openfrom: openfrom.toISOString(),
+          openuntil: openuntil.toISOString(),
+          pools: parsePools(f.pools, await currentPools(existing, eventSlug, sessionId)),
+          inputs: parseFields(f.fields),
+          confirmedMessage: optionalString(f.confirmedMessage, 'confirmedMessage') ?? '',
+          confirmedLink: optionalString(f.confirmedLink, 'confirmedLink') ?? '',
+        },
+      }
+    })
+  )
+
+// Turns the arguments of create_post / update_post into a PostInput. Only given
+// fields are set. `existing` is the post being updated.
+export const parsePostArgs = async (
+  args: Record<string, unknown>,
+  existing: Post | null = null
+): Promise<PostInput> => {
   const input: PostInput = {}
   if ('title' in args) input.title = requireString(args.title, 'title')
   if ('body' in args) input.bodyMd = typeof args.body === 'string' ? args.body : ''
@@ -136,12 +161,14 @@ export const parsePostArgs = async (args: Record<string, unknown>): Promise<Post
       input.websiteChange = null
     } else {
       const w = asRecord(args.websiteChange, 'websiteChange')
+      const kind = w.kind as 'create_event' | 'update_event'
+      const eventSlug = optionalString(w.eventSlug, 'websiteChange.eventSlug') ?? null
       input.websiteChange = {
-        kind: w.kind as 'create_event' | 'update_event',
-        eventSlug: optionalString(w.eventSlug, 'websiteChange.eventSlug') ?? null,
+        kind,
+        eventSlug,
         runAt: w.runAt ? toIso(w.runAt, 'websiteChange.runAt') : null,
         event: parseEvent(w.event),
-        signupForms: parseForms(w.signupForms),
+        signupForms: await parseForms(w.signupForms, existing, kind === 'update_event' ? eventSlug : null),
       }
     }
   }

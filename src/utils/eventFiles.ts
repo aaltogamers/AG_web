@@ -74,6 +74,22 @@ export const getEventFile = async (slug: string): Promise<EventFile | null> => {
   }
 }
 
+// The last commit that changed the event file, e.g. to tell whether a scheduled
+// post already saved it. Null with local files.
+export const getLastEventCommit = async (
+  slug: string
+): Promise<{ sha: string; message: string } | null> => {
+  if (useLocalFiles) return null
+  const octokit = await getRepoOctokit()
+  const { data } = await octokit.rest.repos.listCommits({
+    ...repo,
+    sha: REPO_BRANCH,
+    path: pathOf(slug),
+    per_page: 1,
+  })
+  return data[0] ? { sha: data[0].sha, message: data[0].commit.message } : null
+}
+
 type TreeQuery = {
   repository: {
     object: {

@@ -5,7 +5,15 @@ import { getInstagramTokenState, saveInstagramTokenState } from '../postStore'
 
 const GRAPH = 'https://graph.instagram.com/v23.0'
 
-export class InstagramError extends Error {}
+export class InstagramError extends Error {
+  constructor(
+    message: string,
+    // The post may have been published, so sending it again could post it twice
+    public noRetry = false
+  ) {
+    super(message)
+  }
+}
 
 export const isInstagramConfigured = () =>
   !!process.env.INSTAGRAM_USER_ID && !!process.env.INSTAGRAM_ACCESS_TOKEN
@@ -90,8 +98,13 @@ export const publishInstagramPost = async (imageUrls: string[], caption: string)
     ).id
   }
   await waitUntilReady(containerId)
-  const published = await call<{ id: string }>(`/${id}/media_publish`, { creation_id: containerId }, 'POST')
-  return published.id
+  try {
+    const published = await call<{ id: string }>(`/${id}/media_publish`, { creation_id: containerId }, 'POST')
+    return published.id
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err)
+    throw new InstagramError(`${error} (it may have been published anyway; check Instagram before sending it again)`, true)
+  }
 }
 
 export const getInstagramAccount = async () => {

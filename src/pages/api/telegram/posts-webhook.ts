@@ -125,8 +125,12 @@ const chatTitle = (msg: TgMessage) => {
 
 const handleCommand = async (msg: TgMessage, command: string, isChannelPost: boolean) => {
   const settings = await getSettings()
-  // In channels only admins can post, so channel posts are trusted
-  if (!isChannelPost && !(msg.from && isApprover(settings, msg.from.id))) {
+  const byApprover = !!msg.from && isApprover(settings, msg.from.id)
+  // /register only lists the chat in the settings dropdowns, so channel admins
+  // can use it. /review_here sends every review to the chat, so only approvers
+  // can, which rules out channels: channel posts don't say who sent them.
+  if (!byApprover && (command === 'review_here' || !isChannelPost)) {
+    if (isChannelPost) return
     return reply(msg, 'Not allowed: only approvers (set in the posts settings on the website) can use this.')
   }
   const chatId = String(msg.chat.id)

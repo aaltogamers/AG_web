@@ -114,7 +114,8 @@ Settings (`/admin/posts/settings`): the review chat, the approvers (Telegram
 users who can press the buttons), the Discord server, the base URL and the
 channels. Posts bot commands, for approvers:
 
-- `/review_here` — reviews go to this chat or topic.
+- `/review_here` — reviews go to this group or topic. Not in channels, since
+  channel posts don't say who sent them.
 - `/register` — makes this chat or topic selectable as a channel (also chats
   the bot is added to). In a channel, any admin can send it.
 

@@ -22,7 +22,7 @@ import { buildPreview, previewErrors } from './preview'
 import { escapeTelegramHtml as esc } from './telegram'
 import { announceDecision, approvalNote, closeOpenMessages, sendReview } from './review'
 import type { Post, PostInput } from './types'
-import { chooseNewEventSlug, snapshotBase } from './website'
+import { chooseNewEventSlug, committedByPost, snapshotBase } from './website'
 
 // Times up to this much in the past still count as "now" when approving
 const GRACE_MS = 2 * 60_000
@@ -34,8 +34,15 @@ const ensureValid = async (post: Post) => {
 
 export const createPostAction = (input: PostInput, actor: Actor) => createPost(input, actor)
 
-const reviewNote = async (sent: boolean) => {
-  if (sent) return 'A review was sent to the review topic in Telegram.'
+// Sends the review and says where it went, for the agent and the website
+const sendReviewWithNote = async (post: Post, options: Parameters<typeof sendReview>[1]) => {
+  try {
+    if (await sendReview(post, options)) return 'A review was sent to the review topic in Telegram.'
+  } catch (err) {
+    console.error('[posts] sending the review failed:', err)
+    const error = err instanceof Error ? err.message : String(err)
+    return `Sending the review to Telegram failed (${error}). It can be approved on the website.`
+  }
   const settings = await getSettings()
   return settings.telegram.reviewChatId
     ? 'The review could not be sent to Telegram (TELEGRAM_POSTS_BOT_TOKEN is not set). It can be approved on the website.'
@@ -50,11 +57,7 @@ export const requestApproval = async (id: string, actor: Actor) => {
   await ensureValid(post)
   await setAwaitingApproval(post, actor)
   const updated = await getPostOrThrow(id)
-  const sent = await sendReview(updated, { requestedBy: actor }).catch((err) => {
-    console.error('[posts] sending the review failed:', err)
-    return false
-  })
-  return { post: updated, note: await reviewNote(sent) }
+  return { post: updated, note: await sendReviewWithNote(updated, { requestedBy: actor }) }
 }
 
 export const withdrawApproval = async (id: string, actor: Actor) => {
@@ -76,14 +79,11 @@ export const editPost = async (
   const wasInReview = previousStatus === 'awaiting_approval' || previousStatus === 'scheduled'
   let note: string | undefined
   if (actor === 'agent' && wasInReview) {
-    const sent = await sendReview(post, {
+    const reviewNote = await sendReviewWithNote(post, {
       requestedBy: actor,
       editedAfterApproval: previousStatus === 'scheduled',
-    }).catch((err) => {
-      console.error('[posts] sending the review failed:', err)
-      return false
     })
-    note = `${previousStatus === 'scheduled' ? 'The post was approved, so the edit took it off the schedule until it is approved again. ' : ''}${await reviewNote(sent)}`
+    note = `${previousStatus === 'scheduled' ? 'The post was approved, so the edit took it off the schedule until it is approved again. ' : ''}${reviewNote}`
   } else if (wasInReview) {
     await closeOpenMessages(post.id, `<i>✏️ Edited on the website (v${post.version})</i>`).catch(() => undefined)
   }
@@ -167,7 +167,13 @@ export const releaseHeldPost = async (
   if (!change || change.status !== 'failed') throw new AgentError(409, 'The website change has not failed')
   let base: Record<string, unknown> | null = null
   if (mode === 'retry') {
-    if (change.kind === 'create_event' && change.eventSlug && (await getEventFile(change.eventSlug))) {
+    // A new address only if someone else took it; not if an interrupted run of this post created the event
+    if (
+      change.kind === 'create_event' &&
+      change.eventSlug &&
+      (await getEventFile(change.eventSlug)) &&
+      !(await committedByPost(post, change.eventSlug))
+    ) {
       const slug = await chooseNewEventSlug(post, change)
       await setWebsiteChangeSlug(post.id, slug)
     }

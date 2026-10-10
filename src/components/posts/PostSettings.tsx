@@ -429,7 +429,11 @@ const ChannelRow = ({
           <button
             type="button"
             className="link"
-            onClick={() => run(() => updateChannel(channel.id, { enabled: !channel.enabled }), channel.enabled ? 'Disabled.' : 'Enabled.')}
+            onClick={() =>
+              (!channel.enabled ||
+                window.confirm(`Disable ${channel.name}? Approved posts that haven't been sent to it yet won't be.`)) &&
+              run(() => updateChannel(channel.id, { enabled: !channel.enabled }), channel.enabled ? 'Disabled.' : 'Enabled.')
+            }
           >
             {channel.enabled ? 'Disable' : 'Enable'}
           </button>
@@ -437,7 +441,7 @@ const ChannelRow = ({
             type="button"
             className="link"
             onClick={() =>
-              window.confirm(`Delete ${channel.name}? Channels that have posts are only disabled.`) &&
+              window.confirm(`Delete ${channel.name}? Approved posts that haven't been sent to it yet won't be. Channels that have posts are only disabled.`) &&
               run(async () => {
                 const { result } = await deleteChannel(channel.id)
                 return result
@@ -490,7 +494,7 @@ const ChannelsCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
     <Card title="Channels">
       <div className="text-sm text-lightgray">
         Where posts can be sent. Every channel has a name, a ref (tag in tracked links) and an optional
-        default footer. Disabled channels can&apos;t be picked for new posts.
+        default footer. Nothing is sent to disabled channels, and they can&apos;t be picked for new posts.
       </div>
       {PLATFORMS.map((platform) => (
         <div key={platform} className="flex flex-col gap-2">

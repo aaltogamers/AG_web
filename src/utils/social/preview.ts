@@ -100,7 +100,8 @@ export const renderTarget = (
   const editable = target.status !== 'sent' && target.status !== 'sending' && target.status !== 'cancelled'
   if (editable) {
     if (!sendAt) errors.push('No send time')
-    if (!channel.enabled) warnings.push('The channel is disabled')
+    // Disabled and deleted channels get nothing; remove them from the post
+    if (!channel.enabled) errors.push(`The channel is ${channel.deleted ? 'deleted' : 'disabled'}`)
     if (!PLATFORM_READY[channel.platform]()) errors.push(`Not set up: ${PLATFORM_ENV[channel.platform]} must be set on the server`)
   }
   return {
