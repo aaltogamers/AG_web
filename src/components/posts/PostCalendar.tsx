@@ -26,8 +26,8 @@ type Entry = {
   allDay?: boolean
 }
 
-// Drafts and posts awaiting approval are shown, but clearly not scheduled
-const PREFIX: Partial<Record<PostStatus, string>> = { draft: 'DRAFT · ', awaiting_approval: '⏳ ' }
+// Posts awaiting approval are shown, but clearly not scheduled (drafts by their dashed border)
+const PREFIX: Partial<Record<PostStatus, string>> = { awaiting_approval: '⏳ ' }
 
 // Colours for the posts of events without a (colourful) image, and posts without an event
 const PALETTE = [
@@ -225,7 +225,18 @@ const toEntries = (
       const run =
         websiteRunAt(post, leadMinutes) ??
         (onApproval && post.websiteChange && !post.websiteChange.ranAt ? today : null)
-      if (run) entries.push(entry(name, ['website'], run, post.websiteChange?.status === 'done'))
+      if (run) {
+        const websiteDone = post.websiteChange?.status === 'done'
+        // A website change shortly before messages (like the lead time) is part of their entry
+        const time = run.getTime()
+        const messages = entries.find(
+          (e) => e.start.getTime() >= time && e.start.getTime() - time <= leadMinutes * 60_000
+        )
+        if (messages) {
+          messages.platforms = ['website', ...messages.platforms]
+          messages.done = messages.done && websiteDone
+        } else entries.push(entry(name, ['website'], run, websiteDone))
+      }
       return entries
     })
 
