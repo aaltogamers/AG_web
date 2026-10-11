@@ -14,7 +14,6 @@ import {
   savePost,
   type PostAction,
 } from '../../utils/social/postsClient'
-import { PLACEHOLDER_HELP } from '../../utils/social/render'
 import {
   PLATFORM_LABELS,
   POST_STATUS_LABELS,
@@ -277,7 +276,10 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
               placeholder="The post's text"
               disabled={!editable}
             />
-            <div className="text-sm text-lightgray">Placeholders: {PLACEHOLDER_HELP}</div>
+            <div className="text-sm text-lightgray">
+              Links: <code>[AG Discord]({'{{link:discord}}'})</code>, <code>[Sign up]({'{{signup}}'})</code>,{' '}
+              <code>[Example](https://example.com)</code>
+            </div>
           </Section>
 
           <Section title="Images">
