@@ -150,12 +150,12 @@ export const unschedulePost = async (id: string, actor: Actor) => {
   return getPostOrThrow(id)
 }
 
-// Deletes the post; unsent messages and website changes are not sent
+// Deletes the post; unsent messages and website changes are not sent.
+// The agent can only delete its own unapproved posts (see removePost).
 export const deletePost = async (id: string, actor: Actor) => {
-  if (actor === 'agent') throw new AgentError(403, 'Only a human can delete posts')
   const post = await getPostOrThrow(id)
   const open = await getOpenPreviewMessages(post.id)
-  await removePost(post)
+  await removePost(post, actor)
   // Their rows went with the post, so edit the review messages fetched before
   await closeMessages(open, `🗑 <b>Deleted by ${esc(describeActor(actor, await getSettings()))}</b>`).catch(
     () => undefined

@@ -89,7 +89,8 @@ changes are committed to the repo, so they show on the site after the next
 rebuild. Tools are defined in `src/utils/mcp/`.
 
 The post tools only make drafts and ask for approval; the agent can never
-approve, schedule or send a post. The agent is told to read the most recently
+approve, schedule or send a post. It can delete its own drafts and posts
+awaiting approval, but not posts made by a human. The agent is told to read the most recently
 sent posts (`get_example_posts`) first and write new posts the same way.
 
 ### Scheduled posts

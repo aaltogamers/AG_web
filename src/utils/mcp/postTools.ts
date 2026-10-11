@@ -10,7 +10,7 @@ import {
 } from '../agentPosts'
 import { AgentError, formatAgentTime, parseAgentTime } from '../agentApi'
 import { getPostHistory, getPostOrThrow, getSettings, listChannels, listPosts, listSentPosts } from '../postStore'
-import { createPostAction, editPost, requestApproval, withdrawApproval } from '../social/actions'
+import { createPostAction, deletePost, editPost, requestApproval, withdrawApproval } from '../social/actions'
 import { isDiscordConfigured, listGuildRoles } from '../social/discord'
 import { buildPreview } from '../social/preview'
 import { PLACEHOLDER_HELP } from '../social/render'
@@ -306,6 +306,21 @@ export const registerPostTools = (server: McpServer) => {
     runTool('withdraw_approval_request', async ({ postId }) => {
       const post = await withdrawApproval(postId, AGENT)
       return { post: await describePost(post, await listChannels()), at: formatAgentTime(new Date()) }
+    })
+  )
+
+  server.registerTool(
+    'delete_post',
+    {
+      title: 'Delete post',
+      description:
+        'Deletes a draft or a post awaiting approval that the AI agent made, with its website change. Posts made by a human, and approved or sent posts, can only be deleted by a human.',
+      inputSchema: { postId: z.string() },
+      annotations: { destructiveHint: true },
+    },
+    runTool('delete_post', async ({ postId }) => {
+      await deletePost(postId, AGENT)
+      return { deleted: postId }
     })
   )
 }

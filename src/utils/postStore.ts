@@ -1246,14 +1246,21 @@ export const markUnscheduled = async (post: Post, actor: Actor) => {
 
 // Deletes the post with its messages, website change and history (cascades).
 // Not while something is being sent, so the scheduler doesn't lose track of it.
-export const removePost = async (post: Post) => {
+// The agent can only delete its own drafts and posts awaiting approval.
+export const removePost = async (post: Post, actor: Actor) => {
+  const byAgent = actor === 'agent'
   const result = await pool.query(
     `DELETE FROM posts p WHERE p.id = $1
        AND NOT EXISTS (SELECT 1 FROM post_targets t WHERE t.post_id = p.id AND t.status = 'sending')
-       AND NOT EXISTS (SELECT 1 FROM post_website_changes w WHERE w.post_id = p.id AND w.status = 'sending')`,
-    [post.id]
+       AND NOT EXISTS (SELECT 1 FROM post_website_changes w WHERE w.post_id = p.id AND w.status = 'sending')
+       AND (NOT $2 OR (p.created_by = 'agent' AND p.status IN ('draft', 'awaiting_approval')))`,
+    [post.id, byAgent]
   )
-  if (!result.rowCount) throw new AgentError(409, 'The post is being sent right now, try again in a minute')
+  if (!result.rowCount) {
+    throw byAgent && (post.createdBy !== 'agent' || !['draft', 'awaiting_approval'].includes(post.status))
+      ? new AgentError(403, 'The AI agent can only delete drafts and posts awaiting approval that it made')
+      : new AgentError(409, 'The post is being sent right now, try again in a minute')
+  }
 }
 
 // Held messages: run the website change again, or send without it. Messages
