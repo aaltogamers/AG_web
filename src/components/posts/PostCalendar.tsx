@@ -27,7 +27,7 @@ type Entry = {
 // Drafts and posts awaiting approval are shown, but clearly not scheduled
 const PREFIX: Partial<Record<PostStatus, string>> = { draft: 'DRAFT · ', awaiting_approval: '⏳ ' }
 
-// Colours for the posts of events without an image, and posts without an event
+// Colours for the posts of events without a (colourful) image, and posts without an event
 const PALETTE = [
   '#2563EB',
   '#DC2626',
@@ -45,27 +45,46 @@ const paletteColor = (key: string) => {
   return PALETTE[Math.abs(hash) % PALETTE.length]
 }
 
-// The average colour of an image, saturated and darkened enough for white text
-const averageColor = (src: string) =>
+// The most used colour of an image: the colourful pixels are grouped by hue and
+// the pixels of the biggest group (with its neighbours) averaged. Saturated and
+// darkened enough for white text. Fails for images that are mostly grey.
+const HUE_BINS = 24
+const dominantColor = (src: string) =>
   new Promise<string>((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
+      const size = 32
       const canvas = document.createElement('canvas')
-      canvas.width = canvas.height = 16
+      canvas.width = canvas.height = size
       const ctx = canvas.getContext('2d')
       if (!ctx) return reject(new Error('No canvas'))
-      ctx.drawImage(img, 0, 0, 16, 16)
-      const data = ctx.getImageData(0, 0, 16, 16).data
-      let [r, g, b, n] = [0, 0, 0, 0]
+      ctx.drawImage(img, 0, 0, size, size)
+      const data = ctx.getImageData(0, 0, size, size).data
+      const bins = Array.from({ length: HUE_BINS }, () => ({ weight: 0, r: 0, g: 0, b: 0 }))
+      let pixels = 0
       for (let i = 0; i < data.length; i += 4) {
         if (data[i + 3] < 128) continue
-        r += data[i]
-        g += data[i + 1]
-        b += data[i + 2]
-        n++
+        pixels++
+        const [h, sat, l] = toHsl(data[i], data[i + 1], data[i + 2])
+        // Greys, near-black and near-white don't count
+        if (sat < 0.2 || l < 0.12 || l > 0.9) continue
+        const bin = bins[Math.floor(h / (360 / HUE_BINS)) % HUE_BINS]
+        bin.weight += sat
+        bin.r += data[i] * sat
+        bin.g += data[i + 1] * sat
+        bin.b += data[i + 2] * sat
       }
-      if (!n) return reject(new Error('Transparent image'))
-      const [h, sat, l] = toHsl(r / n, g / n, b / n)
+      const around = (i: number) => [-1, 0, 1].map((d) => bins[(i + d + HUE_BINS) % HUE_BINS])
+      const score = (i: number) => {
+        const [prev, bin, next] = around(i)
+        return prev.weight / 2 + bin.weight + next.weight / 2
+      }
+      const best = bins.reduce((best, _, i) => (score(i) > score(best) ? i : best), 0)
+      const group = around(best)
+      const weight = group.reduce((sum, bin) => sum + bin.weight, 0)
+      if (!pixels || weight < pixels * 0.03) return reject(new Error('No clear colour'))
+      const sum = (key: 'r' | 'g' | 'b') => group.reduce((s, bin) => s + bin[key], 0) / weight
+      const [h, sat, l] = toHsl(sum('r'), sum('g'), sum('b'))
       resolve(
         `hsl(${Math.round(h)} ${Math.round(Math.max(sat, 0.45) * 100)}% ${Math.round(Math.min(Math.max(l, 0.3), 0.45) * 100)}%)`
       )
@@ -93,7 +112,7 @@ const useEventColors = (events: AGEvent[]) => {
     let cancelled = false
     for (const event of events) {
       if (!event.image || event.image === DEFAULT_EVENT_IMAGE) continue
-      averageColor(event.image)
+      dominantColor(event.image)
         .then((color) => !cancelled && setColors((c) => ({ ...c, [event.slug]: color })))
         .catch(() => {})
     }
