@@ -28,6 +28,8 @@ type Props = {
   // Height of the empty editor, in lines
   rows?: number
   disabled?: boolean
+  // Buttons for adding {{link:discord}}, {{date}} etc.; off where they aren't filled in
+  placeholders?: boolean
 }
 
 // A line break is a plain newline, like Telegram shows it (the editor reads
@@ -110,7 +112,33 @@ const ToolButton = ({
   </button>
 )
 
-const Toolbar = ({ editor }: { editor: Editor }) => {
+const InsertButton = ({ label, title, onClick }: { label: string; title: string; onClick: () => void }) => (
+  <button
+    type="button"
+    title={title}
+    // Keep the editor's selection
+    onMouseDown={(e) => e.preventDefault()}
+    onClick={onClick}
+    className="px-1.5 py-0.5 rounded text-xs text-gray-600 hover:bg-gray-200"
+  >
+    {label}
+  </button>
+)
+
+// Links: the selected text, or this text when nothing is selected
+const PLACEHOLDER_LINKS = [
+  { label: 'Discord', href: '{{link:discord}}', text: 'AG Discord' },
+  { label: 'Telegram', href: '{{link:telegram}}', text: 'AG Telegram' },
+  { label: 'Sign-up', href: '{{signup}}', text: 'Sign up here' },
+]
+const PLACEHOLDER_TEXTS = [
+  { label: 'Date', text: '{{date}}' },
+  { label: 'Time', text: '{{time}}' },
+  { label: 'Location', text: '{{location}}' },
+  { label: 'Sign-up opens', text: '{{signupOpens}}' },
+]
+
+const Toolbar = ({ editor, placeholders }: { editor: Editor; placeholders: boolean }) => {
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -133,6 +161,10 @@ const Toolbar = ({ editor }: { editor: Editor }) => {
     if (url === null) return
     if (!url.trim()) chain().extendMarkRange('link').unsetLink().run()
     else chain().extendMarkRange('link').setLink({ href: url.trim() }).run()
+  }
+  const insertLink = (href: string, text: string) => {
+    if (!editor.state.selection.empty) chain().setLink({ href }).run()
+    else chain().insertContent({ type: 'text', text, marks: [{ type: 'link', attrs: { href } }] }).unsetMark('link').run()
   }
   return (
     <>
@@ -167,12 +199,33 @@ const Toolbar = ({ editor }: { editor: Editor }) => {
       <span className="w-px h-5 bg-gray-300 mx-1" />
       <ToolButton Icon={FaUndo} label="Undo" disabled={!state.canUndo} onClick={() => chain().undo().run()} />
       <ToolButton Icon={FaRedo} label="Redo" disabled={!state.canRedo} onClick={() => chain().redo().run()} />
+      {placeholders && (
+        <>
+          <span className="w-px h-5 bg-gray-300 mx-1" />
+          {PLACEHOLDER_LINKS.map((l) => (
+            <InsertButton
+              key={l.label}
+              label={l.label}
+              title={`Link to ${l.href}`}
+              onClick={() => insertLink(l.href, l.text)}
+            />
+          ))}
+          {PLACEHOLDER_TEXTS.map((p) => (
+            <InsertButton
+              key={p.label}
+              label={p.label}
+              title={`Add ${p.text}`}
+              onClick={() => chain().insertContent(p.text).run()}
+            />
+          ))}
+        </>
+      )}
     </>
   )
 }
 
 // A visual Markdown editor, with a switch to the Markdown source
-const MarkdownEditor = ({ value, onChange, placeholder, rows = 4, disabled = false }: Props) => {
+const MarkdownEditor = ({ value, onChange, placeholder, rows = 4, disabled = false, placeholders = true }: Props) => {
   const [source, setSource] = useState(false)
   // The last Markdown the editor gave, so that its own changes aren't loaded back into it
   const emitted = useRef(value)
@@ -220,7 +273,7 @@ const MarkdownEditor = ({ value, onChange, placeholder, rows = 4, disabled = fal
   return (
     <div className={`markdown-editor rounded-md border border-gray-300 bg-white text-black ${disabled ? 'opacity-70' : ''}`}>
       <div className="flex flex-wrap items-center gap-0.5 border-b border-gray-200 px-1 py-1">
-        {editor && !source && !disabled && <Toolbar editor={editor} />}
+        {editor && !source && !disabled && <Toolbar editor={editor} placeholders={placeholders} />}
         <button
           type="button"
           className="ml-auto text-xs px-2 py-1 rounded text-gray-600 hover:bg-gray-200"
