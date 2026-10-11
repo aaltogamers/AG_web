@@ -53,7 +53,7 @@ const PostList = ({ posts, channels, onOpen }: Props) => {
               <span className={`rounded-sm px-2 ${BADGE_CLASS[post.status]}`}>{POST_STATUS_LABELS[post.status]}</span>
               {problems > 0 && <span className="text-red"> · ❗ {problems}</span>}
             </span>
-            <span className="flex-1 font-bold">{post.title || `Post #${post.id}`}</span>
+            <span className="flex-1 font-bold">{post.title || 'Untitled post'}</span>
             <span className="flex flex-wrap gap-1 not-italic md:max-w-[50%]">
               {post.targets.map((t) => (
                 <TargetChip key={t.channelId} channel={channels.find((c) => c.id === t.channelId)} />

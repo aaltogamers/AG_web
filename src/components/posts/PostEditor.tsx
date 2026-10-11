@@ -233,10 +233,9 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
         <button type="button" className="link" onClick={onClose}>
           ← All posts
         </button>
-        <h2 className="text-3xl">{postId ? `Post #${postId}` : 'New post'}</h2>
         {post && (
           <span className="border border-lightgray rounded-md px-2 py-1 text-sm">
-            {POST_STATUS_LABELS[status]} · v{post.version}
+            {POST_STATUS_LABELS[status]}
             {post.approvedVersion === post.version && status === 'scheduled' && ' · approved'}
           </span>
         )}
@@ -584,7 +583,7 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                 <ul className="text-sm flex flex-col gap-1">
                   {history.map((h, i) => (
                     <li key={i}>
-                      {moment(h.createdAt).format('D.M. HH:mm')} · v{h.version} · {h.action} by {actorLabel(h.actor)}
+                      {moment(h.createdAt).format('D.M. HH:mm')} · {h.action} by {actorLabel(h.actor)}
                     </li>
                   ))}
                 </ul>

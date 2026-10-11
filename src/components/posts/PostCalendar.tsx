@@ -76,7 +76,7 @@ const toEntries = (posts: Post[], channels: Channel[], leadMinutes: number): Ent
   posts
     .filter((p) => p.status !== 'cancelled')
     .flatMap((post) => {
-      const name = `${PREFIX[post.status] ?? ''}${post.title || `Post #${post.id}`}`
+      const name = `${PREFIX[post.status] ?? ''}${post.title || 'Untitled post'}`
       const entry = (title: string, platforms: Entry['platforms'], start: Date, done: boolean): Entry => ({
         title,
         start,
