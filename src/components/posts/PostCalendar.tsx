@@ -225,9 +225,14 @@ type Props = {
   events: AGEvent[]
   leadMinutes: number
   onOpen: (id: string) => void
+  onCreate: (sendAt: Date) => void
 }
 
-const PostCalendar = ({ posts, channels, events, leadMinutes, onOpen }: Props) => {
+// A new post on a day of the month view is sent at noon, in the week view at the clicked time
+const createAt = (start: Date, view: View) =>
+  view === 'month' ? moment(start).hour(12).minute(0).toDate() : start
+
+const PostCalendar = ({ posts, channels, events, leadMinutes, onOpen, onCreate }: Props) => {
   const [view, setView] = useState<View>('month')
   const [date, setDate] = useState(new Date())
   const eventColors = useEventColors(events)
@@ -261,6 +266,9 @@ const PostCalendar = ({ posts, channels, events, leadMinutes, onOpen }: Props) =
           onNavigate={setDate}
           views={['month', 'week', 'agenda']}
           onSelectEvent={(e: Entry) => onOpen(e.postId)}
+          selectable
+          onSelectSlot={({ start }) => onCreate(createAt(start, view))}
+          onDrillDown={(day) => onCreate(createAt(day, 'month'))}
           eventPropGetter={(e: Entry) => ({ style: entryStyle(e) })}
           components={{ event: EntryView }}
         />

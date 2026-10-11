@@ -34,7 +34,7 @@ const defaultPresets = (eventStart: Moment | null): TimePreset[] => {
     : []
   return [
     ...relative.filter((p) => p.time.isAfter(now)),
-    { label: 'Next full hour', icon: <FaBolt />, time: now.clone().add(1, 'hour').startOf('hour') },
+    { label: 'In 45 minutes', icon: <FaBolt />, time: now.clone().add(45, 'minutes').startOf('minute') },
     { label: 'Tomorrow at noon', icon: <FaSun />, time: atNoon(now.clone().add(1, 'day')) },
   ]
 }

@@ -8,6 +8,7 @@ import { POST_STATUS_LABELS, type Channel, type Post, type PostStatus } from '..
 import PostCalendar from './PostCalendar'
 import PostEditor from './PostEditor'
 import PostList, { nextTime } from './PostList'
+import { toLocal } from './postDraft'
 
 const ViewSwitch = ({ view, onChange }: { view: 'list' | 'calendar'; onChange: (view: 'list' | 'calendar') => void }) => {
   const isCalendar = view === 'calendar'
@@ -45,10 +46,11 @@ const FILTERS: { label: string; statuses: PostStatus[] }[] = [
 ]
 
 // The "Posts" admin tab: the list or calendar of posts, and the editor of one
-// (/admin/posts?id=<id> or ?id=new)
+// (/admin/posts?id=<id> or ?id=new, with ?at=<local time> when created from the calendar)
 const PostsSection = ({ events }: { events: AGEvent[] }) => {
   const router = useRouter()
   const openId = typeof router.query.id === 'string' ? router.query.id : null
+  const newAt = typeof router.query.at === 'string' ? router.query.at : ''
   const [filter, setFilter] = useState(1)
   const [view, setView] = useState<'list' | 'calendar'>('calendar')
   const [posts, setPosts] = useState<Post[]>([])
@@ -80,13 +82,20 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
     if (!openId) load()
   }, [load, openId])
 
-  const open = (id: string) =>
-    router.push({ pathname: router.pathname, query: { ...router.query, id } }, undefined, {
+  const open = (id: string, at?: string) => {
+    const query: typeof router.query = { ...router.query, id }
+    delete query.at
+    router.push({ pathname: router.pathname, query: at ? { ...query, at } : query }, undefined, {
       shallow: true,
     })
+  }
   const openFromList = (id: string) => {
     setSavedMessage(null)
     open(id)
+  }
+  const createAt = (sendAt: Date) => {
+    setSavedMessage(null)
+    open('new', toLocal(sendAt.toISOString()))
   }
 
   if (openId) {
@@ -94,6 +103,7 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
       <PostEditor
         key={openId}
         postId={openId === 'new' ? null : openId}
+        initialSendAt={openId === 'new' ? newAt : ''}
         events={events}
         initialMessage={savedMessage}
         onSaved={(id, message) => {
@@ -104,6 +114,7 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
           setSavedMessage(null)
           const query = { ...router.query }
           delete query.id
+          delete query.at
           router.push({ pathname: router.pathname, query }, undefined, { shallow: true })
         }}
       />
@@ -142,7 +153,7 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
           <PostList posts={posts} channels={channels} onOpen={openFromList} />
         </>
       ) : (
-        <PostCalendar posts={posts} channels={channels} events={events} leadMinutes={leadMinutes} onOpen={openFromList} />
+        <PostCalendar posts={posts} channels={channels} events={events} leadMinutes={leadMinutes} onOpen={openFromList} onCreate={createAt} />
       )}
     </div>
   )

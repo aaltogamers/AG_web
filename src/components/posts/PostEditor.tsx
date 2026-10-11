@@ -51,6 +51,8 @@ type Props = {
   onClose: () => void
   // E.g. the result of saving a new post
   initialMessage?: Message | null
+  // The send time of a new post, e.g. the day clicked in the calendar
+  initialSendAt?: string
 }
 
 const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
@@ -79,12 +81,12 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 )
 
-const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }: Props) => {
+const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, initialSendAt = '' }: Props) => {
   const [post, setPost] = useState<Post | null>(null)
   const [history, setHistory] = useState<PostHistoryEntry[]>([])
   const [channels, setChannels] = useState<Channel[]>([])
   const [leadMinutes, setLeadMinutes] = useState(10)
-  const [draft, setDraft] = useState<PostDraft>(emptyPostDraft())
+  const [draft, setDraft] = useState<PostDraft>({ ...emptyPostDraft(), sendAt: initialSendAt })
   const [savedDraft, setSavedDraft] = useState<string>(JSON.stringify(emptyPostDraft()))
   const [preview, setPreview] = useState<PostPreview | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
