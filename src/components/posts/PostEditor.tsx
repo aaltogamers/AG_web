@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import moment from 'moment'
-import { FaRegClock } from 'react-icons/fa'
 import type { AGEvent } from '../../types/types'
 import { eventMoment } from '../../utils/eventUtils'
 import {
@@ -29,6 +28,7 @@ import ImagePicker from './ImagePicker'
 import MarkdownEditor from './MarkdownEditor'
 import PostPreviewPanel from './PostPreviewPanel'
 import PostTimePicker from './PostTimePicker'
+import TargetOverrideChips from './TargetOverrideChips'
 import {
   draftToInput,
   duplicateDraft,
@@ -452,85 +452,16 @@ const PostEditor = ({
                           />
                         </div>
                       )}
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={target.ownTime}
-                          onChange={(e) =>
-                            setTarget(channel.id, {
-                              ownTime: e.target.checked,
-                              sendAt: target.sendAt || draft.sendAt,
-                            })
-                          }
-                        />
-                        Own send time
-                      </label>
-                      {target.ownTime && (
-                        <PostTimePicker
-                          value={target.sendAt}
-                          onChange={(sendAt) => setTarget(channel.id, { sendAt })}
-                          eventStart={eventStart}
-                          extraPresets={
-                            draft.sendAt && !draft.sendOnApproval
-                              ? [-60, 60].map((minutes) => ({
-                                  label: `1 hour ${minutes < 0 ? 'before' : 'after'} the post's time`,
-                                  icon: <FaRegClock />,
-                                  time: moment(draft.sendAt).add(minutes, 'minutes'),
-                                }))
-                              : []
-                          }
-                        />
-                      )}
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={target.detached}
-                          onChange={(e) =>
-                            setTarget(channel.id, {
-                              detached: e.target.checked,
-                              bodyOverrideMd: target.bodyOverrideMd || draft.bodyMd,
-                            })
-                          }
-                        />
-                        Own text for this channel
-                      </label>
-                      {target.detached && (
-                        <MarkdownEditor
-                          value={target.bodyOverrideMd}
-                          onChange={(bodyOverrideMd) => setTarget(channel.id, { bodyOverrideMd })}
-                          rows={6}
-                          placeholders={preview?.placeholders}
-                        />
-                      )}
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={target.footerOverride}
-                          onChange={(e) =>
-                            setTarget(channel.id, {
-                              footerOverride: e.target.checked,
-                              footerOverrideMd: target.footerOverrideMd || channel.defaultFooterMd,
-                            })
-                          }
-                        />
-                        Own footer{' '}
-                        {!target.footerOverride && channel.defaultFooterMd && (
-                          <span className="text-sm text-lightgray">
-                            (default: {channel.defaultFooterMd})
-                          </span>
-                        )}
-                      </label>
-                      {target.footerOverride && (
-                        <MarkdownEditor
-                          value={target.footerOverrideMd}
-                          onChange={(footerOverrideMd) =>
-                            setTarget(channel.id, { footerOverrideMd })
-                          }
-                          rows={2}
-                          placeholder="Empty for no footer"
-                          placeholders={preview?.placeholders}
-                        />
-                      )}
+                      <TargetOverrideChips
+                        target={target}
+                        channel={channel}
+                        onChange={(changes) => setTarget(channel.id, changes)}
+                        postSendAt={draft.sendAt}
+                        postBodyMd={draft.bodyMd}
+                        sendOnApproval={draft.sendOnApproval}
+                        eventStart={eventStart}
+                        placeholders={preview?.placeholders}
+                      />
                     </div>
                   )}
                 </div>
