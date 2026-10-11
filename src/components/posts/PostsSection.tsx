@@ -142,7 +142,7 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
           <PostList posts={posts} channels={channels} onOpen={openFromList} />
         </>
       ) : (
-        <PostCalendar posts={posts} channels={channels} leadMinutes={leadMinutes} onOpen={openFromList} />
+        <PostCalendar posts={posts} channels={channels} events={events} leadMinutes={leadMinutes} onOpen={openFromList} />
       )}
     </div>
   )

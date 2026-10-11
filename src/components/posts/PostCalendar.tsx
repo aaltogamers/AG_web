@@ -1,8 +1,11 @@
 import { Calendar as BigCalendar, momentLocalizer, type View } from 'react-big-calendar'
 import moment from 'moment'
-import { type CSSProperties, useState } from 'react'
+import { type CSSProperties, useEffect, useState } from 'react'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
+import type { AGEvent } from '../../types/types'
 import type { Channel, Platform, Post, PostStatus } from '../../utils/social/types'
+import { DEFAULT_EVENT_IMAGE } from '../../utils/eventUtils'
+import { imageLoader } from '../AGImage'
 import { PLATFORM_STYLE } from './ChannelChip'
 
 // Weeks start on Monday, like the events calendar
@@ -18,15 +21,91 @@ type Entry = {
   // The platforms of the messages sent at the same time, or the website
   platforms: (Platform | 'website')[]
   done: boolean
+  color: string
 }
 
 // Drafts and posts awaiting approval are shown, but clearly not scheduled
 const PREFIX: Partial<Record<PostStatus, string>> = { draft: 'DRAFT · ', awaiting_approval: '⏳ ' }
 
-// In the platforms' colours: filled when approved, outlined when not
-const entryStyle = ({ status, done, platforms }: Entry): CSSProperties => {
-  const colors = platforms.map((p) => PLATFORM_STYLE[p].color)
-  const color = colors[0]
+// Colours for the posts of events without an image, and posts without an event
+const PALETTE = [
+  '#2563EB',
+  '#DC2626',
+  '#059669',
+  '#D97706',
+  '#7C3AED',
+  '#DB2777',
+  '#0891B2',
+  '#65A30D',
+]
+
+const paletteColor = (key: string) => {
+  let hash = 0
+  for (const c of key) hash = (hash * 31 + c.charCodeAt(0)) | 0
+  return PALETTE[Math.abs(hash) % PALETTE.length]
+}
+
+// The average colour of an image, saturated and darkened enough for white text
+const averageColor = (src: string) =>
+  new Promise<string>((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = canvas.height = 16
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return reject(new Error('No canvas'))
+      ctx.drawImage(img, 0, 0, 16, 16)
+      const data = ctx.getImageData(0, 0, 16, 16).data
+      let [r, g, b, n] = [0, 0, 0, 0]
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 128) continue
+        r += data[i]
+        g += data[i + 1]
+        b += data[i + 2]
+        n++
+      }
+      if (!n) return reject(new Error('Transparent image'))
+      const [h, sat, l] = toHsl(r / n, g / n, b / n)
+      resolve(
+        `hsl(${Math.round(h)} ${Math.round(Math.max(sat, 0.45) * 100)}% ${Math.round(Math.min(Math.max(l, 0.3), 0.45) * 100)}%)`
+      )
+    }
+    img.onerror = reject
+    img.src = imageLoader({ src, width: 64 })
+  })
+
+const toHsl = (r: number, g: number, b: number): [number, number, number] => {
+  ;[r, g, b] = [r / 255, g / 255, b / 255]
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const l = (max + min) / 2
+  const d = max - min
+  if (!d) return [0, 0, l]
+  const sat = d / (1 - Math.abs(2 * l - 1))
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+  return [(h * 60 + 360) % 360, sat, l]
+}
+
+// The colours of the events by slug, from their images
+const useEventColors = (events: AGEvent[]) => {
+  const [colors, setColors] = useState<Record<string, string>>({})
+  useEffect(() => {
+    let cancelled = false
+    for (const event of events) {
+      if (!event.image || event.image === DEFAULT_EVENT_IMAGE) continue
+      averageColor(event.image)
+        .then((color) => !cancelled && setColors((c) => ({ ...c, [event.slug]: color })))
+        .catch(() => {})
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [events])
+  return colors
+}
+
+// In the event's colour: filled when approved, outlined when not
+const entryStyle = ({ status, done, color }: Entry): CSSProperties => {
   if (status === 'draft') {
     return { backgroundColor: '#fff', border: `2px dashed ${color}`, color, fontStyle: 'italic' }
   }
@@ -34,7 +113,7 @@ const entryStyle = ({ status, done, platforms }: Entry): CSSProperties => {
     return { backgroundColor: '#fff', border: `2px solid ${color}`, color }
   }
   return {
-    background: colors.length > 1 ? `linear-gradient(90deg, ${colors.join(', ')})` : color,
+    backgroundColor: color,
     border: `2px solid ${color}`,
     color: '#fff',
     opacity: done ? 0.5 : 1,
@@ -72,12 +151,25 @@ const websiteRunAt = (post: Post, leadMinutes: number) => {
 
 // The messages and website change of the posts at their times. Messages sent at
 // the same time are one entry.
-const toEntries = (posts: Post[], channels: Channel[], leadMinutes: number): Entry[] =>
+const toEntries = (
+  posts: Post[],
+  channels: Channel[],
+  events: AGEvent[],
+  eventColors: Record<string, string>,
+  leadMinutes: number
+): Entry[] =>
   posts
     .filter((p) => p.status !== 'cancelled')
     .flatMap((post) => {
-      const name = `${PREFIX[post.status] ?? ''}${post.title || 'Untitled post'}`
-      const entry = (title: string, platforms: Entry['platforms'], start: Date, done: boolean): Entry => ({
+      const event = events.find((e) => e.slug === post.eventSlug)
+      const color = (event && eventColors[event.slug]) ?? paletteColor(post.eventSlug ?? post.id)
+      const name = `${PREFIX[post.status] ?? ''}${post.title || 'Untitled post'}${event ? ` (${event.name})` : ''}`
+      const entry = (
+        title: string,
+        platforms: Entry['platforms'],
+        start: Date,
+        done: boolean
+      ): Entry => ({
         title,
         start,
         end: new Date(start.getTime() + 30 * 60_000),
@@ -85,6 +177,7 @@ const toEntries = (posts: Post[], channels: Channel[], leadMinutes: number): Ent
         status: post.status,
         platforms,
         done,
+        color,
       })
       const byTime = new Map<number, { channel: Channel; sent: boolean }[]>()
       for (const t of post.targets) {
@@ -96,7 +189,7 @@ const toEntries = (posts: Post[], channels: Channel[], leadMinutes: number): Ent
       }
       const entries: Entry[] = [...byTime].map(([time, messages]) =>
         entry(
-          `${messages.map((m) => m.channel.name).join(', ')}: ${name}`,
+          name,
           [...new Set(messages.map((m) => m.channel.platform))],
           new Date(time),
           messages.every((m) => m.sent)
@@ -107,24 +200,33 @@ const toEntries = (posts: Post[], channels: Channel[], leadMinutes: number): Ent
       return entries
     })
 
-type Props = { posts: Post[]; channels: Channel[]; leadMinutes: number; onOpen: (id: string) => void }
+type Props = {
+  posts: Post[]
+  channels: Channel[]
+  events: AGEvent[]
+  leadMinutes: number
+  onOpen: (id: string) => void
+}
 
-const PostCalendar = ({ posts, channels, leadMinutes, onOpen }: Props) => {
+const PostCalendar = ({ posts, channels, events, leadMinutes, onOpen }: Props) => {
   const [view, setView] = useState<View>('month')
   const [date, setDate] = useState(new Date())
+  const eventColors = useEventColors(events)
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-4 text-sm">
         {(['telegram', 'instagram', 'discord', 'website'] as const).map((platform) => {
-          const { color, Icon } = PLATFORM_STYLE[platform]
+          const { Icon } = PLATFORM_STYLE[platform]
           return (
-            <span key={platform} className="flex items-center gap-1 capitalize" style={{ color }}>
+            <span key={platform} className="flex items-center gap-1 capitalize">
               <Icon /> {platform}
             </span>
           )
         })}
         <span className="px-2 rounded-sm bg-gray-500 text-white">Approved</span>
-        <span className="px-2 rounded-sm border-2 border-gray-500 bg-white">⏳ Awaiting approval</span>
+        <span className="px-2 rounded-sm border-2 border-gray-500 bg-white">
+          ⏳ Awaiting approval
+        </span>
         <span className="px-2 rounded-sm border-2 border-dashed border-gray-500 bg-white italic">
           DRAFT · not scheduled
         </span>
@@ -133,7 +235,7 @@ const PostCalendar = ({ posts, channels, leadMinutes, onOpen }: Props) => {
       <div className="h-[700px] text-base bg-white">
         <BigCalendar
           localizer={localizer}
-          events={toEntries(posts, channels, leadMinutes)}
+          events={toEntries(posts, channels, events, eventColors, leadMinutes)}
           view={view}
           onView={setView}
           date={date}

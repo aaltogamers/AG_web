@@ -15,7 +15,7 @@ type ImgProps = {
   priority?: boolean
 }
 
-const imageLoader = ({ src, width }: ImageLoaderProps) => {
+export const imageLoader = ({ src, width }: ImageLoaderProps) => {
   const withRightFileEnding =
     process.env.NODE_ENV === 'development' ? src : src.replace(/\.(jpe?g|png)$/i, '.webp')
   return `${withRightFileEnding}?w=${width}`
