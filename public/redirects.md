@@ -11,7 +11,7 @@ redirects:
     url: https://discord.gg/aaltogamers
   - name: AG Event Calendar
     slug: calendar
-    url: https://calendar.google.com/calendar/embed?src=c_88f02ba0db633a673bf597b424a2bd94c295bc16a80761ef60b020508a18624f%40group.calendar.google.com&ctz=Europe%2FHelsinki
+    url: https://aaltogamers.fi/events
   - name: AG Instagram
     slug: instagram
     url: http://www.instagram.com/aaltogamers/
