@@ -1,12 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import { InputRule } from '@tiptap/core'
-import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/react'
-import type { Node as PmNode } from '@tiptap/pm/model'
-import StarterKit from '@tiptap/starter-kit'
-import { Link } from '@tiptap/extension-link'
-import { HardBreak } from '@tiptap/extension-hard-break'
-import { Placeholder } from '@tiptap/extensions'
-import { Markdown, type MarkdownStorage } from 'tiptap-markdown'
+import { useRef, type KeyboardEvent, type RefObject } from 'react'
 import type { IconType } from 'react-icons'
 import {
   FaBold,
@@ -41,81 +33,33 @@ type Props = {
   placeholders?: PlaceholderOptions | null
 }
 
-// A line break is a plain newline, like Telegram shows it (the editor reads
-// newlines as line breaks), instead of Markdown's backslash
-const LineBreak = HardBreak.extend({
-  addStorage() {
-    return {
-      markdown: {
-        serialize(state: { write: (text: string) => void }, node: PmNode, parent: PmNode, index: number) {
-          // Not at the end of a paragraph
-          for (let i = index + 1; i < parent.childCount; i++) {
-            if (parent.child(i).type !== node.type) {
-              state.write('\n')
-              return
-            }
-          }
-        },
-      },
-    }
-  },
-})
-
-// Typing Markdown link syntax, [text](address), makes a link, instead of text
-// that is saved with escaped brackets
-const MarkdownLink = Link.extend({
-  addInputRules() {
-    return [
-      new InputRule({
-        find: /\[([^[\]]+)\]\((\{\{[^}]*\}\}|<[^>]+>|[^\s()]+)\)$/,
-        handler: ({ state, range, match }) => {
-          const href = match[2].replace(/^<(.*)>$/, '$1')
-          const marks = state.doc.resolve(range.from).marks()
-          state.tr
-            .replaceWith(range.from, range.to, state.schema.text(match[1], [...marks, this.type.create({ href })]))
-            .removeStoredMark(this.type)
-        },
-      }),
-    ]
-  },
-})
-
-// Placeholder link targets can have spaces ({{signup:Day 1}}), which Markdown allows only in <>
-const toEditor = (markdown: string) => markdown.replace(/\]\((\{\{[^}]*\}\})\)/g, '](<$1>)')
-
-// Placeholders ({{signup}} etc.) are filled in the raw Markdown, so undo the
-// editor's escaping inside them, and its URL encoding of them in link targets
-const fixPlaceholders = (markdown: string) =>
-  markdown
-    .replace(/%7B%7B(.*?)%7D%7D/gi, (_, inner: string) => `{{${decodeURIComponent(inner)}}}`)
-    .replace(/\{\{[^}]*\}\}/g, (placeholder) => placeholder.replace(/\\([\\`*_[\]~#+\-.!()])/g, '$1'))
-
-const getMarkdown = (editor: Editor) =>
-  fixPlaceholders((editor.storage as unknown as { markdown: MarkdownStorage }).markdown.getMarkdown())
+type Edit = {
+  // The range to replace and its new text
+  from: number
+  to: number
+  text: string
+  // The selection afterwards
+  selectFrom: number
+  selectTo: number
+}
 
 const ToolButton = ({
   Icon,
   label,
-  active = false,
-  disabled = false,
   onClick,
 }: {
   Icon: IconType
   label: string
-  active?: boolean
-  disabled?: boolean
   onClick: () => void
 }) => (
   <button
     type="button"
     title={label}
     aria-label={label}
-    aria-pressed={active}
-    disabled={disabled}
-    // Keep the editor's selection
+    // Keep the textarea's selection
     onMouseDown={(e) => e.preventDefault()}
     onClick={onClick}
-    className={`p-1.5 rounded ${active ? 'bg-gray-200 text-black' : 'text-gray-600'} hover:bg-gray-200 disabled:opacity-40`}
+    className="p-1.5 rounded text-gray-600 hover:bg-gray-200"
   >
     <Icon size={14} />
   </button>
@@ -132,35 +76,82 @@ const EVENT_PLACEHOLDERS = [
   { Icon: FaMapMarkerAlt, label: 'Location', text: '{{location}}' },
 ]
 
-const Toolbar = ({ editor, placeholders }: { editor: Editor; placeholders: PlaceholderOptions | null }) => {
-  const state = useEditorState({
-    editor,
-    selector: ({ editor: e }) => ({
-      bold: e.isActive('bold'),
-      italic: e.isActive('italic'),
-      strike: e.isActive('strike'),
-      code: e.isActive('code'),
-      link: e.isActive('link'),
-      bulletList: e.isActive('bulletList'),
-      orderedList: e.isActive('orderedList'),
-      blockquote: e.isActive('blockquote'),
-      canUndo: e.can().undo(),
-      canRedo: e.can().redo(),
-    }),
-  })
-  const chain = () => editor.chain().focus()
+// Adds or removes a marker like ** around the selection. Whitespace at the
+// selection's ends stays outside, as Markdown needs.
+const toggleWrap = (value: string, start: number, end: number, marker: string): Edit => {
+  const selected = value.slice(start, end)
+  const from = start + (selected.length - selected.trimStart().length)
+  const to = Math.max(from, end - (selected.length - selected.trimEnd().length))
+  const inner = value.slice(from, to)
+  const m = marker.length
+  if (value.slice(from - m, from) === marker && value.slice(to, to + m) === marker) {
+    return { from: from - m, to: to + m, text: inner, selectFrom: from - m, selectTo: to - m }
+  }
+  if (inner.length >= 2 * m && inner.startsWith(marker) && inner.endsWith(marker)) {
+    const text = inner.slice(m, -m)
+    return { from, to, text, selectFrom: from, selectTo: from + text.length }
+  }
+  return { from, to, text: `${marker}${inner}${marker}`, selectFrom: from + m, selectTo: to + m }
+}
+
+const LINE_PREFIXES = {
+  bullet: /^\s*[-*+] /,
+  ordered: /^\s*\d+[.)] /,
+  quote: /^> ?/,
+}
+
+// Adds or removes a list or quote prefix on the selected lines
+const toggleLines = (value: string, start: number, end: number, kind: keyof typeof LINE_PREFIXES): Edit => {
+  const from = value.lastIndexOf('\n', start - 1) + 1
+  // A selection ending at a line's start doesn't include that line
+  const lastEnd = end > start && value[end - 1] === '\n' ? end - 1 : end
+  const newline = value.indexOf('\n', lastEnd)
+  const to = newline === -1 ? value.length : newline
+  const lines = value.slice(from, to).split('\n')
+  const prefix = LINE_PREFIXES[kind]
+  const used = lines.filter((line) => line.trim())
+  const remove = used.length > 0 && used.every((line) => prefix.test(line))
+  let n = 0
+  const text = lines
+    .map((line) => {
+      if (remove) return line.replace(prefix, '')
+      if (!line.trim()) return line
+      // A bulleted list becomes a numbered one and the other way round
+      const plain = kind === 'quote' ? line : line.replace(LINE_PREFIXES.bullet, '').replace(LINE_PREFIXES.ordered, '')
+      n += 1
+      return `${kind === 'bullet' ? '- ' : kind === 'ordered' ? `${n}. ` : '> '}${plain}`
+    })
+    .join('\n')
+  return { from, to, text, selectFrom: from, selectTo: from + text.length }
+}
+
+const Toolbar = ({
+  textarea,
+  apply,
+  placeholders,
+}: {
+  textarea: RefObject<HTMLTextAreaElement | null>
+  apply: (edit: (value: string, start: number, end: number) => Edit | null) => void
+  placeholders: PlaceholderOptions | null
+}) => {
+  const wrap = (marker: string) => () => apply((v, s, e) => toggleWrap(v, s, e, marker))
+  const lines = (kind: keyof typeof LINE_PREFIXES) => () => apply((v, s, e) => toggleLines(v, s, e, kind))
+  const insertLink = (href: string, fallback: string) =>
+    apply((v, s, e) => {
+      const label = v.slice(s, e) || fallback
+      const text = `[${label}](${href})`
+      return { from: s, to: e, text, selectFrom: s + text.length, selectTo: s + text.length }
+    })
   const setLink = () => {
-    const current = editor.getAttributes('link').href as string | undefined
-    const url = window.prompt('Link address (or a placeholder like {{signup}}); empty removes the link', current ?? '')
-    if (url === null) return
-    if (!url.trim()) chain().extendMarkRange('link').unsetLink().run()
-    else chain().extendMarkRange('link').setLink({ href: url.trim() }).run()
+    const url = window.prompt('Link address (or a placeholder like {{signup}})')
+    if (url?.trim()) insertLink(url.trim(), url.trim())
   }
-  const insertLink = (href: string, text: string) => {
-    if (!editor.state.selection.empty) chain().setLink({ href }).run()
-    else chain().insertContent({ type: 'text', text, marks: [{ type: 'link', attrs: { href } }] }).unsetMark('link').run()
+  const insertText = (text: string) =>
+    apply((_, s, e) => ({ from: s, to: e, text, selectFrom: s + text.length, selectTo: s + text.length }))
+  const history = (command: 'undo' | 'redo') => () => {
+    textarea.current?.focus()
+    document.execCommand(command)
   }
-  const insertText = (text: string) => chain().insertContent(text).run()
   const { signupSessions } = placeholders ?? {}
   // Several sign-up forms: ask which session's
   const insertSignupLink = (sessions: string[]) => {
@@ -171,37 +162,17 @@ const Toolbar = ({ editor, placeholders }: { editor: Editor; placeholders: Place
   }
   return (
     <>
-      <ToolButton Icon={FaBold} label="Bold" active={state.bold} onClick={() => chain().toggleBold().run()} />
-      <ToolButton Icon={FaItalic} label="Italic" active={state.italic} onClick={() => chain().toggleItalic().run()} />
-      <ToolButton
-        Icon={FaStrikethrough}
-        label="Strikethrough"
-        active={state.strike}
-        onClick={() => chain().toggleStrike().run()}
-      />
-      <ToolButton Icon={FaCode} label="Code" active={state.code} onClick={() => chain().toggleCode().run()} />
-      <ToolButton Icon={FaLink} label="Link" active={state.link} onClick={setLink} />
-      <ToolButton
-        Icon={FaListUl}
-        label="Bulleted list"
-        active={state.bulletList}
-        onClick={() => chain().toggleBulletList().run()}
-      />
-      <ToolButton
-        Icon={FaListOl}
-        label="Numbered list"
-        active={state.orderedList}
-        onClick={() => chain().toggleOrderedList().run()}
-      />
-      <ToolButton
-        Icon={FaQuoteRight}
-        label="Quote"
-        active={state.blockquote}
-        onClick={() => chain().toggleBlockquote().run()}
-      />
+      <ToolButton Icon={FaBold} label="Bold (Ctrl+B)" onClick={wrap('**')} />
+      <ToolButton Icon={FaItalic} label="Italic (Ctrl+I)" onClick={wrap('_')} />
+      <ToolButton Icon={FaStrikethrough} label="Strikethrough" onClick={wrap('~~')} />
+      <ToolButton Icon={FaCode} label="Code" onClick={wrap('`')} />
+      <ToolButton Icon={FaLink} label="Link" onClick={setLink} />
+      <ToolButton Icon={FaListUl} label="Bulleted list" onClick={lines('bullet')} />
+      <ToolButton Icon={FaListOl} label="Numbered list" onClick={lines('ordered')} />
+      <ToolButton Icon={FaQuoteRight} label="Quote" onClick={lines('quote')} />
       <span className="w-px h-5 bg-gray-300 mx-1" />
-      <ToolButton Icon={FaUndo} label="Undo" disabled={!state.canUndo} onClick={() => chain().undo().run()} />
-      <ToolButton Icon={FaRedo} label="Redo" disabled={!state.canRedo} onClick={() => chain().redo().run()} />
+      <ToolButton Icon={FaUndo} label="Undo" onClick={history('undo')} />
+      <ToolButton Icon={FaRedo} label="Redo" onClick={history('redo')} />
       {placeholders && (
         <>
           <span className="w-px h-5 bg-gray-300 mx-1" />
@@ -227,75 +198,51 @@ const Toolbar = ({ editor, placeholders }: { editor: Editor; placeholders: Place
 // For text used in many posts, like channel footers
 const ALL_PLACEHOLDERS: PlaceholderOptions = { event: true, signupSessions: [] }
 
-// A visual Markdown editor, with a switch to the Markdown source
+// A Markdown text area with formatting buttons that write the Markdown
 const MarkdownEditor = ({ value, onChange, placeholder, rows = 4, disabled = false, placeholders = ALL_PLACEHOLDERS }: Props) => {
-  const [source, setSource] = useState(false)
-  // The last Markdown the editor gave, so that its own changes aren't loaded back into it
-  const emitted = useRef(value)
-  const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
+  const textarea = useRef<HTMLTextAreaElement>(null)
 
-  const editor = useEditor({
-    immediatelyRender: false,
-    editable: !disabled,
-    extensions: [
-      StarterKit.configure({
-        underline: false,
-        hardBreak: false,
-        heading: { levels: [1, 2, 3] },
-        link: false,
-      }),
-      MarkdownLink.configure({
-        openOnClick: false,
-        autolink: true,
-        isAllowedUri: (url, { defaultValidate }) => /^(\{\{|%7B%7B)/i.test(url.trim()) || defaultValidate(url),
-      }),
-      LineBreak,
-      Placeholder.configure({ placeholder: placeholder ?? '' }),
-      Markdown.configure({ html: false, tightLists: true, linkify: false, breaks: true, transformPastedText: true }),
-    ],
-    content: toEditor(value),
-    onUpdate: ({ editor: e }) => {
-      const markdown = getMarkdown(e)
-      emitted.current = markdown
-      onChangeRef.current(markdown)
-    },
-  })
+  const apply = (edit: (value: string, start: number, end: number) => Edit | null) => {
+    const el = textarea.current
+    if (!el) return
+    const change = edit(el.value, el.selectionStart, el.selectionEnd)
+    if (!change) return
+    el.focus()
+    el.setSelectionRange(change.from, change.to)
+    // Typing the text keeps the browser's undo history
+    if (document.execCommand('insertText', false, change.text)) {
+      el.setSelectionRange(change.selectFrom, change.selectTo)
+    } else {
+      onChange(el.value.slice(0, change.from) + change.text + el.value.slice(change.to))
+      requestAnimationFrame(() => el.setSelectionRange(change.selectFrom, change.selectTo))
+    }
+  }
 
-  useEffect(() => {
-    if (!editor || value === emitted.current) return
-    emitted.current = value
-    editor.commands.setContent(toEditor(value), { emitUpdate: false })
-  }, [editor, value])
+  const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return
+    const marker = { b: '**', i: '_' }[e.key.toLowerCase()]
+    if (!marker) return
+    e.preventDefault()
+    apply((v, s, end) => toggleWrap(v, s, end, marker))
+  }
 
-  useEffect(() => {
-    editor?.setEditable(!disabled)
-  }, [editor, disabled])
-
-  const minHeight = `${rows * 1.6 + 1}rem`
   return (
-    <div className={`markdown-editor rounded-md border border-gray-300 bg-white text-black ${disabled ? 'opacity-70' : ''}`}>
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-gray-200 px-1 py-1">
-        {editor && !source && !disabled && <Toolbar editor={editor} placeholders={placeholders} />}
-        <button
-          type="button"
-          className="ml-auto text-xs px-2 py-1 rounded text-gray-600 hover:bg-gray-200"
-          onClick={() => setSource(!source)}
-        >
-          {source ? 'Visual editor' : 'Markdown'}
-        </button>
-      </div>
-      {source ? (
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          style={{ minHeight }}
-          className="block w-full p-2 font-mono text-sm rounded-b-md !border-0 outline-none"
-        />
-      ) : (
-        <EditorContent editor={editor} className="p-2 text-base" style={{ minHeight }} />
+    <div className={`rounded-md border border-gray-300 bg-white text-black ${disabled ? 'opacity-70' : ''}`}>
+      {!disabled && (
+        <div className="flex flex-wrap items-center gap-0.5 border-b border-gray-200 px-1 py-1">
+          <Toolbar textarea={textarea} apply={apply} placeholders={placeholders} />
+        </div>
       )}
+      <textarea
+        ref={textarea}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
+        placeholder={placeholder}
+        disabled={disabled}
+        style={{ minHeight: `${rows * 1.6 + 1}rem` }}
+        className="block w-full p-2 font-mono text-sm rounded-b-md !border-0 outline-none"
+      />
     </div>
   )
 }

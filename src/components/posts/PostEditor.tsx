@@ -142,7 +142,11 @@ const PostEditor = ({
 
   // Live preview of the unsaved post
   const previewTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const previewedEvent = useRef(draft.eventSlug)
   useEffect(() => {
+    // A new event changes the editor's placeholder buttons, so update them right away
+    const eventChanged = draft.eventSlug !== previewedEvent.current
+    previewedEvent.current = draft.eventSlug
     if (!isDirty) return
     clearTimeout(previewTimer.current)
     previewTimer.current = setTimeout(async () => {
@@ -160,7 +164,7 @@ const PostEditor = ({
       } finally {
         setPreviewLoading(false)
       }
-    }, 700)
+    }, eventChanged ? 0 : 700)
     return () => clearTimeout(previewTimer.current)
   }, [draft, isDirty, postId])
 
