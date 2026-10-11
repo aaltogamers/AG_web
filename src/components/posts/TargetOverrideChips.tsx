@@ -113,15 +113,15 @@ const TargetOverrideChips = ({
         Icon={FaRegClock}
         label={
           target.ownTime && target.sendAt
-            ? `Own time ${moment(target.sendAt).format('ddd D.M. HH:mm')}`
-            : "Post's send time"
+            ? `Custom send time ${moment(target.sendAt).format('ddd D.M. HH:mm')}`
+            : 'Not using custom send time'
         }
         active={target.ownTime}
         onClick={() => open('time')}
       />
       <Chip
         Icon={FaPen}
-        label={target.detached ? 'Own text' : "Post's text"}
+        label={target.detached ? 'Custom text' : 'Not using custom text'}
         active={target.detached}
         onClick={() => open('text')}
       />
@@ -130,11 +130,9 @@ const TargetOverrideChips = ({
         label={
           target.footerOverride
             ? target.footerOverrideMd.trim()
-              ? 'Own footer'
-              : 'No footer'
-            : channel.defaultFooterMd.trim()
-              ? 'Default footer'
-              : 'No footer'
+              ? 'Custom footer'
+              : 'Custom footer: none'
+            : 'Not using custom footer'
         }
         active={target.footerOverride}
         onClick={() => open('footer')}
@@ -172,7 +170,7 @@ const TargetOverrideChips = ({
       )}
       {editing === 'text' && (
         <OverrideDialog
-          title={`Own text for ${channel.name}`}
+          title={`Custom text for ${channel.name}`}
           active={target.detached}
           onSave={() => {
             onChange({ detached: true, bodyOverrideMd: value })
