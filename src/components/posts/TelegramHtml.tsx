@@ -30,9 +30,17 @@ const parse = (html: string): Node => {
   return root
 }
 
+// Telegram shows quotes and code blocks on their own lines, so the line break
+// after one only ends its line, unlike after an HTML block
+const BLOCKS = ['blockquote', 'pre']
+
 const render = (node: Node | string, key: number): ReactNode => {
   if (typeof node === 'string') return node
-  const children = node.children.map(render)
+  const children = node.children.map((child, i) => {
+    const prev = node.children[i - 1]
+    const afterBlock = typeof child === 'string' && typeof prev === 'object' && BLOCKS.includes(prev.tag)
+    return render(afterBlock ? child.replace(/^\n/, '') : child, i)
+  })
   switch (node.tag) {
     case 'b':
       return <strong key={key}>{children}</strong>

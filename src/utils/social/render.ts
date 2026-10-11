@@ -247,6 +247,14 @@ export const telegramLength = (html: string) =>
 
 // Discord: Markdown, mostly unchanged. Images become links.
 
+// Characters that are plain text in the post (like an escaped \*) but formatting in
+// Discord are escaped again, except in URLs, which Discord links as they are
+const escapeDiscord = (text: string) =>
+  text
+    .split(/(https?:\/\/\S+)/)
+    .map((part, i) => (i % 2 ? part : part.replace(/[\\*_~`]/g, '\\$&')))
+    .join('')
+
 const discordBlocks = (nodes: Nodes[], indent = ''): string =>
   nodes
     .map((node) => discordBlock(node, indent))
@@ -295,7 +303,7 @@ const discordInline = (nodes: Nodes[]): string =>
     .map((node) => {
       switch (node.type) {
         case 'text':
-          return node.value
+          return escapeDiscord(node.value)
         case 'strong':
           return `**${discordInline(node.children)}**`
         case 'emphasis':

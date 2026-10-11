@@ -15,7 +15,6 @@ import {
   FaRedo,
   FaRegCalendarAlt,
   FaRegClock,
-  FaStrikethrough,
   FaTelegramPlane,
   FaUndo,
 } from 'react-icons/fa'
@@ -164,7 +163,6 @@ const Toolbar = ({
     <>
       <ToolButton Icon={FaBold} label="Bold (Ctrl+B)" onClick={wrap('**')} />
       <ToolButton Icon={FaItalic} label="Italic (Ctrl+I)" onClick={wrap('_')} />
-      <ToolButton Icon={FaStrikethrough} label="Strikethrough" onClick={wrap('~~')} />
       <ToolButton Icon={FaCode} label="Code" onClick={wrap('`')} />
       <ToolButton Icon={FaLink} label="Link" onClick={setLink} />
       <ToolButton Icon={FaListUl} label="Bulleted list" onClick={lines('bullet')} />
