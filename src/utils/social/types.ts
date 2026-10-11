@@ -36,7 +36,9 @@ export type WebsiteChangeStatus =
   | 'skipped'
   | 'cancelled'
 
-export type TelegramChannelConfig = { chatId: string; threadId?: string }
+// manual: the bot can't post there, so it sends the message to the review topic
+// for someone to forward with "Hide sender name" (no chatId)
+export type TelegramChannelConfig = { chatId: string; threadId?: string; manual?: boolean }
 export type DiscordChannelConfig = { channelId: string; crosspost?: boolean }
 export type ChannelConfig = Partial<TelegramChannelConfig & DiscordChannelConfig>
 
@@ -76,6 +78,9 @@ export type PostTarget = {
   sentAt?: string | null
   error?: string | null
   attempts?: number
+  // Channels forwarded by hand: who pressed "Forwarded" in the review topic
+  forwardedBy?: string | null
+  forwardedAt?: string | null
 }
 
 // Text of an event field: the post's text, or its own

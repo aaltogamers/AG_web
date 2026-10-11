@@ -148,7 +148,7 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'List post channels',
       description:
-        'Lists the Telegram, Discord and Instagram channels posts can be sent to, and the Discord roles a message can ping.',
+        'Lists the Telegram, Discord and Instagram channels posts can be sent to, and the Discord roles a message can ping. The bot can\'t post to channels with forwardedByHand: their message goes to the review topic for a human to forward, so their footer usually links to our Telegram.',
       inputSchema: {},
       annotations: { readOnlyHint: true },
     },

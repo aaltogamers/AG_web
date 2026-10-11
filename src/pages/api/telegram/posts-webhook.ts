@@ -3,17 +3,21 @@ import { timingSafeEqualStr } from '../../../utils/adminSession'
 import { AgentError } from '../../../utils/agentApi'
 import { getHeader } from '../../../utils/apiUtils'
 import { ensureMigrated } from '../../../utils/db_pg'
+import moment from 'moment-timezone'
+import { EVENT_TIMEZONE } from '../../../utils/eventUtils'
 import {
   forgetKnownChat,
   getPost,
   getSettings,
   isApprover,
+  markTargetForwarded,
   saveSettings,
   upsertKnownChat,
 } from '../../../utils/postStore'
 import { approvePost, rejectPost, releaseHeldPost } from '../../../utils/social/actions'
 import {
   answerCallback,
+  editTelegramMessage,
   escapeTelegramHtml as esc,
   sendTelegramMessage,
   tgCall,
@@ -24,11 +28,13 @@ import {
 
 type TgUser = { id: number; first_name: string; last_name?: string; username?: string }
 type TgChat = { id: number; type: string; title?: string; first_name?: string }
+type TgEntity = { type: string; offset: number; length: number }
 type TgMessage = {
   message_id: number
   chat: TgChat
   from?: TgUser
   text?: string
+  entities?: TgEntity[]
   message_thread_id?: number
   is_topic_message?: boolean
   reply_to_message?: TgMessage & { forum_topic_created?: { name: string } }
@@ -53,7 +59,34 @@ const actorOf = (user: TgUser) => `tg:${user.id}` as const
 const errorText = (err: unknown) =>
   err instanceof AgentError ? err.message : 'Something went wrong, see the server log'
 
+// Bold texts of a message as HTML, enough for the forwarding request
+const boldHtml = (msg: TgMessage) => {
+  const text = msg.text ?? ''
+  let html = ''
+  let at = 0
+  for (const e of (msg.entities ?? []).filter((e) => e.type === 'bold')) {
+    html += `${esc(text.slice(at, e.offset))}<b>${esc(text.slice(e.offset, e.offset + e.length))}</b>`
+    at = e.offset + e.length
+  }
+  return html + esc(text.slice(at))
+}
+
+// "✅ Forwarded" under a message to forward by hand. Anyone in the review topic can press it.
+const handleForwarded = async (query: NonNullable<Update['callback_query']>, targetId: string) => {
+  const name = [query.from.first_name, query.from.last_name].filter(Boolean).join(' ')
+  if (!(await markTargetForwarded(targetId, name))) return answerCallback(query.id, 'Already marked as forwarded')
+  if (query.message) {
+    const note = `✅ <b>Forwarded by ${esc(name)}</b> at ${moment().tz(EVENT_TIMEZONE).format('HH:mm')}`
+    await editTelegramMessage(String(query.message.chat.id), query.message.message_id, `${boldHtml(query.message)}\n\n${note}`).catch(
+      (err) => console.warn('[posts-webhook] editing the forwarding request failed:', err)
+    )
+  }
+  return answerCallback(query.id, 'Marked as forwarded')
+}
+
 const handleCallback = async (query: NonNullable<Update['callback_query']>) => {
+  const forwarded = /^fwd:(\d+)$/.exec(query.data ?? '')
+  if (forwarded) return handleForwarded(query, forwarded[1])
   const match = /^post:(\d+):(\d+):(approve|reject|retry|send_anyway)$/.exec(query.data ?? '')
   if (!match) return answerCallback(query.id, 'Unknown button')
   const [, postId, versionText, action] = match

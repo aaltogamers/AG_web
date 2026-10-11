@@ -28,7 +28,7 @@ import { sendToDiscordChannel } from './discord'
 import { isInstagramConfigured, publishInstagramPost, refreshInstagramToken } from './instagram'
 import { loadImage, publicImageUrl } from './media'
 import { buildPreview } from './preview'
-import { formatTime, sendNotice, sendReviewText } from './review'
+import { formatTime, sendForForwarding, sendNotice, sendReviewText } from './review'
 import { sendToTelegramChannel, escapeTelegramHtml as esc } from './telegram'
 import type { Post } from './types'
 import { isConflict, runWebsiteChange } from './website'
@@ -103,6 +103,9 @@ const sendTarget = async (due: DueTarget, post: Post): Promise<{ externalMessage
   }
   const images = await Promise.all(post.images.map(loadImage))
   if (channel.platform === 'telegram') {
+    if (channel.config.manual) {
+      return { externalMessageId: await sendForForwarding(post, due.targetId, channel.name, rendered.text, images) }
+    }
     const { chatId, threadId } = channel.config
     if (!chatId) throw new PermanentError('The channel has no chat id')
     return { externalMessageId: await sendToTelegramChannel({ chatId, threadId }, rendered.text, images) }

@@ -435,7 +435,11 @@ const PostEditor = ({
                     {!channel.enabled && <span className="text-sm text-lightgray">(disabled)</span>}
                     {targetStatus && (
                       <span className="text-sm">
-                        {TARGET_STATUS_LABELS[targetStatus.status]}
+                        {channel.config.manual && targetStatus.status === 'sent'
+                          ? targetStatus.forwardedAt
+                            ? `✅ forwarded by ${targetStatus.forwardedBy}`
+                            : '📨 in the review topic, waiting to be forwarded'
+                          : TARGET_STATUS_LABELS[targetStatus.status]}
                         {targetStatus.error && (
                           <span className="text-red"> {targetStatus.error}</span>
                         )}

@@ -226,6 +226,7 @@ const toRef = (name: string) =>
 const parseChannelConfig = (platform: Platform, raw: ChannelConfig | undefined): ChannelConfig => {
   const config = raw ?? {}
   if (platform === 'telegram') {
+    if (config.manual) return { manual: true }
     const chatId = String(config.chatId ?? '').trim()
     const threadId = String(config.threadId ?? '').trim()
     if (!idPattern.test(chatId) && !/^@\w{4,}$/.test(chatId)) {
@@ -414,6 +415,8 @@ type TargetRow = {
   sent_at: Date | null
   error: string | null
   attempts: number
+  forwarded_by: string | null
+  forwarded_at: Date | null
 }
 
 type WebsiteChangeRow = {
@@ -445,7 +448,7 @@ type ImageRow = {
 const POST_COLUMNS = `id, title, body_md, event_slug, status, version, approved_version, approved_by,
   approved_at, send_at, send_on_approval, created_by, updated_by, created_at, updated_at`
 const TARGET_COLUMNS = `id, post_id, channel_id, send_at, body_override_md, footer_override_md, pings, status,
-  external_message_id, sent_at, error, attempts`
+  external_message_id, sent_at, error, attempts, forwarded_by, forwarded_at`
 
 const rowToTarget = (row: TargetRow): PostTarget => ({
   id: String(row.id),
@@ -459,6 +462,8 @@ const rowToTarget = (row: TargetRow): PostTarget => ({
   sentAt: toISO(row.sent_at),
   error: row.error,
   attempts: row.attempts,
+  forwardedBy: row.forwarded_by,
+  forwardedAt: toISO(row.forwarded_at),
 })
 
 const rowToWebsiteChange = (row: WebsiteChangeRow): WebsiteChange => ({
@@ -1461,6 +1466,18 @@ export const finishTarget = async (
       result.error,
     ])
   }
+}
+
+// A message of a channel forwarded by hand was forwarded. Returns false if it
+// already was, or the message hasn't been sent to the review topic.
+export const markTargetForwarded = async (targetId: string, name: string): Promise<boolean> => {
+  if (!/^\d+$/.test(targetId)) return false
+  const result = await pool.query(
+    `UPDATE post_targets SET forwarded_by = $2, forwarded_at = now()
+     WHERE id = $1 AND status = 'sent' AND forwarded_at IS NULL`,
+    [targetId, name]
+  )
+  return (result.rowCount ?? 0) > 0
 }
 
 // Claims that were interrupted, e.g. by a restart while sending. They may or may

@@ -274,31 +274,39 @@ const ChannelForm = ({
         <>
           <span>Chat</span>
           <div className="flex flex-col gap-2">
-            <select
-              className={inputClass}
-              value=""
-              onChange={(e) => {
-                const chat = data.knownChats.find((c) => `${c.chatId}/${c.threadId}` === e.target.value)
-                if (chat) {
-                  onChange({
-                    ...value,
-                    name: value.name || chat.title,
-                    config: { ...config, chatId: chat.chatId, threadId: chat.threadId },
-                  })
-                }
-              }}
-            >
-              <option value="">Pick a chat the bot knows (added to it, or /register)…</option>
-              {data.knownChats.map((c) => (
-                <option key={`${c.chatId}/${c.threadId}`} value={`${c.chatId}/${c.threadId}`}>
-                  {c.title} ({c.type})
-                </option>
-              ))}
-            </select>
-            <div className="flex flex-wrap gap-2">
-              <input className={inputClass} value={config.chatId ?? ''} onChange={(e) => setConfig({ chatId: e.target.value })} placeholder="Chat id or @channel" />
-              <input className={inputClass} value={config.threadId ?? ''} onChange={(e) => setConfig({ threadId: e.target.value })} placeholder="Topic id (optional)" />
-            </div>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={!!config.manual} onChange={(e) => setConfig({ manual: e.target.checked })} />
+              Forwarded by hand: the bot can&apos;t post here, so it sends the message to the review topic for someone to forward with &quot;Hide sender name&quot;
+            </label>
+            {!config.manual && (
+              <>
+                <select
+                  className={inputClass}
+                  value=""
+                  onChange={(e) => {
+                    const chat = data.knownChats.find((c) => `${c.chatId}/${c.threadId}` === e.target.value)
+                    if (chat) {
+                      onChange({
+                        ...value,
+                        name: value.name || chat.title,
+                        config: { ...config, chatId: chat.chatId, threadId: chat.threadId },
+                      })
+                    }
+                  }}
+                >
+                  <option value="">Pick a chat the bot knows (added to it, or /register)…</option>
+                  {data.knownChats.map((c) => (
+                    <option key={`${c.chatId}/${c.threadId}`} value={`${c.chatId}/${c.threadId}`}>
+                      {c.title} ({c.type})
+                    </option>
+                  ))}
+                </select>
+                <div className="flex flex-wrap gap-2">
+                  <input className={inputClass} value={config.chatId ?? ''} onChange={(e) => setConfig({ chatId: e.target.value })} placeholder="Chat id or @channel" />
+                  <input className={inputClass} value={config.threadId ?? ''} onChange={(e) => setConfig({ threadId: e.target.value })} placeholder="Topic id (optional)" />
+                </div>
+              </>
+            )}
           </div>
         </>
       )}
@@ -357,7 +365,9 @@ const ChannelRow = ({
   const [test, setTest] = useState<string | null>(null)
   const where =
     channel.platform === 'telegram'
-      ? `chat ${channel.config.chatId}${channel.config.threadId ? `, topic ${channel.config.threadId}` : ''}`
+      ? channel.config.manual
+        ? 'forwarded by hand'
+        : `chat ${channel.config.chatId}${channel.config.threadId ? `, topic ${channel.config.threadId}` : ''}`
       : channel.platform === 'discord'
         ? `#${discordChannels?.find((c) => c.id === channel.config.channelId)?.name ?? channel.config.channelId}${channel.config.crosspost ? ', published' : ''}`
         : ''

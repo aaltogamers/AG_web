@@ -1,5 +1,5 @@
-// Review topic messages: posts with Approve / Reject buttons, and failures with
-// Retry / Send anyway buttons.
+// Review topic messages: posts with Approve / Reject buttons, failures with
+// Retry / Send anyway buttons, and messages to forward by hand.
 import moment from 'moment-timezone'
 import { EVENT_TIMEZONE } from '../eventUtils'
 import {
@@ -11,7 +11,7 @@ import {
   savePreviewMessage,
   websiteRunAt,
 } from '../postStore'
-import { loadImage } from './media'
+import { loadImage, type LoadedImage } from './media'
 import { buildPreview, previewErrors } from './preview'
 import { showDiscordRoles, telegramLength, toTelegramHtml } from './render'
 import {
@@ -21,6 +21,7 @@ import {
   isTelegramConfigured,
   sendReviewImages,
   sendTelegramMessage,
+  sendToTelegramChannel,
 } from './telegram'
 import type { Platform, Post, PostPreview, RenderedText, SocialSettings, WebsiteChangeTiming } from './types'
 
@@ -253,4 +254,28 @@ export const sendReviewText = async (html: string) => {
   await sendTelegramMessage(chat.chatId, chat.threadId, html).catch((err) =>
     console.error('[posts-review] sending a message failed:', err)
   )
+}
+
+// A channel the bot can't post to: sends its message to the review topic, with
+// a reply that asks someone to forward it and a button to mark it forwarded.
+// Returns the message ids, like sending to a channel.
+export const sendForForwarding = async (
+  post: Post,
+  targetId: string,
+  channelName: string,
+  html: string,
+  images: LoadedImage[]
+): Promise<string> => {
+  const chat = reviewTarget(await getSettings())
+  if (!chat) throw new Error('No review topic is set up, so the message could not be given to anyone to forward')
+  const ids = await sendToTelegramChannel(chat, html, images)
+  const first = Number(ids.split(',')[0])
+  await sendTelegramMessage(
+    chat.chatId,
+    chat.threadId,
+    `📨 <b>Post #${post.id}: forward to ${esc(channelName)}</b>\n` +
+      `Forward the message${images.length > 1 ? 's' : ''} above to ${esc(channelName)} with "Hide sender name", then press the button.`,
+    { buttons: [[{ text: '✅ Forwarded', callback_data: `fwd:${targetId}` }]], replyTo: first }
+  )
+  return ids
 }

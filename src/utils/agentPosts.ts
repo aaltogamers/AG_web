@@ -190,6 +190,8 @@ export const describeChannel = (c: Channel) => ({
   name: c.name,
   ref: c.ref,
   defaultFooter: c.defaultFooterMd || undefined,
+  // The bot sends it to the review topic for a human to forward
+  ...(c.config.manual && { forwardedByHand: true }),
 })
 
 const describeWebsiteChange = (post: Post) => {
@@ -247,6 +249,7 @@ export const describePost = async (
       ownSendTime: !!t.sendAt,
       ...(channel?.platform === 'discord' && { pings: t.pings }),
       status: t.status,
+      ...(channel?.config.manual && t.status === 'sent' && { forwarded: !!t.forwardedAt }),
       ...(t.error && { error: t.error }),
       ...(full && {
         bodyOverride: t.bodyOverrideMd ?? undefined,

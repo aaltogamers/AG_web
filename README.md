@@ -121,6 +121,13 @@ the website or with the posts bot's buttons in the review topic. On the website,
 times and reports failures in the review topic. Messages more than 30 minutes
 late are reported instead of sent.
 
+A Telegram channel or group the bot can't post to can be added as "Forwarded by
+hand". When its message is due, the bot sends it to the review topic, with a
+reply asking someone to forward it there with "Hide sender name" (so it doesn't
+show the bot or our channel as the sender) and a "✅ Forwarded" button that
+anyone in the review topic can press. Give it a footer like
+`Join us: {{link:telegram}}` and its own ref.
+
 Settings (`/admin/posts/settings`): the review chat, the approvers (Telegram
 users who can press the buttons), the Discord server and the channels. Posts bot commands, for approvers:
 
@@ -142,7 +149,8 @@ In production, set the env variables as GitHub Actions secrets and run the
 3. Add the bot to the review group, let it post, and send `/review_here` in the
    review topic.
 4. Add the bot as an admin to each Telegram channel or group to post to, send
-   `/register` there (in the right topic), and add it as a channel.
+   `/register` there (in the right topic), and add it as a channel. Chats the
+   bot can't be added to can be added as "Forwarded by hand" instead.
 5. Discord: create a bot at discord.com/developers and invite it to the server
    with View Channels, Send Messages, Embed Links, Attach Files and Mention
    @everyone, @here and All Roles. Set
