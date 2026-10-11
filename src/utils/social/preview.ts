@@ -148,6 +148,7 @@ export const buildPreview = async (post: Post, ctx?: PreviewContext): Promise<Po
     ? {
         kind: eventContext.website.kind,
         eventSlug: eventContext.website.eventSlug,
+        timing: post.websiteChange?.timing ?? 'on_approval',
         runAt: websiteRunAt(post, settings.website.leadMinutes),
         diff: eventContext.website.diff,
         forms: eventContext.website.forms,
@@ -155,7 +156,7 @@ export const buildPreview = async (post: Post, ctx?: PreviewContext): Promise<Po
         warnings: eventContext.website.warnings,
       }
     : null
-  if (website && !website.runAt && post.websiteChange?.status === 'pending') {
+  if (website && website.timing !== 'on_approval' && !website.runAt && post.websiteChange?.status === 'pending') {
     website.errors.push('No time for the website change: give it a time or give the channels send times')
   }
   return { texts, website, errors }

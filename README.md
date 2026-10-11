@@ -100,7 +100,8 @@ redirect), `{{event}}`, `{{signup}}` and `{{signup:<session name>}}`, all with
 `?ref=<channel ref>`. Each channel can have its own send time, footer or text.
 
 A post can include one website change (creating or changing an event and its
-sign-up forms), which runs before the messages (by default 10 minutes). If it
+sign-up forms), which runs when the post is approved (default), 10 minutes
+before the first message, or at a set time. If it
 fails, e.g. because the same fields were edited in the CMS, the messages wait
 until someone presses Retry (overwrites) or Send anyway.
 
@@ -113,8 +114,7 @@ times and reports failures in the review topic. Messages more than 30 minutes
 late are reported instead of sent.
 
 Settings (`/admin/posts/settings`): the review chat, the approvers (Telegram
-users who can press the buttons), the Discord server, the base URL and the
-channels. Posts bot commands, for approvers:
+users who can press the buttons), the Discord server and the channels. Posts bot commands, for approvers:
 
 - `/review_here` — reviews go to this group or topic. Not in channels, since
   channel posts don't say who sent them.

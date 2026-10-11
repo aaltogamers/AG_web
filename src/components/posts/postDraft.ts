@@ -1,6 +1,7 @@
 // The post editor's state and its PostInput. Times are in the browser's time,
 // except session times, which are Helsinki times like in the CMS.
 import moment from 'moment'
+import { eventMoment } from '../../utils/eventUtils'
 import type { AGEvent, SignupMode } from '../../types/types'
 import type {
   EventChange,
@@ -9,6 +10,7 @@ import type {
   PostImage,
   PostInput,
   WebsiteChangeKind,
+  WebsiteChangeTiming,
 } from '../../utils/social/types'
 import { draftToForm, formToDraft, type FormDraft } from '../SignupFormEditor'
 
@@ -64,7 +66,7 @@ export type FormSlotDraft = { sessionId?: string; draft: FormDraft }
 export type WebsiteChangeDraft = {
   kind: WebsiteChangeKind
   eventSlug: string
-  ownTime: boolean
+  timing: WebsiteChangeTiming
   runAt: string
   event: EventDraft
   changed: EventField[]
@@ -156,7 +158,7 @@ export const postToDraft = (post: Post, events: AGEvent[]): PostDraft => {
     websiteChange = {
       kind: change.kind,
       eventSlug: change.eventSlug ?? '',
-      ownTime: !!change.runAt,
+      timing: change.timing,
       runAt: toLocal(change.runAt),
       event,
       changed: (Object.keys(e) as EventField[]).filter((k) => e[k] !== undefined),
@@ -244,7 +246,8 @@ export const draftToInput = (draft: PostDraft, { lenient = false } = {}): PostIn
     websiteChange: change && {
       kind: change.kind,
       eventSlug: change.kind === 'update_event' ? change.eventSlug || null : null,
-      runAt: change.ownTime ? fromLocal(change.runAt) : null,
+      timing: change.timing,
+      runAt: change.timing === 'at' ? fromLocal(change.runAt) : null,
       event: eventToChange(change, draft.images),
       signupForms: change.forms.flatMap(({ sessionId, draft: formDraft }) => {
         const result = draftToForm(formDraft)
@@ -256,4 +259,20 @@ export const draftToInput = (draft: PostDraft, { lenient = false } = {}): PostIn
       }),
     },
   }
+}
+
+// When the post's event starts (in the browser's time), for the time pickers: its
+// next session, or its first if all have passed. The website change's sessions
+// when it sets them.
+export const postEventStart = (draft: PostDraft, events: AGEvent[]): moment.Moment | null => {
+  const change = draft.websiteChange
+  const sessions =
+    change && (change.kind === 'create_event' || change.changed.includes('sessions'))
+      ? change.event.sessions.map((s) => s.start)
+      : (events.find((e) => e.slug === (change?.eventSlug || draft.eventSlug))?.sessions.map((s) => s.start.slice(0, 16)) ?? [])
+  const starts = sessions
+    .filter(Boolean)
+    .map((s) => eventMoment(s).local())
+    .sort((a, b) => a.valueOf() - b.valueOf())
+  return starts.find((s) => s.isAfter(moment())) ?? starts[0] ?? null
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import moment from 'moment-timezone'
-import { FaTrash } from 'react-icons/fa'
+import { FaRegClock, FaTrash } from 'react-icons/fa'
 import type { AGEvent, SignupMode } from '../../types/types'
 import { EVENT_TIMEZONE, eventMoment } from '../../utils/eventUtils'
 import { getSignupEvent, listSignupEvents, type SignupEvent } from '../../utils/signupApi'
@@ -13,6 +13,7 @@ import {
   type FormDraft,
 } from '../SignupFormEditor'
 import MarkdownEditor from './MarkdownEditor'
+import PostTimePicker from './PostTimePicker'
 import {
   emptyEventDraft,
   eventToDraft,
@@ -30,6 +31,8 @@ type Props = {
   events: AGEvent[]
   preview: WebsiteChangePreview | null
   leadMinutes: number
+  // When the post's event starts, for the time presets
+  eventStart: moment.Moment | null
 }
 
 const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
@@ -109,24 +112,36 @@ const SessionsInput = ({
             placeholder="Location"
             className={inputClass}
           />
-          <label className="text-sm">
+          <div className="text-sm">
             Start
-            <input
-              type="datetime-local"
+            <PostTimePicker
               value={s.start}
-              onChange={(e) => update(s.id, { start: e.target.value })}
-              className={inputClass}
+              onChange={(start) => update(s.id, { start })}
+              eventStart={null}
+              eventPresets={false}
+              defaultTime={moment().hour(18).minute(0)}
             />
-          </label>
-          <label className="text-sm">
+          </div>
+          <div className="text-sm">
             End
-            <input
-              type="datetime-local"
+            <PostTimePicker
               value={s.end}
-              onChange={(e) => update(s.id, { end: e.target.value })}
-              className={inputClass}
+              onChange={(end) => update(s.id, { end })}
+              eventStart={s.start ? moment(s.start) : null}
+              eventPresets={false}
+              extraPresets={
+                s.start
+                  ? [1, 2, 3, 4].map((hours) => ({
+                      label: `${hours} hour${hours > 1 ? 's' : ''} after start`,
+                      icon: <FaRegClock />,
+                      time: moment(s.start).add(hours, 'hours'),
+                    }))
+                  : []
+              }
+              clearable
+              placeholder="Same as start"
             />
-          </label>
+          </div>
           <div className="md:col-span-2 flex justify-between text-xs text-lightgray">
             <span>Helsinki time · id {s.id}</span>
             <button type="button" className="hover:text-red" onClick={() => onChange(value.filter((o) => o.id !== s.id))}>
@@ -221,7 +236,7 @@ const FormSlot = ({
   )
 }
 
-const WebsiteChangeEditor = ({ value, onChange, events, preview, leadMinutes }: Props) => {
+const WebsiteChangeEditor = ({ value, onChange, events, preview, leadMinutes, eventStart }: Props) => {
   const [copySources, setCopySources] = useState<SignupEvent[]>([])
   useEffect(() => {
     listSignupEvents().then(setCopySources)
@@ -313,17 +328,28 @@ const WebsiteChangeEditor = ({ value, onChange, events, preview, leadMinutes }: 
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={value.ownTime} onChange={(e) => set({ ownTime: e.target.checked })} />
-          Own time for the website change
-        </label>
-        {value.ownTime ? (
-          <input type="datetime-local" value={value.runAt} onChange={(e) => set({ runAt: e.target.value })} className={inputClass} />
-        ) : (
-          <div className="text-sm text-lightgray">
-            {leadMinutes} minutes before the first message. The site is rebuilt 2–3 minutes after the change.
-          </div>
+        <span className="font-bold">Update the website</span>
+        {(
+          [
+            ['on_approval', 'When the post is approved'],
+            ['before_post', `${leadMinutes} minutes before the first message`],
+            ['at', 'At a set time'],
+          ] as const
+        ).map(([timing, label]) => (
+          <label key={timing} className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="website-change-timing"
+              checked={value.timing === timing}
+              onChange={() => set({ timing })}
+            />
+            {label}
+          </label>
+        ))}
+        {value.timing === 'at' && (
+          <PostTimePicker value={value.runAt} onChange={(runAt) => set({ runAt })} eventStart={eventStart} />
         )}
+        <div className="text-sm text-lightgray">The site is rebuilt 2–3 minutes after the change.</div>
       </div>
 
       {(isCreate || value.eventSlug) && (

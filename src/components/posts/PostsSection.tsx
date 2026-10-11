@@ -50,7 +50,7 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
   const router = useRouter()
   const openId = typeof router.query.id === 'string' ? router.query.id : null
   const [filter, setFilter] = useState(1)
-  const [view, setView] = useState<'list' | 'calendar'>('list')
+  const [view, setView] = useState<'list' | 'calendar'>('calendar')
   const [posts, setPosts] = useState<Post[]>([])
   const [channels, setChannels] = useState<Channel[]>([])
   const [leadMinutes, setLeadMinutes] = useState(10)

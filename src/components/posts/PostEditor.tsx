@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import moment from 'moment'
+import { FaRegClock } from 'react-icons/fa'
 import type { AGEvent } from '../../types/types'
 import { eventMoment } from '../../utils/eventUtils'
 import {
@@ -25,13 +26,15 @@ import {
 import ImagePicker from './ImagePicker'
 import MarkdownEditor from './MarkdownEditor'
 import PostPreviewPanel from './PostPreviewPanel'
+import PostTimePicker from './PostTimePicker'
 import {
   draftToInput,
   emptyEventDraft,
   emptyPostDraft,
   eventToDraft,
+  postEventStart,
   postToDraft,
-  toLocal,
+  type EventField,
   type PostDraft,
   type TargetDraft,
 } from './postDraft'
@@ -129,11 +132,18 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
 
   const set = (changes: Partial<PostDraft>) => setDraft((old) => ({ ...old, ...changes }))
   // The website change changes the post's event, or creates a new one if it has none
+  // An empty short description defaults to the post's text
   const websiteChangeFor = (eventSlug: string) => {
-    const event = events.find((e) => e.slug === eventSlug)
-    return event
-      ? { kind: 'update_event' as const, eventSlug, event: eventToDraft(event), changed: [], forms: [] }
-      : { kind: 'create_event' as const, eventSlug: '', event: emptyEventDraft(), changed: [], forms: [] }
+    const existing = events.find((e) => e.slug === eventSlug)
+    const event = existing ? eventToDraft(existing) : emptyEventDraft()
+    const changed: EventField[] = []
+    if (!event.description.text.trim()) {
+      event.description = { fromPost: true, text: '' }
+      changed.push('description')
+    }
+    return existing
+      ? { kind: 'update_event' as const, eventSlug, event, changed, forms: [] }
+      : { kind: 'create_event' as const, eventSlug: '', event, changed: [], forms: [] }
   }
   const setEvent = (eventSlug: string) =>
     set({
@@ -195,6 +205,7 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
   const status = post?.status ?? 'draft'
   const unschedulesOnSave = status === 'scheduled'
   const editable = status !== 'cancelled'
+  const eventStart = useMemo(() => postEventStart(draft, events), [draft, events])
   const hasHeld = post?.targets.some((t) => t.status === 'held') || post?.websiteChange?.status === 'failed'
   const errorCount =
     (preview?.errors.length ?? 0) +
@@ -277,16 +288,16 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
           </Section>
 
           <Section title="Channels and times">
-            <label className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               Send time of all channels
-              <input
-                type="datetime-local"
+              <PostTimePicker
                 value={draft.sendAt}
-                onChange={(e) => set({ sendAt: e.target.value })}
-                className={inputClass}
+                onChange={(sendAt) => set({ sendAt })}
+                eventStart={eventStart}
+                clearable
                 disabled={!editable}
               />
-            </label>
+            </div>
             {availableChannels.length === 0 && (
               <div className="text-lightgray">
                 No channels yet. Add them in the{' '}
@@ -351,11 +362,19 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                         Own send time
                       </label>
                       {target.ownTime && (
-                        <input
-                          type="datetime-local"
+                        <PostTimePicker
                           value={target.sendAt}
-                          onChange={(e) => setTarget(channel.id, { sendAt: e.target.value })}
-                          className={inputClass}
+                          onChange={(sendAt) => setTarget(channel.id, { sendAt })}
+                          eventStart={eventStart}
+                          extraPresets={
+                            draft.sendAt
+                              ? [-60, 60].map((minutes) => ({
+                                  label: `1 hour ${minutes < 0 ? 'before' : 'after'} the post's time`,
+                                  icon: <FaRegClock />,
+                                  time: moment(draft.sendAt).add(minutes, 'minutes'),
+                                }))
+                              : []
+                          }
                         />
                       )}
                       <label className="flex items-center gap-2">
@@ -417,6 +436,7 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                   events={events}
                   preview={preview?.website ?? null}
                   leadMinutes={leadMinutes}
+                  eventStart={eventStart}
                 />
                 {!draft.websiteChange.locked && editable && (
                   <button type="button" className="link self-start text-sm" onClick={() => set({ websiteChange: null })}>
@@ -440,7 +460,7 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                       set({
                         websiteChange: {
                           ...websiteChangeFor(draft.eventSlug),
-                          ownTime: false,
+                          timing: 'on_approval',
                           runAt: '',
                           locked: false,
                         },
@@ -522,16 +542,16 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                     The website change failed, so the messages are held back.
                     {post?.websiteChange?.error && ` ${post.websiteChange.error}`}
                   </div>
-                  <label className="flex flex-col gap-1 text-sm">
+                  <div className="flex flex-col gap-1 text-sm">
                     New send time for messages whose time has passed (empty: now)
-                    <input
-                      type="datetime-local"
+                    <PostTimePicker
                       value={newTime}
-                      onChange={(e) => setNewTime(e.target.value)}
-                      min={toLocal(new Date().toISOString())}
-                      className={inputClass}
+                      onChange={setNewTime}
+                      eventStart={eventStart}
+                      clearable
+                      placeholder="Now"
                     />
-                  </label>
+                  </div>
                   <div className="flex flex-wrap gap-3">
                     <button
                       type="button"

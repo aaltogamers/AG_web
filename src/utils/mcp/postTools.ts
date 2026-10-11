@@ -61,10 +61,16 @@ const websiteChangeSchema = z.object({
     .enum(['create_event', 'update_event'])
     .describe('create_event makes a new event; update_event changes an existing one'),
   eventSlug: z.string().optional().describe('The event to change (update_event)'),
+  timing: z
+    .enum(['on_approval', 'before_post', 'at'])
+    .optional()
+    .describe(
+      'When the change is made: on_approval (right when a human approves the post), before_post (the lead time, by default 10 minutes, before the first message) or at (runAt). Defaults to at when runAt is given, otherwise on_approval.'
+    ),
   runAt: z
     .string()
     .optional()
-    .describe(`When the change is made. ${TIME_HINT}. Defaults to 10 minutes before the first message.`),
+    .describe(`When the change is made, with the timing "at". ${TIME_HINT}.`),
   event: z
     .object({
       name: z.string().optional(),

@@ -122,8 +122,8 @@ export const approvePost = async (id: string, version: number, actor: Actor) => 
       base = snapshotBase(change, change.eventSlug ? await getEventFile(change.eventSlug) : null)
     }
     scheduledRunAt = websiteRunAt(post, settings.website.leadMinutes)
-    if (scheduledRunAt && new Date(scheduledRunAt).getTime() < now) {
-      // A lead time that has already passed runs the change right away
+    if (change.timing === 'on_approval' || (scheduledRunAt && new Date(scheduledRunAt).getTime() < now)) {
+      // On approval, or a time that has already passed: the change runs right away
       scheduledRunAt = new Date().toISOString()
     }
   }

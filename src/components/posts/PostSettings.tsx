@@ -243,40 +243,6 @@ const InstagramCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
   )
 }
 
-const WebsiteCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
-  const [website, setWebsite] = useState(data.settings.website)
-  useEffect(() => setWebsite(data.settings.website), [data.settings.website])
-  return (
-    <Card title="Website">
-      <label className="flex flex-col gap-1">
-        Base URL for links and images
-        <input
-          className={inputClass}
-          value={website.baseUrl}
-          onChange={(e) => setWebsite({ ...website, baseUrl: e.target.value })}
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        Default minutes between a website change and the first message
-        <input
-          className={inputClass}
-          type="number"
-          min={0}
-          value={website.leadMinutes}
-          onChange={(e) => setWebsite({ ...website, leadMinutes: Number(e.target.value) })}
-        />
-      </label>
-      <button
-        type="button"
-        className="mainbutton self-start"
-        onClick={() => run(() => saveSettings({ website }), 'Website settings saved.')}
-      >
-        Save website settings
-      </button>
-    </Card>
-  )
-}
-
 const emptyChannel = (platform: Platform): ChannelInput => ({
   platform,
   name: '',
@@ -358,7 +324,7 @@ const ChannelForm = ({
             )}
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={!!config.crosspost} onChange={(e) => setConfig({ crosspost: e.target.checked })} />
-              Publish to following servers (announcement channels)
+              Also publish to the servers that follow this announcement channel
             </label>
           </div>
         </>
@@ -578,7 +544,6 @@ const PostSettings = () => {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <TelegramCard data={data} run={run} />
           <div className="flex flex-col gap-6">
-            <WebsiteCard data={data} run={run} />
             <DiscordCard data={data} run={run} />
             <InstagramCard data={data} run={run} />
           </div>

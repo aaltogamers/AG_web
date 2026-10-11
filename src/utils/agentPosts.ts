@@ -25,6 +25,7 @@ import type {
   PostPreview,
   SignupFormChange,
   TextChoice,
+  WebsiteChangeTiming,
 } from './social/types'
 import type { SignupPool } from '../types/types'
 
@@ -166,6 +167,7 @@ export const parsePostArgs = async (
       input.websiteChange = {
         kind,
         eventSlug,
+        ...(w.timing !== undefined && { timing: w.timing as WebsiteChangeTiming }),
         runAt: w.runAt ? toIso(w.runAt, 'websiteChange.runAt') : null,
         event: parseEvent(w.event),
         signupForms: await parseForms(w.signupForms, existing, kind === 'update_event' ? eventSlug : null),
@@ -197,7 +199,8 @@ const describeWebsiteChange = (post: Post) => {
   return {
     kind: w.kind,
     eventSlug: w.eventSlug,
-    runAt: time(w.runAt) ?? 'default: before the first message',
+    timing: w.timing,
+    runAt: time(w.runAt) ?? undefined,
     status: w.status,
     ...(w.error && { error: w.error }),
     event: {

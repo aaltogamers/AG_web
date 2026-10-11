@@ -29,6 +29,8 @@ import {
   type TextChoice,
   type WebsiteChange,
   type WebsiteChangeStatus,
+  type WebsiteChangeTiming,
+  WEBSITE_CHANGE_TIMINGS,
 } from './social/types'
 import { MAX_IMAGES } from './social/render'
 
@@ -413,6 +415,7 @@ type TargetRow = {
 
 type WebsiteChangeRow = {
   post_id: string
+  timing: WebsiteChangeTiming
   run_at: Date | null
   scheduled_run_at: Date | null
   kind: WebsiteChange['kind']
@@ -457,6 +460,7 @@ const rowToTarget = (row: TargetRow): PostTarget => ({
 const rowToWebsiteChange = (row: WebsiteChangeRow): WebsiteChange => ({
   kind: row.kind,
   eventSlug: row.event_slug,
+  timing: row.timing,
   runAt: toISO(row.run_at),
   event: row.event ?? {},
   signupForms: row.signup_forms ?? [],
@@ -544,11 +548,12 @@ export const getWebsiteChangeBase = async (postId: string) => {
 // When a channel's message goes out
 export const targetSendAt = (post: Post, target: PostTarget) => target.sendAt ?? post.sendAt
 
-// When the website change runs: its own time, or the lead time before the first message
+// When the website change runs: its own time, or the lead time before the first
+// message. null when it runs on approval (or has no time).
 export const websiteRunAt = (post: Post, leadMinutes: number): string | null => {
   const change = post.websiteChange
-  if (!change) return null
-  if (change.runAt) return change.runAt
+  if (!change || change.timing === 'on_approval') return null
+  if (change.timing === 'at') return change.runAt
   const times = post.targets
     .filter((t) => t.status !== 'cancelled')
     .map((t) => targetSendAt(post, t))
@@ -815,6 +820,7 @@ type NormalizedInput = {
   websiteChange?: {
     kind: WebsiteChange['kind']
     eventSlug: string | null
+    timing: WebsiteChangeTiming
     runAt: string | null
     event: EventChange
     signupForms: SignupFormChange[]
@@ -878,11 +884,18 @@ const normalizePostInput = async (
       if (eventSlug && !/^[a-z0-9-]+$/.test(eventSlug)) {
         throw new AgentError(400, `"${eventSlug}" is not an event slug`)
       }
+      const runAt = parseIsoTime(raw.runAt, 'websiteChange.runAt')
+      const timing = raw.timing ?? (runAt ? 'at' : 'on_approval')
+      if (!WEBSITE_CHANGE_TIMINGS.includes(timing)) {
+        throw new AgentError(400, `websiteChange.timing must be one of ${WEBSITE_CHANGE_TIMINGS.join(', ')}`)
+      }
+      if (timing === 'at' && !runAt) throw new AgentError(400, 'websiteChange.runAt is required with the timing "at"')
       out.websiteChange = {
         kind: raw.kind,
         // A new event's slug is chosen when the post is approved
         eventSlug: raw.kind === 'update_event' ? eventSlug : null,
-        runAt: parseIsoTime(raw.runAt, 'websiteChange.runAt'),
+        timing,
+        runAt: timing === 'at' ? runAt : null,
         event: parseEventChange(raw.event ?? {}, imageCount),
         signupForms: parseSignupForms(raw.signupForms ?? []),
       }
@@ -1003,9 +1016,9 @@ const writeWebsiteChange = async (
     return
   }
   await client.query(
-    `INSERT INTO post_website_changes (post_id, run_at, kind, event_slug, event, signup_forms, status)
-     VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, 'pending')
-     ON CONFLICT (post_id) DO UPDATE SET run_at = EXCLUDED.run_at, kind = EXCLUDED.kind,
+    `INSERT INTO post_website_changes (post_id, timing, run_at, kind, event_slug, event, signup_forms, status)
+     VALUES ($1, $7, $2, $3, $4, $5::jsonb, $6::jsonb, 'pending')
+     ON CONFLICT (post_id) DO UPDATE SET timing = EXCLUDED.timing, run_at = EXCLUDED.run_at, kind = EXCLUDED.kind,
        event_slug = EXCLUDED.event_slug, event = EXCLUDED.event, signup_forms = EXCLUDED.signup_forms`,
     [
       postId,
@@ -1014,6 +1027,7 @@ const writeWebsiteChange = async (
       change.eventSlug,
       JSON.stringify(change.event),
       JSON.stringify(change.signupForms),
+      change.timing,
     ]
   )
 }
@@ -1468,9 +1482,12 @@ export const claimMissedApprovals = async (leadMinutes: number): Promise<string[
      WHERE p.status = 'awaiting_approval' AND p.missed_notice_at IS NULL
        AND LEAST(
          (SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t WHERE t.post_id = p.id),
-         (SELECT COALESCE(w.run_at, (
-            SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t WHERE t.post_id = p.id
-          ) - make_interval(mins => $1))
+         (SELECT CASE w.timing
+            WHEN 'at' THEN w.run_at
+            WHEN 'before_post' THEN (
+              SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t WHERE t.post_id = p.id
+            ) - make_interval(mins => $1)
+          END
           FROM post_website_changes w WHERE w.post_id = p.id)
        ) <= now()
      RETURNING p.id`,

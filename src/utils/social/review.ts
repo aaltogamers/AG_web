@@ -22,12 +22,16 @@ import {
   sendReviewImages,
   sendTelegramMessage,
 } from './telegram'
-import type { Platform, Post, PostPreview, RenderedText, SocialSettings } from './types'
+import type { Platform, Post, PostPreview, RenderedText, SocialSettings, WebsiteChangeTiming } from './types'
 
 const SHORT: Record<Platform, string> = { telegram: 'TG', discord: 'DC', instagram: 'IG' }
 
 export const formatTime = (iso: string | null) =>
   iso ? moment(iso).tz(EVENT_TIMEZONE).format('ddd D.M. HH:mm') : 'no time'
+
+// When the website change runs, for the review messages
+const websiteTime = (timing: WebsiteChangeTiming | undefined, runAt: string | null) =>
+  timing === 'on_approval' ? 'when approved' : formatTime(runAt)
 
 export const postAdminUrl = (settings: SocialSettings, postId: string) =>
   `${settings.website.baseUrl}/admin/posts?id=${postId}`
@@ -75,7 +79,7 @@ const websiteMessage = (preview: PostPreview) => {
       : `change the event /events/${w.eventSlug}`
   const cut = (s: string) => (s.length > 300 ? `${s.slice(0, 300)}…` : s)
   const lines = [
-    `🌐 <b>Website</b> · ${formatTime(w.runAt)}: ${esc(what)}`,
+    `🌐 <b>Website</b> · ${websiteTime(w.timing, w.runAt)}: ${esc(what)}`,
     ...w.diff.map((d) =>
       w.kind === 'create_event'
         ? `<b>${esc(d.field)}</b>: ${esc(cut(d.to))}`
@@ -105,7 +109,7 @@ const summaryText = (
     ...(editedAfterApproval ? ['⚠️ <b>Edited after approval</b>; it is off the schedule until approved again'] : []),
     `Approval requested by ${esc(describeActor(requestedBy, settings))}`,
     ...preview.texts.map((t) => `• ${SHORT[t.platform]}: ${esc(t.channelName)} · ${formatTime(t.sendAt)}`),
-    ...(post.websiteChange ? [`• Website · ${formatTime(runAt)}`] : []),
+    ...(post.websiteChange ? [`• Website · ${websiteTime(post.websiteChange.timing, runAt)}`] : []),
     ...(errors.length
       ? ['', `❗ <b>Can't be approved until fixed:</b>`, ...errors.map((e) => `❗ ${esc(e)}`)]
       : []),
@@ -188,7 +192,7 @@ export const approvalNote = (post: Post, actor: string, settings: SocialSettings
     .sort()
   const runAt = websiteRunAt(post, settings.website.leadMinutes)
   const parts = [
-    ...(post.websiteChange ? [`website ${formatTime(runAt)}`] : []),
+    ...(post.websiteChange ? [`website ${post.websiteChange.timing === 'on_approval' ? 'now' : formatTime(runAt)}`] : []),
     ...(times.length ? [`posts ${formatTime(times[0])}${times.length > 1 && times[times.length - 1] !== times[0] ? `–${formatTime(times[times.length - 1])}` : ''}`] : []),
   ]
   return `✅ <b>Approved by ${esc(describeActor(actor, settings))}</b> at ${moment().tz(EVENT_TIMEZONE).format('HH:mm')}${parts.length ? ` → ${parts.join(', ')}` : ''}`

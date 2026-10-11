@@ -117,11 +117,17 @@ export type SignupFormChange = { sessionId?: string; form: SignupFormData }
 
 export type WebsiteChangeKind = 'create_event' | 'update_event'
 
+// When a website change runs: when the post is approved, the lead time before
+// the first message, or at its own time (runAt)
+export const WEBSITE_CHANGE_TIMINGS = ['on_approval', 'before_post', 'at'] as const
+export type WebsiteChangeTiming = (typeof WEBSITE_CHANGE_TIMINGS)[number]
+
 export type WebsiteChange = {
   kind: WebsiteChangeKind
   // The event to change; for a new event, the slug it gets (chosen at approval)
   eventSlug: string | null
-  // When the change runs (ISO); earliest send time − lead time when null
+  timing: WebsiteChangeTiming
+  // When the change runs (ISO), with the timing "at"
   runAt: string | null
   event: EventChange
   signupForms: SignupFormChange[]
@@ -174,6 +180,8 @@ export type PostInput = {
   websiteChange?: {
     kind: WebsiteChangeKind
     eventSlug?: string | null
+    // on_approval when not given, or at when runAt is given
+    timing?: WebsiteChangeTiming
     runAt?: string | null
     event: EventChange
     signupForms?: SignupFormChange[]
@@ -228,6 +236,8 @@ export type DiffLine = { field: string; from: string; to: string }
 export type WebsiteChangePreview = {
   kind: WebsiteChangeKind
   eventSlug: string | null
+  timing: WebsiteChangeTiming
+  // null with the timing on_approval (until it is approved)
   runAt: string | null
   diff: DiffLine[]
   forms: { key: string; label: string; isNew: boolean; signups: number }[]

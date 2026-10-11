@@ -80,7 +80,7 @@ const PostPreviewPanel = ({ preview, loading }: Props) => {
         <div className="flex flex-col gap-2 text-base">
           <div className="text-sm text-lightgray">
             {website.kind === 'create_event' ? 'New event' : 'Change to'}{' '}
-            {website.eventSlug ? `/events/${website.eventSlug}` : ''} · {formatTime(website.runAt)}
+            {website.eventSlug ? `/events/${website.eventSlug}` : ''} · {website.timing === 'on_approval' ? 'when approved' : formatTime(website.runAt)}
           </div>
           {website.errors.map((e) => (
             <div key={e} className="text-red text-sm">
