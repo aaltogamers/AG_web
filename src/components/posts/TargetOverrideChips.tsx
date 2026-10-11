@@ -37,9 +37,7 @@ const Chip = ({
     type="button"
     onClick={onClick}
     className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${
-      active
-        ? 'border-white bg-white/15 text-white'
-        : 'border-lightgray/50 text-lightgray hover:text-white hover:border-lightgray'
+      active ? 'border-red bg-red text-white' : 'border-lightgray text-lightgray hover:border-red'
     }`}
   >
     <Icon className="shrink-0" />
