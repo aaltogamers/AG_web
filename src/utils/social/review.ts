@@ -178,9 +178,10 @@ const websiteMessage = (preview: PostPreview): Message | null => {
   return { html: lines.join('\n') }
 }
 
-// The post's title, at the top of the review
+// What the review is and the post's title, at the top of the review
 const titleText = (post: Post, editedAfterApproval: boolean) =>
   [
+    'Post awaiting approval',
     `📝 <b>${esc(post.title || 'Untitled')}</b>`,
     ...(editedAfterApproval ? ['⚠️ <b>Edited after approval</b>; it is off the schedule until approved again'] : []),
   ].join('\n')
