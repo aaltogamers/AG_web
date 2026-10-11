@@ -10,6 +10,7 @@ import { normalizePools } from './signupPools'
 import type { SignupInput } from '../types/types'
 import {
   DEFAULT_SETTINGS,
+  DISCORD_PINGS,
   PLATFORMS,
   type Channel,
   type ChannelConfig,
@@ -240,7 +241,7 @@ const parseChannelConfig = (platform: Platform, raw: ChannelConfig | undefined):
     if (!/^\d+$/.test(channelId)) throw new AgentError(400, 'Pick a Discord channel')
     return { channelId, crosspost: !!config.crosspost }
   }
-  return { linkInBio: !!config.linkInBio }
+  return {}
 }
 
 const uniqueNameError = (err: unknown) =>
@@ -393,6 +394,7 @@ type PostRow = {
   approved_by: string | null
   approved_at: Date | null
   send_at: Date | null
+  send_on_approval: boolean
   created_by: string
   updated_by: string
   created_at: Date
@@ -406,6 +408,7 @@ type TargetRow = {
   send_at: Date | null
   body_override_md: string | null
   footer_override_md: string | null
+  pings: string[] | null
   status: TargetStatus
   external_message_id: string | null
   sent_at: Date | null
@@ -440,8 +443,8 @@ type ImageRow = {
 }
 
 const POST_COLUMNS = `id, title, body_md, event_slug, status, version, approved_version, approved_by,
-  approved_at, send_at, created_by, updated_by, created_at, updated_at`
-const TARGET_COLUMNS = `id, post_id, channel_id, send_at, body_override_md, footer_override_md, status,
+  approved_at, send_at, send_on_approval, created_by, updated_by, created_at, updated_at`
+const TARGET_COLUMNS = `id, post_id, channel_id, send_at, body_override_md, footer_override_md, pings, status,
   external_message_id, sent_at, error, attempts`
 
 const rowToTarget = (row: TargetRow): PostTarget => ({
@@ -450,6 +453,7 @@ const rowToTarget = (row: TargetRow): PostTarget => ({
   sendAt: toISO(row.send_at),
   bodyOverrideMd: row.body_override_md,
   footerOverrideMd: row.footer_override_md,
+  pings: row.pings ?? [],
   status: row.status,
   externalMessageId: row.external_message_id,
   sentAt: toISO(row.sent_at),
@@ -510,6 +514,7 @@ const loadPosts = async (rows: PostRow[]): Promise<Post[]> => {
       approvedBy: row.approved_by,
       approvedAt: toISO(row.approved_at),
       sendAt: toISO(row.send_at),
+      sendOnApproval: row.send_on_approval,
       createdBy: row.created_by,
       updatedBy: row.updated_by,
       createdAt: row.created_at.toISOString(),
@@ -810,12 +815,14 @@ type NormalizedInput = {
   bodyMd?: string
   eventSlug?: string | null
   sendAt?: string | null
+  sendOnApproval?: boolean
   images?: PostImage[]
   targets?: {
     channelId: string
     sendAt: string | null
     bodyOverrideMd: string | null
     footerOverrideMd: string | null
+    pings: string[]
   }[]
   websiteChange?: {
     kind: WebsiteChange['kind']
@@ -825,6 +832,17 @@ type NormalizedInput = {
     event: EventChange
     signupForms: SignupFormChange[]
   } | null
+}
+
+// Discord pings: here, everyone or role ids
+const parsePings = (raw: unknown, i: number): string[] => {
+  if (!Array.isArray(raw)) throw new AgentError(400, `channels[${i}].pings must be a list`)
+  const pings = [...new Set(raw.map((p) => String(p).trim().replace(/^@/, '')))].filter(Boolean)
+  const invalid = pings.find((p) => !(DISCORD_PINGS as readonly string[]).includes(p) && !/^\d+$/.test(p))
+  if (invalid) {
+    throw new AgentError(400, `channels[${i}].pings: "${invalid}" is not "here", "everyone" or a role id`)
+  }
+  return pings
 }
 
 const nullableText = (value: unknown) =>
@@ -843,6 +861,10 @@ const normalizePostInput = async (
     out.eventSlug = slug
   }
   if (input.sendAt !== undefined) out.sendAt = parseIsoTime(input.sendAt, 'sendAt')
+  if (input.sendOnApproval !== undefined) out.sendOnApproval = !!input.sendOnApproval
+  // Giving a send time turns sending on approval off; sending on approval has no time until approved
+  else if (out.sendAt) out.sendOnApproval = false
+  if (out.sendOnApproval ?? existing?.sendOnApproval) out.sendAt = null
   if (input.images !== undefined) out.images = await parseImages(input.images)
   const imageCount = (out.images ?? existing?.images ?? []).length
 
@@ -865,6 +887,10 @@ const normalizePostInput = async (
         sendAt: parseIsoTime(t.sendAt, `channels[${i}].sendAt`),
         bodyOverrideMd: nullableText(t.bodyOverrideMd),
         footerOverrideMd: t.footerOverrideMd === undefined ? null : (t.footerOverrideMd ?? null),
+        pings:
+          channel.platform === 'discord'
+            ? parsePings(t.pings ?? existing?.targets.find((e) => e.channelId === channelId)?.pings ?? ['here'], i)
+            : [],
       }
     })
   }
@@ -925,6 +951,7 @@ export const postFromInput = async (input: PostInput, existing: Post | null): Pr
     approvedBy: null,
     approvedAt: null,
     sendAt: null,
+    sendOnApproval: false,
     createdBy: 'admin',
     updatedBy: 'admin',
     createdAt: now,
@@ -941,6 +968,7 @@ export const postFromInput = async (input: PostInput, existing: Post | null): Pr
     bodyMd: data.bodyMd ?? base.bodyMd,
     eventSlug: data.eventSlug !== undefined ? data.eventSlug : base.eventSlug,
     sendAt: data.sendAt !== undefined ? data.sendAt : base.sendAt,
+    sendOnApproval: data.sendOnApproval ?? base.sendOnApproval,
     images: data.images ?? base.images,
     targets: data.targets
       ? [
@@ -994,12 +1022,12 @@ const writeTargets = async (
   for (const [position, t] of targets.entries()) {
     if (locked.some((l) => l.channelId === t.channelId)) continue
     await client.query(
-      `INSERT INTO post_targets (post_id, channel_id, send_at, body_override_md, footer_override_md, position)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO post_targets (post_id, channel_id, send_at, body_override_md, footer_override_md, pings, position)
+       VALUES ($1, $2, $3, $4, $5, $7::jsonb, $6)
        ON CONFLICT (post_id, channel_id) DO UPDATE SET send_at = EXCLUDED.send_at,
          body_override_md = EXCLUDED.body_override_md,
-         footer_override_md = EXCLUDED.footer_override_md, position = EXCLUDED.position`,
-      [postId, t.channelId, t.sendAt, t.bodyOverrideMd, t.footerOverrideMd, position]
+         footer_override_md = EXCLUDED.footer_override_md, pings = EXCLUDED.pings, position = EXCLUDED.position`,
+      [postId, t.channelId, t.sendAt, t.bodyOverrideMd, t.footerOverrideMd, position, JSON.stringify(t.pings)]
     )
   }
 }
@@ -1036,9 +1064,9 @@ export const createPost = async (input: PostInput, actor: Actor): Promise<Post> 
   const data = await normalizePostInput(input, null)
   const id = await withTransaction(async (client) => {
     const result = await client.query<{ id: string }>(
-      `INSERT INTO posts (title, body_md, event_slug, send_at, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $5) RETURNING id`,
-      [data.title ?? '', data.bodyMd ?? '', data.eventSlug ?? null, data.sendAt ?? null, actor]
+      `INSERT INTO posts (title, body_md, event_slug, send_at, send_on_approval, created_by, updated_by)
+       VALUES ($1, $2, $3, $4, $6, $5, $5) RETURNING id`,
+      [data.title ?? '', data.bodyMd ?? '', data.eventSlug ?? null, data.sendAt ?? null, actor, data.sendOnApproval ?? false]
     )
     const postId = String(result.rows[0].id)
     await writeImages(client, postId, data.images ?? [])
@@ -1086,7 +1114,8 @@ export const updatePost = async (
     }
     await client.query(
       `UPDATE posts SET title = $2, body_md = $3, event_slug = $4, send_at = $5, status = $6,
-         version = version + 1, updated_by = $7, updated_at = now(), missed_notice_at = NULL
+         version = version + 1, updated_by = $7, updated_at = now(), missed_notice_at = NULL,
+         send_on_approval = $8
        WHERE id = $1`,
       [
         id,
@@ -1096,6 +1125,7 @@ export const updatePost = async (
         data.sendAt !== undefined ? data.sendAt : existing.sendAt,
         nextStatus,
         actor,
+        data.sendOnApproval ?? existing.sendOnApproval,
       ]
     )
     if (data.images) await writeImages(client, id, data.images)
@@ -1148,7 +1178,8 @@ export const markApproved = async (
     const result = await client.query(
       `UPDATE posts SET status = 'scheduled', approved_version = version, approved_by = $3,
          approved_at = now(), missed_notice_at = NULL, updated_at = now(),
-         event_slug = COALESCE($4, event_slug)
+         event_slug = COALESCE($4, event_slug),
+         send_at = CASE WHEN send_on_approval THEN now() ELSE send_at END
        WHERE id = $1 AND version = $2 AND status IN ('draft', 'awaiting_approval')`,
       [post.id, version, actor, data.eventSlug ?? null]
     )
@@ -1187,7 +1218,8 @@ export const markRejected = async (post: Post, version: number, actor: Actor) =>
 // Approved or awaiting approval back to draft, so nothing more is sent until it is approved again
 export const markUnscheduled = async (post: Post, actor: Actor) => {
   const result = await pool.query(
-    `UPDATE posts SET status = 'draft', updated_at = now()
+    `UPDATE posts SET status = 'draft', updated_at = now(),
+       send_at = CASE WHEN send_on_approval THEN NULL ELSE send_at END
      WHERE id = $1 AND status IN ('scheduled', 'awaiting_approval')`,
     [post.id]
   )

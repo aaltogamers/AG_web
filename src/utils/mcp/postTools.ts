@@ -2,8 +2,9 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { AGENT, describeChannel, describePost, describePreview, parsePostArgs } from '../agentPosts'
 import { AgentError, formatAgentTime, parseAgentTime } from '../agentApi'
-import { getPostHistory, getPostOrThrow, listChannels, listPosts } from '../postStore'
+import { getPostHistory, getPostOrThrow, getSettings, listChannels, listPosts } from '../postStore'
 import { createPostAction, editPost, requestApproval, withdrawApproval } from '../social/actions'
+import { isDiscordConfigured, listGuildRoles } from '../social/discord'
 import { buildPreview } from '../social/preview'
 import { PLACEHOLDER_HELP } from '../social/render'
 import { POST_STATUSES } from '../social/types'
@@ -39,6 +40,12 @@ const channelSchema = z.object({
     .nullable()
     .optional()
     .describe("Footer instead of the channel's default footer; an empty string for no footer"),
+  pings: z
+    .array(z.string())
+    .optional()
+    .describe(
+      'Discord only: who the message pings, put before the text: "here", "everyone" or role ids from list_channels\' discordRoles. Defaults to ["here"] for a new Discord channel of the post; [] pings no one.'
+    ),
 })
 
 const signupFormSchema = z.object({
@@ -111,6 +118,9 @@ const postFields = {
     .describe(`The text in markdown. Placeholders, filled in for each channel: ${PLACEHOLDER_HELP}`),
   eventSlug: z.string().nullable().describe('The event the post is about, for {{event}} and {{signup}}'),
   sendAt: z.string().nullable().describe(`Default send time of all channels. ${TIME_HINT}`),
+  sendOnApproval: z
+    .boolean()
+    .describe('Send the channels without their own sendAt right when a human approves the post, instead of at sendAt'),
   images: z.array(imageSchema).describe('Up to 10 images; Instagram needs at least one. Replaces all images.'),
   channels: z
     .array(channelSchema)
@@ -128,13 +138,21 @@ export const registerPostTools = (server: McpServer) => {
     'list_channels',
     {
       title: 'List post channels',
-      description: 'Lists the Telegram, Discord and Instagram channels posts can be sent to.',
+      description:
+        'Lists the Telegram, Discord and Instagram channels posts can be sent to, and the Discord roles a message can ping.',
       inputSchema: {},
       annotations: { readOnlyHint: true },
     },
-    runTool('list_channels', async () => ({
-      channels: (await listChannels()).filter((c) => c.enabled).map(describeChannel),
-    }))
+    runTool('list_channels', async () => {
+      const [channels, settings] = await Promise.all([listChannels(), getSettings()])
+      const discordRoles =
+        settings.discord.guildId && isDiscordConfigured()
+          ? await listGuildRoles(settings.discord.guildId)
+              .then((roles) => roles.map(({ id, name }) => ({ id, name })))
+              .catch(() => undefined)
+          : undefined
+      return { channels: channels.filter((c) => c.enabled).map(describeChannel), discordRoles }
+    })
   )
 
   server.registerTool(

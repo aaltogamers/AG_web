@@ -145,6 +145,7 @@ export const parsePostArgs = async (
   if ('body' in args) input.bodyMd = typeof args.body === 'string' ? args.body : ''
   if ('eventSlug' in args) input.eventSlug = optionalString(args.eventSlug, 'eventSlug') ?? null
   if ('sendAt' in args) input.sendAt = args.sendAt === null ? null : toIso(args.sendAt, 'sendAt')
+  if ('sendOnApproval' in args) input.sendOnApproval = optionalBoolean(args.sendOnApproval, 'sendOnApproval')
   if ('images' in args) input.images = await parseImages(args.images)
   if ('channels' in args) {
     input.targets = (optionalArray(args.channels, 'channels') ?? []).map((raw, i) => {
@@ -154,6 +155,7 @@ export const parsePostArgs = async (
         sendAt: t.sendAt ? toIso(t.sendAt, `channels[${i}].sendAt`) : null,
         bodyOverrideMd: optionalString(t.bodyOverride, `channels[${i}].bodyOverride`) ?? null,
         footerOverrideMd: t.footerOverride === undefined || t.footerOverride === null ? null : String(t.footerOverride),
+        ...(t.pings !== undefined && t.pings !== null && { pings: optionalArray(t.pings, `channels[${i}].pings`)?.map(String) }),
       }
     })
   }
@@ -188,7 +190,6 @@ export const describeChannel = (c: Channel) => ({
   name: c.name,
   ref: c.ref,
   defaultFooter: c.defaultFooterMd || undefined,
-  ...(c.platform === 'instagram' && { linkInBio: !!c.config.linkInBio }),
 })
 
 const describeWebsiteChange = (post: Post) => {
@@ -234,6 +235,7 @@ export const describePost = async (
   approved: post.approvedVersion === post.version && post.status !== 'draft',
   eventSlug: post.eventSlug,
   sendAt: time(post.sendAt),
+  sendOnApproval: post.sendOnApproval,
   ...(full && { body: post.bodyMd, images: post.images }),
   channels: post.targets.map((t) => {
     const channel = channels.find((c) => c.id === t.channelId)
@@ -243,6 +245,7 @@ export const describePost = async (
       platform: channel?.platform,
       sendAt: time(t.sendAt ?? post.sendAt),
       ownSendTime: !!t.sendAt,
+      ...(channel?.platform === 'discord' && { pings: t.pings }),
       status: t.status,
       ...(t.error && { error: t.error }),
       ...(full && {
@@ -274,7 +277,7 @@ export const describePreview = (preview: PostPreview) => ({
     channelId: t.channelId,
     channel: t.channelName,
     platform: t.platform,
-    sendAt: time(t.sendAt),
+    sendAt: t.onApproval ? 'when approved' : time(t.sendAt),
     format: t.platform === 'telegram' ? 'Telegram HTML' : t.platform === 'discord' ? 'Discord markdown' : 'plain text',
     text: t.text,
     characters: t.length,

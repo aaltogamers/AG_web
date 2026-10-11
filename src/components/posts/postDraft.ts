@@ -31,6 +31,8 @@ export type TargetDraft = {
   bodyOverrideMd: string
   footerOverride: boolean
   footerOverrideMd: string
+  // Discord: 'here', 'everyone' or role ids
+  pings: string[]
   // Sent or being sent: shown, but not editable
   locked: boolean
 }
@@ -79,6 +81,7 @@ export type PostDraft = {
   bodyMd: string
   eventSlug: string
   sendAt: string
+  sendOnApproval: boolean
   images: PostImage[]
   targets: TargetDraft[]
   websiteChange: WebsiteChangeDraft | null
@@ -89,6 +92,7 @@ export const emptyPostDraft = (): PostDraft => ({
   bodyMd: '',
   eventSlug: '',
   sendAt: '',
+  sendOnApproval: false,
   images: [],
   targets: [],
   websiteChange: null,
@@ -171,7 +175,9 @@ export const postToDraft = (post: Post, events: AGEvent[]): PostDraft => {
     bodyMd: post.bodyMd,
     // A new event that isn't created yet isn't selectable; its slug is chosen again at approval
     eventSlug: websiteChange?.kind === 'create_event' && !websiteChange.locked ? '' : (post.eventSlug ?? ''),
-    sendAt: toLocal(post.sendAt),
+    // A post sent on approval has the approval time once approved
+    sendAt: post.sendOnApproval ? '' : toLocal(post.sendAt),
+    sendOnApproval: post.sendOnApproval,
     images: post.images,
     targets: post.targets
       .filter((t) => t.status !== 'cancelled')
@@ -183,6 +189,7 @@ export const postToDraft = (post: Post, events: AGEvent[]): PostDraft => {
         bodyOverrideMd: t.bodyOverrideMd ?? '',
         footerOverride: t.footerOverrideMd !== null,
         footerOverrideMd: t.footerOverrideMd ?? '',
+        pings: t.pings,
         locked: t.status === 'sent' || t.status === 'sending',
       })),
     websiteChange,
@@ -235,13 +242,15 @@ export const draftToInput = (draft: PostDraft, { lenient = false } = {}): PostIn
     title: draft.title,
     bodyMd: draft.bodyMd,
     eventSlug: postEventSlug(draft),
-    sendAt: fromLocal(draft.sendAt),
+    sendAt: draft.sendOnApproval ? null : fromLocal(draft.sendAt),
+    sendOnApproval: draft.sendOnApproval,
     images: draft.images,
     targets: draft.targets.map((t) => ({
       channelId: t.channelId,
       sendAt: t.ownTime ? fromLocal(t.sendAt) : null,
       bodyOverrideMd: t.detached ? t.bodyOverrideMd : null,
       footerOverrideMd: t.footerOverride ? t.footerOverrideMd : null,
+      pings: t.pings,
     })),
     websiteChange: change && {
       kind: change.kind,
@@ -258,6 +267,21 @@ export const draftToInput = (draft: PostDraft, { lenient = false } = {}): PostIn
         return [{ ...(sessionId && { sessionId }), form: result.form }]
       }),
     },
+  }
+}
+
+// A new draft with the post's text, event, images and channels, without times or a
+// website change, e.g. for a reminder of the same event
+export const duplicateDraft = (post: Post, events: AGEvent[]): PostDraft => {
+  const draft = postToDraft(post, events)
+  return {
+    ...draft,
+    title: `${draft.title || 'Untitled'} (copy)`,
+    eventSlug: post.eventSlug && events.some((e) => e.slug === post.eventSlug) ? post.eventSlug : '',
+    sendAt: '',
+    sendOnApproval: false,
+    targets: draft.targets.map((t) => ({ ...t, ownTime: false, sendAt: '', locked: false })),
+    websiteChange: null,
   }
 }
 

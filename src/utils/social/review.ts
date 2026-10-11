@@ -13,7 +13,7 @@ import {
 } from '../postStore'
 import { loadImage } from './media'
 import { buildPreview, previewErrors } from './preview'
-import { telegramLength, toTelegramHtml } from './render'
+import { showDiscordRoles, telegramLength, toTelegramHtml } from './render'
 import {
   editTelegramMessage,
   escapeTelegramHtml as esc,
@@ -67,7 +67,11 @@ const fit = (header: string, html: string) => {
 const channelMessage = (t: RenderedText) =>
   fit(
     '',
-    t.platform === 'telegram' ? t.text : t.platform === 'discord' ? toTelegramHtml(t.text) : esc(t.text)
+    t.platform === 'telegram'
+      ? t.text
+      : t.platform === 'discord'
+        ? toTelegramHtml(showDiscordRoles(t.text, t.roleNames))
+        : esc(t.text)
   )
 
 const websiteMessage = (preview: PostPreview) => {
@@ -108,7 +112,7 @@ const summaryText = (
     `📝 <b>Post #${post.id}: ${esc(post.title || 'Untitled')}</b>`,
     ...(editedAfterApproval ? ['⚠️ <b>Edited after approval</b>; it is off the schedule until approved again'] : []),
     `Approval requested by ${esc(describeActor(requestedBy, settings))}`,
-    ...preview.texts.map((t) => `• ${SHORT[t.platform]}: ${esc(t.channelName)} · ${formatTime(t.sendAt)}`),
+    ...preview.texts.map((t) => `• ${SHORT[t.platform]}: ${esc(t.channelName)} · ${t.onApproval ? 'when approved' : formatTime(t.sendAt)}`),
     ...(post.websiteChange ? [`• Website · ${websiteTime(post.websiteChange.timing, runAt)}`] : []),
     ...(errors.length
       ? ['', `❗ <b>Can't be approved until fixed:</b>`, ...errors.map((e) => `❗ ${esc(e)}`)]

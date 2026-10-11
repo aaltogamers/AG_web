@@ -157,6 +157,7 @@ export const sendToTelegramChannel = async (
     ...target(chatId, threadId),
     text: html,
     parse_mode: 'HTML',
+    link_preview_options: { is_disabled: true },
   })
   return String(msg.message_id)
 }

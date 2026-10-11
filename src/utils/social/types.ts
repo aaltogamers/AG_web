@@ -38,8 +38,7 @@ export type WebsiteChangeStatus =
 
 export type TelegramChannelConfig = { chatId: string; threadId?: string }
 export type DiscordChannelConfig = { channelId: string; crosspost?: boolean }
-// Instagram: `linkInBio` turns links into a "link in bio" line
-export type ChannelConfig = Partial<TelegramChannelConfig & DiscordChannelConfig> & { linkInBio?: boolean }
+export type ChannelConfig = Partial<TelegramChannelConfig & DiscordChannelConfig>
 
 export type Channel = {
   id: string
@@ -60,6 +59,9 @@ export type PostImage = { mediaId: string; width?: number; height?: number } | {
 export const imagePreviewUrl = (image: PostImage) =>
   'mediaId' in image ? `/api/posts/media/${image.mediaId}` : image.sitePath
 
+// Discord pings other than roles
+export const DISCORD_PINGS = ['here', 'everyone'] as const
+
 export type PostTarget = {
   id?: string
   channelId: string
@@ -67,6 +69,8 @@ export type PostTarget = {
   sendAt: string | null
   bodyOverrideMd: string | null
   footerOverrideMd: string | null
+  // Discord: who the message pings, DISCORD_PINGS or role ids
+  pings: string[]
   status: TargetStatus
   externalMessageId?: string | null
   sentAt?: string | null
@@ -155,6 +159,8 @@ export type Post = {
   approvedBy: string | null
   approvedAt: string | null
   sendAt: string | null
+  // Sent when approved: sendAt is set to the approval time
+  sendOnApproval: boolean
   createdBy: string
   updatedBy: string
   createdAt: string
@@ -170,12 +176,14 @@ export type PostInput = {
   bodyMd?: string
   eventSlug?: string | null
   sendAt?: string | null
+  sendOnApproval?: boolean
   images?: PostImage[]
   targets?: {
     channelId: string
     sendAt?: string | null
     bodyOverrideMd?: string | null
     footerOverrideMd?: string | null
+    pings?: string[]
   }[]
   websiteChange?: {
     kind: WebsiteChangeKind
@@ -221,6 +229,10 @@ export type RenderedText = {
   platform: Platform
   channelName: string
   sendAt: string | null
+  // No send time yet: sent when the post is approved
+  onApproval: boolean
+  // Discord: names of the pinged roles by id, to show <@&id> as @name
+  roleNames?: Record<string, string>
   // Telegram: HTML, Discord: markdown, Instagram: plain text
   text: string
   // Characters counted the way the platform counts them

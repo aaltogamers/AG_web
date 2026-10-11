@@ -2,6 +2,7 @@ import { useState } from 'react'
 import moment from 'moment'
 import { PLATFORM_LABELS, type PostPreview } from '../../utils/social/types'
 import { BlockMarkdown } from '../../utils/markdownLinks'
+import { showDiscordRoles } from '../../utils/social/render'
 import TelegramHtml from './TelegramHtml'
 
 const formatTime = (iso: string | null) => (iso ? moment(iso).format('ddd D.M.YYYY HH:mm') : 'no time')
@@ -49,7 +50,7 @@ const PostPreviewPanel = ({ preview, loading }: Props) => {
       {text && (
         <div className="flex flex-col gap-2">
           <div className="text-sm text-lightgray">
-            {formatTime(text.sendAt)} ·{' '}
+            {text.onApproval ? 'when approved' : formatTime(text.sendAt)} ·{' '}
             <span className={text.length > text.limit ? 'text-red' : ''}>
               {text.length} / {text.limit} characters
             </span>
@@ -69,7 +70,7 @@ const PostPreviewPanel = ({ preview, loading }: Props) => {
             {text.platform === 'telegram' ? (
               <TelegramHtml html={text.text} />
             ) : text.platform === 'discord' ? (
-              <BlockMarkdown text={text.text} />
+              <BlockMarkdown text={showDiscordRoles(text.text, text.roleNames)} />
             ) : (
               <div className="whitespace-pre-wrap break-words">{text.text}</div>
             )}

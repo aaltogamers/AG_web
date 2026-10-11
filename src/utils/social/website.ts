@@ -23,7 +23,7 @@ import {
 } from '../signupForms'
 import pool from '../db_pg'
 import { getMedia } from '../postStore'
-import { fillPlaceholders } from './render'
+import { fillPlaceholders, type PlaceholderSession } from './render'
 import type {
   DiffLine,
   EventChange,
@@ -61,13 +61,31 @@ const FIELD_LABELS: Record<ChangeField, string> = {
 const changedFields = (event: EventChange): ChangeField[] =>
   CHANGE_FIELDS.filter((field) => event[field] !== undefined)
 
+// The sessions after the change for {{date}} etc., with when the website change's
+// sign-up forms open
+const placeholderSessions = (data: Record<string, unknown>, change: WebsiteChange): PlaceholderSession[] =>
+  (Array.isArray(data.sessions) ? (data.sessions as SessionChange[]) : [])
+    .map((s) => {
+      const form = change.signupForms.find((f) =>
+        data.signupMode === 'session' ? f.sessionId === s.id : data.signupMode === 'event' && !f.sessionId
+      )
+      return {
+        label: s.name || eventMoment(s.start).format('D.M.YYYY'),
+        start: s.start,
+        location: s.location,
+        signupOpens: form?.form.openfrom ?? null,
+      }
+    })
+    .sort((a, b) => eventMoment(a.start).valueOf() - eventMoment(b.start).valueOf())
+
 // Text of an event field: the post's text with placeholders filled in (no ref,
-// since the link is on the site itself), or its own text
+// since the link is on the site itself, and dates without "today"), or its own text
 const resolveText = (
   choice: TextChoice,
   post: Post,
   slug: string | null,
-  signupSessions: (string | undefined)[] | null
+  signupSessions: (string | undefined)[] | null,
+  sessions: PlaceholderSession[]
 ) =>
   'fromPost' in choice
     ? fillPlaceholders(post.bodyMd, {
@@ -75,6 +93,7 @@ const resolveText = (
         ref: '',
         eventSlug: slug,
         signupSessions,
+        sessions,
       }).text.trim()
     : choice.text.trim()
 
@@ -146,10 +165,11 @@ export const resolveEvent = (
   }
   // Texts last, so that their sign-up links know the event's sessions
   const signupSessions = signupSessionsAfterChange({ data, body })
+  const sessions = placeholderSessions(data, change)
   if (event.description !== undefined) {
-    data.description = resolveText(event.description, post, slug, signupSessions)
+    data.description = resolveText(event.description, post, slug, signupSessions, sessions)
   }
-  if (event.body !== undefined) body = resolveText(event.body, post, slug, signupSessions)
+  if (event.body !== undefined) body = resolveText(event.body, post, slug, signupSessions, sessions)
   // No long description: the short one
   if (!body && (change.kind === 'create_event' || event.body !== undefined)) body = String(data.description ?? '')
   return { data, body, upload }

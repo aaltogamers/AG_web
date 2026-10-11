@@ -97,7 +97,14 @@ The "Posts" admin tab (`/admin/posts`) schedules posts to Telegram, Discord
 and Instagram channels. A post is written once in Markdown and rendered for
 each channel, with the placeholders `{{link:<name>}}` (a `/link/<name>`
 redirect), `{{event}}`, `{{signup}}` and `{{signup:<session name>}}`, all with
-`?ref=<channel ref>`. Each channel can have its own send time, footer or text.
+`?ref=<channel ref>`, and `{{date}}`, `{{time}}`, `{{location}}` and
+`{{signupOpens}}` of the event's next session at the send time (or
+`{{date:<session name>}}` etc.; dates are "today" or "tomorrow" when they are).
+Each channel can have its own send time, footer or text, and Discord channels
+pings (`@here` by default). Discord messages have no link previews, and neither
+do Telegram messages; Instagram shows links as their text. A post can be sent
+right when it is approved instead of at a time. "Duplicate" makes a copy of a
+post without its times or website change, e.g. for a reminder.
 
 A post can include one website change (creating or changing an event and its
 sign-up forms), which runs when the post is approved (default), 10 minutes
@@ -136,7 +143,8 @@ In production, set the env variables as GitHub Actions secrets and run the
 4. Add the bot as an admin to each Telegram channel or group to post to, send
    `/register` there (in the right topic), and add it as a channel.
 5. Discord: create a bot at discord.com/developers and invite it to the server
-   with View Channels, Send Messages, Embed Links and Attach Files. Set
+   with View Channels, Send Messages, Embed Links, Attach Files and Mention
+   @everyone, @here and All Roles. Set
    `DISCORD_BOT_TOKEN`, enter the server id in the settings and add the
    channels. "Test" checks the bot's permissions.
 6. Instagram: make the account a professional account. Create a Business app at

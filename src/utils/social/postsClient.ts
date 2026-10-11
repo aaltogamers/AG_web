@@ -133,6 +133,11 @@ export type DiscordChannelOption = {
 export const fetchDiscordChannels = () =>
   request<{ channels: DiscordChannelOption[] }>('/api/posts/discord')
 
+export type DiscordRoleOption = { id: string; name: string; color: number }
+
+export const fetchDiscordRoles = () =>
+  request<{ roles: DiscordRoleOption[] }>('/api/posts/discord?roles')
+
 export const testDiscordChannel = (channelId: string, crosspost: boolean) =>
   request<{ ok: boolean; problems: string[] }>('/api/posts/discord', 'POST', { channelId, crosspost })
 

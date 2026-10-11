@@ -248,7 +248,7 @@ const emptyChannel = (platform: Platform): ChannelInput => ({
   name: '',
   ref: '',
   defaultFooterMd: '',
-  config: platform === 'discord' ? { channelId: '', crosspost: false } : platform === 'telegram' ? { chatId: '', threadId: '' } : { linkInBio: false },
+  config: platform === 'discord' ? { channelId: '', crosspost: false } : platform === 'telegram' ? { chatId: '', threadId: '' } : {},
 })
 
 // Adds or edits a channel
@@ -329,15 +329,6 @@ const ChannelForm = ({
           </div>
         </>
       )}
-      {value.platform === 'instagram' && (
-        <>
-          <span>Links</span>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={!!config.linkInBio} onChange={(e) => setConfig({ linkInBio: e.target.checked })} />
-            Links aren&apos;t clickable on Instagram: show only their text and a &ldquo;Link in bio&rdquo; line
-          </label>
-        </>
-      )}
       <span>Ref</span>
       <input className={inputClass} value={value.ref ?? ''} onChange={(e) => onChange({ ...value, ref: e.target.value })} placeholder="Tag in tracked links (?ref=…), made from the name if empty" />
       <span>Default footer</span>
@@ -369,9 +360,7 @@ const ChannelRow = ({
       ? `chat ${channel.config.chatId}${channel.config.threadId ? `, topic ${channel.config.threadId}` : ''}`
       : channel.platform === 'discord'
         ? `#${discordChannels?.find((c) => c.id === channel.config.channelId)?.name ?? channel.config.channelId}${channel.config.crosspost ? ', published' : ''}`
-        : channel.config.linkInBio
-          ? 'links → link in bio'
-          : ''
+        : ''
   return (
     <div className={`border border-lightgray/40 rounded-md p-3 flex flex-col gap-2 ${channel.enabled ? '' : 'opacity-60'}`}>
       <div className="flex flex-wrap items-center gap-3">

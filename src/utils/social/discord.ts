@@ -68,15 +68,42 @@ export const listGuildChannels = async (guildId: string) => {
     }))
 }
 
+export type DiscordRole = { id: string; name: string; color: number }
+
+let rolesCache: { guildId: string; roles: DiscordRole[]; at: number } | null = null
+
+// The server's roles that can be pinged (not @everyone or bots' own roles), top role first
+export const listGuildRoles = async (guildId: string): Promise<DiscordRole[]> => {
+  if (rolesCache?.guildId === guildId && Date.now() - rolesCache.at < 5 * 60_000) return rolesCache.roles
+  const roles = await call<{ id: string; name: string; color: number; position: number; managed: boolean }[]>(
+    `/guilds/${guildId}/roles`
+  )
+  const result = roles
+    .filter((r) => r.id !== guildId && !r.managed)
+    .sort((a, b) => b.position - a.position)
+    .map(({ id, name, color }) => ({ id, name, color }))
+  rolesCache = { guildId, roles: result, at: Date.now() }
+  return result
+}
+
+const SUPPRESS_EMBEDS = 1 << 2
+
+// `pings` are the message's pings (here, everyone or role ids); the text pings no one else
 export const sendToDiscordChannel = async (
   config: DiscordChannelConfig,
   markdown: string,
-  images: LoadedImage[]
+  images: LoadedImage[],
+  pings: string[]
 ): Promise<{ id: string; warning?: string }> => {
   const payload = {
     content: markdown,
-    // Never ping anyone, even if the text has @everyone or a role mention
-    allowed_mentions: { parse: [] },
+    allowed_mentions: {
+      // @everyone also covers @here
+      parse: pings.some((p) => p === 'here' || p === 'everyone') ? ['everyone'] : [],
+      roles: pings.filter((p) => /^\d+$/.test(p)),
+    },
+    // No link previews under the post
+    flags: SUPPRESS_EMBEDS,
     attachments: images.map((image, i) => ({ id: i, filename: image.filename })),
   }
   const form = new FormData()
@@ -109,6 +136,7 @@ const VIEW_CHANNEL = BigInt(1) << BigInt(10)
 const SEND_MESSAGES = BigInt(1) << BigInt(11)
 const EMBED_LINKS = BigInt(1) << BigInt(14)
 const ATTACH_FILES = BigInt(1) << BigInt(15)
+const MENTION_EVERYONE = BigInt(1) << BigInt(17)
 
 // Checks that the bot can see and post in the channel, without posting anything
 export const testDiscordChannel = async (
@@ -160,6 +188,7 @@ export const testDiscordChannel = async (
   if (!has(SEND_MESSAGES)) problems.push('missing Send Messages')
   if (!has(EMBED_LINKS)) problems.push('missing Embed Links')
   if (!has(ATTACH_FILES)) problems.push('missing Attach Files (needed for images)')
+  if (!has(MENTION_EVERYONE)) problems.push('missing Mention @everyone, @here and All Roles (needed for pings)')
   if (config.crosspost) {
     // Publishing its own messages only needs Send Messages
     if (channel.type !== ANNOUNCEMENT) problems.push('publishing only works in announcement channels')

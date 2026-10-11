@@ -2,7 +2,7 @@ import { AgentError } from '../../../utils/agentApi'
 import { parseJsonBody } from '../../../utils/apiUtils'
 import { getSettings } from '../../../utils/postStore'
 import { adminRoute } from '../../../utils/social/adminApi'
-import { listGuildChannels, testDiscordChannel } from '../../../utils/social/discord'
+import { listGuildChannels, listGuildRoles, testDiscordChannel } from '../../../utils/social/discord'
 
 const guildId = async () => {
   const { discord } = await getSettings()
@@ -10,9 +10,13 @@ const guildId = async () => {
   return discord.guildId
 }
 
-// Admin: the server's text and announcement channels, and testing that the bot can post in one
+// Admin: the server's text and announcement channels (or with ?roles its roles, for
+// pings), and testing that the bot can post in one
 export default adminRoute({
-  GET: async () => ({ channels: await listGuildChannels(await guildId()) }),
+  GET: async (req) =>
+    req.query.roles !== undefined
+      ? { roles: await listGuildRoles(await guildId()) }
+      : { channels: await listGuildChannels(await guildId()) },
   POST: async (req) => {
     const body = parseJsonBody<{ channelId?: string; crosspost?: boolean }>(req)
     if (!body?.channelId) throw new AgentError(400, 'channelId is required')

@@ -103,9 +103,11 @@ export const approvePost = async (id: string, version: number, actor: Actor) => 
   const settings = await getSettings()
 
   const now = Date.now() - GRACE_MS
-  const late = post.targets
+  // A post sent on approval goes out now (markApproved sets its time)
+  const timed = post.sendOnApproval ? { ...post, sendAt: new Date().toISOString() } : post
+  const late = timed.targets
     .filter((t) => t.status === 'pending' || t.status === 'held' || t.status === 'failed')
-    .filter((t) => new Date(t.sendAt ?? post.sendAt ?? 0).getTime() < now)
+    .filter((t) => new Date(t.sendAt ?? timed.sendAt ?? 0).getTime() < now)
   if (late.length) {
     throw new AgentError(400, 'Some send times have passed. Choose new times on the website and approve there.')
   }
@@ -121,7 +123,7 @@ export const approvePost = async (id: string, version: number, actor: Actor) => 
     } else {
       base = snapshotBase(change, change.eventSlug ? await getEventFile(change.eventSlug) : null)
     }
-    scheduledRunAt = websiteRunAt(post, settings.website.leadMinutes)
+    scheduledRunAt = websiteRunAt(timed, settings.website.leadMinutes)
     if (change.timing === 'on_approval' || (scheduledRunAt && new Date(scheduledRunAt).getTime() < now)) {
       // On approval, or a time that has already passed: the change runs right away
       scheduledRunAt = new Date().toISOString()

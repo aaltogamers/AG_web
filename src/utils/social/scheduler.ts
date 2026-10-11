@@ -109,7 +109,7 @@ const sendTarget = async (due: DueTarget, post: Post): Promise<{ externalMessage
   }
   const { channelId, crosspost } = channel.config
   if (!channelId) throw new PermanentError('The channel has no Discord channel')
-  const sent = await sendToDiscordChannel({ channelId, crosspost }, rendered.text, images)
+  const sent = await sendToDiscordChannel({ channelId, crosspost }, rendered.text, images, target.pings)
   return { externalMessageId: sent.id, warning: sent.warning }
 }
 

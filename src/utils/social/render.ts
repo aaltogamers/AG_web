@@ -2,6 +2,8 @@
 // Instagram plain text) and checks the limits. The preview and sender share it.
 import { fromMarkdown } from 'mdast-util-from-markdown'
 import type { Nodes, Parents } from 'mdast'
+import moment, { type Moment } from 'moment-timezone'
+import { EVENT_TIMEZONE, eventMoment } from '../eventUtils'
 import type { Platform } from './types'
 
 export const LIMITS: Record<Platform, number> = {
@@ -14,6 +16,17 @@ export const INSTAGRAM_MAX_HASHTAGS = 30
 export const INSTAGRAM_MAX_IMAGES = 10
 export const MAX_IMAGES = 10
 
+// A session of the post's event, for {{date}}, {{time}}, {{location}} and {{signupOpens}}
+export type PlaceholderSession = {
+  // The session's name, or its date (D.M.YYYY) when it has none
+  label: string
+  // Helsinki wall-clock time like the event content
+  start: string
+  location: string
+  // When its sign-up opens (ISO); null when it has no sign-up form
+  signupOpens: string | null
+}
+
 export type PlaceholderContext = {
   baseUrl: string
   // Tag of the channel, added to tracked links as ?ref=
@@ -24,10 +37,34 @@ export type PlaceholderContext = {
   signupSessions: (string | undefined)[] | null
   // Slugs of the /link/<slug> redirects, to catch typos
   linkSlugs?: string[]
+  // The event's sessions, sorted by start; null when the post has no event
+  sessions?: PlaceholderSession[] | null
+  // When the message is sent (ISO), for "today" and "tomorrow"; null when not known
+  sendAt?: string | null
 }
 
 export const PLACEHOLDER_HELP =
-  '{{link:<name>}} (a https://aaltogamers.fi/link/<name> redirect, e.g. {{link:discord}}), {{event}} (the event page), {{signup}} or {{signup:<session name>}} (the sign-up form)'
+  '{{link:<name>}} (a https://aaltogamers.fi/link/<name> redirect, e.g. {{link:discord}}), {{event}} (the event page), {{signup}} or {{signup:<session name>}} (the sign-up form), {{date}} (e.g. "Friday, September 18th", or "today" / "tomorrow" when sent that day / the day before), {{time}} (e.g. 17:00), {{location}}, {{signupOpens}} (when sign-up opens, e.g. "today at 16:00"). {{date}}, {{time}}, {{location}} and {{signupOpens}} are of the next session at the send time, or {{date:<session name>}} etc.'
+
+const SESSION_PLACEHOLDERS = ['date', 'time', 'location', 'signupopens']
+
+// A day relative to the send time: "today", "tomorrow" or e.g. "Friday, September 18th"
+const formatDay = (time: Moment, sendAt: string | null | undefined) => {
+  if (sendAt) {
+    const sent = moment(sendAt).tz(EVENT_TIMEZONE)
+    const days = time.clone().startOf('day').diff(sent.clone().startOf('day'), 'days')
+    if (days === 0) return 'today'
+    if (days === 1) return 'tomorrow'
+  }
+  return time.format('dddd, MMMM Do')
+}
+
+// The session a {{date}} etc. is about: the named one, or the next one at the send time
+const pickSession = (sessions: PlaceholderSession[], name: string | undefined, sendAt: string | null | undefined) => {
+  if (name) return sessions.find((s) => s.label.toLowerCase() === name.toLowerCase()) ?? null
+  const from = sendAt ? moment(sendAt) : moment()
+  return sessions.find((s) => eventMoment(s.start).isSameOrAfter(from)) ?? sessions[sessions.length - 1] ?? null
+}
 
 const withRef = (url: string, ref: string) => {
   if (!ref) return url
@@ -41,8 +78,9 @@ const withRef = (url: string, ref: string) => {
 export const fillPlaceholders = (
   markdown: string,
   ctx: PlaceholderContext
-): { text: string; errors: string[] } => {
+): { text: string; errors: string[]; warnings: string[] } => {
   const errors: string[] = []
+  const warnings: string[] = []
   const base = ctx.baseUrl.replace(/\/+$/, '')
   const text = markdown.replace(
     /\{\{\s*([a-zA-Z]+)\s*(?::\s*([^}]*?)\s*)?\}\}/g,
@@ -83,11 +121,37 @@ export const fillPlaceholders = (
         }
         return withRef(`${eventUrl}#signups`, ctx.ref)
       }
+      if (SESSION_PLACEHOLDERS.includes(name)) {
+        if (!ctx.eventSlug || !ctx.sessions) {
+          errors.push(`${match}: the post has no event`)
+          return match
+        }
+        if (!ctx.sessions.length) {
+          errors.push(`${match}: the event has no sessions`)
+          return match
+        }
+        const session = pickSession(ctx.sessions, arg, ctx.sendAt)
+        if (!session) {
+          errors.push(`${match}: no session called "${arg}" (sessions: ${ctx.sessions.map((s) => s.label).join(', ')})`)
+          return match
+        }
+        const start = eventMoment(session.start)
+        if (name === 'date') return formatDay(start, ctx.sendAt)
+        if (name === 'time') return start.format('HH:mm')
+        if (name === 'location') return session.location
+        if (!session.signupOpens) {
+          errors.push(`${match}: ${ctx.sessions.length > 1 ? `the session ${session.label}` : 'the event'} has no sign-up form`)
+          return match
+        }
+        const opens = moment(session.signupOpens).tz(EVENT_TIMEZONE)
+        if (ctx.sendAt && opens.isSameOrBefore(ctx.sendAt)) warnings.push(`${match}: sign-up is already open when this is sent`)
+        return `${formatDay(opens, ctx.sendAt)} at ${opens.format('HH:mm')}`
+      }
       errors.push(`${match}: unknown placeholder. Use ${PLACEHOLDER_HELP}`)
       return match
     }
   )
-  return { text, errors }
+  return { text, errors, warnings }
 }
 
 // Body and footer, separated by an empty line
@@ -258,24 +322,35 @@ const discordInline = (nodes: Nodes[]): string =>
 
 export const toDiscordMarkdown = (markdown: string) => discordBlock(parse(markdown), '').trim()
 
-// Instagram: plain text. Links aren't clickable, so they become the bare URL,
-// or with `linkInBio` only their text and a "link in bio" line at the end.
+// Pings only come from the message's pings: @everyone and @here in the text are
+// broken with a zero-width space
+export const escapeDiscordPings = (markdown: string) => markdown.replace(/@(everyone|here)\b/g, '@\u200b$1')
 
-const plainBlocks = (nodes: Nodes[], linkInBio: boolean, indent = ''): string =>
+export const discordPingLine = (pings: string[]) =>
+  pings.map((p) => (p === 'here' || p === 'everyone' ? `@${p}` : `<@&${p}>`)).join(' ')
+
+// Role mentions as @name, for showing the text in the admin page and the review
+export const showDiscordRoles = (text: string, roleNames: Record<string, string> = {}) =>
+  text.replace(/<@&(\d+)>/g, (match, id: string) => (roleNames[id] ? `@${roleNames[id]}` : match))
+
+// Instagram: plain text. Links aren't clickable, so only their text is kept
+// (the URL when they have no text).
+
+const plainBlocks = (nodes: Nodes[], indent = ''): string =>
   nodes
-    .map((node) => plainBlock(node, linkInBio, indent))
+    .map((node) => plainBlock(node, indent))
     .filter((s) => s !== '')
     .join('\n\n')
 
-const plainBlock = (node: Nodes, linkInBio: boolean, indent: string): string => {
+const plainBlock = (node: Nodes, indent: string): string => {
   switch (node.type) {
     case 'root':
-      return plainBlocks(node.children, linkInBio)
+      return plainBlocks(node.children)
     case 'paragraph':
     case 'heading':
-      return plainInline(node.children, linkInBio)
+      return plainInline(node.children)
     case 'blockquote':
-      return plainBlocks(node.children, linkInBio)
+      return plainBlocks(node.children)
     case 'code':
       return node.value
     case 'list':
@@ -283,8 +358,8 @@ const plainBlock = (node: Nodes, linkInBio: boolean, indent: string): string => 
         .map((item, i) => {
           const bullet = node.ordered ? `${(node.start ?? 1) + i}.` : '•'
           const [first, ...rest] = item.children
-          const firstText = first ? plainBlock(first, linkInBio, `${indent}  `) : ''
-          const restText = rest.map((child) => plainBlock(child, linkInBio, `${indent}  `))
+          const firstText = first ? plainBlock(first, `${indent}  `) : ''
+          const restText = rest.map((child) => plainBlock(child, `${indent}  `))
           return [`${indent}${bullet} ${firstText}`, ...restText].join('\n')
         })
         .join('\n')
@@ -295,11 +370,11 @@ const plainBlock = (node: Nodes, linkInBio: boolean, indent: string): string => 
     case 'definition':
       return ''
     default:
-      return plainInline([node], linkInBio)
+      return plainInline([node])
   }
 }
 
-const plainInline = (nodes: Nodes[], linkInBio: boolean): string =>
+const plainInline = (nodes: Nodes[]): string =>
   nodes
     .map((node) => {
       switch (node.type) {
@@ -309,27 +384,17 @@ const plainInline = (nodes: Nodes[], linkInBio: boolean): string =>
           return node.value
         case 'break':
           return '\n'
-        case 'link': {
-          const text = plainInline(node.children, linkInBio)
-          if (linkInBio) return text === node.url ? '' : text
-          return !text || text === node.url ? node.url : `${text} ${node.url}`
-        }
+        case 'link':
+          return plainInline(node.children) || node.url
         case 'image':
-          return linkInBio ? node.alt : node.url
+          return node.alt || node.url
         default:
-          return plainInline(childrenOf(node), linkInBio)
+          return plainInline(childrenOf(node))
       }
     })
     .join('')
 
-const hasLinks = (node: Nodes): boolean =>
-  node.type === 'link' || node.type === 'image' || childrenOf(node).some(hasLinks)
-
-export const toInstagramText = (markdown: string, linkInBio = false) => {
-  const tree = parse(markdown)
-  const text = plainBlock(tree, linkInBio, '').trim()
-  return linkInBio && hasLinks(tree) ? `${text}\n\n🔗 Link in bio` : text
-}
+export const toInstagramText = (markdown: string) => plainBlock(parse(markdown), '').trim()
 
 export const countHashtags = (text: string) => (text.match(/(^|\s)#[^\s#.,!?;:()]+/g) ?? []).length
 
@@ -345,7 +410,7 @@ export type PlatformRender = {
 export const renderForPlatform = (
   platform: Platform,
   markdown: string,
-  options: { imageCount: number; linkInBio?: boolean }
+  options: { imageCount: number }
 ): PlatformRender => {
   const errors: string[] = []
   const warnings: string[] = []
@@ -363,7 +428,7 @@ export const renderForPlatform = (
     text = toDiscordMarkdown(markdown)
     length = text.length
   } else {
-    text = toInstagramText(markdown, options.linkInBio)
+    text = toInstagramText(markdown)
     length = text.length
     limit = LIMITS.instagram
     const hashtags = countHashtags(text)

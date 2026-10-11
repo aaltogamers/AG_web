@@ -7,11 +7,13 @@ import { eventMoment } from '../../utils/eventUtils'
 import {
   createPost,
   deletePost,
+  fetchDiscordRoles,
   fetchPost,
   fetchSettings,
   postAction,
   previewPost,
   savePost,
+  type DiscordRoleOption,
   type PostAction,
 } from '../../utils/social/postsClient'
 import {
@@ -22,12 +24,14 @@ import {
   type PostHistoryEntry,
   type PostPreview,
 } from '../../utils/social/types'
+import DiscordPingsPicker from './DiscordPingsPicker'
 import ImagePicker from './ImagePicker'
 import MarkdownEditor from './MarkdownEditor'
 import PostPreviewPanel from './PostPreviewPanel'
 import PostTimePicker from './PostTimePicker'
 import {
   draftToInput,
+  duplicateDraft,
   emptyEventDraft,
   emptyPostDraft,
   eventToDraft,
@@ -84,6 +88,8 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
   const [post, setPost] = useState<Post | null>(null)
   const [history, setHistory] = useState<PostHistoryEntry[]>([])
   const [channels, setChannels] = useState<Channel[]>([])
+  // For Discord pings; null while loading
+  const [discordRoles, setDiscordRoles] = useState<DiscordRoleOption[] | null>(null)
   const [leadMinutes, setLeadMinutes] = useState(10)
   const [draft, setDraft] = useState<PostDraft>({ ...emptyPostDraft(), sendAt: initialSendAt })
   const [savedDraft, setSavedDraft] = useState<string>(JSON.stringify(emptyPostDraft()))
@@ -97,6 +103,11 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
     const settingsRes = await fetchSettings()
     setChannels(settingsRes.channels)
     setLeadMinutes(settingsRes.settings.website.leadMinutes)
+    if (settingsRes.configured.discord && settingsRes.channels.some((c) => c.platform === 'discord')) {
+      fetchDiscordRoles()
+        .then((res) => setDiscordRoles(res.roles))
+        .catch(() => setDiscordRoles([]))
+    }
     if (!postId) return
     const res = await fetchPost(postId)
     const loaded = postToDraft(res.post, events)
@@ -190,6 +201,23 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
   const act = (action: PostAction, done: string, body: { newTime?: string | null } = {}) =>
     postId && post && run(() => postAction(postId, action, { version: post.version, ...body }), done)
 
+  // Saves a copy of the saved post as a new draft and opens it
+  const duplicate = async () => {
+    if (!post) return
+    setBusy(true)
+    setMessage(null)
+    try {
+      const copy = duplicateDraft(post, events)
+      // Disabled channels can't be used for new posts
+      copy.targets = copy.targets.filter((t) => channels.some((c) => c.id === t.channelId && c.enabled))
+      const { post: created } = await createPost(draftToInput(copy))
+      onSaved(created.id, { text: 'This is a copy of the post. Choose its send times and edit its text.' })
+    } catch (e) {
+      setMessage({ text: e instanceof Error ? e.message : String(e), isError: true })
+      setBusy(false)
+    }
+  }
+
   const remove = async () => {
     if (!postId || !window.confirm(DELETE_CONFIRM)) return
     setBusy(true)
@@ -279,6 +307,10 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
             <div className="text-sm text-lightgray">
               Links: <code>[AG Discord]({'{{link:discord}}'})</code>, <code>[Sign up]({'{{signup}}'})</code>,{' '}
               <code>[Example](https://example.com)</code>
+              <br />
+              Event: <code>{'{{date}}'}</code> (e.g. Friday, September 18th, or today / tomorrow),{' '}
+              <code>{'{{time}}'}</code>, <code>{'{{location}}'}</code>, <code>{'{{signupOpens}}'}</code> (e.g. today at
+              16:00). Of the next session at the send time, or <code>{'{{date:<session name>}}'}</code>.
             </div>
           </Section>
 
@@ -293,13 +325,24 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
           <Section title="Channels and times">
             <div className="flex flex-col gap-1">
               Send time of all channels
-              <PostTimePicker
-                value={draft.sendAt}
-                onChange={(sendAt) => set({ sendAt })}
-                eventStart={eventStart}
-                clearable
-                disabled={!editable}
-              />
+              <label className="flex items-center gap-2 text-base">
+                <input
+                  type="checkbox"
+                  checked={draft.sendOnApproval}
+                  onChange={(e) => set({ sendOnApproval: e.target.checked })}
+                  disabled={!editable}
+                />
+                Send when approved
+              </label>
+              {!draft.sendOnApproval && (
+                <PostTimePicker
+                  value={draft.sendAt}
+                  onChange={(sendAt) => set({ sendAt })}
+                  eventStart={eventStart}
+                  clearable
+                  disabled={!editable}
+                />
+              )}
             </div>
             {availableChannels.length === 0 && (
               <div className="text-lightgray">
@@ -334,6 +377,7 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                                   bodyOverrideMd: '',
                                   footerOverride: false,
                                   footerOverrideMd: '',
+                                  pings: channel.platform === 'discord' ? ['here'] : [],
                                   locked: false,
                                 },
                               ]
@@ -354,6 +398,16 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                   </label>
                   {target && !locked && (
                     <div className="flex flex-col gap-2 pl-6 text-base">
+                      {channel.platform === 'discord' && (
+                        <div className="flex flex-col gap-1">
+                          Pings
+                          <DiscordPingsPicker
+                            value={target.pings}
+                            onChange={(pings) => setTarget(channel.id, { pings })}
+                            roles={discordRoles}
+                          />
+                        </div>
+                      )}
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -370,7 +424,7 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                           onChange={(sendAt) => setTarget(channel.id, { sendAt })}
                           eventStart={eventStart}
                           extraPresets={
-                            draft.sendAt
+                            draft.sendAt && !draft.sendOnApproval
                               ? [-60, 60].map((minutes) => ({
                                   label: `1 hour ${minutes < 0 ? 'before' : 'after'} the post's time`,
                                   icon: <FaRegClock />,
@@ -507,7 +561,9 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                     className="mainbutton"
                     disabled={busy || errorCount > 0}
                     title={errorCount ? 'Fix the problems in the preview first' : undefined}
-                    onClick={() => act('approve', 'Approved. It will be sent at the planned times.')}
+                    onClick={() =>
+                      act('approve', draft.sendOnApproval ? 'Approved. It will be sent now.' : 'Approved. It will be sent at the planned times.')
+                    }
                   >
                     Approve
                   </button>
@@ -531,6 +587,17 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                     onClick={() => act('unschedule', 'Back to draft; nothing more is sent until it is approved again.')}
                   >
                     Back to draft
+                  </button>
+                )}
+                {post && (
+                  <button
+                    type="button"
+                    className="borderbutton"
+                    disabled={busy}
+                    title="Saves a copy of the saved version as a new draft, without times or a website change, e.g. for a reminder"
+                    onClick={duplicate}
+                  >
+                    Duplicate
                   </button>
                 )}
                 {postId && (
