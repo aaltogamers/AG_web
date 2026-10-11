@@ -25,7 +25,7 @@ import {
 } from './telegram'
 import type { Platform, Post, PostPreview, RenderedText, SocialSettings, WebsiteChangeTiming } from './types'
 
-const SHORT: Record<Platform, string> = { telegram: 'TG', discord: 'DC', instagram: 'IG' }
+const PLATFORM: Record<Platform, string> = { telegram: '✈️ Telegram', discord: '💬 Discord', instagram: '📷 Instagram' }
 
 export const formatTime = (iso: string | null) =>
   iso ? moment(iso).tz(EVENT_TIMEZONE).format('ddd D.M. HH:mm') : 'no time'
@@ -50,32 +50,110 @@ const openButton = (settings: SocialSettings, post: Post): InlineButton => ({
   url: postAdminUrl(settings, post.id),
 })
 
-// Telegram's limit is 4096 characters; long texts are cut as plain text. Cut
-// unescaped, so that an entity like &amp; isn't cut in half.
-const fit = (header: string, html: string) => {
-  if (telegramLength(header + html) <= 4000) return header + html
-  const plain = html
+const toPlain = (html: string) =>
+  html
     .replace(/<[^>]+>/g, '')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&amp;/g, '&')
-  return `${header}${esc(plain.slice(0, 3500))}… <i>(cut here in the review)</i>`
+
+// Telegram's limit is 4096 characters; long texts are cut as plain text. Cut
+// unescaped, so that an entity like &amp; isn't cut in half.
+const fit = ({ header = '', html, footer = '' }: Message) => {
+  if (telegramLength(header + html + footer) <= 4000) return header + html + footer
+  const room = Math.max(500, 3500 - telegramLength(header + footer))
+  return `${header}${esc(toPlain(html).slice(0, room))}… <i>(cut here in the review)</i>${footer}`
 }
 
 // A channel's text as Telegram can show it: Telegram channels exactly, the
-// others approximately. Only the text; the summary says where and when.
-const channelMessage = (t: RenderedText) =>
-  fit(
-    '',
-    t.platform === 'telegram'
-      ? t.text
-      : t.platform === 'discord'
-        ? toTelegramHtml(showDiscordRoles(t.text, t.roleNames))
-        : esc(t.text)
-  )
+// others approximately
+const channelHtml = (t: RenderedText) =>
+  t.platform === 'telegram'
+    ? t.text
+    : t.platform === 'discord'
+      ? toTelegramHtml(showDiscordRoles(t.text, t.roleNames))
+      : esc(t.text)
 
-const websiteMessage = (preview: PostPreview) => {
+const channelLine = (t: RenderedText) =>
+  `${PLATFORM[t.platform]} <b>${esc(t.channelName)}</b> · ${t.onApproval ? 'when approved' : formatTime(t.sendAt)}`
+
+const LINE = '━━━━━━━━━━'
+
+// A review message; only `html` is cut when it is too long
+type Message = { header?: string; html: string; footer?: string }
+
+// Top-level blocks of Telegram HTML: paragraphs, without cutting a quote or a
+// code block in half
+const htmlBlocks = (html: string) => {
+  const blocks: string[] = []
+  for (const part of html.split('\n\n')) {
+    const prev = blocks[blocks.length - 1]
+    const isOpen = (b: string) => (b.match(/<[a-z]/g) ?? []).length > (b.match(/<\//g) ?? []).length
+    if (prev !== undefined && isOpen(prev)) blocks[blocks.length - 1] = `${prev}\n\n${part}`
+    else blocks.push(part)
+  }
+  return blocks.filter((b) => b.trim())
+}
+
+const blockKey = (html: string) => toPlain(html).replace(/\s+/g, ' ').trim()
+
+type TextGroup = { blocks: string[]; keys: string[]; channels: RenderedText[] }
+
+// The longest run of blocks that every group has, as [start in each group, length]
+const sharedRun = (groups: TextGroup[]): [number[], number] | null => {
+  const [first, ...rest] = groups
+  for (let len = first.keys.length; len > 0; len--) {
+    for (let i = 0; i + len <= first.keys.length; i++) {
+      const run = first.keys.slice(i, i + len).join('\n')
+      const starts = rest.map((g) =>
+        g.keys.findIndex((_, j) => j + len <= g.keys.length && g.keys.slice(j, j + len).join('\n') === run)
+      )
+      if (starts.every((j) => j >= 0)) return [[i, ...starts], len]
+    }
+  }
+  return null
+}
+
+// The channels' texts in as few messages as possible, each headed by the
+// channels it goes to. Texts that only differ in formatting count as the same,
+// and are shown as the first channel's (Telegram's, if it has one). When the
+// texts only differ at the start or the end, like in the footer or Discord's
+// pings, the shared text is shown once, followed by each channel's own parts.
+const channelMessages = (texts: RenderedText[]): Message[] => {
+  const order: Platform[] = ['telegram', 'discord', 'instagram']
+  const sorted = [...texts].sort((a, b) => order.indexOf(a.platform) - order.indexOf(b.platform))
+  const byText = new Map<string, TextGroup>()
+  for (const t of sorted) {
+    const blocks = htmlBlocks(channelHtml(t))
+    const keys = blocks.map(blockKey)
+    const group = byText.get(keys.join('\n'))
+    if (group) group.channels.push(t)
+    else byText.set(keys.join('\n'), { blocks, keys, channels: [t] })
+  }
+  const groups = [...byText.values()]
+  const header = (g: TextGroup) => g.channels.map(channelLine).join('\n')
+  const separate = () => groups.map((g) => ({ header: `${header(g)}\n${LINE}\n`, html: g.blocks.join('\n\n') }))
+  if (groups.length < 2) return separate()
+
+  // Only worth it when most of each text is shared
+  const run = sharedRun(groups)
+  if (!run || groups.some((g) => run[1] * 2 < g.keys.length)) return separate()
+  const [starts, len] = run
+  const shared = groups[0].blocks.slice(starts[0], starts[0] + len).join('\n\n')
+  const parts = groups.map((g, i) => {
+    const before = g.blocks.slice(0, starts[i]).join('\n\n')
+    const after = g.blocks.slice(starts[i] + len).join('\n\n')
+    return [
+      header(g),
+      ...(before ? [`<i>Starts with:</i>\n${before}`] : []),
+      ...(after ? [`<i>Ends with:</i>\n${after}`] : []),
+    ].join('\n')
+  })
+  return [{ html: [shared, ...parts].join(`\n\n${LINE}\n`) }]
+}
+
+const websiteMessage = (preview: PostPreview): Message | null => {
   const w = preview.website
   if (!w) return null
   const what =
@@ -97,28 +175,20 @@ const websiteMessage = (preview: PostPreview) => {
     ...w.errors.map((e) => `❗ ${esc(e)}`),
     ...w.warnings.map((e) => `⚠️ ${esc(e)}`),
   ]
-  return fit('', lines.join('\n'))
+  return { html: lines.join('\n') }
 }
 
-const summaryText = (
-  post: Post,
-  preview: PostPreview,
-  settings: SocialSettings,
-  requestedBy: string,
-  editedAfterApproval: boolean
-) => {
-  const errors = previewErrors(preview)
-  const runAt = websiteRunAt(post, settings.website.leadMinutes)
-  return [
-    `📝 <b>Post #${post.id}: ${esc(post.title || 'Untitled')}</b>`,
+// The post's title, at the top of the review
+const titleText = (post: Post, editedAfterApproval: boolean) =>
+  [
+    `📝 <b>${esc(post.title || 'Untitled')}</b>`,
     ...(editedAfterApproval ? ['⚠️ <b>Edited after approval</b>; it is off the schedule until approved again'] : []),
-    `Approval requested by ${esc(describeActor(requestedBy, settings))}`,
-    ...preview.texts.map((t) => `• ${SHORT[t.platform]}: ${esc(t.channelName)} · ${t.onApproval ? 'when approved' : formatTime(t.sendAt)}`),
-    ...(post.websiteChange ? [`• Website · ${websiteTime(post.websiteChange.timing, runAt)}`] : []),
-    ...(errors.length
-      ? ['', `❗ <b>Can't be approved until fixed:</b>`, ...errors.map((e) => `❗ ${esc(e)}`)]
-      : []),
   ].join('\n')
+
+// What stops approving, at the end of the review
+const errorsText = (preview: PostPreview) => {
+  const errors = previewErrors(preview)
+  return errors.length ? [`❗ <b>Can't be approved until fixed:</b>`, ...errors.map((e) => `❗ ${esc(e)}`)].join('\n') : ''
 }
 
 // Marks older review messages of the post as out of date, without buttons
@@ -142,7 +212,7 @@ export const closeMessages = async (messages: PreviewMessage[], note: string) =>
 // Sends the post to the review topic. Returns false if no review topic is set up.
 export const sendReview = async (
   post: Post,
-  { requestedBy, editedAfterApproval = false }: { requestedBy: string; editedAfterApproval?: boolean }
+  { editedAfterApproval = false }: { editedAfterApproval?: boolean } = {}
 ): Promise<boolean> => {
   const settings = await getSettings()
   const chat = reviewTarget(settings)
@@ -154,14 +224,19 @@ export const sendReview = async (
     const images = await Promise.all(post.images.map(loadImage)).catch(() => [])
     if (images.length) await sendReviewImages(chat.chatId, chat.threadId, images)
   }
-  // Channels with the same text get it once
-  for (const text of new Set(preview.texts.map(channelMessage))) {
-    await sendTelegramMessage(chat.chatId, chat.threadId, text)
-  }
+  // The title goes on the first message, and the errors and the buttons on the last
   const website = websiteMessage(preview)
-  if (website) await sendTelegramMessage(chat.chatId, chat.threadId, website)
+  const messages: Message[] = [...channelMessages(preview.texts), ...(website ? [website] : [])]
+  if (!messages.length) messages.push({ html: '' })
+  const title = titleText(post, editedAfterApproval)
+  messages[0] = { ...messages[0], header: `${title}\n\n${messages[0].header ?? ''}` }
+  const errors = errorsText(preview)
+  const last = messages.length - 1
+  if (errors) messages[last] = { ...messages[last], footer: `\n\n${errors}` }
+  const texts = messages.map((m) => fit(m).trim())
+  for (const text of texts.slice(0, -1)) await sendTelegramMessage(chat.chatId, chat.threadId, text)
 
-  const text = summaryText(post, preview, settings, requestedBy, editedAfterApproval)
+  const text = texts[last]
   const msg = await sendTelegramMessage(chat.chatId, chat.threadId, text, {
     buttons: [
       [
@@ -215,7 +290,7 @@ export const sendNotice = async (
     console.warn(`[posts-review] no review topic set up; post #${post.id}: ${html}`)
     return
   }
-  const text = `📝 <b>Post #${post.id}: ${esc(post.title || 'Untitled')}</b>\n${html}`
+  const text = `📝 <b>${esc(post.title || 'Untitled')}</b>\n${html}`
   const buttons: InlineButton[][] = [
     ...(heldButtons
       ? [
@@ -273,7 +348,7 @@ export const sendForForwarding = async (
   await sendTelegramMessage(
     chat.chatId,
     chat.threadId,
-    `📨 <b>Post #${post.id}: forward to ${esc(channelName)}</b>\n` +
+    `📨 <b>Forward to ${esc(channelName)}</b> (${esc(post.title || 'Untitled')})\n` +
       `Forward the message${images.length > 1 ? 's' : ''} above to ${esc(channelName)} with "Hide sender name", then press the button.`,
     { buttons: [[{ text: '✅ Forwarded', callback_data: `fwd:${targetId}` }]], replyTo: first }
   )

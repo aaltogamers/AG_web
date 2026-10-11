@@ -37,7 +37,7 @@ const ensureValid = async (post: Post) => {
 export const createPostAction = (input: PostInput, actor: Actor) => createPost(input, actor)
 
 // Sends the review and says where it went, for the agent and the website
-const sendReviewWithNote = async (post: Post, options: Parameters<typeof sendReview>[1]) => {
+const sendReviewWithNote = async (post: Post, options?: Parameters<typeof sendReview>[1]) => {
   try {
     if (await sendReview(post, options)) return 'A review was sent to the review topic in Telegram.'
   } catch (err) {
@@ -59,7 +59,7 @@ export const requestApproval = async (id: string, actor: Actor) => {
   await ensureValid(post)
   await setAwaitingApproval(post, actor)
   const updated = await getPostOrThrow(id)
-  return { post: updated, note: await sendReviewWithNote(updated, { requestedBy: actor }) }
+  return { post: updated, note: await sendReviewWithNote(updated) }
 }
 
 export const withdrawApproval = async (id: string, actor: Actor) => {
@@ -81,10 +81,7 @@ export const editPost = async (
   const wasInReview = previousStatus === 'awaiting_approval' || previousStatus === 'scheduled'
   let note: string | undefined
   if (actor === 'agent' && wasInReview) {
-    const reviewNote = await sendReviewWithNote(post, {
-      requestedBy: actor,
-      editedAfterApproval: previousStatus === 'scheduled',
-    })
+    const reviewNote = await sendReviewWithNote(post, { editedAfterApproval: previousStatus === 'scheduled' })
     note = `${previousStatus === 'scheduled' ? 'The post was approved, so the edit took it off the schedule until it is approved again. ' : ''}${reviewNote}`
   } else if (wasInReview) {
     await closeOpenMessages(post.id, '<i>✏️ Edited on the website</i>').catch(() => undefined)

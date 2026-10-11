@@ -1,11 +1,10 @@
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect } from 'react'
 import Link from 'next/link'
 import { AGEvent } from '../types/types'
 import SignUpCreateForm from './SignupCreateForm'
 import BetManagement from './BetManagement'
 import MapBanMangement from './MapBanManagement'
 import { AdminSection } from '../utils/adminSections'
-import { fetchPosts } from '../utils/social/postsClient'
 import PostsSection from './posts/PostsSection'
 
 type Props = {
@@ -19,14 +18,6 @@ type Props = {
 const tabClass = (active: boolean) => `text-4xl ${active ? 'underline' : ''}`
 
 const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
-  // Posts awaiting approval, shown as a badge on the Posts tab
-  const [awaiting, setAwaiting] = useState(0)
-  useEffect(() => {
-    fetchPosts(['awaiting_approval'])
-      .then((res) => setAwaiting(res.awaitingApproval))
-      .catch(() => undefined)
-  }, [section])
-
   // The posts pages are in light mode
   useEffect(() => {
     if (section !== 'posts') return
@@ -42,9 +33,6 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
         </Link>
         <Link href="/admin/posts" className={tabClass(section === 'posts')}>
           Posts
-          {awaiting > 0 && (
-            <span className="ml-2 align-middle bg-red text-white rounded-full px-2 text-base">{awaiting}</span>
-          )}
         </Link>
         <Link href="/admin/bets" className={tabClass(section === 'bets')}>
           Bets
