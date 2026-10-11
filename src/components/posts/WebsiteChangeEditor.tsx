@@ -71,7 +71,7 @@ const TextChoiceInput = ({
       Use the post&apos;s text
     </label>
     {!value.fromPost && (
-      <MarkdownEditor value={value.text} onChange={(text) => onChange({ ...value, text })} rows={rows} placeholders={false} />
+      <MarkdownEditor value={value.text} onChange={(text) => onChange({ ...value, text })} rows={rows} placeholders={null} />
     )}
   </div>
 )

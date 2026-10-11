@@ -150,11 +150,13 @@ const PostEditor = ({
       try {
         setPreview((await previewPost(postId, draftToInput(draft, { lenient: true }))).preview)
       } catch (e) {
-        setPreview({
+        setPreview((current) => ({
           texts: [],
           website: null,
           errors: [e instanceof Error ? e.message : String(e)],
-        })
+          // Keep the editor's buttons as they were
+          placeholders: current?.placeholders ?? { event: true, signupSessions: [] },
+        }))
       } finally {
         setPreviewLoading(false)
       }
@@ -338,17 +340,9 @@ const PostEditor = ({
               onChange={(bodyMd) => set({ bodyMd })}
               rows={10}
               placeholder="The post's text"
+              placeholders={preview?.placeholders}
               disabled={!editable}
             />
-            <div className="text-sm text-lightgray">
-              Links: <code>[AG Discord]({'{{link:discord}}'})</code>,{' '}
-              <code>[Sign up]({'{{signup}}'})</code>, <code>[Example](https://example.com)</code>
-              <br />
-              Event: <code>{'{{date}}'}</code> (e.g. Friday, September 18th, or today / tomorrow),{' '}
-              <code>{'{{time}}'}</code>, <code>{'{{location}}'}</code>,{' '}
-              <code>{'{{signupOpens}}'}</code> (e.g. today at 16:00). Of the next session at the
-              send time, or <code>{'{{date:<session name>}}'}</code>.
-            </div>
           </Section>
 
           <Section title="Images">
@@ -505,6 +499,7 @@ const PostEditor = ({
                           value={target.bodyOverrideMd}
                           onChange={(bodyOverrideMd) => setTarget(channel.id, { bodyOverrideMd })}
                           rows={6}
+                          placeholders={preview?.placeholders}
                         />
                       )}
                       <label className="flex items-center gap-2">
@@ -533,6 +528,7 @@ const PostEditor = ({
                           }
                           rows={2}
                           placeholder="Empty for no footer"
+                          placeholders={preview?.placeholders}
                         />
                       )}
                     </div>

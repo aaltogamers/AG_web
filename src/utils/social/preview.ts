@@ -242,7 +242,11 @@ export const buildPreview = async (post: Post, ctx?: PreviewContext): Promise<Po
   if (website && website.timing !== 'on_approval' && !website.runAt && post.websiteChange?.status === 'pending') {
     website.errors.push('No time for the website change: give it a time or give the channels send times')
   }
-  return { texts, website, errors }
+  const placeholders = {
+    event: !!eventContext.sessions?.length,
+    signupSessions: eventContext.signupSessions?.filter((s): s is string => !!s) ?? null,
+  }
+  return { texts, website, errors, placeholders }
 }
 
 // All problems that block approval

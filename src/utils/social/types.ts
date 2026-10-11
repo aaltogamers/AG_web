@@ -262,8 +262,18 @@ export type WebsiteChangePreview = {
   warnings: string[]
 }
 
+// What the post's {{date}}, {{signup}} etc. can refer to, for the editor's buttons
+export type PlaceholderOptions = {
+  // The post has an event, for {{date}}, {{time}} and {{location}}
+  event: boolean
+  // Sessions with sign-up forms, for {{signup:<session name>}}; empty for one form
+  // for the whole event, null when the event has no sign-up
+  signupSessions: string[] | null
+}
+
 export type PostPreview = {
   texts: RenderedText[]
   website: WebsiteChangePreview | null
   errors: string[]
+  placeholders: PlaceholderOptions
 }

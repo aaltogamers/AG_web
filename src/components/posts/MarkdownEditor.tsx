@@ -10,16 +10,24 @@ import { Markdown, type MarkdownStorage } from 'tiptap-markdown'
 import type { IconType } from 'react-icons'
 import {
   FaBold,
+  FaClipboardList,
   FaCode,
+  FaDiscord,
+  FaDoorOpen,
   FaItalic,
   FaLink,
   FaListOl,
   FaListUl,
+  FaMapMarkerAlt,
   FaQuoteRight,
   FaRedo,
+  FaRegCalendarAlt,
+  FaRegClock,
   FaStrikethrough,
+  FaTelegramPlane,
   FaUndo,
 } from 'react-icons/fa'
+import type { PlaceholderOptions } from '../../utils/social/types'
 
 type Props = {
   value: string
@@ -28,8 +36,9 @@ type Props = {
   // Height of the empty editor, in lines
   rows?: number
   disabled?: boolean
-  // Buttons for adding {{link:discord}}, {{date}} etc.; off where they aren't filled in
-  placeholders?: boolean
+  // Buttons for adding {{link:discord}}, {{date}} etc., for what the text can refer
+  // to; all by default, null where placeholders aren't filled in
+  placeholders?: PlaceholderOptions | null
 }
 
 // A line break is a plain newline, like Telegram shows it (the editor reads
@@ -112,33 +121,18 @@ const ToolButton = ({
   </button>
 )
 
-const InsertButton = ({ label, title, onClick }: { label: string; title: string; onClick: () => void }) => (
-  <button
-    type="button"
-    title={title}
-    // Keep the editor's selection
-    onMouseDown={(e) => e.preventDefault()}
-    onClick={onClick}
-    className="px-1.5 py-0.5 rounded text-xs text-gray-600 hover:bg-gray-200"
-  >
-    {label}
-  </button>
-)
-
 // Links: the selected text, or this text when nothing is selected
 const PLACEHOLDER_LINKS = [
-  { label: 'Discord', href: '{{link:discord}}', text: 'AG Discord' },
-  { label: 'Telegram', href: '{{link:telegram}}', text: 'AG Telegram' },
-  { label: 'Sign-up', href: '{{signup}}', text: 'Sign up here' },
+  { Icon: FaDiscord, label: 'Discord link', href: '{{link:discord}}', text: 'AG Discord' },
+  { Icon: FaTelegramPlane, label: 'Telegram link', href: '{{link:telegram}}', text: 'AG Telegram' },
 ]
-const PLACEHOLDER_TEXTS = [
-  { label: 'Date', text: '{{date}}' },
-  { label: 'Time', text: '{{time}}' },
-  { label: 'Location', text: '{{location}}' },
-  { label: 'Sign-up opens', text: '{{signupOpens}}' },
+const EVENT_PLACEHOLDERS = [
+  { Icon: FaRegCalendarAlt, label: 'Date', text: '{{date}}' },
+  { Icon: FaRegClock, label: 'Time', text: '{{time}}' },
+  { Icon: FaMapMarkerAlt, label: 'Location', text: '{{location}}' },
 ]
 
-const Toolbar = ({ editor, placeholders }: { editor: Editor; placeholders: boolean }) => {
+const Toolbar = ({ editor, placeholders }: { editor: Editor; placeholders: PlaceholderOptions | null }) => {
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -165,6 +159,15 @@ const Toolbar = ({ editor, placeholders }: { editor: Editor; placeholders: boole
   const insertLink = (href: string, text: string) => {
     if (!editor.state.selection.empty) chain().setLink({ href }).run()
     else chain().insertContent({ type: 'text', text, marks: [{ type: 'link', attrs: { href } }] }).unsetMark('link').run()
+  }
+  const insertText = (text: string) => chain().insertContent(text).run()
+  const { signupSessions } = placeholders ?? {}
+  // Several sign-up forms: ask which session's
+  const insertSignupLink = (sessions: string[]) => {
+    if (!sessions.length) return insertLink('{{signup}}', 'Sign up here')
+    const session =
+      sessions.length === 1 ? sessions[0] : window.prompt(`Which session's sign-up? (${sessions.join(', ')})`, sessions[0])
+    if (session?.trim()) insertLink(`{{signup:${session.trim()}}}`, 'Sign up here')
   }
   return (
     <>
@@ -203,29 +206,29 @@ const Toolbar = ({ editor, placeholders }: { editor: Editor; placeholders: boole
         <>
           <span className="w-px h-5 bg-gray-300 mx-1" />
           {PLACEHOLDER_LINKS.map((l) => (
-            <InsertButton
-              key={l.label}
-              label={l.label}
-              title={`Link to ${l.href}`}
-              onClick={() => insertLink(l.href, l.text)}
-            />
+            <ToolButton key={l.href} Icon={l.Icon} label={l.label} onClick={() => insertLink(l.href, l.text)} />
           ))}
-          {PLACEHOLDER_TEXTS.map((p) => (
-            <InsertButton
-              key={p.label}
-              label={p.label}
-              title={`Add ${p.text}`}
-              onClick={() => chain().insertContent(p.text).run()}
-            />
-          ))}
+          {signupSessions && (
+            <ToolButton Icon={FaClipboardList} label="Sign-up link" onClick={() => insertSignupLink(signupSessions)} />
+          )}
+          {placeholders.event &&
+            EVENT_PLACEHOLDERS.map((p) => (
+              <ToolButton key={p.text} Icon={p.Icon} label={p.label} onClick={() => insertText(p.text)} />
+            ))}
+          {signupSessions && (
+            <ToolButton Icon={FaDoorOpen} label="When sign-up opens" onClick={() => insertText('{{signupOpens}}')} />
+          )}
         </>
       )}
     </>
   )
 }
 
+// For text used in many posts, like channel footers
+const ALL_PLACEHOLDERS: PlaceholderOptions = { event: true, signupSessions: [] }
+
 // A visual Markdown editor, with a switch to the Markdown source
-const MarkdownEditor = ({ value, onChange, placeholder, rows = 4, disabled = false, placeholders = true }: Props) => {
+const MarkdownEditor = ({ value, onChange, placeholder, rows = 4, disabled = false, placeholders = ALL_PLACEHOLDERS }: Props) => {
   const [source, setSource] = useState(false)
   // The last Markdown the editor gave, so that its own changes aren't loaded back into it
   const emitted = useRef(value)
