@@ -167,7 +167,8 @@ export const postToDraft = (post: Post, events: AGEvent[]): PostDraft => {
   return {
     title: post.title,
     bodyMd: post.bodyMd,
-    eventSlug: post.eventSlug ?? '',
+    // A new event that isn't created yet isn't selectable; its slug is chosen again at approval
+    eventSlug: websiteChange?.kind === 'create_event' && !websiteChange.locked ? '' : (post.eventSlug ?? ''),
     sendAt: toLocal(post.sendAt),
     images: post.images,
     targets: post.targets

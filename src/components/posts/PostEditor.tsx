@@ -23,11 +23,13 @@ import {
   type PostPreview,
 } from '../../utils/social/types'
 import ImagePicker from './ImagePicker'
+import MarkdownEditor from './MarkdownEditor'
 import PostPreviewPanel from './PostPreviewPanel'
 import {
   draftToInput,
   emptyEventDraft,
   emptyPostDraft,
+  eventToDraft,
   postToDraft,
   toLocal,
   type PostDraft,
@@ -126,6 +128,18 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
   }, [draft, isDirty, postId])
 
   const set = (changes: Partial<PostDraft>) => setDraft((old) => ({ ...old, ...changes }))
+  // The website change changes the post's event, or creates a new one if it has none
+  const websiteChangeFor = (eventSlug: string) => {
+    const event = events.find((e) => e.slug === eventSlug)
+    return event
+      ? { kind: 'update_event' as const, eventSlug, event: eventToDraft(event), changed: [], forms: [] }
+      : { kind: 'create_event' as const, eventSlug: '', event: emptyEventDraft(), changed: [], forms: [] }
+  }
+  const setEvent = (eventSlug: string) =>
+    set({
+      eventSlug,
+      websiteChange: draft.websiteChange && { ...draft.websiteChange, ...websiteChangeFor(eventSlug) },
+    })
   const setTarget = (channelId: string, changes: Partial<TargetDraft>) =>
     set({ targets: draft.targets.map((t) => (t.channelId === channelId ? { ...t, ...changes } : t)) })
 
@@ -228,28 +242,27 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
               className={inputClass}
               disabled={!editable}
             />
-            {!draft.websiteChange && (
-              <select
-                value={draft.eventSlug}
-                onChange={(e) => set({ eventSlug: e.target.value })}
-                className={inputClass}
-                disabled={!editable}
-              >
-                <option value="">No event (for {'{{event}}'} and {'{{signup}}'} links)</option>
-                {sortedEvents.map((e) => (
-                  <option key={e.slug} value={e.slug}>
-                    {e.name}
-                    {e.sessions[0] ? ` (${eventMoment(e.sessions[0].start).format('D.M.YYYY')})` : ''}
-                  </option>
-                ))}
-              </select>
-            )}
-            <textarea
+            <select
+              value={draft.eventSlug}
+              onChange={(e) => setEvent(e.target.value)}
+              className={inputClass}
+              disabled={!editable || !!draft.websiteChange?.locked}
+            >
+              <option value="">
+                {draft.websiteChange ? 'No event: the website change creates a new one' : 'No event'}
+              </option>
+              {sortedEvents.map((e) => (
+                <option key={e.slug} value={e.slug}>
+                  {e.name}
+                  {e.sessions[0] ? ` (${eventMoment(e.sessions[0].start).format('D.M.YYYY')})` : ''}
+                </option>
+              ))}
+            </select>
+            <MarkdownEditor
               value={draft.bodyMd}
-              onChange={(e) => set({ bodyMd: e.target.value })}
-              rows={12}
-              placeholder="Markdown: **bold**, _italic_, [links](https://…), lists…"
-              className={`${inputClass} font-mono text-sm`}
+              onChange={(bodyMd) => set({ bodyMd })}
+              rows={10}
+              placeholder="The post's text"
               disabled={!editable}
             />
             <div className="text-sm text-lightgray">Placeholders: {PLACEHOLDER_HELP}</div>
@@ -359,11 +372,10 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                         Own text for this channel
                       </label>
                       {target.detached && (
-                        <textarea
+                        <MarkdownEditor
                           value={target.bodyOverrideMd}
-                          onChange={(e) => setTarget(channel.id, { bodyOverrideMd: e.target.value })}
-                          rows={8}
-                          className={`${inputClass} font-mono text-sm`}
+                          onChange={(bodyOverrideMd) => setTarget(channel.id, { bodyOverrideMd })}
+                          rows={6}
                         />
                       )}
                       <label className="flex items-center gap-2">
@@ -382,12 +394,11 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                         )}
                       </label>
                       {target.footerOverride && (
-                        <textarea
+                        <MarkdownEditor
                           value={target.footerOverrideMd}
-                          onChange={(e) => setTarget(channel.id, { footerOverrideMd: e.target.value })}
+                          onChange={(footerOverrideMd) => setTarget(channel.id, { footerOverrideMd })}
                           rows={2}
                           placeholder="Empty for no footer"
-                          className={`${inputClass} font-mono text-sm`}
                         />
                       )}
                     </div>
@@ -428,13 +439,9 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                     onClick={() =>
                       set({
                         websiteChange: {
-                          kind: 'create_event',
-                          eventSlug: '',
+                          ...websiteChangeFor(draft.eventSlug),
                           ownTime: false,
                           runAt: '',
-                          event: emptyEventDraft(),
-                          changed: [],
-                          forms: [],
                           locked: false,
                         },
                       })

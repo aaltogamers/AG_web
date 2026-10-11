@@ -12,6 +12,7 @@ import {
   SignupFormSettings,
   type FormDraft,
 } from '../SignupFormEditor'
+import MarkdownEditor from './MarkdownEditor'
 import {
   emptyEventDraft,
   eventToDraft,
@@ -45,13 +46,6 @@ const FIELD_LABELS: Record<EditedField, string> = {
 }
 const FIELDS: EditedField[] = ['name', 'sessions', 'signupMode', 'description', 'body']
 
-const byNewest = (events: AGEvent[]) =>
-  [...events].sort(
-    (a, b) =>
-      (b.sessions[0] ? eventMoment(b.sessions[0].start).valueOf() : 0) -
-      (a.sessions[0] ? eventMoment(a.sessions[0].start).valueOf() : 0)
-  )
-
 const eventLabel = (e: AGEvent) =>
   `${e.name}${e.sessions[0] ? ` (${eventMoment(e.sessions[0].start).format('D.M.YYYY')})` : ''}`
 
@@ -74,12 +68,7 @@ const TextChoiceInput = ({
       Use the post&apos;s text
     </label>
     {!value.fromPost && (
-      <textarea
-        value={value.text}
-        onChange={(e) => onChange({ ...value, text: e.target.value })}
-        rows={rows}
-        className={`${inputClass} font-mono text-sm`}
-      />
+      <MarkdownEditor value={value.text} onChange={(text) => onChange({ ...value, text })} rows={rows} />
     )}
   </div>
 )
@@ -247,7 +236,6 @@ const WebsiteChangeEditor = ({ value, onChange, events, preview, leadMinutes }: 
   const isCreate = value.kind === 'create_event'
   const isOn = (field: EventField) => isCreate || value.changed.includes(field)
   const current = events.find((e) => e.slug === value.eventSlug)
-  const sortedEvents = byNewest(events)
 
   const toggleField = (field: EventField, on: boolean) => {
     if (!on) {
@@ -313,46 +301,16 @@ const WebsiteChangeEditor = ({ value, onChange, events, preview, leadMinutes }: 
 
   return (
     <div className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1">
-        Event
-        <select
-          value={value.eventSlug}
-          onChange={(ev) => {
-            const event = events.find((e) => e.slug === ev.target.value)
-            set(
-              event
-                ? { kind: 'update_event', eventSlug: event.slug, event: eventToDraft(event), changed: [], forms: [] }
-                : { kind: 'create_event', eventSlug: '', event: emptyEventDraft(), changed: [], forms: [] }
-            )
-          }}
-          className={inputClass}
-        >
-          <option value="">Create a new event</option>
-          {sortedEvents.map((e) => (
-            <option key={e.slug} value={e.slug}>
-              Edit: {eventLabel(e)}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {isCreate && (
-        <select
-          value=""
-          onChange={(ev) => {
-            const source = events.find((e) => e.slug === ev.target.value)
-            if (source) set({ event: { ...eventToDraft(source, false) }, forms: [] })
-          }}
-          className={inputClass}
-        >
-          <option value="">Start from an existing event (copies its texts and sign-up mode)…</option>
-          {sortedEvents.map((e) => (
-            <option key={e.slug} value={e.slug}>
-              {eventLabel(e)}
-            </option>
-          ))}
-        </select>
-      )}
+      <div>
+        {isCreate ? (
+          <>
+            <b>Creates a new event.</b>{' '}
+            <span className="text-sm text-lightgray">Choose the post&apos;s event above to change an existing one instead.</span>
+          </>
+        ) : (
+          <b>Changes the event {current ? eventLabel(current) : value.eventSlug}.</b>
+        )}
+      </div>
 
       <div className="flex flex-col gap-1">
         <label className="flex items-center gap-2">

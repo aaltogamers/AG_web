@@ -20,6 +20,7 @@ import {
   type SettingsResponse,
 } from '../../utils/social/postsClient'
 import { PLATFORMS, PLATFORM_LABELS, type Channel, type Platform } from '../../utils/social/types'
+import MarkdownEditor from './MarkdownEditor'
 
 const inputClass = 'p-2 rounded-md bg-white text-black'
 
@@ -374,7 +375,12 @@ const ChannelForm = ({
       <span>Ref</span>
       <input className={inputClass} value={value.ref ?? ''} onChange={(e) => onChange({ ...value, ref: e.target.value })} placeholder="Tag in tracked links (?ref=…), made from the name if empty" />
       <span>Default footer</span>
-      <textarea className={`${inputClass} font-mono text-sm`} rows={2} value={value.defaultFooterMd ?? ''} onChange={(e) => onChange({ ...value, defaultFooterMd: e.target.value })} placeholder="Markdown added to the end of every post, e.g. Join us: {{link:discord}}" />
+      <MarkdownEditor
+        value={value.defaultFooterMd ?? ''}
+        onChange={(defaultFooterMd) => onChange({ ...value, defaultFooterMd })}
+        rows={2}
+        placeholder="Added to the end of every post, e.g. Join us: {{link:discord}}"
+      />
     </div>
   )
 }

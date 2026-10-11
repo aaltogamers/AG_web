@@ -1,0 +1,225 @@
+import { useEffect, useRef, useState } from 'react'
+import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/react'
+import type { Node as PmNode } from '@tiptap/pm/model'
+import StarterKit from '@tiptap/starter-kit'
+import { HardBreak } from '@tiptap/extension-hard-break'
+import { Placeholder } from '@tiptap/extensions'
+import { Markdown, type MarkdownStorage } from 'tiptap-markdown'
+import type { IconType } from 'react-icons'
+import {
+  FaBold,
+  FaCode,
+  FaItalic,
+  FaLink,
+  FaListOl,
+  FaListUl,
+  FaQuoteRight,
+  FaRedo,
+  FaStrikethrough,
+  FaUndo,
+} from 'react-icons/fa'
+
+type Props = {
+  value: string
+  onChange: (markdown: string) => void
+  placeholder?: string
+  // Height of the empty editor, in lines
+  rows?: number
+  disabled?: boolean
+}
+
+// A line break is a plain newline, like Telegram shows it (the editor reads
+// newlines as line breaks), instead of Markdown's backslash
+const LineBreak = HardBreak.extend({
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: { write: (text: string) => void }, node: PmNode, parent: PmNode, index: number) {
+          // Not at the end of a paragraph
+          for (let i = index + 1; i < parent.childCount; i++) {
+            if (parent.child(i).type !== node.type) {
+              state.write('\n')
+              return
+            }
+          }
+        },
+      },
+    }
+  },
+})
+
+// Placeholder link targets can have spaces ({{signup:Day 1}}), which Markdown allows only in <>
+const toEditor = (markdown: string) => markdown.replace(/\]\((\{\{[^}]*\}\})\)/g, '](<$1>)')
+
+// Placeholders ({{signup}} etc.) are filled in the raw Markdown, so undo the
+// editor's escaping inside them, and its URL encoding of them in link targets
+const fixPlaceholders = (markdown: string) =>
+  markdown
+    .replace(/%7B%7B(.*?)%7D%7D/gi, (_, inner: string) => `{{${decodeURIComponent(inner)}}}`)
+    .replace(/\{\{[^}]*\}\}/g, (placeholder) => placeholder.replace(/\\([\\`*_[\]~#+\-.!()])/g, '$1'))
+
+const getMarkdown = (editor: Editor) =>
+  fixPlaceholders((editor.storage as unknown as { markdown: MarkdownStorage }).markdown.getMarkdown())
+
+const ToolButton = ({
+  Icon,
+  label,
+  active = false,
+  disabled = false,
+  onClick,
+}: {
+  Icon: IconType
+  label: string
+  active?: boolean
+  disabled?: boolean
+  onClick: () => void
+}) => (
+  <button
+    type="button"
+    title={label}
+    aria-label={label}
+    aria-pressed={active}
+    disabled={disabled}
+    // Keep the editor's selection
+    onMouseDown={(e) => e.preventDefault()}
+    onClick={onClick}
+    className={`p-1.5 rounded ${active ? 'bg-gray-200 text-black' : 'text-gray-600'} hover:bg-gray-200 disabled:opacity-40`}
+  >
+    <Icon size={14} />
+  </button>
+)
+
+const Toolbar = ({ editor }: { editor: Editor }) => {
+  const state = useEditorState({
+    editor,
+    selector: ({ editor: e }) => ({
+      bold: e.isActive('bold'),
+      italic: e.isActive('italic'),
+      strike: e.isActive('strike'),
+      code: e.isActive('code'),
+      link: e.isActive('link'),
+      bulletList: e.isActive('bulletList'),
+      orderedList: e.isActive('orderedList'),
+      blockquote: e.isActive('blockquote'),
+      canUndo: e.can().undo(),
+      canRedo: e.can().redo(),
+    }),
+  })
+  const chain = () => editor.chain().focus()
+  const setLink = () => {
+    const current = editor.getAttributes('link').href as string | undefined
+    const url = window.prompt('Link address (or a placeholder like {{signup}}); empty removes the link', current ?? '')
+    if (url === null) return
+    if (!url.trim()) chain().extendMarkRange('link').unsetLink().run()
+    else chain().extendMarkRange('link').setLink({ href: url.trim() }).run()
+  }
+  return (
+    <>
+      <ToolButton Icon={FaBold} label="Bold" active={state.bold} onClick={() => chain().toggleBold().run()} />
+      <ToolButton Icon={FaItalic} label="Italic" active={state.italic} onClick={() => chain().toggleItalic().run()} />
+      <ToolButton
+        Icon={FaStrikethrough}
+        label="Strikethrough"
+        active={state.strike}
+        onClick={() => chain().toggleStrike().run()}
+      />
+      <ToolButton Icon={FaCode} label="Code" active={state.code} onClick={() => chain().toggleCode().run()} />
+      <ToolButton Icon={FaLink} label="Link" active={state.link} onClick={setLink} />
+      <ToolButton
+        Icon={FaListUl}
+        label="Bulleted list"
+        active={state.bulletList}
+        onClick={() => chain().toggleBulletList().run()}
+      />
+      <ToolButton
+        Icon={FaListOl}
+        label="Numbered list"
+        active={state.orderedList}
+        onClick={() => chain().toggleOrderedList().run()}
+      />
+      <ToolButton
+        Icon={FaQuoteRight}
+        label="Quote"
+        active={state.blockquote}
+        onClick={() => chain().toggleBlockquote().run()}
+      />
+      <span className="w-px h-5 bg-gray-300 mx-1" />
+      <ToolButton Icon={FaUndo} label="Undo" disabled={!state.canUndo} onClick={() => chain().undo().run()} />
+      <ToolButton Icon={FaRedo} label="Redo" disabled={!state.canRedo} onClick={() => chain().redo().run()} />
+    </>
+  )
+}
+
+// A visual Markdown editor, with a switch to the Markdown source
+const MarkdownEditor = ({ value, onChange, placeholder, rows = 4, disabled = false }: Props) => {
+  const [source, setSource] = useState(false)
+  // The last Markdown the editor gave, so that its own changes aren't loaded back into it
+  const emitted = useRef(value)
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    editable: !disabled,
+    extensions: [
+      StarterKit.configure({
+        underline: false,
+        hardBreak: false,
+        heading: { levels: [1, 2, 3] },
+        link: {
+          openOnClick: false,
+          autolink: true,
+          isAllowedUri: (url, { defaultValidate }) => /^(\{\{|%7B%7B)/i.test(url.trim()) || defaultValidate(url),
+        },
+      }),
+      LineBreak,
+      Placeholder.configure({ placeholder: placeholder ?? '' }),
+      Markdown.configure({ html: false, tightLists: true, linkify: false, breaks: true, transformPastedText: true }),
+    ],
+    content: toEditor(value),
+    onUpdate: ({ editor: e }) => {
+      const markdown = getMarkdown(e)
+      emitted.current = markdown
+      onChangeRef.current(markdown)
+    },
+  })
+
+  useEffect(() => {
+    if (!editor || value === emitted.current) return
+    emitted.current = value
+    editor.commands.setContent(toEditor(value), { emitUpdate: false })
+  }, [editor, value])
+
+  useEffect(() => {
+    editor?.setEditable(!disabled)
+  }, [editor, disabled])
+
+  const minHeight = `${rows * 1.6 + 1}rem`
+  return (
+    <div className={`markdown-editor rounded-md border border-gray-300 bg-white text-black ${disabled ? 'opacity-70' : ''}`}>
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-gray-200 px-1 py-1">
+        {editor && !source && !disabled && <Toolbar editor={editor} />}
+        <button
+          type="button"
+          className="ml-auto text-xs px-2 py-1 rounded text-gray-600 hover:bg-gray-200"
+          onClick={() => setSource(!source)}
+        >
+          {source ? 'Visual editor' : 'Markdown'}
+        </button>
+      </div>
+      {source ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          style={{ minHeight }}
+          className="block w-full p-2 font-mono text-sm rounded-b-md !border-0 outline-none"
+        />
+      ) : (
+        <EditorContent editor={editor} className="p-2 text-base" style={{ minHeight }} />
+      )}
+    </div>
+  )
+}
+
+export default MarkdownEditor
