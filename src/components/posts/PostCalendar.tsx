@@ -22,6 +22,8 @@ type Entry = {
   platforms: (Platform | 'website')[]
   done: boolean
   color: string
+  // A post sent as soon as it's approved has no time yet, so it's shown for today
+  allDay?: boolean
 }
 
 // Drafts and posts awaiting approval are shown, but clearly not scheduled
@@ -183,24 +185,30 @@ const toEntries = (
       const event = events.find((e) => e.slug === post.eventSlug)
       const color = (event && eventColors[event.slug]) ?? paletteColor(post.eventSlug ?? post.id)
       const name = `${PREFIX[post.status] ?? ''}${post.title || 'Untitled post'}${event ? ` (${event.name})` : ''}`
+      const today = moment().startOf('day').toDate()
+      const onApproval = post.sendOnApproval && !post.sendAt
       const entry = (
         title: string,
         platforms: Entry['platforms'],
         start: Date,
         done: boolean
-      ): Entry => ({
-        title,
-        start,
-        end: new Date(start.getTime() + 30 * 60_000),
-        postId: post.id,
-        status: post.status,
-        platforms,
-        done,
-        color,
-      })
+      ): Entry => {
+        const allDay = onApproval && start.getTime() === today.getTime()
+        return {
+          title,
+          start,
+          end: allDay ? start : new Date(start.getTime() + 30 * 60_000),
+          postId: post.id,
+          status: post.status,
+          platforms,
+          done,
+          color,
+          allDay,
+        }
+      }
       const byTime = new Map<number, { channel: Channel; sent: boolean }[]>()
       for (const t of post.targets) {
-        const time = t.sendAt ?? post.sendAt
+        const time = t.sendAt ?? post.sendAt ?? (onApproval ? today.toISOString() : null)
         const channel = channels.find((c) => c.id === t.channelId)
         if (!time || !channel || t.status === 'cancelled') continue
         const key = new Date(time).getTime()
@@ -214,7 +222,9 @@ const toEntries = (
           messages.every((m) => m.sent)
         )
       )
-      const run = websiteRunAt(post, leadMinutes)
+      const run =
+        websiteRunAt(post, leadMinutes) ??
+        (onApproval && post.websiteChange && !post.websiteChange.ranAt ? today : null)
       if (run) entries.push(entry(name, ['website'], run, post.websiteChange?.status === 'done'))
       return entries
     })
