@@ -2,28 +2,46 @@ import { Calendar as BigCalendar, momentLocalizer, type View } from 'react-big-c
 import moment from 'moment'
 import { type CSSProperties, useState } from 'react'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
-import type { Channel, Post, PostStatus } from '../../utils/social/types'
-import styles from '../Calendar.module.css'
+import type { Channel, Platform, Post, PostStatus } from '../../utils/social/types'
+import { PLATFORM_STYLE } from './ChannelChip'
 
 // Weeks start on Monday, like the events calendar
 moment.locale('en-GB', { week: { dow: 1, doy: 1 } })
 const localizer = momentLocalizer(moment)
 
-type Entry = { title: string; start: Date; end: Date; postId: string; status: PostStatus; done: boolean }
-
-const SHORT = { telegram: 'TG', discord: 'DC', instagram: 'IG' } as const
+type Entry = {
+  title: string
+  start: Date
+  end: Date
+  postId: string
+  status: PostStatus
+  platform: Platform | 'website'
+  done: boolean
+}
 
 // Drafts and posts awaiting approval are shown, but clearly not scheduled
 const PREFIX: Partial<Record<PostStatus, string>> = { draft: 'DRAFT · ', awaiting_approval: '⏳ ' }
 
-const entryStyle = ({ status, done }: Entry): CSSProperties => {
+// In the platform's colour: filled when approved, outlined when not
+const entryStyle = ({ status, done, platform }: Entry): CSSProperties => {
+  const { color } = PLATFORM_STYLE[platform]
   if (status === 'draft') {
-    return { backgroundColor: 'transparent', border: '2px dashed #AAABAD', color: '#AAABAD', fontStyle: 'italic' }
+    return { backgroundColor: '#fff', border: `2px dashed ${color}`, color, fontStyle: 'italic' }
   }
   if (status === 'awaiting_approval') {
-    return { backgroundColor: 'transparent', border: '2px solid #facc15', color: '#facc15' }
+    return { backgroundColor: '#fff', border: `2px solid ${color}`, color }
   }
-  return { opacity: done ? 0.5 : 1 }
+  return { backgroundColor: color, border: `2px solid ${color}`, color: '#fff', opacity: done ? 0.5 : 1 }
+}
+
+const EntryView = ({ event }: { event: Entry }) => {
+  const { Icon } = PLATFORM_STYLE[event.platform]
+  return (
+    <span className="flex items-center gap-1 min-w-0">
+      <Icon className="shrink-0" />
+      <span className="truncate">{event.title}</span>
+    </span>
+  )
 }
 
 // When the website change runs: its own time, or the lead time before the first message
@@ -45,23 +63,23 @@ const toEntries = (posts: Post[], channels: Channel[], leadMinutes: number): Ent
     .filter((p) => p.status !== 'cancelled')
     .flatMap((post) => {
       const name = `${PREFIX[post.status] ?? ''}${post.title || `Post #${post.id}`}`
-      const entry = (title: string, start: Date, done: boolean): Entry => ({
+      const entry = (title: string, platform: Entry['platform'], start: Date, done: boolean): Entry => ({
         title,
         start,
         end: new Date(start.getTime() + 30 * 60_000),
         postId: post.id,
         status: post.status,
+        platform,
         done,
       })
       const entries: Entry[] = post.targets.flatMap((t) => {
         const time = t.sendAt ?? post.sendAt
         const channel = channels.find((c) => c.id === t.channelId)
-        if (!time || t.status === 'cancelled') return []
-        const label = channel ? `${SHORT[channel.platform]} ${channel.name}` : '?'
-        return [entry(`${label}: ${name}`, new Date(time), t.status === 'sent')]
+        if (!time || !channel || t.status === 'cancelled') return []
+        return [entry(`${channel.name}: ${name}`, channel.platform, new Date(time), t.status === 'sent')]
       })
       const run = websiteRunAt(post, leadMinutes)
-      if (run) entries.push(entry(`🌐 ${name}`, run, post.websiteChange?.status === 'done'))
+      if (run) entries.push(entry(name, 'website', run, post.websiteChange?.status === 'done'))
       return entries
     })
 
@@ -73,14 +91,22 @@ const PostCalendar = ({ posts, channels, leadMinutes, onOpen }: Props) => {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-4 text-sm">
-        <span className="px-2 rounded-sm bg-red">Approved</span>
-        <span className="px-2 rounded-sm border-2 border-yellow-400 text-yellow-400">⏳ Awaiting approval</span>
-        <span className="px-2 rounded-sm border-2 border-dashed border-lightgray text-lightgray italic">
+        {(['telegram', 'instagram', 'discord', 'website'] as const).map((platform) => {
+          const { color, Icon } = PLATFORM_STYLE[platform]
+          return (
+            <span key={platform} className="flex items-center gap-1 capitalize" style={{ color }}>
+              <Icon /> {platform}
+            </span>
+          )
+        })}
+        <span className="px-2 rounded-sm bg-gray-500 text-white">Approved</span>
+        <span className="px-2 rounded-sm border-2 border-gray-500 bg-white">⏳ Awaiting approval</span>
+        <span className="px-2 rounded-sm border-2 border-dashed border-gray-500 bg-white italic">
           DRAFT · not scheduled
         </span>
-        <span className="px-2 rounded-sm bg-red opacity-50">Sent</span>
+        <span className="px-2 rounded-sm bg-gray-500 text-white opacity-50">Sent</span>
       </div>
-      <div className={`${styles.calendarWrapper} h-[700px] text-base`}>
+      <div className="h-[700px] text-base bg-white">
         <BigCalendar
           localizer={localizer}
           events={toEntries(posts, channels, leadMinutes)}
@@ -91,6 +117,7 @@ const PostCalendar = ({ posts, channels, leadMinutes, onOpen }: Props) => {
           views={['month', 'week', 'agenda']}
           onSelectEvent={(e: Entry) => onOpen(e.postId)}
           eventPropGetter={(e: Entry) => ({ style: entryStyle(e) })}
+          components={{ event: EntryView }}
         />
       </div>
     </div>

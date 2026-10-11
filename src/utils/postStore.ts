@@ -607,17 +607,15 @@ export const getPostHistory = async (postId: string): Promise<PostHistoryEntry[]
     version: number
     action: string
     actor: string
-    comment: string | null
     created_at: Date
   }>(
-    'SELECT version, action, actor, comment, created_at FROM post_events WHERE post_id = $1 ORDER BY id',
+    'SELECT version, action, actor, created_at FROM post_events WHERE post_id = $1 ORDER BY id',
     [postId]
   )
   return result.rows.map((r) => ({
     version: r.version,
     action: r.action,
     actor: r.actor,
-    comment: r.comment,
     createdAt: r.created_at.toISOString(),
   }))
 }
@@ -627,23 +625,14 @@ export const addPostEvent = async (
   version: number,
   action: string,
   actor: string,
-  comment?: string | null,
   client: PoolClient | typeof pool = pool
 ) => {
-  await client.query(
-    'INSERT INTO post_events (post_id, version, action, actor, comment) VALUES ($1, $2, $3, $4, $5)',
-    [postId, version, action, actor, comment ?? null]
-  )
-}
-
-// Saves a reject reason given later (a reply to the bot's "reason?" message)
-export const setLatestRejectComment = async (postId: string, comment: string) => {
-  await pool.query(
-    `UPDATE post_events SET comment = $2 WHERE id = (
-       SELECT id FROM post_events WHERE post_id = $1 AND action = 'rejected' ORDER BY id DESC LIMIT 1
-     )`,
-    [postId, comment]
-  )
+  await client.query('INSERT INTO post_events (post_id, version, action, actor) VALUES ($1, $2, $3, $4)', [
+    postId,
+    version,
+    action,
+    actor,
+  ])
 }
 
 // Input checks shared by the admin API and the MCP tools
@@ -1041,7 +1030,7 @@ export const createPost = async (input: PostInput, actor: Actor): Promise<Post> 
     await writeImages(client, postId, data.images ?? [])
     await writeTargets(client, postId, data.targets ?? [], [])
     await writeWebsiteChange(client, postId, data.websiteChange, null)
-    await addPostEvent(postId, 1, 'created', actor, null, client)
+    await addPostEvent(postId, 1, 'created', actor, client)
     return postId
   })
   return getPostOrThrow(id)
@@ -1098,7 +1087,7 @@ export const updatePost = async (
     if (data.images) await writeImages(client, id, data.images)
     if (data.targets) await writeTargets(client, id, data.targets, existing.targets)
     await writeWebsiteChange(client, id, data.websiteChange, existing.websiteChange)
-    await addPostEvent(id, existing.version + 1, 'edited', actor, null, client)
+    await addPostEvent(id, existing.version + 1, 'edited', actor, client)
   })
   return { post: await getPostOrThrow(id), previousStatus: existing.status }
 }
@@ -1167,35 +1156,41 @@ export const markApproved = async (
         data.eventSlug ?? null,
       ]
     )
-    await addPostEvent(post.id, version, 'approved', actor, null, client)
+    await addPostEvent(post.id, version, 'approved', actor, client)
   })
 }
 
-export const markRejected = async (post: Post, version: number, actor: Actor, comment?: string) => {
+export const markRejected = async (post: Post, version: number, actor: Actor) => {
   const result = await pool.query(
     `UPDATE posts SET status = 'draft', updated_at = now()
      WHERE id = $1 AND version = $2 AND status = 'awaiting_approval'`,
     [post.id, version]
   )
   if (!result.rowCount) throw outOfDate()
-  await addPostEvent(post.id, version, 'rejected', actor, comment || null)
+  await addPostEvent(post.id, version, 'rejected', actor)
 }
 
-export const markCancelled = async (post: Post, actor: Actor) => {
-  await withTransaction(async (client) => {
-    await client.query(`UPDATE posts SET status = 'cancelled', updated_at = now() WHERE id = $1`, [
-      post.id,
-    ])
-    await client.query(
-      `UPDATE post_targets SET status = 'cancelled' WHERE post_id = $1 AND status IN ('pending', 'held', 'failed')`,
-      [post.id]
-    )
-    await client.query(
-      `UPDATE post_website_changes SET status = 'cancelled' WHERE post_id = $1 AND status IN ('pending', 'failed')`,
-      [post.id]
-    )
-    await addPostEvent(post.id, post.version, 'cancelled', actor, null, client)
-  })
+// Approved or awaiting approval back to draft, so nothing more is sent until it is approved again
+export const markUnscheduled = async (post: Post, actor: Actor) => {
+  const result = await pool.query(
+    `UPDATE posts SET status = 'draft', updated_at = now()
+     WHERE id = $1 AND status IN ('scheduled', 'awaiting_approval')`,
+    [post.id]
+  )
+  if (!result.rowCount) throw new AgentError(409, 'The post is not approved or awaiting approval')
+  await addPostEvent(post.id, post.version, 'back to draft', actor)
+}
+
+// Deletes the post with its messages, website change and history (cascades).
+// Not while something is being sent, so the scheduler doesn't lose track of it.
+export const removePost = async (post: Post) => {
+  const result = await pool.query(
+    `DELETE FROM posts p WHERE p.id = $1
+       AND NOT EXISTS (SELECT 1 FROM post_targets t WHERE t.post_id = p.id AND t.status = 'sending')
+       AND NOT EXISTS (SELECT 1 FROM post_website_changes w WHERE w.post_id = p.id AND w.status = 'sending')`,
+    [post.id]
+  )
+  if (!result.rowCount) throw new AgentError(409, 'The post is being sent right now, try again in a minute')
 }
 
 // Held messages: run the website change again, or send without it. Messages
@@ -1235,7 +1230,7 @@ export const releaseHeld = async (
        WHERE p.id = t.post_id AND t.post_id = $1 AND t.status = 'held'`,
       [post.id, time]
     )
-    await addPostEvent(post.id, version, mode === 'retry' ? 'website change retried' : 'sent without website change', actor, null, client)
+    await addPostEvent(post.id, version, mode === 'retry' ? 'website change retried' : 'sent without website change', actor, client)
   })
 }
 
@@ -1486,7 +1481,7 @@ export const claimMissedApprovals = async (leadMinutes: number): Promise<string[
 
 // Review topic messages
 
-export type PreviewMessageKind = 'summary' | 'notice' | 'reason_prompt'
+export type PreviewMessageKind = 'summary' | 'notice'
 
 export const savePreviewMessage = async (msg: {
   postId: string
@@ -1495,12 +1490,11 @@ export const savePreviewMessage = async (msg: {
   messageId: number
   kind: PreviewMessageKind
   text: string
-  actor?: string
 }) => {
   await pool.query(
-    `INSERT INTO tg_preview_messages (post_id, version, chat_id, message_id, kind, text, actor)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [msg.postId, msg.version, msg.chatId, msg.messageId, msg.kind, msg.text, msg.actor ?? null]
+    `INSERT INTO tg_preview_messages (post_id, version, chat_id, message_id, kind, text)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [msg.postId, msg.version, msg.chatId, msg.messageId, msg.kind, msg.text]
   )
 }
 
@@ -1511,7 +1505,6 @@ export type PreviewMessage = {
   messageId: number
   kind: PreviewMessageKind
   text: string
-  actor: string | null
 }
 
 const rowToPreviewMessage = (r: {
@@ -1521,7 +1514,6 @@ const rowToPreviewMessage = (r: {
   message_id: string
   kind: PreviewMessageKind
   text: string
-  actor: string | null
 }): PreviewMessage => ({
   postId: String(r.post_id),
   version: r.version,
@@ -1529,13 +1521,12 @@ const rowToPreviewMessage = (r: {
   messageId: Number(r.message_id),
   kind: r.kind,
   text: r.text,
-  actor: r.actor,
 })
 
 // Messages with buttons of a post that are still open: summaries and notices
 export const getOpenPreviewMessages = async (postId: string): Promise<PreviewMessage[]> => {
   const result = await pool.query(
-    `SELECT post_id, version, chat_id, message_id, kind, text, actor FROM tg_preview_messages
+    `SELECT post_id, version, chat_id, message_id, kind, text FROM tg_preview_messages
      WHERE post_id = $1 AND kind IN ('summary', 'notice') ORDER BY id`,
     [postId]
   )
@@ -1547,18 +1538,6 @@ export const deletePreviewMessage = async (chatId: string, messageId: number) =>
     chatId,
     messageId,
   ])
-}
-
-export const findPreviewMessage = async (
-  chatId: string,
-  messageId: number
-): Promise<PreviewMessage | null> => {
-  const result = await pool.query(
-    `SELECT post_id, version, chat_id, message_id, kind, text, actor FROM tg_preview_messages
-     WHERE chat_id = $1 AND message_id = $2`,
-    [chatId, messageId]
-  )
-  return result.rows[0] ? rowToPreviewMessage(result.rows[0]) : null
 }
 
 // Uploaded images

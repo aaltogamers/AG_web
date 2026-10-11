@@ -81,7 +81,7 @@ export const sendTelegramMessage = (
   chatId: string,
   threadId: string | undefined,
   html: string,
-  options: { buttons?: InlineButton[][]; forceReply?: boolean; replyTo?: number } = {}
+  options: { buttons?: InlineButton[][]; replyTo?: number } = {}
 ) =>
   tgCall<TgMessage>('sendMessage', {
     ...target(chatId, threadId),
@@ -89,7 +89,6 @@ export const sendTelegramMessage = (
     parse_mode: 'HTML',
     link_preview_options: { is_disabled: true },
     ...(options.buttons && { reply_markup: { inline_keyboard: options.buttons } }),
-    ...(options.forceReply && { reply_markup: { force_reply: true, selective: true } }),
     ...(options.replyTo && { reply_parameters: { message_id: options.replyTo } }),
   })
 

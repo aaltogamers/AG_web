@@ -150,6 +150,8 @@ export const resolveEvent = (
     data.description = resolveText(event.description, post, slug, signupSessions)
   }
   if (event.body !== undefined) body = resolveText(event.body, post, slug, signupSessions)
+  // No long description: the short one
+  if (!body && (change.kind === 'create_event' || event.body !== undefined)) body = String(data.description ?? '')
   return { data, body, upload }
 }
 

@@ -27,6 +27,13 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
       .catch(() => undefined)
   }, [section])
 
+  // The posts pages are in light mode
+  useEffect(() => {
+    if (section !== 'posts') return
+    document.body.classList.add('posts-light')
+    return () => document.body.classList.remove('posts-light')
+  }, [section])
+
   return (
     <div>
       <div className="flex flex-wrap gap-8 justify-center mb-8 text-4xl">
@@ -36,7 +43,7 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
         <Link href="/admin/posts" className={tabClass(section === 'posts')}>
           Posts
           {awaiting > 0 && (
-            <span className="ml-2 align-middle bg-red rounded-full px-2 text-base">{awaiting}</span>
+            <span className="ml-2 align-middle bg-red text-white rounded-full px-2 text-base">{awaiting}</span>
           )}
         </Link>
         <Link href="/admin/bets" className={tabClass(section === 'bets')}>

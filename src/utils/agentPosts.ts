@@ -261,7 +261,6 @@ export const describePost = async (
       action: h.action,
       by: h.actor,
       at: formatAgentTime(h.createdAt),
-      ...(h.comment && { comment: h.comment }),
     })),
   }),
 })

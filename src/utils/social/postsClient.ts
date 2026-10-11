@@ -46,8 +46,7 @@ export const previewPost = (id: string | null, post: PostInput) =>
 export type PostAction =
   | 'request-approval'
   | 'approve'
-  | 'reject'
-  | 'cancel'
+  | 'unschedule'
   | 'withdraw'
   | 'retry'
   | 'send-anyway'
@@ -55,8 +54,10 @@ export type PostAction =
 export const postAction = (
   id: string,
   action: PostAction,
-  body: { version?: number; comment?: string; newTime?: string | null } = {}
+  body: { version?: number; newTime?: string | null } = {}
 ) => request<{ post: Post; note?: string }>(`/api/posts/${id}/${action}`, 'POST', body)
+
+export const deletePost = (id: string) => request<object>(`/api/posts/${id}/delete`, 'POST', {})
 
 export const uploadImage = async (file: File) => {
   const data = await new Promise<string>((resolve, reject) => {

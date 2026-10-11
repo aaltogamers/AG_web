@@ -429,3 +429,53 @@
     animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
 }
+
+/* Light mode of the posts admin pages (AdminDashboard sets the class). Not in a
+   layer, so it overrides the colour utilities. */
+html:has(body.posts-light),
+body.posts-light {
+  background-color: #f6f6f8;
+  color: #1c1d26;
+  font-weight: 300;
+}
+body.posts-light nav {
+  border-bottom: 1px solid #e2e3e8;
+}
+body.posts-light .bg-darkgray {
+  background-color: #ffffff;
+}
+body.posts-light .bg-black {
+  background-color: #eceef1;
+}
+body.posts-light .text-lightgray {
+  color: #6b6c75;
+}
+body.posts-light .border-lightgray {
+  border-color: #cfd0d6;
+}
+body.posts-light .text-yellow-400 {
+  color: #b45309;
+}
+body.posts-light .border-yellow-400 {
+  border-color: #f59e0b;
+}
+body.posts-light .text-green-400 {
+  color: #15803d;
+}
+body.posts-light .borderbutton {
+  color: #1c1d26;
+  background-color: #ffffff;
+}
+body.posts-light .borderbutton:disabled,
+body.posts-light .mainbutton:disabled {
+  opacity: 0.5;
+}
+
+@layer base {
+  /* Utilities still win, e.g. EditableInput's bottom border */
+  body.posts-light input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  body.posts-light select,
+  body.posts-light textarea {
+    border: 1px solid #cfd0d6;
+  }
+}

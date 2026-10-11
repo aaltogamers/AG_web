@@ -2,17 +2,17 @@ import { AgentError } from '../../../../utils/agentApi'
 import { parseJsonBody } from '../../../../utils/apiUtils'
 import {
   approvePost,
-  cancelPost,
-  rejectPost,
+  deletePost,
   releaseHeldPost,
   requestApproval,
+  unschedulePost,
   withdrawApproval,
 } from '../../../../utils/social/actions'
 import { adminRoute, routeParam } from '../../../../utils/social/adminApi'
 
-type Body = { version?: number; comment?: string; newTime?: string | null }
+type Body = { version?: number; newTime?: string | null }
 
-// Admin: request-approval, approve, reject, cancel, withdraw, retry, send-anyway
+// Admin: request-approval, approve, unschedule, delete, withdraw, retry, send-anyway
 export default adminRoute({
   POST: async (req) => {
     const id = routeParam(req, 'id')
@@ -27,10 +27,11 @@ export default adminRoute({
         return requestApproval(id, 'admin')
       case 'approve':
         return { post: await approvePost(id, needsVersion(), 'admin') }
-      case 'reject':
-        return { post: await rejectPost(id, needsVersion(), 'admin', body.comment?.trim()) }
-      case 'cancel':
-        return { post: await cancelPost(id, 'admin') }
+      case 'unschedule':
+        return { post: await unschedulePost(id, 'admin') }
+      case 'delete':
+        await deletePost(id, 'admin')
+        return {}
       case 'withdraw':
         return { post: await withdrawApproval(id, 'admin') }
       case 'retry':

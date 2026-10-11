@@ -4,21 +4,14 @@ import { AgentError } from '../../../utils/agentApi'
 import { getHeader } from '../../../utils/apiUtils'
 import { ensureMigrated } from '../../../utils/db_pg'
 import {
-  findPreviewMessage,
   forgetKnownChat,
   getPost,
   getSettings,
   isApprover,
   saveSettings,
-  savePreviewMessage,
-  setLatestRejectComment,
   upsertKnownChat,
 } from '../../../utils/postStore'
-import {
-  approvePost,
-  rejectPost,
-  releaseHeldPost,
-} from '../../../utils/social/actions'
+import { approvePost, rejectPost, releaseHeldPost } from '../../../utils/social/actions'
 import {
   answerCallback,
   escapeTelegramHtml as esc,
@@ -26,7 +19,7 @@ import {
   tgCall,
 } from '../../../utils/social/telegram'
 
-// Posts bot webhook: review buttons, reject reasons, /register, /review_here and
+// Posts bot webhook: review buttons, /register, /review_here and
 // the chats the bot is added to
 
 type TgUser = { id: number; first_name: string; last_name?: string; username?: string }
@@ -80,26 +73,7 @@ const handleCallback = async (query: NonNullable<Update['callback_query']>) => {
     }
     if (action === 'reject') {
       await rejectPost(postId, version, actor)
-      await answerCallback(query.id, 'Rejected')
-      const chat = query.message?.chat
-      if (chat) {
-        const prompt = await sendTelegramMessage(
-          String(chat.id),
-          query.message?.message_thread_id ? String(query.message.message_thread_id) : undefined,
-          `❌ Post #${post.id} rejected. Reason? <b>Reply to this message</b> to tell the author (optional).`,
-          { forceReply: true }
-        )
-        await savePreviewMessage({
-          postId,
-          version,
-          chatId: String(chat.id),
-          messageId: prompt.message_id,
-          kind: 'reason_prompt',
-          text: '',
-          actor,
-        })
-      }
-      return
+      return answerCallback(query.id, 'Rejected')
     }
     await releaseHeldPost(postId, version, actor, action === 'retry' ? 'retry' : 'send_anyway')
     return answerCallback(query.id, action === 'retry' ? 'Retrying' : 'Sending without the website change')
@@ -154,15 +128,6 @@ const handleCommand = async (msg: TgMessage, command: string, isChannelPost: boo
 }
 
 const handleMessage = async (msg: TgMessage, isChannelPost: boolean) => {
-  // A reply to "Reason?" after a rejection
-  if (msg.reply_to_message && msg.text) {
-    const prompt = await findPreviewMessage(String(msg.chat.id), msg.reply_to_message.message_id)
-    if (prompt?.kind === 'reason_prompt') {
-      if (prompt.actor !== (msg.from && actorOf(msg.from))) return
-      await setLatestRejectComment(prompt.postId, msg.text.trim())
-      return reply(msg, '📝 Saved as the reason; the author sees it with the post.')
-    }
-  }
   const command = /^\/(register|review_here)(@\w+)?(\s|$)/.exec(msg.text ?? '')?.[1]
   if (command) return handleCommand(msg, command, isChannelPost)
 }

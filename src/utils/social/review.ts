@@ -7,6 +7,7 @@ import {
   describeActor,
   getOpenPreviewMessages,
   getSettings,
+  type PreviewMessage,
   savePreviewMessage,
   websiteRunAt,
 } from '../postStore'
@@ -58,25 +59,14 @@ const fit = (header: string, html: string) => {
 }
 
 // A channel's text as Telegram can show it: Telegram channels exactly, the
-// others approximately
-const channelMessage = (post: Post, t: RenderedText) => {
-  const header =
-    `🔍 <b>Review → ${SHORT[t.platform]}: ${esc(t.channelName)}</b> · ${formatTime(t.sendAt)} · v${post.version}\n` +
-    (t.platform !== 'telegram' ? `<i>Approximation; ${t.platform} formats it differently</i>\n` : '') +
-    [...t.errors.map((e) => `❗ ${esc(e)}`), ...t.warnings.map((w) => `⚠️ ${esc(w)}`)]
-      .map((line) => `${line}\n`)
-      .join('') +
-    '—————\n'
-  const body =
-    t.platform === 'telegram'
-      ? t.text
-      : t.platform === 'discord'
-        ? toTelegramHtml(t.text)
-        : esc(t.text)
-  return fit(header, body)
-}
+// others approximately. Only the text; the summary says where and when.
+const channelMessage = (t: RenderedText) =>
+  fit(
+    '',
+    t.platform === 'telegram' ? t.text : t.platform === 'discord' ? toTelegramHtml(t.text) : esc(t.text)
+  )
 
-const websiteMessage = (post: Post, preview: PostPreview) => {
+const websiteMessage = (preview: PostPreview) => {
   const w = preview.website
   if (!w) return null
   const what =
@@ -85,7 +75,7 @@ const websiteMessage = (post: Post, preview: PostPreview) => {
       : `change the event /events/${w.eventSlug}`
   const cut = (s: string) => (s.length > 300 ? `${s.slice(0, 300)}…` : s)
   const lines = [
-    `🌐 <b>Website</b> · ${formatTime(w.runAt)} · v${post.version}: ${esc(what)}`,
+    `🌐 <b>Website</b> · ${formatTime(w.runAt)}: ${esc(what)}`,
     ...w.diff.map((d) =>
       w.kind === 'create_event'
         ? `<b>${esc(d.field)}</b>: ${esc(cut(d.to))}`
@@ -111,7 +101,7 @@ const summaryText = (
   const errors = previewErrors(preview)
   const runAt = websiteRunAt(post, settings.website.leadMinutes)
   return [
-    `📝 <b>Post #${post.id}: ${esc(post.title || 'Untitled')}</b> · v${post.version}`,
+    `📝 <b>Post #${post.id}: ${esc(post.title || 'Untitled')}</b>`,
     ...(editedAfterApproval ? ['⚠️ <b>Edited after approval</b>; it is off the schedule until approved again'] : []),
     `Approval requested by ${esc(describeActor(requestedBy, settings))}`,
     ...preview.texts.map((t) => `• ${SHORT[t.platform]}: ${esc(t.channelName)} · ${formatTime(t.sendAt)}`),
@@ -125,7 +115,14 @@ const summaryText = (
 // Marks older review messages of the post as out of date, without buttons
 export const closeOpenMessages = async (postId: string, note: string, onlyVersion?: number) => {
   const open = await getOpenPreviewMessages(postId)
-  for (const msg of open.filter((m) => onlyVersion === undefined || m.version === onlyVersion)) {
+  await closeMessages(
+    open.filter((m) => onlyVersion === undefined || m.version === onlyVersion),
+    note
+  )
+}
+
+export const closeMessages = async (messages: PreviewMessage[], note: string) => {
+  for (const msg of messages) {
     await editTelegramMessage(msg.chatId, msg.messageId, `${msg.text}\n\n${note}`).catch((err) =>
       console.warn('[posts-review] editing a review message failed:', err)
     )
@@ -141,17 +138,18 @@ export const sendReview = async (
   const settings = await getSettings()
   const chat = reviewTarget(settings)
   if (!chat) return false
-  await closeOpenMessages(post.id, `<i>Out of date: replaced by v${post.version}</i>`)
+  await closeOpenMessages(post.id, '<i>Out of date: replaced by a newer version</i>')
 
   const preview = await buildPreview(post)
   if (post.images.length) {
     const images = await Promise.all(post.images.map(loadImage)).catch(() => [])
     if (images.length) await sendReviewImages(chat.chatId, chat.threadId, images)
   }
-  for (const text of preview.texts) {
-    await sendTelegramMessage(chat.chatId, chat.threadId, channelMessage(post, text))
+  // Channels with the same text get it once
+  for (const text of new Set(preview.texts.map(channelMessage))) {
+    await sendTelegramMessage(chat.chatId, chat.threadId, text)
   }
-  const website = websiteMessage(post, preview)
+  const website = websiteMessage(preview)
   if (website) await sendTelegramMessage(chat.chatId, chat.threadId, website)
 
   const text = summaryText(post, preview, settings, requestedBy, editedAfterApproval)
@@ -208,7 +206,7 @@ export const sendNotice = async (
     console.warn(`[posts-review] no review topic set up; post #${post.id}: ${html}`)
     return
   }
-  const text = `📝 <b>Post #${post.id}: ${esc(post.title || 'Untitled')}</b> · v${post.version}\n${html}`
+  const text = `📝 <b>Post #${post.id}: ${esc(post.title || 'Untitled')}</b>\n${html}`
   const buttons: InlineButton[][] = [
     ...(heldButtons
       ? [

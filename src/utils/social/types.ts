@@ -135,7 +135,6 @@ export type PostHistoryEntry = {
   version: number
   action: string
   actor: string
-  comment: string | null
   createdAt: string
 }
 

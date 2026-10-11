@@ -6,12 +6,14 @@ import {
   type Actor,
   createPost,
   describeActor,
+  getOpenPreviewMessages,
   getPostOrThrow,
   getSettings,
   markApproved,
-  markCancelled,
   markRejected,
+  markUnscheduled,
   releaseHeld,
+  removePost,
   setAwaitingApproval,
   setWebsiteChangeSlug,
   updatePost,
@@ -20,7 +22,7 @@ import {
 } from '../postStore'
 import { buildPreview, previewErrors } from './preview'
 import { escapeTelegramHtml as esc } from './telegram'
-import { announceDecision, approvalNote, closeOpenMessages, sendReview } from './review'
+import { announceDecision, approvalNote, closeMessages, closeOpenMessages, sendReview } from './review'
 import type { Post, PostInput } from './types'
 import { chooseNewEventSlug, committedByPost, snapshotBase } from './website'
 
@@ -85,7 +87,7 @@ export const editPost = async (
     })
     note = `${previousStatus === 'scheduled' ? 'The post was approved, so the edit took it off the schedule until it is approved again. ' : ''}${reviewNote}`
   } else if (wasInReview) {
-    await closeOpenMessages(post.id, `<i>✏️ Edited on the website (v${post.version})</i>`).catch(() => undefined)
+    await closeOpenMessages(post.id, '<i>✏️ Edited on the website</i>').catch(() => undefined)
   }
   return { post, note }
 }
@@ -131,24 +133,34 @@ export const approvePost = async (id: string, version: number, actor: Actor) => 
   return approved
 }
 
-export const rejectPost = async (id: string, version: number, actor: Actor, comment?: string) => {
+export const rejectPost = async (id: string, version: number, actor: Actor) => {
   if (actor === 'agent') throw new AgentError(403, 'Only a human can reject posts')
   const post = await getPostOrThrow(id)
-  await markRejected(post, version, actor, comment)
+  await markRejected(post, version, actor)
   const settings = await getSettings()
-  await announceDecision(post, version, `❌ <b>Rejected by ${esc(describeActor(actor, settings))}</b>${comment ? `: ${esc(comment)}` : ''}`)
+  await announceDecision(post, version, `❌ <b>Rejected by ${esc(describeActor(actor, settings))}</b>`)
   return getPostOrThrow(id)
 }
 
-export const cancelPost = async (id: string, actor: Actor) => {
-  if (actor === 'agent') throw new AgentError(403, 'Only a human can cancel posts')
+// Takes an approved post (or one awaiting approval) back to draft, so nothing more is sent
+export const unschedulePost = async (id: string, actor: Actor) => {
+  if (actor === 'agent') throw new AgentError(403, 'Only a human can do this')
   const post = await getPostOrThrow(id)
-  if (post.status === 'done' || post.status === 'cancelled') {
-    throw new AgentError(409, `The post is already ${post.status}`)
-  }
-  await markCancelled(post, actor)
-  await closeOpenMessages(post.id, `🚫 <b>Cancelled by ${esc(describeActor(actor, await getSettings()))}</b>`).catch(() => undefined)
+  await markUnscheduled(post, actor)
+  await closeOpenMessages(post.id, `⏸ <b>Back to draft by ${esc(describeActor(actor, await getSettings()))}</b>`).catch(() => undefined)
   return getPostOrThrow(id)
+}
+
+// Deletes the post; unsent messages and website changes are not sent
+export const deletePost = async (id: string, actor: Actor) => {
+  if (actor === 'agent') throw new AgentError(403, 'Only a human can delete posts')
+  const post = await getPostOrThrow(id)
+  const open = await getOpenPreviewMessages(post.id)
+  await removePost(post)
+  // Their rows went with the post, so edit the review messages fetched before
+  await closeMessages(open, `🗑 <b>Deleted by ${esc(describeActor(actor, await getSettings()))}</b>`).catch(
+    () => undefined
+  )
 }
 
 // After a failed website change: run it again (overwriting conflicting edits,

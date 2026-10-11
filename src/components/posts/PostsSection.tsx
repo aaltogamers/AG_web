@@ -1,12 +1,39 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { FaCalendarAlt, FaCog, FaList } from 'react-icons/fa'
 import type { AGEvent } from '../../types/types'
 import { fetchPosts, fetchSettings } from '../../utils/social/postsClient'
 import { POST_STATUS_LABELS, type Channel, type Post, type PostStatus } from '../../utils/social/types'
 import PostCalendar from './PostCalendar'
 import PostEditor from './PostEditor'
 import PostList, { nextTime } from './PostList'
+
+const ViewSwitch = ({ view, onChange }: { view: 'list' | 'calendar'; onChange: (view: 'list' | 'calendar') => void }) => {
+  const isCalendar = view === 'calendar'
+  return (
+    <label className="flex items-center gap-2 text-base cursor-pointer select-none">
+      <span className={`flex items-center gap-1 ${isCalendar ? 'text-lightgray' : ''}`}>
+        <FaList /> List
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={isCalendar}
+        aria-label="Calendar view"
+        onClick={() => onChange(isCalendar ? 'list' : 'calendar')}
+        className={`relative w-12 h-6 rounded-full transition-colors ${isCalendar ? 'bg-red' : 'bg-gray-300'}`}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isCalendar ? 'translate-x-6' : ''}`}
+        />
+      </button>
+      <span className={`flex items-center gap-1 ${isCalendar ? '' : 'text-lightgray'}`}>
+        <FaCalendarAlt /> Calendar
+      </span>
+    </label>
+  )
+}
 
 const FILTERS: { label: string; statuses: PostStatus[] }[] = [
   { label: 'Awaiting approval', statuses: ['awaiting_approval'] },
@@ -85,16 +112,16 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap gap-4 items-center justify-between">
         <button type="button" className="mainbutton" onClick={() => openFromList('new')}>
           New post
         </button>
-        <button type="button" className="borderbutton" onClick={() => setView(view === 'list' ? 'calendar' : 'list')}>
-          {view === 'list' ? 'Calendar view' : 'List view'}
-        </button>
-        <Link href="/admin/posts/settings" className="borderbutton">
-          Settings and channels
-        </Link>
+        <div className="flex items-center gap-6">
+          <ViewSwitch view={view} onChange={setView} />
+          <Link href="/admin/posts/settings" aria-label="Settings and channels" title="Settings and channels">
+            <FaCog size={26} />
+          </Link>
+        </div>
       </div>
       {error && <div className="text-red">{error}</div>}
       {view === 'list' ? (
@@ -105,10 +132,10 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
                 key={f.label}
                 type="button"
                 onClick={() => setFilter(i)}
-                className={`px-3 py-1 rounded-md border text-base ${i === filter ? 'border-red' : 'border-lightgray'}`}
+                className={`px-3 py-1 rounded-md border text-base bg-white ${i === filter ? 'border-red' : 'border-lightgray'}`}
               >
                 {f.label}
-                {i === 0 && awaiting > 0 && <span className="ml-2 bg-red rounded-full px-2 text-sm">{awaiting}</span>}
+                {i === 0 && awaiting > 0 && <span className="ml-2 bg-red text-white rounded-full px-2 text-sm">{awaiting}</span>}
               </button>
             ))}
           </div>

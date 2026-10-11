@@ -5,6 +5,7 @@ import type { AGEvent } from '../../types/types'
 import { eventMoment } from '../../utils/eventUtils'
 import {
   createPost,
+  deletePost,
   fetchPost,
   fetchSettings,
   postAction,
@@ -47,7 +48,7 @@ type Props = {
   initialMessage?: Message | null
 }
 
-const inputClass = 'p-2 rounded-md bg-white text-black w-full'
+const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
 
 const actorLabel = (actor: string) =>
   actor === 'admin' ? 'admin' : actor === 'agent' ? 'AI agent' : actor.startsWith('tg:') ? `Telegram ${actor.slice(3)}` : actor
@@ -63,6 +64,8 @@ const TARGET_STATUS_LABELS: Record<string, string> = {
 
 const UNSCHEDULE_CONFIRM =
   'This post is approved. Saving it as a draft takes it off the schedule, so nothing more is sent until it is approved again. Save anyway?'
+const DELETE_CONFIRM =
+  'Delete this post? Unsent messages and website changes are not sent, and the post and its history are gone for good.'
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col gap-3">
@@ -82,7 +85,6 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
   const [previewLoading, setPreviewLoading] = useState(false)
   const [message, setMessage] = useState<Message | null>(initialMessage)
   const [busy, setBusy] = useState(false)
-  const [rejectComment, setRejectComment] = useState('')
   const [newTime, setNewTime] = useState('')
 
   const load = useCallback(async () => {
@@ -143,41 +145,38 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
     }
   }
 
-  const save = (approve = false) =>
+  const save = () =>
     run(async () => {
       const input = draftToInput(draft)
       if (!postId) {
         const { post: created } = await createPost(input)
-        // The post exists now, so open it even if approving fails; saving again would make a copy
-        let saved: Message = { text: approve ? 'Saved and approved.' : 'Saved.' }
-        if (approve) {
-          try {
-            await postAction(created.id, 'approve', { version: created.version })
-          } catch (e) {
-            saved = { text: `Saved as a draft, but not approved: ${e instanceof Error ? e.message : e}`, isError: true }
-          }
-        }
-        onSaved(created.id, saved)
+        onSaved(created.id, { text: 'Saved.' })
         return
       }
       if (!post) throw new Error('The post has not loaded yet')
       // A failed save keeps the unsaved changes on screen (nothing was saved)
-      let saved: { post: Post; note?: string }
       try {
-        saved = await savePost(postId, post.version, input)
+        return await savePost(postId, post.version, input)
       } catch (e) {
         throw Object.assign(e instanceof Error ? e : new Error(String(e)), { keepDraft: true })
       }
-      if (!approve) return saved
-      try {
-        return { ...saved, post: await postAction(postId, 'approve', { version: saved.post.version }).then((r) => r.post) }
-      } catch (e) {
-        throw new Error(`Saved as a draft, but not approved: ${e instanceof Error ? e.message : e}`)
-      }
-    }, approve ? 'Saved and approved.' : 'Saved.')
+    }, 'Saved.')
 
-  const act = (action: PostAction, done: string, body: { comment?: string; newTime?: string | null } = {}) =>
+  const act = (action: PostAction, done: string, body: { newTime?: string | null } = {}) =>
     postId && post && run(() => postAction(postId, action, { version: post.version, ...body }), done)
+
+  const remove = async () => {
+    if (!postId || !window.confirm(DELETE_CONFIRM)) return
+    setBusy(true)
+    setMessage(null)
+    try {
+      await deletePost(postId)
+      onClose()
+    } catch (e) {
+      setMessage({ text: e instanceof Error ? e.message : String(e), isError: true })
+      setBusy(false)
+    }
+  }
 
   const status = post?.status ?? 'draft'
   const unschedulesOnSave = status === 'scheduled'
@@ -405,7 +404,6 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                   value={draft.websiteChange}
                   onChange={(websiteChange) => set({ websiteChange })}
                   events={events}
-                  postImages={draft.images}
                   preview={preview?.website ?? null}
                   leadMinutes={leadMinutes}
                 />
@@ -461,26 +459,27 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                 <div className="border-2 border-yellow-400 rounded-md p-3 text-base">
                   <div className="font-bold text-yellow-400">⚠️ This post is approved and scheduled</div>
                   Saving your changes takes it off the schedule: nothing more is sent until it is approved
-                  again. Use &quot;Save and approve&quot; to keep it scheduled.
+                  again.
                 </div>
               )}
+              {isDirty && editable && status !== 'done' && (
+                <div className="text-sm text-lightgray">Save the changes to approve the post.</div>
+              )}
               <div className="flex flex-wrap gap-3 text-base">
-                {editable && (
-                  <button type="button" className="borderbutton" disabled={busy || (!isDirty && !!postId)} onClick={() => (!unschedulesOnSave || window.confirm(UNSCHEDULE_CONFIRM)) && save(false)}>
+                {editable && isDirty && (
+                  <button type="button" className="borderbutton" disabled={busy} onClick={() => (!unschedulesOnSave || window.confirm(UNSCHEDULE_CONFIRM)) && save()}>
                     Save as draft
                   </button>
                 )}
-                {editable && status !== 'done' && (isDirty || status === 'draft' || status === 'awaiting_approval') && (
+                {postId && !isDirty && (status === 'draft' || status === 'awaiting_approval') && (
                   <button
                     type="button"
                     className="mainbutton"
                     disabled={busy || errorCount > 0}
                     title={errorCount ? 'Fix the problems in the preview first' : undefined}
-                    onClick={() =>
-                      isDirty || !postId ? save(true) : act('approve', 'Approved. It will be sent at the planned times.')
-                    }
+                    onClick={() => act('approve', 'Approved. It will be sent at the planned times.')}
                   >
-                    {isDirty || !postId ? 'Save and approve' : 'Approve'}
+                    Approve
                   </button>
                 )}
                 {postId && status === 'draft' && !isDirty && (
@@ -493,36 +492,23 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                     Request approval in Telegram
                   </button>
                 )}
-                {postId && status !== 'cancelled' && status !== 'done' && (
+                {postId && !isDirty && (status === 'scheduled' || status === 'awaiting_approval') && (
                   <button
                     type="button"
                     className="borderbutton"
                     disabled={busy}
-                    onClick={() => window.confirm('Cancel this post? Unsent messages and website changes are not sent.') && act('cancel', 'Cancelled.')}
+                    title="Takes it off the schedule, so nothing more is sent until it is approved again"
+                    onClick={() => act('unschedule', 'Back to draft; nothing more is sent until it is approved again.')}
                   >
-                    Cancel post
+                    Back to draft
+                  </button>
+                )}
+                {postId && (
+                  <button type="button" className="borderbutton hover:!text-red" disabled={busy} onClick={remove}>
+                    Delete post
                   </button>
                 )}
               </div>
-              {status === 'awaiting_approval' && !isDirty && (
-                <div className="flex flex-col gap-2 text-base">
-                  <textarea
-                    value={rejectComment}
-                    onChange={(e) => setRejectComment(e.target.value)}
-                    rows={2}
-                    placeholder="Reason for rejecting (optional, shown to the author)"
-                    className={inputClass}
-                  />
-                  <button
-                    type="button"
-                    className="borderbutton self-start"
-                    disabled={busy}
-                    onClick={() => act('reject', 'Rejected; back to draft.', { comment: rejectComment })}
-                  >
-                    Reject
-                  </button>
-                </div>
-              )}
               {hasHeld && status === 'scheduled' && !isDirty && (
                 <div className="flex flex-col gap-2 text-base border border-red rounded-md p-3">
                   <div className="text-red">
@@ -572,7 +558,6 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null }:
                   {history.map((h, i) => (
                     <li key={i}>
                       {moment(h.createdAt).format('D.M. HH:mm')} · v{h.version} · {h.action} by {actorLabel(h.actor)}
-                      {h.comment && <span className="text-yellow-400">: “{h.comment}”</span>}
                     </li>
                   ))}
                 </ul>

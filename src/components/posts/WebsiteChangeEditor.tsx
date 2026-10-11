@@ -4,7 +4,7 @@ import { FaTrash } from 'react-icons/fa'
 import type { AGEvent, SignupMode } from '../../types/types'
 import { EVENT_TIMEZONE, eventMoment } from '../../utils/eventUtils'
 import { getSignupEvent, listSignupEvents, type SignupEvent } from '../../utils/signupApi'
-import { imagePreviewUrl, type PostImage, type WebsiteChangePreview } from '../../utils/social/types'
+import type { WebsiteChangePreview } from '../../utils/social/types'
 import {
   emptyFormDraft,
   formToDraft,
@@ -27,33 +27,23 @@ type Props = {
   value: WebsiteChangeDraft
   onChange: (change: WebsiteChangeDraft) => void
   events: AGEvent[]
-  postImages: PostImage[]
   preview: WebsiteChangePreview | null
   leadMinutes: number
 }
 
-const inputClass = 'p-2 rounded-md bg-white text-black w-full'
+const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
 
-const FIELD_LABELS: Record<EventField, string> = {
+// The image and visibility aren't edited here: a new event gets the post's first
+// image (or the AG logo) and is shown everywhere, and a changed event keeps them
+type EditedField = Exclude<EventField, 'image' | 'visibleOnCalendar' | 'visibleOnEventsPage'>
+const FIELD_LABELS: Record<EditedField, string> = {
   name: 'Name',
   sessions: 'Times and places',
   signupMode: 'Sign-up',
-  image: 'Image',
-  visibleOnEventsPage: 'Shown on events page',
-  visibleOnCalendar: 'Shown on calendar',
   description: 'Short description',
   body: 'Long description',
 }
-const FIELDS: EventField[] = [
-  'name',
-  'sessions',
-  'signupMode',
-  'image',
-  'visibleOnEventsPage',
-  'visibleOnCalendar',
-  'description',
-  'body',
-]
+const FIELDS: EditedField[] = ['name', 'sessions', 'signupMode', 'description', 'body']
 
 const byNewest = (events: AGEvent[]) =>
   [...events].sort(
@@ -242,7 +232,7 @@ const FormSlot = ({
   )
 }
 
-const WebsiteChangeEditor = ({ value, onChange, events, postImages, preview, leadMinutes }: Props) => {
+const WebsiteChangeEditor = ({ value, onChange, events, preview, leadMinutes }: Props) => {
   const [copySources, setCopySources] = useState<SignupEvent[]>([])
   useEffect(() => {
     listSignupEvents().then(setCopySources)
@@ -291,7 +281,7 @@ const WebsiteChangeEditor = ({ value, onChange, events, postImages, preview, lea
   }
   const orphanForms = value.forms.filter((f) => !slots.some((s) => s.sessionId === f.sessionId))
 
-  const renderField = (field: EventField) => {
+  const renderField = (field: EditedField) => {
     const e = value.event
     switch (field) {
       case 'name':
@@ -310,49 +300,6 @@ const WebsiteChangeEditor = ({ value, onChange, events, postImages, preview, lea
             <option value="session">A separate sign-up for each session</option>
           </select>
         )
-      case 'image': {
-        const choice = e.image
-        const key = !choice ? 'none' : 'postImage' in choice ? `post:${choice.postImage}` : `site:${choice.sitePath}`
-        return (
-          <div className="flex flex-col gap-2">
-            <select
-              value={key}
-              onChange={(ev) => {
-                const v = ev.target.value
-                setEvent(
-                  'image',
-                  v === 'none' ? null : v.startsWith('post:') ? { postImage: Number(v.slice(5)) } : { sitePath: v.slice(5) }
-                )
-              }}
-              className={inputClass}
-            >
-              <option value="none">No image (the AG logo)</option>
-              {postImages.map((img, i) => (
-                <option key={i} value={`post:${i}`}>
-                  Image {i + 1} of the post{'sitePath' in img ? ` (${img.sitePath})` : ' (uploaded; added to the site)'}
-                </option>
-              ))}
-              {choice && 'sitePath' in choice && <option value={key}>{choice.sitePath}</option>}
-            </select>
-            {choice && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={'sitePath' in choice ? choice.sitePath : postImages[choice.postImage] ? imagePreviewUrl(postImages[choice.postImage]) : ''}
-                alt=""
-                className="h-24 object-contain self-start"
-              />
-            )}
-          </div>
-        )
-      }
-      case 'visibleOnEventsPage':
-      case 'visibleOnCalendar':
-        return (
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={e[field]} onChange={(ev) => setEvent(field, ev.target.checked)} />
-            {e[field] ? 'Shown' : 'Hidden'}
-          </label>
-        )
       case 'description':
         return <TextChoiceInput value={e.description} onChange={(t) => setEvent('description', t)} rows={3} />
       case 'body':
@@ -366,22 +313,30 @@ const WebsiteChangeEditor = ({ value, onChange, events, postImages, preview, lea
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-4">
-        {(['create_event', 'update_event'] as const).map((kind) => (
-          <label key={kind} className="flex items-center gap-2">
-            <input
-              type="radio"
-              checked={value.kind === kind}
-              onChange={() =>
-                set({ kind, eventSlug: '', event: emptyEventDraft(), changed: [], forms: [] })
-              }
-            />
-            {kind === 'create_event' ? 'Create a new event' : 'Change an existing event'}
-          </label>
-        ))}
-      </div>
+      <label className="flex flex-col gap-1">
+        Event
+        <select
+          value={value.eventSlug}
+          onChange={(ev) => {
+            const event = events.find((e) => e.slug === ev.target.value)
+            set(
+              event
+                ? { kind: 'update_event', eventSlug: event.slug, event: eventToDraft(event), changed: [], forms: [] }
+                : { kind: 'create_event', eventSlug: '', event: emptyEventDraft(), changed: [], forms: [] }
+            )
+          }}
+          className={inputClass}
+        >
+          <option value="">Create a new event</option>
+          {sortedEvents.map((e) => (
+            <option key={e.slug} value={e.slug}>
+              Edit: {eventLabel(e)}
+            </option>
+          ))}
+        </select>
+      </label>
 
-      {isCreate ? (
+      {isCreate && (
         <select
           value=""
           onChange={(ev) => {
@@ -390,23 +345,7 @@ const WebsiteChangeEditor = ({ value, onChange, events, postImages, preview, lea
           }}
           className={inputClass}
         >
-          <option value="">Start from an existing event (copies texts, image and settings)…</option>
-          {sortedEvents.map((e) => (
-            <option key={e.slug} value={e.slug}>
-              {eventLabel(e)}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <select
-          value={value.eventSlug}
-          onChange={(ev) => {
-            const event = events.find((e) => e.slug === ev.target.value)
-            set({ eventSlug: ev.target.value, event: event ? eventToDraft(event) : emptyEventDraft(), changed: [], forms: [] })
-          }}
-          className={inputClass}
-        >
-          <option value="">Choose the event to change…</option>
+          <option value="">Start from an existing event (copies its texts and sign-up mode)…</option>
           {sortedEvents.map((e) => (
             <option key={e.slug} value={e.slug}>
               {eventLabel(e)}
@@ -439,6 +378,9 @@ const WebsiteChangeEditor = ({ value, onChange, events, postImages, preview, lea
                 )}
                 {FIELD_LABELS[field]}
                 {!isCreate && !isOn(field) && <span className="font-normal text-sm text-lightgray">(not changed)</span>}
+                {field === 'body' && isOn(field) && (
+                  <span className="font-normal text-sm text-lightgray">(optional; empty uses the short description)</span>
+                )}
               </label>
               {isOn(field) && renderField(field)}
             </div>

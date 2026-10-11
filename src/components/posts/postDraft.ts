@@ -188,7 +188,7 @@ export const postToDraft = (post: Post, events: AGEvent[]): PostDraft => {
 
 const textChoice = (t: TextDraft) => (t.fromPost ? { fromPost: true as const } : { text: t.text })
 
-const eventToChange = (draft: WebsiteChangeDraft): EventChange => {
+const eventToChange = (draft: WebsiteChangeDraft, images: PostImage[]): EventChange => {
   const e = draft.event
   const all: Required<EventChange> = {
     name: e.name,
@@ -206,9 +206,12 @@ const eventToChange = (draft: WebsiteChangeDraft): EventChange => {
     description: textChoice(e.description),
     body: textChoice(e.body),
   }
+  // A new event has the post's first image (or none: the AG logo) and is shown everywhere
   if (draft.kind === 'create_event') {
-    const { image, ...rest } = all
-    return image ? all : rest
+    const created: EventChange = { ...all, visibleOnCalendar: true, visibleOnEventsPage: true }
+    if (images.length) created.image = { postImage: 0 }
+    else delete created.image
+    return created
   }
   return Object.fromEntries(draft.changed.map((field) => [field, all[field]])) as EventChange
 }
@@ -241,7 +244,7 @@ export const draftToInput = (draft: PostDraft, { lenient = false } = {}): PostIn
       kind: change.kind,
       eventSlug: change.kind === 'update_event' ? change.eventSlug || null : null,
       runAt: change.ownTime ? fromLocal(change.runAt) : null,
-      event: eventToChange(change),
+      event: eventToChange(change, draft.images),
       signupForms: change.forms.flatMap(({ sessionId, draft: formDraft }) => {
         const result = draftToForm(formDraft)
         if ('error' in result) {

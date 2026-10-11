@@ -105,7 +105,9 @@ fails, e.g. because the same fields were edited in the CMS, the messages wait
 until someone presses Retry (overwrites) or Send anyway.
 
 Only the approved version of a post is sent; any edit needs a new approval, on
-the website or with the posts bot's buttons in the review topic. The scheduler
+the website or with the posts bot's buttons in the review topic. On the website,
+"Back to draft" takes a post off the schedule and "Delete post" deletes it
+(unsent messages and website changes are not sent). The scheduler
 (`src/utils/social/scheduler.ts`) runs every 60 s, retries failed sends up to 3
 times and reports failures in the review topic. Messages more than 30 minutes
 late are reported instead of sent.

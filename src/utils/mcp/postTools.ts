@@ -86,7 +86,7 @@ const websiteChangeSchema = z.object({
       visibleOnEventsPage: z.boolean().optional(),
       description: z.string().optional().describe('Short description (markdown)'),
       descriptionFromPost: z.boolean().optional().describe("Use the post's body as the short description"),
-      body: z.string().optional().describe('Long description (markdown)'),
+      body: z.string().optional().describe('Long description (markdown). Empty: the short description'),
       bodyFromPost: z.boolean().optional().describe("Use the post's body as the long description"),
     })
     .describe(
@@ -164,7 +164,7 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Get post',
       description:
-        'Gets a post with its text, channels, website change and history, including the reasons humans gave for rejecting it.',
+        'Gets a post with its text, channels, website change and history.',
       inputSchema: { postId: z.string() },
       annotations: { readOnlyHint: true },
     },
