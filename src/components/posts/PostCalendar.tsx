@@ -252,7 +252,7 @@ const PostCalendar = ({ posts, channels, events, leadMinutes, onOpen, onCreate }
           ⏳ Awaiting approval
         </span>
         <span className="px-2 rounded-sm border-2 border-dashed border-gray-500 bg-white italic">
-          DRAFT · not scheduled
+          Draft
         </span>
         <span className="px-2 rounded-sm bg-gray-500 text-white opacity-50">Sent</span>
       </div>
