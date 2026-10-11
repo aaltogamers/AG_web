@@ -271,6 +271,29 @@ export const describePost = async (
   }),
 })
 
+// A sent post as an example of how posts are written: its text and where and when it went
+export const describeExamplePost = (post: Post, channels: Channel[]) => ({
+  id: post.id,
+  title: post.title,
+  eventSlug: post.eventSlug,
+  body: post.bodyMd,
+  images: post.images.length,
+  channels: post.targets
+    .filter((t) => t.status === 'sent')
+    .map((t) => {
+      const channel = channels.find((c) => c.id === t.channelId)
+      return {
+        channelId: t.channelId,
+        name: channel?.name,
+        platform: channel?.platform,
+        sentAt: time(t.sentAt),
+        ...(channel?.platform === 'discord' && { pings: t.pings }),
+        bodyOverride: t.bodyOverrideMd ?? undefined,
+        footerOverride: t.footerOverrideMd ?? undefined,
+      }
+    }),
+})
+
 export const describePreview = (preview: PostPreview) => ({
   errors: preview.errors,
   channels: preview.texts.map((t) => ({

@@ -1,8 +1,15 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { AGENT, describeChannel, describePost, describePreview, parsePostArgs } from '../agentPosts'
+import {
+  AGENT,
+  describeChannel,
+  describeExamplePost,
+  describePost,
+  describePreview,
+  parsePostArgs,
+} from '../agentPosts'
 import { AgentError, formatAgentTime, parseAgentTime } from '../agentApi'
-import { getPostHistory, getPostOrThrow, getSettings, listChannels, listPosts } from '../postStore'
+import { getPostHistory, getPostOrThrow, getSettings, listChannels, listPosts, listSentPosts } from '../postStore'
 import { createPostAction, editPost, requestApproval, withdrawApproval } from '../social/actions'
 import { isDiscordConfigured, listGuildRoles } from '../social/discord'
 import { buildPreview } from '../social/preview'
@@ -115,7 +122,9 @@ const postFields = {
   title: z.string().describe('Short name of the post, only shown to admins'),
   body: z
     .string()
-    .describe(`The text in markdown. Placeholders, filled in for each channel: ${PLACEHOLDER_HELP}`),
+    .describe(
+      `The text in markdown, written like the posts from get_example_posts and as short as possible while still interesting and informative. Placeholders, filled in for each channel: ${PLACEHOLDER_HELP}`
+    ),
   eventSlug: z.string().nullable().describe('The event the post is about, for {{event}} and {{signup}}'),
   sendAt: z.string().nullable().describe(`Default send time of all channels. ${TIME_HINT}`),
   sendOnApproval: z
@@ -184,6 +193,28 @@ export const registerPostTools = (server: McpServer) => {
   )
 
   server.registerTool(
+    'get_example_posts',
+    {
+      title: 'Get example posts',
+      description:
+        "Gets the most recently sent posts with their markdown text, channels, pings, footers and send times. Call it before writing a post and write the new one the same way: the same structure, tone, emoji, length and language(s), the same way of giving the time, place and sign-up link, and the same choice of channels, pings, footers and send times for a similar post (e.g. an announcement, a reminder the day before or a post on the day). Keep it as short as possible while still interesting and informative, even if an example is longer. Each channel's default footer is in list_channels.",
+      inputSchema: {
+        limit: z.number().int().min(1).max(30).optional().describe('How many posts, by default 10'),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    runTool('get_example_posts', async ({ limit }) => {
+      const [posts, channels] = await Promise.all([listSentPosts(limit ?? 10), listChannels()])
+      return {
+        posts: posts.map((p) => describeExamplePost(p, channels)),
+        ...(!posts.length && {
+          note: 'No posts have been sent yet. Ask the user for an example of how their posts look before writing one.',
+        }),
+      }
+    })
+  )
+
+  server.registerTool(
     'get_post',
     {
       title: 'Get post',
@@ -204,7 +235,7 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Create post',
       description:
-        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels, optionally with a scheduled website change. Check it with preview_post, then ask a human to approve it with request_approval. Nothing is sent before a human approves it.',
+        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels, optionally with a scheduled website change. Write it like the posts from get_example_posts. Check it with preview_post, then ask a human to approve it with request_approval. Nothing is sent before a human approves it.',
       inputSchema: { ...optionalPostFields, title: postFields.title, body: postFields.body },
     },
     runTool('create_post', async (args) => {

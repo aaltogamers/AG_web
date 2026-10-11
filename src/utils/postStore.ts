@@ -605,6 +605,18 @@ export const listPosts = async (filter: PostFilter = {}): Promise<Post[]> => {
   )
 }
 
+// Posts that have been sent to at least one channel, most recently sent first
+export const listSentPosts = async (limit: number): Promise<Post[]> => {
+  const result = await pool.query<PostRow>(
+    `SELECT ${POST_COLUMNS} FROM posts p
+     JOIN (SELECT post_id, MAX(sent_at) AS last_sent FROM post_targets WHERE status = 'sent' GROUP BY post_id) s
+       ON s.post_id = p.id
+     ORDER BY s.last_sent DESC LIMIT $1`,
+    [limit]
+  )
+  return loadPosts(result.rows)
+}
+
 export const countAwaitingApproval = async (): Promise<number> => {
   const result = await pool.query<{ count: number }>(
     "SELECT COUNT(*)::int AS count FROM posts WHERE status = 'awaiting_approval'"
