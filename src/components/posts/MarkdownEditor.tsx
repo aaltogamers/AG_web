@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { InputRule } from '@tiptap/core'
 import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/react'
 import type { Node as PmNode } from '@tiptap/pm/model'
 import StarterKit from '@tiptap/starter-kit'
+import { Link } from '@tiptap/extension-link'
 import { HardBreak } from '@tiptap/extension-hard-break'
 import { Placeholder } from '@tiptap/extensions'
 import { Markdown, type MarkdownStorage } from 'tiptap-markdown'
@@ -45,6 +47,25 @@ const LineBreak = HardBreak.extend({
         },
       },
     }
+  },
+})
+
+// Typing Markdown link syntax, [text](address), makes a link, instead of text
+// that is saved with escaped brackets
+const MarkdownLink = Link.extend({
+  addInputRules() {
+    return [
+      new InputRule({
+        find: /\[([^[\]]+)\]\((\{\{[^}]*\}\}|<[^>]+>|[^\s()]+)\)$/,
+        handler: ({ state, range, match }) => {
+          const href = match[2].replace(/^<(.*)>$/, '$1')
+          const marks = state.doc.resolve(range.from).marks()
+          state.tr
+            .replaceWith(range.from, range.to, state.schema.text(match[1], [...marks, this.type.create({ href })]))
+            .removeStoredMark(this.type)
+        },
+      }),
+    ]
   },
 })
 
@@ -166,11 +187,12 @@ const MarkdownEditor = ({ value, onChange, placeholder, rows = 4, disabled = fal
         underline: false,
         hardBreak: false,
         heading: { levels: [1, 2, 3] },
-        link: {
-          openOnClick: false,
-          autolink: true,
-          isAllowedUri: (url, { defaultValidate }) => /^(\{\{|%7B%7B)/i.test(url.trim()) || defaultValidate(url),
-        },
+        link: false,
+      }),
+      MarkdownLink.configure({
+        openOnClick: false,
+        autolink: true,
+        isAllowedUri: (url, { defaultValidate }) => /^(\{\{|%7B%7B)/i.test(url.trim()) || defaultValidate(url),
       }),
       LineBreak,
       Placeholder.configure({ placeholder: placeholder ?? '' }),
