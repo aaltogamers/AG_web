@@ -107,6 +107,8 @@ const PostEditor = ({
   const [draft, setDraft] = useState<PostDraft>({ ...emptyPostDraft(), sendAt: initialSendAt })
   const [savedDraft, setSavedDraft] = useState<string>(JSON.stringify(emptyPostDraft()))
   const [preview, setPreview] = useState<PostPreview | null>(null)
+  // The saved post's preview, shown again when the changes are undone
+  const [savedPreview, setSavedPreview] = useState<PostPreview | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [message, setMessage] = useState<Message | null>(initialMessage)
   const [busy, setBusy] = useState(false)
@@ -130,6 +132,7 @@ const PostEditor = ({
     setPost(res.post)
     setHistory(res.history)
     setPreview(res.preview)
+    setSavedPreview(res.preview)
     setDraft(loaded)
     setSavedDraft(JSON.stringify(loaded))
   }, [postId, events])
@@ -147,13 +150,21 @@ const PostEditor = ({
     // A new event changes the editor's placeholder buttons, so update them right away
     const eventChanged = draft.eventSlug !== previewedEvent.current
     previewedEvent.current = draft.eventSlug
-    if (!isDirty) return
+    if (!isDirty) {
+      setPreview(savedPreview)
+      setPreviewLoading(false)
+      return
+    }
+    // A preview of an older draft that comes back late isn't shown
+    let stale = false
     clearTimeout(previewTimer.current)
     previewTimer.current = setTimeout(async () => {
       setPreviewLoading(true)
       try {
-        setPreview((await previewPost(postId, draftToInput(draft, { lenient: true }))).preview)
+        const result = await previewPost(postId, draftToInput(draft, { lenient: true }))
+        if (!stale) setPreview(result.preview)
       } catch (e) {
+        if (stale) return
         setPreview((current) => ({
           texts: [],
           website: null,
@@ -162,11 +173,14 @@ const PostEditor = ({
           placeholders: current?.placeholders ?? { event: true, signupSessions: [] },
         }))
       } finally {
-        setPreviewLoading(false)
+        if (!stale) setPreviewLoading(false)
       }
     }, eventChanged ? 0 : 700)
-    return () => clearTimeout(previewTimer.current)
-  }, [draft, isDirty, postId])
+    return () => {
+      stale = true
+      clearTimeout(previewTimer.current)
+    }
+  }, [draft, isDirty, postId, savedPreview])
 
   const set = (changes: Partial<PostDraft>) => setDraft((old) => ({ ...old, ...changes }))
   // The website change changes the post's event, or creates a new one if it has none

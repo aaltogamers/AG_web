@@ -70,7 +70,7 @@ const PostPreviewPanel = ({ preview, loading }: Props) => {
             {text.platform === 'telegram' ? (
               <TelegramHtml html={text.text} />
             ) : text.platform === 'discord' ? (
-              <BlockMarkdown text={showDiscordRoles(text.text, text.roleNames)} />
+              <BlockMarkdown text={showDiscordRoles(text.text, text.roleNames)} keepLineBreaks />
             ) : (
               <div className="whitespace-pre-wrap break-words">{text.text}</div>
             )}

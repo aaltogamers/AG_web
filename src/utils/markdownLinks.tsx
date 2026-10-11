@@ -196,7 +196,13 @@ export function DescriptionMarkdown({ text }: { text: string }) {
   )
 }
 
-export function BlockMarkdown({ text }: { text: string }) {
+// Line breaks kept as they are written and an empty line between paragraphs, like Discord shows them
+const lineBreakComponents: Components = {
+  ...blockComponents,
+  p: ({ children }) => <p className="mb-6 last:mb-0 whitespace-pre-wrap">{children}</p>,
+}
+
+export function BlockMarkdown({ text, keepLineBreaks = false }: { text: string; keepLineBreaks?: boolean }) {
   const segments = splitByTables(text)
 
   return (
@@ -205,7 +211,7 @@ export function BlockMarkdown({ text }: { text: string }) {
         seg.type === 'table' ? (
           <TableBlock key={i} content={seg.content} />
         ) : (
-          <ReactMarkdown key={i} components={blockComponents}>{seg.content}</ReactMarkdown>
+          <ReactMarkdown key={i} components={keepLineBreaks ? lineBreakComponents : blockComponents}>{seg.content}</ReactMarkdown>
         )
       )}
     </>
