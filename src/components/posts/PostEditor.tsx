@@ -61,7 +61,13 @@ type Props = {
 const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
 
 const actorLabel = (actor: string) =>
-  actor === 'admin' ? 'admin' : actor === 'agent' ? 'AI agent' : actor.startsWith('tg:') ? `Telegram ${actor.slice(3)}` : actor
+  actor === 'admin'
+    ? 'admin'
+    : actor === 'agent'
+      ? 'AI agent'
+      : actor.startsWith('tg:')
+        ? `Telegram ${actor.slice(3)}`
+        : actor
 
 const TARGET_STATUS_LABELS: Record<string, string> = {
   pending: '',
@@ -84,7 +90,14 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 )
 
-const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, initialSendAt = '' }: Props) => {
+const PostEditor = ({
+  postId,
+  events,
+  onSaved,
+  onClose,
+  initialMessage = null,
+  initialSendAt = '',
+}: Props) => {
   const [post, setPost] = useState<Post | null>(null)
   const [history, setHistory] = useState<PostHistoryEntry[]>([])
   const [channels, setChannels] = useState<Channel[]>([])
@@ -103,7 +116,10 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
     const settingsRes = await fetchSettings()
     setChannels(settingsRes.channels)
     setLeadMinutes(settingsRes.settings.website.leadMinutes)
-    if (settingsRes.configured.discord && settingsRes.channels.some((c) => c.platform === 'discord')) {
+    if (
+      settingsRes.configured.discord &&
+      settingsRes.channels.some((c) => c.platform === 'discord')
+    ) {
       fetchDiscordRoles()
         .then((res) => setDiscordRoles(res.roles))
         .catch(() => setDiscordRoles([]))
@@ -134,7 +150,11 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
       try {
         setPreview((await previewPost(postId, draftToInput(draft, { lenient: true }))).preview)
       } catch (e) {
-        setPreview({ texts: [], website: null, errors: [e instanceof Error ? e.message : String(e)] })
+        setPreview({
+          texts: [],
+          website: null,
+          errors: [e instanceof Error ? e.message : String(e)],
+        })
       } finally {
         setPreviewLoading(false)
       }
@@ -160,10 +180,15 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
   const setEvent = (eventSlug: string) =>
     set({
       eventSlug,
-      websiteChange: draft.websiteChange && { ...draft.websiteChange, ...websiteChangeFor(eventSlug) },
+      websiteChange: draft.websiteChange && {
+        ...draft.websiteChange,
+        ...websiteChangeFor(eventSlug),
+      },
     })
   const setTarget = (channelId: string, changes: Partial<TargetDraft>) =>
-    set({ targets: draft.targets.map((t) => (t.channelId === channelId ? { ...t, ...changes } : t)) })
+    set({
+      targets: draft.targets.map((t) => (t.channelId === channelId ? { ...t, ...changes } : t)),
+    })
 
   const run = async (work: () => Promise<{ post: Post; note?: string } | void>, done: string) => {
     setBusy(true)
@@ -199,7 +224,9 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
     }, 'Saved.')
 
   const act = (action: PostAction, done: string, body: { newTime?: string | null } = {}) =>
-    postId && post && run(() => postAction(postId, action, { version: post.version, ...body }), done)
+    postId &&
+    post &&
+    run(() => postAction(postId, action, { version: post.version, ...body }), done)
 
   // Saves a copy of the saved post as a new draft and opens it
   const duplicate = async () => {
@@ -209,9 +236,13 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
     try {
       const copy = duplicateDraft(post, events)
       // Disabled channels can't be used for new posts
-      copy.targets = copy.targets.filter((t) => channels.some((c) => c.id === t.channelId && c.enabled))
+      copy.targets = copy.targets.filter((t) =>
+        channels.some((c) => c.id === t.channelId && c.enabled)
+      )
       const { post: created } = await createPost(draftToInput(copy))
-      onSaved(created.id, { text: 'This is a copy of the post. Choose its send times and edit its text.' })
+      onSaved(created.id, {
+        text: 'This is a copy of the post. Choose its send times and edit its text.',
+      })
     } catch (e) {
       setMessage({ text: e instanceof Error ? e.message : String(e), isError: true })
       setBusy(false)
@@ -235,7 +266,8 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
   const unschedulesOnSave = status === 'scheduled'
   const editable = status !== 'cancelled'
   const eventStart = useMemo(() => postEventStart(draft, events), [draft, events])
-  const hasHeld = post?.targets.some((t) => t.status === 'held') || post?.websiteChange?.status === 'failed'
+  const hasHeld =
+    post?.targets.some((t) => t.status === 'held') || post?.websiteChange?.status === 'failed'
   const errorCount =
     (preview?.errors.length ?? 0) +
     (preview?.texts.reduce((n, t) => n + t.errors.length, 0) ?? 0) +
@@ -269,7 +301,9 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
           </span>
         )}
       </div>
-      {message && <div className={message.isError ? 'text-red' : 'text-green-400'}>{message.text}</div>}
+      {message && (
+        <div className={message.isError ? 'text-red' : 'text-green-400'}>{message.text}</div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="flex flex-col gap-8 lg:w-1/2 min-w-0">
@@ -288,7 +322,9 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
               disabled={!editable || !!draft.websiteChange?.locked}
             >
               <option value="">
-                {draft.websiteChange ? 'No event: the website change creates a new one' : 'No event'}
+                {draft.websiteChange
+                  ? 'No event: the website change creates a new one'
+                  : 'No event'}
               </option>
               {sortedEvents.map((e) => (
                 <option key={e.slug} value={e.slug}>
@@ -305,18 +341,23 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
               disabled={!editable}
             />
             <div className="text-sm text-lightgray">
-              Links: <code>[AG Discord]({'{{link:discord}}'})</code>, <code>[Sign up]({'{{signup}}'})</code>,{' '}
-              <code>[Example](https://example.com)</code>
+              Links: <code>[AG Discord]({'{{link:discord}}'})</code>,{' '}
+              <code>[Sign up]({'{{signup}}'})</code>, <code>[Example](https://example.com)</code>
               <br />
               Event: <code>{'{{date}}'}</code> (e.g. Friday, September 18th, or today / tomorrow),{' '}
-              <code>{'{{time}}'}</code>, <code>{'{{location}}'}</code>, <code>{'{{signupOpens}}'}</code> (e.g. today at
-              16:00). Of the next session at the send time, or <code>{'{{date:<session name>}}'}</code>.
+              <code>{'{{time}}'}</code>, <code>{'{{location}}'}</code>,{' '}
+              <code>{'{{signupOpens}}'}</code> (e.g. today at 16:00). Of the next session at the
+              send time, or <code>{'{{date:<session name>}}'}</code>.
             </div>
           </Section>
 
           <Section title="Images">
             {editable ? (
-              <ImagePicker value={draft.images} onChange={(images) => set({ images })} events={events} />
+              <ImagePicker
+                value={draft.images}
+                onChange={(images) => set({ images })}
+                events={events}
+              />
             ) : (
               <div>{draft.images.length} image(s)</div>
             )}
@@ -332,7 +373,7 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                   onChange={(e) => set({ sendOnApproval: e.target.checked })}
                   disabled={!editable}
                 />
-                Send when approved
+                Send immediately when approved
               </label>
               {!draft.sendOnApproval && (
                 <PostTimePicker
@@ -358,7 +399,10 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
               const targetStatus = post?.targets.find((t) => t.channelId === channel.id)
               const locked = !!target?.locked || !editable
               return (
-                <div key={channel.id} className="border border-lightgray/40 rounded-md p-3 flex flex-col gap-2">
+                <div
+                  key={channel.id}
+                  className="border border-lightgray/40 rounded-md p-3 flex flex-col gap-2"
+                >
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -392,7 +436,9 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                     {targetStatus && (
                       <span className="text-sm">
                         {TARGET_STATUS_LABELS[targetStatus.status]}
-                        {targetStatus.error && <span className="text-red"> {targetStatus.error}</span>}
+                        {targetStatus.error && (
+                          <span className="text-red"> {targetStatus.error}</span>
+                        )}
                       </span>
                     )}
                   </label>
@@ -413,7 +459,10 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                           type="checkbox"
                           checked={target.ownTime}
                           onChange={(e) =>
-                            setTarget(channel.id, { ownTime: e.target.checked, sendAt: target.sendAt || draft.sendAt })
+                            setTarget(channel.id, {
+                              ownTime: e.target.checked,
+                              sendAt: target.sendAt || draft.sendAt,
+                            })
                           }
                         />
                         Own send time
@@ -465,14 +514,19 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                             })
                           }
                         />
-                        Own footer {!target.footerOverride && channel.defaultFooterMd && (
-                          <span className="text-sm text-lightgray">(default: {channel.defaultFooterMd})</span>
+                        Own footer{' '}
+                        {!target.footerOverride && channel.defaultFooterMd && (
+                          <span className="text-sm text-lightgray">
+                            (default: {channel.defaultFooterMd})
+                          </span>
                         )}
                       </label>
                       {target.footerOverride && (
                         <MarkdownEditor
                           value={target.footerOverrideMd}
-                          onChange={(footerOverrideMd) => setTarget(channel.id, { footerOverrideMd })}
+                          onChange={(footerOverrideMd) =>
+                            setTarget(channel.id, { footerOverrideMd })
+                          }
                           rows={2}
                           placeholder="Empty for no footer"
                         />
@@ -496,7 +550,11 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                   eventStart={eventStart}
                 />
                 {!draft.websiteChange.locked && editable && (
-                  <button type="button" className="link self-start text-sm" onClick={() => set({ websiteChange: null })}>
+                  <button
+                    type="button"
+                    className="link self-start text-sm"
+                    onClick={() => set({ websiteChange: null })}
+                  >
                     Remove the website change
                   </button>
                 )}
@@ -507,7 +565,8 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
             ) : (
               <div className="flex flex-col gap-2">
                 <div className="text-sm text-lightgray">
-                  Create a new event or change an existing one (and its sign-up forms) before the messages go out.
+                  Create a new event or change an existing one (and its sign-up forms) before the
+                  messages go out.
                 </div>
                 {editable && (
                   <button
@@ -541,9 +600,11 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
             <Section title="Approval">
               {isDirty && unschedulesOnSave && (
                 <div className="border-2 border-yellow-400 rounded-md p-3 text-base">
-                  <div className="font-bold text-yellow-400">⚠️ This post is approved and scheduled</div>
-                  Saving your changes takes it off the schedule: nothing more is sent until it is approved
-                  again.
+                  <div className="font-bold text-yellow-400">
+                    ⚠️ This post is approved and scheduled
+                  </div>
+                  Saving your changes takes it off the schedule: nothing more is sent until it is
+                  approved again.
                 </div>
               )}
               {isDirty && editable && status !== 'done' && (
@@ -551,7 +612,14 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
               )}
               <div className="flex flex-wrap gap-3 text-base">
                 {editable && isDirty && (
-                  <button type="button" className="borderbutton" disabled={busy} onClick={() => (!unschedulesOnSave || window.confirm(UNSCHEDULE_CONFIRM)) && save()}>
+                  <button
+                    type="button"
+                    className="borderbutton"
+                    disabled={busy}
+                    onClick={() =>
+                      (!unschedulesOnSave || window.confirm(UNSCHEDULE_CONFIRM)) && save()
+                    }
+                  >
                     Save as draft
                   </button>
                 )}
@@ -562,7 +630,12 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                     disabled={busy || errorCount > 0}
                     title={errorCount ? 'Fix the problems in the preview first' : undefined}
                     onClick={() =>
-                      act('approve', draft.sendOnApproval ? 'Approved. It will be sent now.' : 'Approved. It will be sent at the planned times.')
+                      act(
+                        'approve',
+                        draft.sendOnApproval
+                          ? 'Approved. It will be sent now.'
+                          : 'Approved. It will be sent at the planned times.'
+                      )
                     }
                   >
                     Approve
@@ -578,17 +651,24 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                     Request approval in Telegram
                   </button>
                 )}
-                {postId && !isDirty && (status === 'scheduled' || status === 'awaiting_approval') && (
-                  <button
-                    type="button"
-                    className="borderbutton"
-                    disabled={busy}
-                    title="Takes it off the schedule, so nothing more is sent until it is approved again"
-                    onClick={() => act('unschedule', 'Back to draft; nothing more is sent until it is approved again.')}
-                  >
-                    Back to draft
-                  </button>
-                )}
+                {postId &&
+                  !isDirty &&
+                  (status === 'scheduled' || status === 'awaiting_approval') && (
+                    <button
+                      type="button"
+                      className="borderbutton"
+                      disabled={busy}
+                      title="Takes it off the schedule, so nothing more is sent until it is approved again"
+                      onClick={() =>
+                        act(
+                          'unschedule',
+                          'Back to draft; nothing more is sent until it is approved again.'
+                        )
+                      }
+                    >
+                      Back to draft
+                    </button>
+                  )}
                 {post && (
                   <button
                     type="button"
@@ -601,7 +681,12 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                   </button>
                 )}
                 {postId && (
-                  <button type="button" className="borderbutton hover:!text-red" disabled={busy} onClick={remove}>
+                  <button
+                    type="button"
+                    className="borderbutton hover:!text-red"
+                    disabled={busy}
+                    onClick={remove}
+                  >
                     Delete post
                   </button>
                 )}
@@ -627,7 +712,11 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                       type="button"
                       className="mainbutton"
                       disabled={busy}
-                      onClick={() => act('retry', 'Retrying the website change.', { newTime: newTime ? new Date(newTime).toISOString() : null })}
+                      onClick={() =>
+                        act('retry', 'Retrying the website change.', {
+                          newTime: newTime ? new Date(newTime).toISOString() : null,
+                        })
+                      }
                     >
                       🔁 Retry
                     </button>
@@ -636,9 +725,13 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                       className="borderbutton"
                       disabled={busy}
                       onClick={() =>
-                        act('send-anyway', 'The messages will be sent without the website change.', {
-                          newTime: newTime ? new Date(newTime).toISOString() : null,
-                        })
+                        act(
+                          'send-anyway',
+                          'The messages will be sent without the website change.',
+                          {
+                            newTime: newTime ? new Date(newTime).toISOString() : null,
+                          }
+                        )
                       }
                     >
                       ▶️ Send anyway
@@ -646,7 +739,11 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                   </div>
                 </div>
               )}
-              {errorCount > 0 && <div className="text-red text-sm">Fix the problems in the preview before approving.</div>}
+              {errorCount > 0 && (
+                <div className="text-red text-sm">
+                  Fix the problems in the preview before approving.
+                </div>
+              )}
             </Section>
 
             {history.length > 0 && (
@@ -654,7 +751,8 @@ const PostEditor = ({ postId, events, onSaved, onClose, initialMessage = null, i
                 <ul className="text-sm flex flex-col gap-1">
                   {history.map((h, i) => (
                     <li key={i}>
-                      {moment(h.createdAt).format('D.M. HH:mm')} · {h.action} by {actorLabel(h.actor)}
+                      {moment(h.createdAt).format('D.M. HH:mm')} · {h.action} by{' '}
+                      {actorLabel(h.actor)}
                     </li>
                   ))}
                 </ul>
