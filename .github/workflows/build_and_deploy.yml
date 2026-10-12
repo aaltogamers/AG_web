@@ -7,6 +7,12 @@ on:
     paths-ignore:
       - 'infra/**'
 
+# CMS edits often push several commits within seconds. Parallel runs race to push
+# the image, so an older commit could end up deployed. Only let the newest run deploy.
+concurrency:
+  group: build-and-deploy
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
