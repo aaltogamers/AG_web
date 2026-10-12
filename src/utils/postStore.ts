@@ -645,7 +645,7 @@ export const getPostHistory = async (postId: string): Promise<PostHistoryEntry[]
     created_at: Date
     snapshot: Post | null
   }>(
-    'SELECT version, action, actor, created_at, snapshot FROM post_events WHERE post_id = $1 ORDER BY id',
+    'SELECT version, action, actor, created_at, snapshot FROM post_events WHERE post_id = $1 ORDER BY id DESC',
     [postId]
   )
   return result.rows.map((r) => ({
