@@ -119,7 +119,7 @@ export const fillPlaceholders = (
         } else if (ctx.signupSessions.length > 1) {
           errors.push(`${match}: the event has several sign-ups, pick one with {{signup:<session name>}}`)
         }
-        return withRef(`${eventUrl}#signups`, ctx.ref)
+        return withRef(`${eventUrl}?signup`, ctx.ref)
       }
       if (SESSION_PLACEHOLDERS.includes(name)) {
         if (!ctx.eventSlug || !ctx.sessions) {

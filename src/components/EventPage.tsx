@@ -172,12 +172,11 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
 
   const isSelectedOpen =
     !!now && !!selectedSummary && getSignupStatus(selectedSummary, now) === 'open'
-  // Only open the form when it can be sent; otherwise show the sign-ups and their status
+  // Only open the form when it can be sent
   useEffect(() => {
     if (!isAutoOpenPending || !now || !selectedSummary || !currentList) return
     setIsAutoOpenPending(false)
     if (isSelectedOpen) setIsDialogOpen(true)
-    else scrollToSignups()
   }, [isAutoOpenPending, now, selectedSummary, currentList, isSelectedOpen])
 
   const showStickyBar = isSelectedOpen && !isSignupInView && !isDialogOpen
