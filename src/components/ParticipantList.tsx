@@ -1,5 +1,6 @@
 import { CSSProperties } from 'react'
-import { DataValue, SignupInput, SignupPool, SignupRow } from '../types/types'
+import { SignupInput, SignupPool, SignupRow } from '../types/types'
+import { answerInputs, formatAnswer, imageUrl, isPublicInput } from '../utils/signupAnswers'
 import { poolFill, resolvePoolId } from '../utils/signupPools'
 import CapacityBar from './CapacityBar'
 
@@ -10,47 +11,56 @@ type Props = {
   ownSignupId: string | null
 }
 
-const formatValue = (v: DataValue | undefined): string => {
-  if (v === undefined || v === null) return ''
-  if (Array.isArray(v)) return v.join(', ')
-  if (typeof v === 'boolean') return v ? 'Yes' : 'No'
-  return String(v)
-}
-
 /** Public list of who has signed up, by pool, as shown on event pages */
 const ParticipantList = ({ participants, pools, inputs, ownSignupId }: Props) => {
-  const publicInputs = inputs
-    .filter((input) => input.type !== 'info' && input.public)
-    .sort((a, b) => a.number - b.number)
+  const publicInputs = answerInputs(inputs).filter(isPublicInput)
   const sorted = [...participants].sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   )
 
   // On wider screens the answers line up in columns under their titles
   const gridStyle = {
-    '--cols': `2.5rem repeat(${publicInputs.length}, minmax(0, 1fr))`,
+    '--cols': `2.5rem ${publicInputs
+      .map((input) => (input.type === 'image' ? '3rem' : 'minmax(0, 1fr)'))
+      .join(' ')}`,
   } as CSSProperties
   const rowClass =
     'flex flex-wrap items-baseline gap-x-3 md:grid md:[grid-template-columns:var(--cols)]'
 
   const row = (p: SignupRow, index: number) => {
     const isOwn = p.id === ownSignupId
-    const values = publicInputs.map((input) => formatValue(p.answers[String(input.id)]))
+    const values = publicInputs.map((input) => {
+      const value = p.answers[String(input.id)]
+      // The own sign-up comes with all answers, but this list only shows public ones
+      if (input.type !== 'image') return formatAnswer(input, value, true)
+      const url = imageUrl(value)
+      return url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" className="w-10 h-10 object-contain" loading="lazy" />
+      ) : (
+        ''
+      )
+    })
     return (
       <li
         key={p.id}
         className={`${rowClass} py-2 border-b border-gray-600 ${isOwn ? 'text-red' : ''}`}
       >
         <span className="text-lightgray tabular-nums">{index + 1}.</span>
-        {values.map((value, i) => (
-          <span
-            key={publicInputs[i].id}
-            className={`break-words ${i > 0 && !isOwn ? 'text-lightgray md:text-white' : ''}`}
-          >
-            {i > 0 && <span className="md:hidden text-lightgray">· </span>}
-            {value || <span className="text-lightgray">–</span>}
-          </span>
-        ))}
+        {values.map((value, i) => {
+          // No separator after a logo, or before the first text
+          const hasSeparator =
+            i > 0 && publicInputs[i - 1].type !== 'image' && publicInputs[i].type !== 'image'
+          return (
+            <span
+              key={publicInputs[i].id}
+              className={`break-words ${i > 0 && !isOwn ? 'text-lightgray md:text-white' : ''}`}
+            >
+              {hasSeparator && <span className="md:hidden text-lightgray">· </span>}
+              {value || <span className="text-lightgray">–</span>}
+            </span>
+          )
+        })}
         {isOwn && <span className="uppercase tracking-widest text-sm md:hidden">You</span>}
       </li>
     )
@@ -63,7 +73,7 @@ const ParticipantList = ({ participants, pools, inputs, ownSignupId }: Props) =>
       >
         <span>#</span>
         {publicInputs.map((input) => (
-          <span key={input.id}>{input.title}</span>
+          <span key={input.id}>{input.type === 'image' ? '' : input.title}</span>
         ))}
       </li>
       {rows.map(row)}

@@ -140,7 +140,8 @@ export const participantsError = (forms: SignupSummary[], action: string) =>
 
 // Sign-up forms
 
-const INPUT_TYPES = ['text', 'select', 'info'] as const
+const INPUT_TYPES = ['text', 'textarea', 'select', 'info', 'image', 'group'] as const
+const SUB_FIELD_TYPES = ['text', 'textarea', 'select'] as const
 
 export const parsePools = (raw: unknown, existing: SignupPool[] = []): SignupPool[] => {
   const pools = optionalArray(raw, 'pools')
@@ -164,37 +165,107 @@ export const parsePools = (raw: unknown, existing: SignupPool[] = []): SignupPoo
   })
 }
 
+const optionalCount = (value: unknown, name: string): number | undefined => {
+  if (value === undefined || value === null) return undefined
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 0)
+    throw new AgentError(400, `${name} must be a whole number >= 0`)
+  return n
+}
+
+const parseField = (
+  rawField: unknown,
+  i: number,
+  name: string,
+  isSubField: boolean
+): SignupInput => {
+  const f = asRecord(rawField, `${name}[${i}]`)
+  const types: readonly string[] = isSubField ? SUB_FIELD_TYPES : INPUT_TYPES
+  const type = INPUT_TYPES.find((t) => t === f.type && types.includes(t))
+  if (!type) throw new AgentError(400, `${name}[${i}].type must be ${types.join(', ')}`)
+  const field: SignupInput = {
+    id: Number(f.id) || 0,
+    number: i + 1,
+    type,
+    title: requireString(f.title, `${name}[${i}].title`),
+    public: optionalBoolean(f.public, `${name}[${i}].public`) ?? false,
+    required: optionalBoolean(f.required, `${name}[${i}].required`) ?? false,
+  }
+  const description = optionalString(f.description, `${name}[${i}].description`)
+  if (description) field.description = description
+  const placeholder = optionalString(f.placeholder, `${name}[${i}].placeholder`)
+  if (placeholder && (type === 'text' || type === 'textarea')) field.placeholder = placeholder
+  if (type === 'select') {
+    const options =
+      typeof f.options === 'string'
+        ? f.options.split(',')
+        : (optionalArray(f.options, `${name}[${i}].options`) ?? [])
+    field.options = options.map((o) => String(o).trim()).filter(Boolean)
+    if (!field.options.length) {
+      throw new AgentError(400, `${name}[${i}].options is required for select fields`)
+    }
+    field.multi = optionalBoolean(f.multi, `${name}[${i}].multi`) ?? false
+  }
+  if (type === 'group') {
+    field.public = false
+    field.required = false
+    field.fields = (optionalArray(f.fields, `${name}[${i}].fields`) ?? []).map((sub, j) =>
+      parseField(sub, j, `${name}[${i}].fields`, true)
+    )
+    const min = optionalCount(f.min, `${name}[${i}].min`)
+    const max = optionalCount(f.max, `${name}[${i}].max`)
+    if (min !== undefined) field.min = min
+    if (max !== undefined) field.max = max
+    const itemLabel = optionalString(f.itemLabel, `${name}[${i}].itemLabel`)
+    const extraLabel = optionalString(f.extraLabel, `${name}[${i}].extraLabel`)
+    if (itemLabel) field.itemLabel = itemLabel
+    if (extraLabel) field.extraLabel = extraLabel
+  }
+  return field
+}
+
 export const parseFields = (raw: unknown): SignupInput[] =>
-  (optionalArray(raw, 'fields') ?? []).map((rawField, i) => {
-    const f = asRecord(rawField, `fields[${i}]`)
-    const type = INPUT_TYPES.find((t) => t === f.type)
-    if (!type) throw new AgentError(400, `fields[${i}].type must be text, select or info`)
-    const field: SignupInput = {
-      id: Number(f.id) || 0,
-      number: i + 1,
-      type,
-      title: requireString(f.title, `fields[${i}].title`),
-      public: optionalBoolean(f.public, `fields[${i}].public`) ?? false,
-      required: optionalBoolean(f.required, `fields[${i}].required`) ?? false,
-    }
-    const description = optionalString(f.description, `fields[${i}].description`)
-    if (description) field.description = description
-    if (type === 'select') {
-      const options =
-        typeof f.options === 'string'
-          ? f.options.split(',')
-          : (optionalArray(f.options, `fields[${i}].options`) ?? [])
-      field.options = options.map((o) => String(o).trim()).filter(Boolean)
-      if (!field.options.length) {
-        throw new AgentError(400, `fields[${i}].options is required for select fields`)
-      }
-      field.multi = optionalBoolean(f.multi, `fields[${i}].multi`) ?? false
-    }
-    return field
-  })
+  (optionalArray(raw, 'fields') ?? []).map((rawField, i) =>
+    parseField(rawField, i, 'fields', false)
+  )
 
 // Sign-up forms are shown on the event page. Form keys are `<slug>` or `<slug>:<session id>`.
 const signupUrl = (key: string) => `${eventUrl(key.split(':')[0])}#signups`
+
+type DescribedField = Pick<
+  SignupInput,
+  | 'id'
+  | 'type'
+  | 'title'
+  | 'description'
+  | 'placeholder'
+  | 'required'
+  | 'public'
+  | 'options'
+  | 'multi'
+  | 'min'
+  | 'max'
+  | 'itemLabel'
+  | 'extraLabel'
+> & { fields?: DescribedField[] }
+
+const describeField = (f: SignupInput): DescribedField => ({
+  id: f.id,
+  type: f.type,
+  title: f.title,
+  description: f.description,
+  placeholder: f.placeholder,
+  required: f.required,
+  public: f.public,
+  ...(f.type === 'select' && { options: f.options, multi: f.multi }),
+  ...(f.type === 'group' && {
+    fields: (f.fields ?? []).map(describeField),
+    min: f.min,
+    max: f.max,
+    itemLabel: f.itemLabel,
+    extraLabel: f.extraLabel,
+  }),
+})
 
 export const describeForm = (form: SignupSummary, target?: SignupTarget) => ({
   key: form.key,
@@ -218,15 +289,7 @@ export const describeForm = (form: SignupSummary, target?: SignupTarget) => ({
       reserve: poolFill(p, count).reserve,
     }
   }),
-  fields: form.inputs.map((f) => ({
-    id: f.id,
-    type: f.type,
-    title: f.title,
-    description: f.description,
-    required: f.required,
-    public: f.public,
-    ...(f.type === 'select' && { options: f.options, multi: f.multi }),
-  })),
+  fields: form.inputs.map(describeField),
   // Shown only to participants who got a place, e.g. a Telegram group link
   confirmedMessage: form.confirmedMessage || undefined,
   confirmedLink: form.confirmedLink || undefined,

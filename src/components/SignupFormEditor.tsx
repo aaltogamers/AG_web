@@ -1,10 +1,11 @@
-// Controlled sign-up form editor, used by the Signups tab and the website change
-// editor of posts. Turn the FormDraft into SignUpData with draftToForm.
+// Controlled sign-up form editor, used by the Signups tab. Turn the FormDraft into
+// SignUpData with draftToForm.
 import moment, { Moment } from 'moment'
 import { FaLock, FaLockOpen, FaTrash } from 'react-icons/fa'
 import type { EditableInputType, SignupInput, SignupPool, SignUpData } from '../types/types'
 import { defaultPools } from '../utils/signupPools'
-import EditableInput from './EditableInput'
+import { inputsError } from '../utils/signupAnswers'
+import { FieldList, newFieldKey } from './EditableInput'
 import SignupTimePicker from './SignupTimePicker'
 
 // Field values as typed: the id and the select options are kept as text
@@ -15,10 +16,17 @@ export type FieldDraft = {
   type: EditableInputType
   title: string
   description: string
+  placeholder: string
   options: string
   required: boolean
   public: boolean
   multi: boolean
+  // Groups: how many items (as typed), their labels and sub-fields
+  min: string
+  max: string
+  itemLabel: string
+  extraLabel: string
+  subFields: FieldDraft[]
 }
 
 export type FormDraft = {
@@ -33,8 +41,6 @@ export type FormDraft = {
 
 const LOCAL_FORMAT = 'YYYY-MM-DDTHH:mm'
 
-let nextKey = 1
-
 export const emptyFormDraft = (): FormDraft => ({
   openfrom: '',
   openuntil: '',
@@ -44,21 +50,29 @@ export const emptyFormDraft = (): FormDraft => ({
   confirmedLink: '',
 })
 
+const inputToDraft = (input: SignupInput): FieldDraft => ({
+  key: newFieldKey(),
+  id: String(input.id ?? ''),
+  type: input.type,
+  title: input.title ?? '',
+  description: input.description ?? '',
+  placeholder: input.placeholder ?? '',
+  options: (input.options ?? []).join(', '),
+  required: !!input.required,
+  public: !!input.public,
+  multi: !!input.multi,
+  min: input.min === undefined ? '' : String(input.min),
+  max: input.max === undefined ? '' : String(input.max),
+  itemLabel: input.itemLabel ?? '',
+  extraLabel: input.extraLabel ?? '',
+  subFields: (input.fields ?? []).map(inputToDraft),
+})
+
 export const formToDraft = (form: Omit<SignUpData, 'key'>): FormDraft => ({
   openfrom: form.openfrom ? moment(form.openfrom).format(LOCAL_FORMAT) : '',
   openuntil: form.openuntil ? moment(form.openuntil).format(LOCAL_FORMAT) : '',
   pools: form.pools?.length ? form.pools : defaultPools(),
-  fields: (form.inputs ?? []).map((input) => ({
-    key: nextKey++,
-    id: String(input.id ?? ''),
-    type: input.type,
-    title: input.title ?? '',
-    description: input.description ?? '',
-    options: (input.options ?? []).join(', '),
-    required: !!input.required,
-    public: !!input.public,
-    multi: !!input.multi,
-  })),
+  fields: (form.inputs ?? []).map(inputToDraft),
   confirmedMessage: form.confirmedMessage ?? '',
   confirmedLink: form.confirmedLink ?? '',
 })
@@ -77,20 +91,16 @@ export const hasDuplicatePoolNames = (draft: FormDraft) => {
   return new Set(names).size !== names.length
 }
 
-// The form to save, or what's wrong with it
-export const draftToForm = (
-  draft: FormDraft
-): { form: Omit<SignUpData, 'key'> } | { error: string } => {
-  if (duplicateFieldIds(draft).size) return { error: 'field IDs must be unique.' }
-  if (hasDuplicatePoolNames(draft)) return { error: 'pool names must be unique.' }
-  if (!draft.openfrom || !draft.openuntil) {
-    return { error: 'choose when sign-up opens and closes.' }
-  }
+const optionalInt = (value: string) => {
+  const n = parseInt(value, 10)
+  return Number.isFinite(n) && n >= 0 ? n : undefined
+}
 
-  // Explicit ids are kept; fields without one get the smallest free id
-  const used = new Set(draft.fields.map((f) => Number(f.id)).filter((n) => Number.isFinite(n) && n > 0))
+// Explicit ids are kept; fields without one get the smallest free id
+const draftToInputs = (fields: FieldDraft[]): SignupInput[] => {
+  const used = new Set(fields.map((f) => Number(f.id)).filter((n) => Number.isFinite(n) && n > 0))
   let nextId = 1
-  const inputs: SignupInput[] = draft.fields.map((f, i) => {
+  return fields.map((f, i) => {
     let id = Number(f.id)
     if (!Number.isFinite(id) || id <= 0) {
       while (used.has(nextId)) nextId += 1
@@ -102,10 +112,13 @@ export const draftToForm = (
       number: i + 1,
       type: f.type,
       title: f.title,
-      public: f.public,
-      required: f.required,
+      public: f.type !== 'group' && f.type !== 'info' && f.public,
+      required: f.type !== 'group' && f.type !== 'info' && f.required,
     }
     if (f.description) input.description = f.description
+    if ((f.type === 'text' || f.type === 'textarea') && f.placeholder) {
+      input.placeholder = f.placeholder
+    }
     if (f.type === 'select') {
       input.options = f.options
         .split(',')
@@ -113,8 +126,34 @@ export const draftToForm = (
         .filter(Boolean)
       input.multi = f.multi
     }
+    if (f.type === 'group') {
+      input.fields = draftToInputs(f.subFields)
+      const min = optionalInt(f.min)
+      const max = optionalInt(f.max)
+      if (min !== undefined) input.min = min
+      if (max !== undefined) input.max = max
+      if (f.itemLabel.trim()) input.itemLabel = f.itemLabel.trim()
+      if (f.extraLabel.trim()) input.extraLabel = f.extraLabel.trim()
+    }
     return input
   })
+}
+
+// The fields as participants see them, e.g. for a preview of an unsaved form
+export const draftInputs = (draft: FormDraft) => draftToInputs(draft.fields)
+
+// The form to save, or what's wrong with it
+export const draftToForm = (
+  draft: FormDraft
+): { form: Omit<SignUpData, 'key'> } | { error: string } => {
+  if (duplicateFieldIds(draft).size) return { error: 'field IDs must be unique.' }
+  if (hasDuplicatePoolNames(draft)) return { error: 'pool names must be unique.' }
+  if (!draft.openfrom || !draft.openuntil) {
+    return { error: 'choose when sign-up opens and closes.' }
+  }
+  const inputs = draftToInputs(draft.fields)
+  const error = inputsError(inputs)
+  if (error) return { error: `${error}.` }
 
   return {
     form: {
@@ -131,13 +170,6 @@ export const draftToForm = (
 type Props = {
   value: FormDraft
   onChange: (draft: FormDraft) => void
-}
-
-const smallestFreeId = (fields: FieldDraft[]) => {
-  const used = new Set(fields.map((f) => Number(f.id)))
-  let next = 1
-  while (used.has(next)) next += 1
-  return next
 }
 
 // Open times, pools and the message for participants: label and control pairs
@@ -279,66 +311,16 @@ export const SignupFormSettings = ({
 }
 
 // The sign-up fields, with buttons to add more
-export const SignupFieldsEditor = ({ value, onChange }: Props) => {
-  const { fields } = value
-  const setFields = (next: FieldDraft[]) => onChange({ ...value, fields: next })
-  const duplicates = duplicateFieldIds(value)
-
-  const add = (type: EditableInputType) =>
-    setFields([
-      ...fields,
-      {
-        key: nextKey++,
-        id: String(smallestFreeId(fields)),
-        type,
-        title: '',
-        description: '',
-        options: '',
-        required: false,
-        public: false,
-        multi: false,
-      },
-    ])
-
-  const move = (index: number, by: number) => {
-    const next = [...fields]
-    const [field] = next.splice(index, 1)
-    next.splice(index + by, 0, field)
-    setFields(next)
-  }
-
-  return (
-    <div className="flex flex-col">
-      <h3 className="text-center mt-4 mb-5">Sign-up Fields</h3>
-      <h5 className="text-center text-lightgray">
-        Don&apos;t edit field IDs or select options after signups have started.
-      </h5>
-      {fields.map((field, i) => (
-        <EditableInput
-          key={field.key}
-          field={field}
-          onChange={(changes) =>
-            setFields(fields.map((f) => (f.key === field.key ? { ...f, ...changes } : f)))
-          }
-          handleUp={() => move(i, -1)}
-          handleDown={() => move(i, 1)}
-          handleDelete={() => setFields(fields.filter((f) => f.key !== field.key))}
-          index={i}
-          lastIndex={fields.length - 1}
-          duplicateId={duplicates.has(Number(field.id))}
-        />
-      ))}
-      <div className="w-full flex flex-wrap justify-center gap-4 p-4">
-        <button type="button" className="borderbutton" onClick={() => add('text')}>
-          Add text input
-        </button>
-        <button type="button" className="borderbutton" onClick={() => add('select')}>
-          Add select input
-        </button>
-        <button type="button" className="borderbutton" onClick={() => add('info')}>
-          Add info box
-        </button>
-      </div>
-    </div>
-  )
-}
+export const SignupFieldsEditor = ({ value, onChange }: Props) => (
+  <div className="flex flex-col">
+    <h3 className="text-center mt-4 mb-5">Sign-up Fields</h3>
+    <h5 className="text-center text-lightgray">
+      Don&apos;t edit field IDs or select options after signups have started.
+    </h5>
+    <FieldList
+      fields={value.fields}
+      onChange={(fields) => onChange({ ...value, fields })}
+      duplicateIds={duplicateFieldIds(value)}
+    />
+  </div>
+)

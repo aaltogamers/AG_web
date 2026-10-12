@@ -4,9 +4,12 @@ import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { getHeader, parseJsonBody } from '../../../utils/apiUtils'
 import { isPoolPasswordValid, normalizePools, pickPoolId } from '../../../utils/signupPools'
-import type { DataValue } from '../../../types/types'
+import type { SignupInput } from '../../../types/types'
+import { describeErrors, validateAnswers, type AnswerMap } from '../../../utils/signupAnswers'
+import { prepareImages, saveImages, UploadError } from '../../../utils/signupFiles'
 
-type AnswerMap = Record<string, DataValue>
+// Room for an image upload in the body, besides the answers
+export const config = { api: { bodyParser: { sizeLimit: '8mb' } } }
 
 const timingSafeEqualStr = (a: string, b: string): boolean => {
   if (a.length !== b.length) return false
@@ -59,12 +62,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'PUT') {
     const { ok, isAdmin } = await canAct(req, id)
     if (!ok) return res.status(401).json({ error: 'Unauthorized' })
-    const body = parseJsonBody<{ answers: AnswerMap; poolId?: number; poolPassword?: string }>(req)
+    const body = parseJsonBody<{
+      answers: AnswerMap
+      // New images by field id, as data URLs
+      files?: Record<string, string>
+      poolId?: number
+      poolPassword?: string
+    }>(req)
     if (!body || typeof body.answers !== 'object') {
       return res.status(400).json({ error: 'Invalid body' })
     }
     const eventRes = await pool.query(
-      'SELECT e.pools, s.pool_id FROM signups s JOIN signup_events e ON e.id = s.event_id WHERE s.id = $1',
+      'SELECT e.pools, e.inputs, s.pool_id, s.answers FROM signups s JOIN signup_events e ON e.id = s.event_id WHERE s.id = $1',
       [id]
     )
     if (eventRes.rows.length === 0) return res.status(404).json({ error: 'Not found' })
@@ -77,11 +86,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!isAdmin && isMoving && !isPoolPasswordValid(chosenPool, body.poolPassword)) {
       return res.status(403).json({ error: 'Wrong password' })
     }
-    await pool.query('UPDATE signups SET answers = $1::jsonb, pool_id = $2 WHERE id = $3', [
-      JSON.stringify(body.answers),
-      poolId,
-      id,
-    ])
+    const inputs = eventRes.rows[0].inputs as SignupInput[]
+    const previous = (eventRes.rows[0].answers ?? {}) as AnswerMap
+    let prepared
+    try {
+      prepared = await prepareImages(inputs, body.answers, body.files, previous)
+    } catch (err) {
+      if (err instanceof UploadError) return res.status(400).json({ error: err.message })
+      throw err
+    }
+    const { answers, errors } = validateAnswers(inputs, prepared.answers)
+    const error = describeErrors(inputs, errors)
+    if (error) return res.status(400).json({ error, errors })
+
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+      const saved = await saveImages(client, id, inputs, answers, prepared.uploads, previous)
+      await client.query('UPDATE signups SET answers = $1::jsonb, pool_id = $2 WHERE id = $3', [
+        JSON.stringify(saved),
+        poolId,
+        id,
+      ])
+      await client.query('COMMIT')
+    } catch (err) {
+      await client.query('ROLLBACK')
+      throw err
+    } finally {
+      client.release()
+    }
     return res.status(204).end()
   }
 

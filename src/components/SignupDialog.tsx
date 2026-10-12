@@ -1,32 +1,38 @@
-import { useState } from 'react'
-import { Controller, SubmitHandler, useForm } from 'react-hook-form'
-import { FaCheck, FaCircleNotch, FaLock } from 'react-icons/fa'
+import { FormEvent, useMemo, useState } from 'react'
+import { FaCheck, FaCircleNotch, FaCopy, FaLock } from 'react-icons/fa'
 import Select from 'react-select'
-import { DataValue, SignupPool, SignupRow } from '../types/types'
+import { DataValue, SignupInput, SignupPool, SignupRow } from '../types/types'
 import { formatSessionTime, SignupTarget } from '../utils/eventUtils'
 import {
   AnswerMap,
   clearStoredSignup,
   createSignup,
   deleteSignup,
+  FileMap,
   getStoredSignup,
   setStoredSignup,
+  signupEditLink,
   SignupSummary,
   updateSignup,
 } from '../utils/signupApi'
+import { groupMin, sortedInputs, validateAnswers } from '../utils/signupAnswers'
 import { getPlacement, poolFill, resolvePoolId } from '../utils/signupPools'
 import CapacityBar from './CapacityBar'
 import ConfirmedMessage, { ConfirmedInfo } from './ConfirmedMessage'
 import Dialog from './Dialog'
-import Input from './Input'
+import { SignupField } from './SignupFields'
 
-const POOL_FIELD = 'pool'
 // More groups than this are picked from a dropdown instead of a list
 const MAX_POOL_OPTIONS = 4
-// Lowercase, since Input slugifies field names
-const POOL_PASSWORD_FIELD = 'poolpassword'
+const POOL_FIELD = 'signup-pool'
 // Above the mobile nav bar, since the dialog covers the whole screen on phones
 const Z_CLASS = 'z-[110]'
+
+// Instead of saving, e.g. for trying out a form in the admin panel
+export type SignupPreviewActions = {
+  save: (answers: AnswerMap, poolId: number) => void
+  remove: () => void
+}
 
 type Props = {
   target: SignupTarget
@@ -37,7 +43,21 @@ type Props = {
   confirmed?: ConfirmedInfo
   onClose: () => void
   // Reloads the participants and counts after a sign-up is saved or removed
-  onChanged: () => Promise<void>
+  onChanged?: () => Promise<void>
+  preview?: SignupPreviewActions
+}
+
+// Groups start with their minimum number of items, so they can be filled in right away
+const initialAnswers = (inputs: SignupInput[], saved?: AnswerMap): AnswerMap => {
+  const answers: AnswerMap = { ...(saved ?? {}) }
+  inputs.forEach((input) => {
+    const key = String(input.id)
+    if (input.type !== 'group') return
+    const items = Array.isArray(answers[key]) ? [...(answers[key] as object[])] : []
+    while (items.length < groupMin(input)) items.push({})
+    answers[key] = items as DataValue
+  })
+  return answers
 }
 
 const SignupDialog = ({
@@ -48,11 +68,13 @@ const SignupDialog = ({
   confirmed,
   onClose,
   onChanged,
+  preview,
 }: Props) => {
   const { key, session, event } = target
   const { pools, counts } = summary
+  const inputs = useMemo(() => sortedInputs(summary.inputs), [summary.inputs])
   const own = participants.find((p) => p.id === ownSignupId)
-  const hasAlreadySignedUp = !!own && !!getStoredSignup(key)
+  const hasAlreadySignedUp = !!own && (!!preview || !!getStoredSignup(key))
 
   // Suggest the first public pool with room, since private ones need a password
   const defaultPool =
@@ -61,21 +83,33 @@ const SignupDialog = ({
     pools.find((p) => !p.private) ??
     pools[0]
 
-  const { register, handleSubmit, control, watch } = useForm({
-    defaultValues: { [POOL_FIELD]: String(defaultPool.id), ...(own?.answers ?? {}) } as Record<
-      string,
-      DataValue
-    >,
-  })
+  const [initial] = useState(() => initialAnswers(inputs, own?.answers))
+  const [values, setValues] = useState<AnswerMap>(initial)
+  const [poolId, setPoolId] = useState(defaultPool.id)
+  const [poolPassword, setPoolPassword] = useState('')
+  const [hasTriedSubmit, setHasTriedSubmit] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isBusy, setIsBusy] = useState(false)
   const [result, setResult] = useState<'saved' | 'removed' | null>(null)
   const [isConfirmingRemove, setIsConfirmingRemove] = useState(false)
+  const [isLinkCopied, setIsLinkCopied] = useState(false)
 
-  const selectedPool = pools.find((p) => String(p.id) === String(watch(POOL_FIELD))) ?? pools[0]
+  const validation = useMemo(() => validateAnswers(inputs, values), [inputs, values])
+  // Errors are shown once the participant has tried to send the form
+  const shownErrors = hasTriedSubmit ? validation.errors : {}
+  const isDirty = JSON.stringify(values) !== JSON.stringify(initial) || poolId !== defaultPool.id
+
+  const selectedPool = pools.find((p) => p.id === poolId) ?? pools[0]
   // The password is only asked when joining a private pool, not when already in it
   const needsPassword = (pool: SignupPool) =>
-    !!pool.private && pool.id !== (own && resolvePoolId(pools, own.pool_id))
+    !preview && !!pool.private && pool.id !== (own && resolvePoolId(pools, own.pool_id))
+
+  const close = () => {
+    if (!result && isDirty && !window.confirm('Close without saving? Your answers will be lost.')) {
+      return
+    }
+    onClose()
+  }
 
   const run = async (action: () => Promise<void>) => {
     setError(null)
@@ -89,44 +123,83 @@ const SignupDialog = ({
     }
   }
 
-  const onSubmit: SubmitHandler<Record<string, DataValue>> = (data) =>
-    run(async () => {
-      const answers: AnswerMap = {}
-      summary.inputs.forEach((input) => {
-        if (input.type === 'info') return
-        const fieldKey = String(input.id)
-        const value = data[fieldKey]
-        if (value !== undefined) answers[fieldKey] = value
+  const scrollToFirstError = () =>
+    // After the errors have been rendered
+    setTimeout(() => {
+      const first = document.querySelector('[data-signup-error]')
+      ;(first?.closest('[data-field-path]') ?? first)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
       })
-      const poolPassword = needsPassword(selectedPool)
-        ? String(data[POOL_PASSWORD_FIELD] ?? '')
-        : undefined
+    })
 
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    setHasTriedSubmit(true)
+    if (Object.keys(validation.errors).length) {
+      setError('Check the fields marked in red.')
+      scrollToFirstError()
+      return
+    }
+    run(async () => {
+      if (preview) {
+        preview.save(validation.answers, selectedPool.id)
+        setResult('saved')
+        return
+      }
+      // New images are sent separately; kept ones by their id
+      const answers: AnswerMap = {}
+      const files: FileMap = {}
+      Object.entries(validation.answers).forEach(([fieldKey, value]) => {
+        if (typeof value === 'string' && value.startsWith('data:')) files[fieldKey] = value
+        else answers[fieldKey] = value
+      })
+      const password = needsPassword(selectedPool) ? poolPassword : undefined
       const stored = getStoredSignup(key)
       if (hasAlreadySignedUp && stored) {
-        await updateSignup(stored.id, answers, selectedPool.id, stored.token, poolPassword)
+        await updateSignup(stored.id, answers, files, selectedPool.id, stored.token, password)
       } else {
-        const res = await createSignup(key, answers, selectedPool.id, poolPassword)
+        const res = await createSignup(key, answers, files, selectedPool.id, password)
         setStoredSignup(key, res.id, res.submission_token)
       }
-      await onChanged()
+      await onChanged?.()
       setResult('saved')
     })
+  }
 
   const removeSignup = () =>
     run(async () => {
+      if (preview) {
+        preview.remove()
+        setResult('removed')
+        return
+      }
       const stored = getStoredSignup(key)
       if (!stored) return
       await deleteSignup(stored.id, stored.token)
       clearStoredSignup(key)
-      await onChanged()
+      await onChanged?.()
       setResult('removed')
     })
+
+  const copyEditLink = async (link: string) => {
+    try {
+      await navigator.clipboard.writeText(link)
+      setIsLinkCopied(true)
+    } catch {
+      window.prompt('Copy this link:', link)
+    }
+  }
 
   const subtitle = (
     <div className="text-lg text-lightgray -mt-2">
       {event.name}
       {session && ` · ${session.name ? `${session.name} · ` : ''}${formatSessionTime(session)}`}
+      {preview && (
+        <div className="mt-2 text-base text-white border border-red/70 px-3 py-1 w-fit">
+          Preview: nothing is saved
+        </div>
+      )}
     </div>
   )
 
@@ -136,11 +209,12 @@ const SignupDialog = ({
   if (result) {
     const placement =
       result === 'saved' && ownSignupId && getPlacement(participants, pools, ownSignupId)
+    const editLink = !preview && result === 'saved' ? signupEditLink(event.slug, key) : null
     return (
       <Dialog
         onClose={onClose}
         title="Sign up"
-        maxWidthClass="max-w-xl"
+        maxWidthClass="max-w-3xl"
         zClass={Z_CLASS}
         fullScreenOnMobile
       >
@@ -172,17 +246,31 @@ const SignupDialog = ({
               {confirmed && <ConfirmedMessage info={confirmed} className="w-full mt-4" />}
             </>
           )}
+          {editLink && (
+            <div className="w-full mt-4 text-left text-base text-lightgray flex flex-col gap-2">
+              <span>
+                You can edit your sign-up later in this browser. To edit it on another device, save
+                this link. Anyone with the link can edit your sign-up.
+              </span>
+              <button
+                type="button"
+                className="borderbutton !text-base !py-1 !px-4 self-start flex items-center gap-2"
+                onClick={() => copyEditLink(editLink)}
+              >
+                <FaCopy size={12} />
+                {isLinkCopied ? 'Link copied!' : 'Copy edit link'}
+              </button>
+            </div>
+          )}
         </div>
         <div className={footerClass}>
           <button type="button" className="mainbutton !text-lg !py-2 !px-6" onClick={onClose}>
-            Done
+            {preview ? 'See results' : 'Done'}
           </button>
         </div>
       </Dialog>
     )
   }
-
-  const inputs = [...summary.inputs].sort((a, b) => a.number - b.number)
 
   const poolBar = (pool: SignupPool) => {
     const { taken, reserve, isFull } = poolFill(pool, counts[pool.id] ?? 0)
@@ -198,46 +286,38 @@ const SignupDialog = ({
     )
   }
 
+  const poolOptions = pools.map((pool) => ({
+    value: pool.id,
+    label: `${pool.name}${pool.private ? ' (private)' : ''}`,
+  }))
+
   return (
     <Dialog
-      onClose={onClose}
+      onClose={close}
       title={hasAlreadySignedUp ? 'Edit sign-up' : 'Sign up'}
       busy={isBusy}
-      maxWidthClass="max-w-xl"
+      maxWidthClass="max-w-3xl"
       zClass={Z_CLASS}
       fullScreenOnMobile
     >
       {subtitle}
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col text-lg">
+      <form onSubmit={onSubmit} className="flex flex-col text-lg" noValidate>
         {pools.length > MAX_POOL_OPTIONS && (
           <div className="flex flex-col gap-2 mb-6">
             <label htmlFor={POOL_FIELD}>
               Sign up as<span className="text-red">*</span>
             </label>
-            <Controller
-              control={control}
-              name={POOL_FIELD}
-              render={({ field: { onChange, value, ref } }) => {
-                const options = pools.map((pool) => ({
-                  value: String(pool.id),
-                  label: `${pool.name}${pool.private ? ' (private)' : ''}`,
-                }))
-                return (
-                  <Select
-                    ref={ref}
-                    inputId={POOL_FIELD}
-                    value={options.find((o) => o.value === String(value))}
-                    onChange={(option) => option && onChange(option.value)}
-                    options={options}
-                    isSearchable={false}
-                    className="text-black"
-                    theme={(theme) => ({
-                      ...theme,
-                      colors: { ...theme.colors, primary25: 'lightgray', primary: 'red' },
-                    })}
-                  />
-                )
-              }}
+            <Select
+              inputId={POOL_FIELD}
+              value={poolOptions.find((o) => o.value === selectedPool.id)}
+              onChange={(option) => option && setPoolId(option.value)}
+              options={poolOptions}
+              isSearchable={false}
+              className="text-black"
+              theme={(theme) => ({
+                ...theme,
+                colors: { ...theme.colors, primary25: 'lightgray', primary: 'red' },
+              })}
             />
             {poolBar(selectedPool)}
           </div>
@@ -259,8 +339,9 @@ const SignupDialog = ({
                   <div className="flex items-center gap-3">
                     <input
                       type="radio"
-                      value={String(pool.id)}
-                      {...register(POOL_FIELD)}
+                      name={POOL_FIELD}
+                      checked={isSelected}
+                      onChange={() => setPoolId(pool.id)}
                       className="accent-red w-4 h-4 shrink-0"
                     />
                     <span className="flex-1">{pool.name}</span>
@@ -274,65 +355,35 @@ const SignupDialog = ({
         )}
         {pools.length === 1 && <div className="mb-6">{poolBar(pools[0])}</div>}
         {needsPassword(selectedPool) && (
-          <Input
-            register={register}
-            name={POOL_PASSWORD_FIELD}
-            displayName={
-              pools.length > 1 ? `Password for ${selectedPool.name}` : 'Sign-up password'
-            }
-            type="text"
-            hint="This private group needs a password to sign up in"
-            required
-            control={control}
-            stacked
-          />
+          <div className="mb-6 flex flex-col">
+            <label htmlFor="signup-pool-password">
+              {pools.length > 1 ? `Password for ${selectedPool.name}` : 'Sign-up password'}
+              <span className="text-red">*</span>
+            </label>
+            <span className="text-base text-lightgray mb-2">
+              This private group needs a password to sign up in
+            </span>
+            <input
+              id="signup-pool-password"
+              value={poolPassword}
+              onChange={(e) => setPoolPassword(e.target.value)}
+              className="p-2 rounded-md w-full bg-white text-black"
+              required
+            />
+          </div>
         )}
-        {inputs.map((field) => {
-          const name = String(field.id)
-          switch (field.type) {
-            case 'text':
-              return (
-                <Input
-                  register={register}
-                  name={name}
-                  displayName={field.title}
-                  placeHolder={field.description}
-                  type="text"
-                  key={name}
-                  required={field.required}
-                  isPublic={field.public}
-                  control={control}
-                  stacked
-                />
-              )
-            case 'select':
-              return (
-                <Input
-                  register={register}
-                  name={name}
-                  displayName={field.title}
-                  options={field.options}
-                  key={name}
-                  required={field.required}
-                  isPublic={field.public}
-                  isMulti={field.multi}
-                  control={control}
-                  stacked
-                />
-              )
-            case 'info':
-              return (
-                <div className="mb-6" key={name}>
-                  <b>{field.title}</b>
-                  <p className="text-lightgray">{field.description}</p>
-                </div>
-              )
-            default:
-              return null
-          }
-        })}
+        {inputs.map((input) => (
+          <SignupField
+            key={input.id}
+            input={input}
+            value={values[input.id]}
+            onChange={(value) => setValues((old) => ({ ...old, [input.id]: value }))}
+            errors={shownErrors}
+            path={String(input.id)}
+          />
+        ))}
         <div className="text-lightgray text-sm">
-          {inputs.some((input) => input.public) &&
+          {inputs.some((input) => input.public || input.fields?.some((f) => f.public)) &&
             'Answers marked (public) are shown to everyone. '}
           Never input any sensitive data on this form.
         </div>

@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Header from './Header'
 import CmsEditLink, { AdminLinkButton } from './CmsEditLink'
@@ -19,7 +20,13 @@ import {
   getSignupStatus,
   getSignupTargets,
 } from '../utils/eventUtils'
-import { getSignupSummaries, getStoredSignup, listSignups, SignupSummary } from '../utils/signupApi'
+import {
+  getSignupSummaries,
+  getStoredSignup,
+  listSignups,
+  setStoredSignup,
+  SignupSummary,
+} from '../utils/signupApi'
 import { totalFill } from '../utils/signupPools'
 import { useNow } from '../utils/useNow'
 
@@ -121,6 +128,21 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
     setSelectedKey(key)
     setIsDialogOpen(true)
   }
+
+  // An edit link from the sign-up dialog (`?signup=<key>&id=<id>&token=<token>`) makes
+  // this browser the sign-up's owner and opens it for editing
+  const router = useRouter()
+  useEffect(() => {
+    if (!showSignUp || !router.isReady) return
+    const { signup: key, id, token, ...rest } = router.query
+    if (typeof key !== 'string' || typeof id !== 'string' || typeof token !== 'string') return
+    if (getSignupTargets(event).some((t) => t.key === key)) {
+      setStoredSignup(key, id, token)
+      openDialog(key)
+    }
+    router.replace({ pathname: router.pathname, query: rest }, undefined, { shallow: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.isReady])
 
   // On phones the sign-up button follows along once the details and the list are out of view
   const detailsRef = useRef<HTMLDivElement>(null)

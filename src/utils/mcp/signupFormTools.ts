@@ -35,19 +35,60 @@ export const poolSchema = z.object({
     .describe('Password of a private pool. Leave it out to keep the current one.'),
 })
 
-export const fieldSchema = z.object({
+const fieldShape = {
   id: z
     .number()
     .int()
     .optional()
     .describe('Id of an existing field. Keep it to keep its answers, leave it out for new fields.'),
-  type: z.enum(['text', 'select', 'info']).describe('info only shows its title and description'),
   title: z.string(),
-  description: z.string().optional(),
+  description: z
+    .string()
+    .optional()
+    .describe('Help text under the title, or the text of an info box. Markdown, e.g. for links.'),
+  placeholder: z.string().optional().describe('Placeholder of text and textarea fields'),
   required: z.boolean().optional(),
   public: z.boolean().optional().describe("Whether answers are shown on the event's sign-up list"),
   options: z.array(z.string()).optional().describe('Options of a select field'),
   multi: z.boolean().optional().describe('Whether several options of a select field can be chosen'),
+}
+
+const subFieldSchema = z.object({
+  ...fieldShape,
+  type: z.enum(['text', 'textarea', 'select']),
+})
+
+export const fieldSchema = z.object({
+  ...fieldShape,
+  type: z
+    .enum(['text', 'textarea', 'select', 'info', 'image', 'group'])
+    .describe(
+      'textarea is long text. info only shows its title and description. image is a picture upload, e.g. a team logo (at most one per form). group is a block of fields filled in once per item, e.g. per player of a team.'
+    ),
+  fields: z
+    .array(subFieldSchema)
+    .optional()
+    .describe(
+      'Fields of a group, filled in for each item. Mark them public to show them on the sign-up list.'
+    ),
+  min: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe('Group: items that must be filled in, e.g. 5 players'),
+  max: z
+    .number()
+    .int()
+    .min(1)
+    .max(20)
+    .optional()
+    .describe('Group: most items, e.g. 7 with 2 substitutes'),
+  itemLabel: z.string().optional().describe('Group: name of an item, e.g. "Player"'),
+  extraLabel: z
+    .string()
+    .optional()
+    .describe('Group: name of items after the minimum, e.g. "Substitute"'),
 })
 
 const formFields = {

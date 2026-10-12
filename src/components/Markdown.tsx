@@ -19,9 +19,12 @@ interface ImgProps extends ComponentProps {
 interface MarkdownProps {
   children: string
   className?: string
+  // Smaller spacing between paragraphs, e.g. for help text in forms
+  compact?: boolean
 }
 
 const P = ({ children }: ComponentProps) => <p className="mt-3 mb-5">{children}</p>
+const CompactP = ({ children }: ComponentProps) => <p className="my-1">{children}</p>
 const H1 = ({ children }: ComponentProps) => <h1 className="text-white">{children}</h1>
 const H2 = ({ children }: ComponentProps) => <h2 className="text-white">{children}</h2>
 const H3 = ({ children }: ComponentProps) => <h3 className="text-white">{children}</h3>
@@ -53,9 +56,9 @@ const Img = ({ title, src, alt }: ImgProps) => (
   </span>
 )
 
-const Markdown = ({ children, className }: MarkdownProps) => {
+const Markdown = ({ children, className, compact }: MarkdownProps) => {
   const components: Components = {
-    p: P,
+    p: compact ? CompactP : P,
     h1: H1,
     h2: H2,
     h3: H3,

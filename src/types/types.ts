@@ -33,7 +33,10 @@ export type Option = {
   option: string
 }
 
-export type DataValue = string | number | boolean | string[]
+// One entry of a group field, keyed by sub-field id
+export type GroupItem = Record<string, string | string[]>
+
+export type DataValue = string | number | boolean | string[] | GroupItem[]
 
 export type Data = {
   [key: string]: DataValue
@@ -100,18 +103,30 @@ export type HistoryEntry = {
   slug: string
 }
 
-export type EditableInputType = 'text' | 'select' | 'info'
+// textarea is long text, image a picture upload (e.g. a team logo), and group a
+// block of sub-fields filled in once per item (e.g. per player)
+export type EditableInputType = 'text' | 'textarea' | 'select' | 'info' | 'image' | 'group'
 
 export type SignupInput = {
   id: number
   title: string
+  // Help text under the title (Markdown), or the text of an info box
   description?: string
+  // Placeholder of text fields
+  placeholder?: string
   type: EditableInputType
   number: number
   public: boolean
   required: boolean
   options?: string[]
   multi?: boolean
+  // Group fields: sub-fields (ids are unique within the group), and how many items.
+  // Items up to `min` are called "<itemLabel> 1…", the ones after "<extraLabel> 1…".
+  fields?: SignupInput[]
+  min?: number
+  max?: number
+  itemLabel?: string
+  extraLabel?: string
 }
 export type SignupPool = {
   id: number

@@ -1,6 +1,9 @@
-import type { DataValue, SignupInput, SignupPool, SignupRow, SignUpData } from '../types/types'
+import type { SignupInput, SignupPool, SignupRow, SignUpData } from '../types/types'
+import type { AnswerMap } from './signupAnswers'
 
-export type AnswerMap = Record<string, DataValue>
+export type { AnswerMap }
+// New images by field id, as data URLs
+export type FileMap = Record<string, string>
 
 export type SignupEvent = {
   key: string
@@ -18,6 +21,14 @@ export type SignupSummary = SignupEvent & { counts: Record<number, number> }
 
 const tokenKey = (signupKey: string) => `signupToken-${signupKey}`
 const idKey = (signupKey: string) => `signupId-${signupKey}`
+
+// A link that lets the participant edit their sign-up on another device
+export const signupEditLink = (eventSlug: string, signupKey: string) => {
+  const stored = getStoredSignup(signupKey)
+  if (!stored || typeof window === 'undefined') return null
+  const params = new URLSearchParams({ signup: signupKey, id: stored.id, token: stored.token })
+  return `${window.location.origin}/events/${eventSlug}?${params}`
+}
 
 export const getStoredSignup = (signupKey: string): { id: string; token: string } | null => {
   if (typeof window === 'undefined') return null
@@ -107,6 +118,7 @@ export const listSignups = async (
 export const createSignup = async (
   signupKey: string,
   answers: AnswerMap,
+  files: FileMap,
   poolId: number,
   poolPassword?: string
 ): Promise<{ id: string; submission_token: string; created_at: string }> => {
@@ -114,7 +126,7 @@ export const createSignup = async (
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     credentials: 'same-origin',
-    body: JSON.stringify({ key: signupKey, answers, poolId, poolPassword }),
+    body: JSON.stringify({ key: signupKey, answers, files, poolId, poolPassword }),
   })
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { error?: string }
@@ -126,6 +138,7 @@ export const createSignup = async (
 export const updateSignup = async (
   id: string,
   answers: AnswerMap,
+  files: FileMap,
   poolId: number,
   submissionToken: string,
   poolPassword?: string
@@ -137,7 +150,7 @@ export const updateSignup = async (
       'x-submission-token': submissionToken,
     },
     credentials: 'same-origin',
-    body: JSON.stringify({ answers, poolId, poolPassword }),
+    body: JSON.stringify({ answers, files, poolId, poolPassword }),
   })
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { error?: string }

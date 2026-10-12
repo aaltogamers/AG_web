@@ -3,7 +3,14 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { getHeader, getQueryParam, parseJsonBody } from '../../../utils/apiUtils'
-import type { DataValue, SignupInput } from '../../../types/types'
+import type { SignupInput } from '../../../types/types'
+import {
+  describeErrors,
+  publicAnswers,
+  validateAnswers,
+  type AnswerMap,
+} from '../../../utils/signupAnswers'
+import { prepareImages, saveImages, UploadError } from '../../../utils/signupFiles'
 import {
   getPlacement,
   isPoolPasswordValid,
@@ -12,24 +19,8 @@ import {
   resolvePoolId,
 } from '../../../utils/signupPools'
 
-type AnswerMap = Record<string, DataValue>
-
-const publicFieldIds = (inputs: SignupInput[]): Set<string> => {
-  const ids = new Set<string>()
-  inputs.forEach((input) => {
-    if (input.public) ids.add(String(input.id))
-  })
-  return ids
-}
-
-const filterPublicAnswers = (answers: AnswerMap, inputs: SignupInput[]): AnswerMap => {
-  const publicIds = publicFieldIds(inputs)
-  const out: AnswerMap = {}
-  Object.entries(answers).forEach(([k, v]) => {
-    if (publicIds.has(k)) out[k] = v
-  })
-  return out
-}
+// Room for an image upload in the body, besides the answers
+export const config = { api: { bodyParser: { sizeLimit: '8mb' } } }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -90,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id,
         pool_id: resolvePoolId(pools, row.pool_id),
         created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
-        answers: canSeeAll ? answers : filterPublicAnswers(answers, inputs),
+        answers: canSeeAll ? answers : publicAnswers(answers, inputs),
       }
     })
 
@@ -110,6 +101,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const body = parseJsonBody<{
       key: string
       answers: AnswerMap
+      // New images by field id, as data URLs
+      files?: Record<string, string>
       poolId?: number
       poolPassword?: string
     }>(req)
@@ -121,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const eventRes = await pool.query(
-      'SELECT id, openfrom, openuntil, pools FROM signup_events WHERE signup_key = $1',
+      'SELECT id, openfrom, openuntil, pools, inputs FROM signup_events WHERE signup_key = $1',
       [body.key]
     )
     if (eventRes.rows.length === 0) {
@@ -131,10 +124,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       id: eventId,
       openfrom,
       openuntil,
+      inputs,
     } = eventRes.rows[0] as {
       id: string
       openfrom: Date
       openuntil: Date
+      inputs: SignupInput[]
     }
     const pools = normalizePools(eventRes.rows[0].pools)
     const poolId = pickPoolId(pools, body.poolId)
@@ -154,13 +149,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    let prepared
+    try {
+      prepared = await prepareImages(inputs, body.answers, body.files, {})
+    } catch (err) {
+      if (err instanceof UploadError) return res.status(400).json({ error: err.message })
+      throw err
+    }
+    const { answers, errors } = validateAnswers(inputs, prepared.answers)
+    const error = describeErrors(inputs, errors)
+    if (error) return res.status(400).json({ error, errors })
+
     const submissionToken = crypto.randomBytes(32).toString('hex')
-    const insert = await pool.query(
-      `INSERT INTO signups (event_id, pool_id, answers, submission_token)
-       VALUES ($1, $2, $3::jsonb, $4)
-       RETURNING id, created_at`,
-      [eventId, poolId, JSON.stringify(body.answers), submissionToken]
-    )
+    const client = await pool.connect()
+    let insert
+    try {
+      await client.query('BEGIN')
+      insert = await client.query(
+        `INSERT INTO signups (event_id, pool_id, answers, submission_token)
+         VALUES ($1, $2, $3::jsonb, $4)
+         RETURNING id, created_at`,
+        [eventId, poolId, JSON.stringify(answers), submissionToken]
+      )
+      if (prepared.uploads.size) {
+        const id = String(insert.rows[0].id)
+        const saved = await saveImages(client, id, inputs, answers, prepared.uploads, {})
+        await client.query('UPDATE signups SET answers = $1::jsonb WHERE id = $2', [
+          JSON.stringify(saved),
+          id,
+        ])
+      }
+      await client.query('COMMIT')
+    } catch (err) {
+      await client.query('ROLLBACK')
+      throw err
+    } finally {
+      client.release()
+    }
     const row = insert.rows[0]
     return res.status(201).json({
       id: String(row.id),

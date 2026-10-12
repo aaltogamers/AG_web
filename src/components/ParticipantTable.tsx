@@ -1,5 +1,16 @@
+import { FaDownload } from 'react-icons/fa'
 import { DataValue, SignupInput, SignupPool, SignupRow } from '../types/types'
 import { deleteSignup } from '../utils/signupApi'
+import {
+  answerInputs,
+  formatAnswer,
+  formatSimple,
+  groupItemLabel,
+  groupItems,
+  imageUrl,
+  isPublicInput,
+  signupsToCsv,
+} from '../utils/signupAnswers'
 import { resolvePoolId } from '../utils/signupPools'
 
 type Props = {
@@ -12,13 +23,49 @@ type Props = {
   allowEdit?: boolean
   ownSignupId?: string | null
   onChange?: () => void
+  // Shows an "Export CSV" button, and the name of the file
+  csvName?: string
 }
 
-const formatValue = (v: DataValue | undefined): string => {
-  if (v === undefined || v === null) return ''
-  if (Array.isArray(v)) return v.join(', ')
-  if (typeof v === 'boolean') return v ? 'Yes' : 'No'
-  return String(v)
+const Answer = ({ input, value }: { input: SignupInput; value: DataValue | undefined }) => {
+  if (input.type === 'image') {
+    const url = imageUrl(value)
+    return url ? (
+      <a href={url} target="_blank" rel="noopener noreferrer">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt="" className="w-12 h-12 object-contain" loading="lazy" />
+      </a>
+    ) : null
+  }
+  if (input.type !== 'group') return <>{formatSimple(value)}</>
+  const subs = input.fields ?? []
+  return (
+    <table className="text-base">
+      <tbody>
+        {groupItems(value).map((item, i) => (
+          <tr key={i} className="align-top">
+            <td className="pr-3 text-lightgray whitespace-nowrap">{groupItemLabel(input, i)}</td>
+            {subs.map((f) => (
+              <td key={f.id} className="pr-3 whitespace-nowrap">
+                {formatSimple(item[f.id])}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+const downloadCsv = (name: string, csv: string) => {
+  // The byte order mark makes Excel read it as UTF-8
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${name}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 const ParticipantTable = ({
@@ -28,12 +75,11 @@ const ParticipantTable = ({
   allowEdit,
   ownSignupId,
   onChange,
+  csvName,
 }: Props) => {
-  const inputsOrdered = [...signupData.inputs]
-    .filter((input) => input.type !== 'info')
-    .sort((a, b) => a.number - b.number)
-
-  const visibleInputs = inputsOrdered.filter((input) => showPrivateData || input.public)
+  const visibleInputs = answerInputs(signupData.inputs).filter(
+    (input) => showPrivateData || isPublicInput(input)
+  )
 
   const sorted = [...participants].sort((a, b) => {
     const ta = new Date(a.created_at).getTime()
@@ -45,8 +91,8 @@ const ParticipantTable = ({
   const isMultiPool = pools.length > 1
 
   const deleteParticipant = async (p: SignupRow) => {
-    const firstAnswer = visibleInputs.length ? p.answers[String(visibleInputs[0].id)] : undefined
-    const label = formatValue(firstAnswer) || 'this sign-up'
+    const first = visibleInputs.find((input) => input.type !== 'image')
+    const label = (first && formatAnswer(first, p.answers[String(first.id)])) || 'this sign-up'
     if (!window.confirm(`Are you sure you want to delete ${label}?`)) return
     await deleteSignup(p.id)
     onChange?.()
@@ -57,8 +103,8 @@ const ParticipantTable = ({
     return (
       <tr key={p.id} className={isOwn ? 'text-red' : ''}>
         {visibleInputs.map((input) => (
-          <td className="p-4 pl-0" key={input.id}>
-            {formatValue(p.answers[String(input.id)] as DataValue | undefined)}
+          <td className="p-4 pl-0 align-top" key={input.id}>
+            <Answer input={input} value={p.answers[String(input.id)]} />
           </td>
         ))}
         <td className="p-4 pl-0 text-sm text-lightgray">
@@ -123,7 +169,26 @@ const ParticipantTable = ({
     )
   }
 
-  return <div>{pools.map(poolSection)}</div>
+  return (
+    <div>
+      {csvName && participants.length > 0 && (
+        <button
+          type="button"
+          className="borderbutton !text-base !py-1 !px-4 flex items-center gap-2 mt-4"
+          onClick={() =>
+            downloadCsv(
+              csvName,
+              signupsToCsv(signupData.inputs, pools, participants, window.location.origin)
+            )
+          }
+        >
+          <FaDownload size={12} />
+          Export CSV
+        </button>
+      )}
+      {pools.map(poolSection)}
+    </div>
+  )
 }
 
 export default ParticipantTable

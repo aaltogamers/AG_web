@@ -5,6 +5,7 @@ import pool from './db_pg'
 import type { SignupInput, SignupPool, SignUpData } from '../types/types'
 import type { SignupEvent, SignupSummary } from './signupApi'
 import { normalizePools, publicPools, resolvePoolId } from './signupPools'
+import { inputsError } from './signupAnswers'
 
 type SignupEventRow = {
   signup_key: string
@@ -39,12 +40,17 @@ const ensureInputIds = (inputs: SignupInput[]): SignupInput[] => {
     if (Number.isFinite(id) && id > maxId) maxId = id
   })
   return inputs.map((input) => {
+    // Sub-fields of groups have their own ids
+    const withFields =
+      input?.type === 'group' && Array.isArray(input.fields)
+        ? { ...input, fields: ensureInputIds(input.fields) }
+        : input
     const id = Number(input?.id)
     if (Number.isFinite(id) && id > 0) {
-      return { ...input, id }
+      return { ...withFields, id }
     }
     maxId += 1
-    return { ...input, id: maxId }
+    return { ...withFields, id: maxId }
   })
 }
 
@@ -83,6 +89,8 @@ export const saveSignupForm = async (
   }
 
   const inputs = Array.isArray(data.inputs) ? ensureInputIds(data.inputs) : []
+  const error = inputsError(inputs)
+  if (error) return { error }
 
   const confirmedLink = String(data.confirmedLink ?? '').trim()
   if (confirmedLink && !/^https?:\/\/\S+$/i.test(confirmedLink)) {

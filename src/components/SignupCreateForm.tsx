@@ -13,6 +13,7 @@ import {
 } from '../utils/eventUtils'
 import ParticipantTable from './ParticipantTable'
 import CopySignupDialog from './CopySignupDialog'
+import SignupPreview from './SignupPreview'
 import {
   deleteSignupEvent,
   getSignupEvent,
@@ -48,6 +49,7 @@ const SignUpCreateForm = ({ events }: Props) => {
   const [draft, setDraft] = useState<FormDraft>(emptyFormDraft())
   const [message, setMessage] = useState<string | null>(null)
   const [isCopyOpen, setIsCopyOpen] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   // Only events with sign-ups enabled in the CMS, newest first
   const startOf = (target: SignupTarget) => {
@@ -226,13 +228,24 @@ const SignUpCreateForm = ({ events }: Props) => {
                   Two or more fields share the same ID. IDs must be unique.
                 </div>
               )}
-              <button
-                type="submit"
-                className="mainbutton"
-                disabled={hasDuplicateIds || duplicatePoolNames}
-              >
-                Save changes
-              </button>
+              <div className="flex flex-wrap justify-center gap-4">
+                <button
+                  type="button"
+                  className="borderbutton"
+                  onClick={() => setIsPreviewOpen(true)}
+                  disabled={!selectedTarget}
+                  title="Try the form as a participant. Nothing is saved."
+                >
+                  Preview
+                </button>
+                <button
+                  type="submit"
+                  className="mainbutton"
+                  disabled={hasDuplicateIds || duplicatePoolNames}
+                >
+                  Save changes
+                </button>
+              </div>
               {signupData && (
                 <button type="button" className="borderbutton mt-8 text-base" onClick={deleteEvent}>
                   Delete entire sign-up
@@ -248,11 +261,20 @@ const SignUpCreateForm = ({ events }: Props) => {
                 showPrivateData
                 allowEdit
                 onChange={() => loadParticipants(signupData.key)}
+                csvName={`signups-${signupData.key.replace(/[^a-z0-9-]+/gi, '-')}`}
               />
             )}
           </div>
         </div>
       </form>
+      {isPreviewOpen && selectedTarget && (
+        <SignupPreview
+          target={selectedTarget}
+          draft={draft}
+          participants={signupData ? participants : []}
+          onClose={() => setIsPreviewOpen(false)}
+        />
+      )}
       {isCopyOpen && selectedTarget && (
         <CopySignupDialog
           targetKey={selectedTarget.key}
