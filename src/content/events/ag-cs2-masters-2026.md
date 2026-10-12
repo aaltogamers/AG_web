@@ -2,23 +2,27 @@
 name: AG CS2 Masters 2026
 sessions:
   - name: Qualifiers
-    start: '2026-11-07T12:00:00'
-    end: '2026-11-07T20:00:00'
+    start: 2026-11-07T12:00:00
+    end: 2026-11-07T20:00:00
     location: AG Discord
     id: 0avvczp6
   - name: Finals
-    start: '2026-11-14T12:00:00'
-    end: '2026-11-14T16:00:00'
-    location: 'Design Factory, Puumiehenkuja 5, Espoo'
+    start: 2026-11-14T12:00:00
+    end: 2026-11-14T16:00:00
+    location: Design Factory, Puumiehenkuja 5, Espoo
     id: qw0ehzc6
 signupMode: none
-image: /images/Black-ag.png
+image: ""
 visibleOnCalendar: true
 visibleOnEventsPage: false
-description: 'Gather a team of friends and get ready to compete in AG CS2 Masters 2026, the Aalto Gamers Counter-Strike 2 tournament!'
+description: >-
+  Gather your team and get ready to compete with the best players the Finnish
+  student Counter Strike scene has to offer!
+
+
+  [SIGN UP HERE!](https://forms.gle/DfEVHQheFMsU6UPd9)
 recordings: []
 ---
-
 ### SIGN-UP
 
 Team signup: [https://forms.gle/DfEVHQheFMsU6UPd9](https://forms.gle/DfEVHQheFMsU6UPd9)
@@ -26,26 +30,29 @@ Team signup: [https://forms.gle/DfEVHQheFMsU6UPd9](https://forms.gle/DfEVHQheFMs
 ### Format
 
 #### Qualifiers
-
-Online qualifiers will take place on 7.11. in the AG Discord.
+Online on the AG Discord server 7,
+Max 32 teams → Swiss best of 1 (3 games) →
+16 teams → Single elimination best of 1 (4 games) → 2 teams
+All games BO1
 
 #### Finals
-
-The finals will take place on 14.11. at Design Factory, Puumiehenkuja 5, Espoo.
+Live at Design Factory, Puumiehenkuja 5, Espoo.
+Single BO3 game between finalists
 
 ### Schedule
 
 #### Qualifiers 7.11.
-
-Players ready on Discord 11:30
-
-Matches start at 12:00
+Captains ready on Discord 11:30
+Swiss stage 12:00-15:00
+Break 15:00-15:45
+Round of 16 15:45-16:45
+Quarter finals 16:45 - 17:45
+Semi-finals 17:45 - 18:45
 
 #### Finals 14.11.
-
-Players ready at the venue 11:30
-
-Matches start at 12:00
+Players ready at the venue 13:00
+Matches start at 14:00
+Matches end at ~17:00
 
 Times are not exact, and may vary by multiple hours in both directions.
 
