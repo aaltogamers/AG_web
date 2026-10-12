@@ -214,7 +214,7 @@ const SignupDialog = ({
       <Dialog
         onClose={onClose}
         title="Sign up"
-        maxWidthClass="max-w-3xl"
+        maxWidthClass="max-w-4xl"
         zClass={Z_CLASS}
         fullScreenOnMobile
       >
@@ -296,7 +296,7 @@ const SignupDialog = ({
       onClose={close}
       title={hasAlreadySignedUp ? 'Edit sign-up' : 'Sign up'}
       busy={isBusy}
-      maxWidthClass="max-w-3xl"
+      maxWidthClass="max-w-4xl"
       zClass={Z_CLASS}
       fullScreenOnMobile
     >

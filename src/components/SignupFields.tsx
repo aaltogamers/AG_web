@@ -40,7 +40,11 @@ const Label = ({ input, htmlFor }: { input: SignupInput; htmlFor?: string }) => 
   <div className="flex flex-col mb-2">
     <label htmlFor={htmlFor}>
       {input.title}
-      {input.required && <span className="text-red">*</span>}
+      {input.required ? (
+        <span className="text-red">*</span>
+      ) : (
+        <span className="text-sm text-lightgray"> (optional)</span>
+      )}
       {input.public && <span className="text-sm text-lightgray"> (public)</span>}
     </label>
     {input.description && (
