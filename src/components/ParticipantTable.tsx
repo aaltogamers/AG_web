@@ -1,4 +1,4 @@
-import { FaDownload } from 'react-icons/fa'
+import { FaDownload, FaTrash } from 'react-icons/fa'
 import { DataValue, SignupInput, SignupPool, SignupRow } from '../types/types'
 import { deleteSignup } from '../utils/signupApi'
 import {
@@ -98,22 +98,32 @@ const ParticipantTable = ({
     onChange?.()
   }
 
-  const rowFor = (p: SignupRow) => {
+  const columns = visibleInputs.length + 2 + (allowEdit ? 1 : 0)
+  const cell = 'py-2 pr-4 align-top'
+
+  const rowFor = (p: SignupRow, place: number) => {
     const isOwn = ownSignupId && ownSignupId === p.id
     return (
-      <tr key={p.id} className={isOwn ? 'text-red' : ''}>
+      <tr key={p.id} className={`border-b border-lightgray/30 ${isOwn ? 'text-red' : ''}`}>
+        <td className={`${cell} text-lightgray`}>{place}</td>
         {visibleInputs.map((input) => (
-          <td className="p-4 pl-0 align-top" key={input.id}>
+          <td className={cell} key={input.id}>
             <Answer input={input} value={p.answers[String(input.id)]} />
           </td>
         ))}
-        <td className="p-4 pl-0 text-sm text-lightgray">
+        <td className={`${cell} text-sm text-lightgray whitespace-nowrap`}>
           {new Date(p.created_at).toLocaleString('en-GB')}
         </td>
         {allowEdit && (
-          <td>
-            <button type="button" className="mainbutton" onClick={() => deleteParticipant(p)}>
-              Delete
+          <td className="py-2 align-top text-right">
+            <button
+              type="button"
+              className="p-1 text-lightgray hover:text-red"
+              onClick={() => deleteParticipant(p)}
+              title="Delete sign-up"
+              aria-label="Delete sign-up"
+            >
+              <FaTrash size={14} />
             </button>
           </td>
         )}
@@ -123,13 +133,14 @@ const ParticipantTable = ({
 
   const header = (
     <thead>
-      <tr>
+      <tr className="border-b border-lightgray text-sm text-lightgray">
+        <th className="text-left font-normal py-2 pr-4">#</th>
         {visibleInputs.map((input) => (
-          <th className="text-left p-2 pl-0" key={input.id}>
+          <th className="text-left font-normal py-2 pr-4" key={input.id}>
             {input.title}
           </th>
         ))}
-        <th className="text-left p-2 pl-0">Signed up at</th>
+        <th className="text-left font-normal py-2 pr-4">Signed up at</th>
         {allowEdit && <th />}
       </tr>
     </thead>
@@ -140,26 +151,26 @@ const ParticipantTable = ({
     const madeIt = inPool.slice(0, pool.size)
     const reserve = inPool.slice(pool.size)
     return (
-      <div key={pool.id}>
-        <h3 className="mt-4">
-          {isMultiPool ? pool.name : 'Signed up'} ({madeIt.length} / {pool.size})
+      <div key={pool.id} className="flex flex-col gap-2">
+        <h3 className="text-xl font-normal">
+          {isMultiPool ? pool.name : 'Signed up'}{' '}
+          <span className="text-lightgray">
+            {madeIt.length} / {pool.size}
+          </span>
         </h3>
-
-        <div className="overflow-x-auto max-w-[90vw]">
-          <table className="table-auto">
+        <div className="overflow-x-auto">
+          <table className="w-full text-base">
             {header}
-
             <tbody>
-              {madeIt.map((p) => rowFor(p))}
+              {madeIt.map((p, i) => rowFor(p, i + 1))}
               {reserve.length > 0 && (
                 <>
                   <tr>
-                    <td colSpan={visibleInputs.length + 1}>
-                      <h5 className="mt-4">On reserve list ({reserve.length})</h5>
-                      <hr className="bg-gray w-full mt-2 mb-0" />
+                    <td colSpan={columns} className="pt-6 pb-2 text-sm text-lightgray">
+                      Reserve list ({reserve.length})
                     </td>
                   </tr>
-                  {reserve.map((p) => rowFor(p))}
+                  {reserve.map((p, i) => rowFor(p, madeIt.length + i + 1))}
                 </>
               )}
             </tbody>
@@ -170,11 +181,11 @@ const ParticipantTable = ({
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-8">
       {csvName && participants.length > 0 && (
         <button
           type="button"
-          className="borderbutton !text-base !py-1 !px-4 flex items-center gap-2 mt-4"
+          className="borderbutton flex items-center gap-2 self-end"
           onClick={() =>
             downloadCsv(
               csvName,

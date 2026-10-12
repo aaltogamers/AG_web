@@ -17,6 +17,8 @@ export type DialogProps = {
   zClass?: string
   // Fill the whole screen on phones, with a close button in the corner
   fullScreenOnMobile?: boolean
+  // Classes of the backdrop, e.g. keep-dark to keep the dark look on the light admin pages
+  className?: string
 }
 
 // A reusable modal dialog. Renders via a portal into `document.body` so its
@@ -31,6 +33,7 @@ const Dialog = ({
   maxWidthClass = 'max-w-sm',
   zClass = 'z-50',
   fullScreenOnMobile = false,
+  className = '',
 }: DialogProps) => {
   const titleId = useId()
 
@@ -57,14 +60,14 @@ const Dialog = ({
     <div
       className={`fixed inset-0 ${zClass} flex items-center justify-center bg-black/60 ${
         fullScreenOnMobile ? 'md:p-4' : 'p-4'
-      }`}
+      } ${className}`}
       onClick={busy ? undefined : onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
       <div
-        className={`w-full ${maxWidthClass} max-h-full overflow-y-auto bg-darkgray text-white relative ${
+        className={`dialog-panel w-full ${maxWidthClass} max-h-full overflow-y-auto bg-darkgray text-white relative ${
           fullScreenOnMobile
             ? 'h-full md:h-auto md:border md:border-lightgray'
             : 'border border-lightgray'

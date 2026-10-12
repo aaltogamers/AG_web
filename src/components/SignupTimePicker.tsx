@@ -7,7 +7,6 @@ type Props = {
   onChange: (value: string) => void
   // Start of the event the sign-up is for; presets are relative to it
   eventStart: Moment | null
-  commonMargins?: string
 }
 
 const PRESETS: { label: string; icon: React.ReactNode; time: (eventStart: Moment) => Moment }[] = [
@@ -35,7 +34,7 @@ const PRESETS: { label: string; icon: React.ReactNode; time: (eventStart: Moment
   { label: 'At event start', icon: <FaFlagCheckered />, time: (s) => s.clone() },
 ]
 
-const SignupTimePicker = ({ value, onChange, eventStart, commonMargins }: Props) => {
+const SignupTimePicker = ({ value, onChange, eventStart }: Props) => {
   const presets: TimePreset[] = eventStart
     ? [
         ...PRESETS.map((p) => ({ label: p.label, icon: p.icon, time: p.time(eventStart) })),
@@ -48,7 +47,6 @@ const SignupTimePicker = ({ value, onChange, eventStart, commonMargins }: Props)
       onChange={onChange}
       presets={presets}
       markedDay={eventStart}
-      className={commonMargins}
     />
   )
 }

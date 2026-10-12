@@ -217,6 +217,7 @@ const SignupDialog = ({
         maxWidthClass="max-w-4xl"
         zClass={Z_CLASS}
         fullScreenOnMobile
+        className="keep-dark"
       >
         {subtitle}
         <div className="flex flex-col items-center text-center gap-3 py-8">
@@ -299,6 +300,7 @@ const SignupDialog = ({
       maxWidthClass="max-w-4xl"
       zClass={Z_CLASS}
       fullScreenOnMobile
+      className="keep-dark"
     >
       {subtitle}
       <form onSubmit={onSubmit} className="flex flex-col text-lg" noValidate>

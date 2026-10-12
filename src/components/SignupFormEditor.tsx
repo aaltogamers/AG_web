@@ -172,8 +172,27 @@ type Props = {
   onChange: (draft: FormDraft) => void
 }
 
-// Open times, pools and the message for participants: label and control pairs
-// for a two-column grid (grid-cols-input)
+export const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
+
+export const Section = ({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description?: string
+  children: React.ReactNode
+}) => (
+  <section className="flex flex-col gap-3">
+    <div>
+      <h3 className="text-xl font-normal">{title}</h3>
+      {description && <div className="text-sm text-lightgray">{description}</div>}
+    </div>
+    {children}
+  </section>
+)
+
+// Open times, pools and the message for participants
 export const SignupFormSettings = ({
   value,
   onChange,
@@ -192,36 +211,34 @@ export const SignupFormSettings = ({
 
   return (
     <>
-      <label className="flex items-center">
-        Sign-up open from
-        <span className="text-red">*</span>
-      </label>
-      <SignupTimePicker
-        value={value.openfrom}
-        onChange={(openfrom) => set({ openfrom })}
-        eventStart={eventStart}
-        commonMargins="mt-2 mb-8 md:m-4"
-      />
-      <label className="flex items-center">
-        Sign-up open until
-        <span className="text-red">*</span>
-      </label>
-      <SignupTimePicker
-        value={value.openuntil}
-        onChange={(openuntil) => set({ openuntil })}
-        eventStart={eventStart}
-        commonMargins="mt-2 mb-8 md:m-4"
-      />
-      <div className="flex flex-col justify-center">
-        <div>
-          Participant pools
-          <span className="text-red">*</span>
+      <Section title="Sign-up time">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-sm">
+              Opens<span className="text-red">*</span>
+            </span>
+            <SignupTimePicker
+              value={value.openfrom}
+              onChange={(openfrom) => set({ openfrom })}
+              eventStart={eventStart}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-sm">
+              Closes<span className="text-red">*</span>
+            </span>
+            <SignupTimePicker
+              value={value.openuntil}
+              onChange={(openuntil) => set({ openuntil })}
+              eventStart={eventStart}
+            />
+          </div>
         </div>
-        <div className="text-sm text-lightgray">
-          With more than one pool, participants choose which pool to sign up to.
-        </div>
-      </div>
-      <div className="mt-2 mb-8 md:m-4 flex flex-col gap-2">
+      </Section>
+      <Section
+        title="Pools"
+        description="With more than one pool, participants choose which pool to sign up to."
+      >
         {pools.map((p) => (
           <div className="flex flex-col gap-1" key={p.id}>
             <div className="flex items-center gap-2">
@@ -229,7 +246,7 @@ export const SignupFormSettings = ({
                 value={p.name}
                 onChange={(e) => updatePool(p.id, { name: e.target.value })}
                 placeholder="Pool name"
-                className="p-2 rounded-md bg-white text-black flex-1 min-w-0"
+                className={`${inputClass} flex-1 min-w-0`}
                 required
               />
               <input
@@ -240,12 +257,12 @@ export const SignupFormSettings = ({
                 step={1}
                 title="Size"
                 aria-label="Size"
-                className="p-2 rounded-md bg-white text-black w-20"
+                className={`${inputClass} !w-20`}
                 required
               />
               <button
                 type="button"
-                className={p.private ? 'text-red' : 'text-lightgray hover:text-red'}
+                className={`p-1 ${p.private ? 'text-red' : 'text-lightgray hover:text-red'}`}
                 onClick={() => updatePool(p.id, { private: !p.private, password: p.password ?? '' })}
                 title={p.private ? 'Private: needs a password' : 'Public: anyone can join'}
                 aria-label={p.private ? 'Make pool public' : 'Make pool private'}
@@ -255,8 +272,9 @@ export const SignupFormSettings = ({
               {pools.length > 1 && (
                 <button
                   type="button"
-                  className="text-lightgray hover:text-red"
+                  className="p-1 text-lightgray hover:text-red"
                   onClick={() => removePool(p.id)}
+                  title="Remove pool"
                   aria-label="Remove pool"
                 >
                   <FaTrash size={14} />
@@ -268,7 +286,7 @@ export const SignupFormSettings = ({
                 value={p.password ?? ''}
                 onChange={(e) => updatePool(p.id, { password: e.target.value })}
                 placeholder={`Password for ${p.name || 'this pool'}`}
-                className="p-2 rounded-md bg-white text-black text-base"
+                className={inputClass}
                 required
               />
             )}
@@ -277,25 +295,20 @@ export const SignupFormSettings = ({
         {hasDuplicatePoolNames(value) && (
           <div className="text-red text-sm">Pool names must be unique.</div>
         )}
-        <div className="text-sm">
-          <button type="button" className="link" onClick={addPool}>
-            + Add pool
-          </button>
-        </div>
-      </div>
-      <div className="flex flex-col justify-center">
-        <div>For participants</div>
-        <div className="text-sm text-lightgray">
-          Shown only to those who got a place, not to those on a reserve list.
-        </div>
-      </div>
-      <div className="mt-2 mb-8 md:m-4 flex flex-col gap-2">
+        <button type="button" className="link self-start text-sm" onClick={addPool}>
+          + Add pool
+        </button>
+      </Section>
+      <Section
+        title="For participants"
+        description="Shown only to those who got a place, not to those on a reserve list."
+      >
         <input
           value={value.confirmedMessage}
           onChange={(e) => set({ confirmedMessage: e.target.value })}
           placeholder="Message, e.g. Join the event Telegram group!"
           aria-label="Message for participants"
-          className="p-2 rounded-md bg-white text-black text-base"
+          className={inputClass}
         />
         <input
           value={value.confirmedLink}
@@ -303,24 +316,34 @@ export const SignupFormSettings = ({
           type="url"
           placeholder="Link, e.g. https://t.me/+abc123"
           aria-label="Link for participants"
-          className="p-2 rounded-md bg-white text-black text-base"
+          className={inputClass}
         />
-      </div>
+      </Section>
     </>
   )
 }
 
 // The sign-up fields, with buttons to add more
-export const SignupFieldsEditor = ({ value, onChange }: Props) => (
-  <div className="flex flex-col">
-    <h3 className="text-center mt-4 mb-5">Sign-up Fields</h3>
-    <h5 className="text-center text-lightgray">
-      Don&apos;t edit field IDs or select options after signups have started.
-    </h5>
+export const SignupFieldsEditor = ({
+  value,
+  onChange,
+  hasSignups,
+}: Props & {
+  // Field IDs and select options shouldn't change once people have signed up
+  hasSignups: boolean
+}) => (
+  <Section
+    title="Fields"
+    description={
+      hasSignups
+        ? "People have signed up, so don't change field IDs or select options."
+        : undefined
+    }
+  >
     <FieldList
       fields={value.fields}
       onChange={(fields) => onChange({ ...value, fields })}
       duplicateIds={duplicateFieldIds(value)}
     />
-  </div>
+  </Section>
 )

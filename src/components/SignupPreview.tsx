@@ -83,7 +83,12 @@ const SignupPreview = ({ target, draft, participants, onClose }: Props) => {
   }
 
   return (
-    <Dialog onClose={onClose} title="Preview results" maxWidthClass="max-w-5xl">
+    <Dialog
+      onClose={onClose}
+      title="Preview results"
+      maxWidthClass="max-w-5xl"
+      className="keep-dark"
+    >
       <div className="text-lg text-lightgray">
         Nothing was saved. The preview sign-up is shown in red, together with the real sign-ups.
       </div>

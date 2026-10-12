@@ -1,10 +1,17 @@
-import { useForm } from 'react-hook-form'
-import { useEffect, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
-import { FaCopy, FaEdit, FaExternalLinkAlt } from 'react-icons/fa'
-import Input from './Input'
+import {
+  FaCopy,
+  FaEdit,
+  FaExternalLinkAlt,
+  FaEye,
+  FaSave,
+  FaTrash,
+  FaUndo,
+} from 'react-icons/fa'
 import { AGEvent, SignupRow } from '../types/types'
 import {
+  DEFAULT_EVENT_IMAGE,
   eventMoment,
   getSignupTargetLabel,
   getSignupTargets,
@@ -31,25 +38,32 @@ import {
   SignupFieldsEditor,
   SignupFormSettings,
 } from './SignupFormEditor'
-
-type Inputs = {
-  // Label of the selected time & place
-  target: string
-}
+import { useToast } from './Toast'
 
 type Props = {
   events: AGEvent[]
 }
 
+type Tab = 'fields' | 'signups'
+
+const DISCARD_CONFIRM = 'You have unsaved changes. Discard them?'
+
+const iconLink =
+  'p-2 rounded-md border border-lightgray bg-white hover:border-red hover:text-red text-black'
+
 const SignUpCreateForm = ({ events }: Props) => {
-  const { register, handleSubmit, setValue, control, getValues, watch } = useForm<Inputs>()
   const router = useRouter()
+  const toast = useToast()
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [signupData, setSignupData] = useState<SignupEvent | null>(null)
   const [participants, setParticipants] = useState<SignupRow[]>([])
   const [draft, setDraft] = useState<FormDraft>(emptyFormDraft())
-  const [message, setMessage] = useState<string | null>(null)
+  const [savedDraft, setSavedDraft] = useState(() => JSON.stringify(draft))
+  const [tab, setTab] = useState<Tab>('fields')
+  const [busy, setBusy] = useState(false)
   const [isCopyOpen, setIsCopyOpen] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const cardRefs = useRef(new Map<string, HTMLButtonElement>())
 
   // Only events with sign-ups enabled in the CMS, newest first
   const startOf = (target: SignupTarget) => {
@@ -67,29 +81,33 @@ const SignUpCreateForm = ({ events }: Props) => {
       label: isDuplicate ? `${label} ${startOf(target)?.format('HH:mm') ?? ''}` : label,
     }
   })
-  const keyForLabel = (label: string) => targetOptions.find((o) => o.label === label)?.key
+  const labelFor = (key: string) => targetOptions.find((o) => o.key === key)?.label ?? key
 
-  const selectedTarget = targets.find((t) => t.key === keyForLabel(watch('target')))
+  const selectedTarget = targets.find((t) => t.key === selectedKey)
   // Presets in the time pickers are relative to this, in the browser's local time
   const selectedStart = selectedTarget ? (startOf(selectedTarget)?.clone().local() ?? null) : null
+
+  const isDirty = JSON.stringify(draft) !== savedDraft
 
   const loadParticipants = async (signupKey: string) => {
     const { signups } = await listSignups(signupKey)
     setParticipants(signups)
   }
 
-  const loadEvent = async (label: string) => {
-    const signupKey = keyForLabel(label)
-    const event = signupKey ? await getSignupEvent(signupKey) : null
-    setValue('target', label)
-    setDraft(event ? formToDraft(event) : emptyFormDraft())
-    if (!event) {
-      setSignupData(null)
-      setParticipants([])
-      return
-    }
+  const loadTarget = async (key: string) => {
+    setSelectedKey(key)
+    const event = await getSignupEvent(key)
+    const loaded = event ? formToDraft(event) : emptyFormDraft()
+    setDraft(loaded)
+    setSavedDraft(JSON.stringify(loaded))
     setSignupData(event)
-    await loadParticipants(event.key)
+    if (event) await loadParticipants(event.key)
+    else setParticipants([])
+  }
+
+  const select = (key: string) => {
+    if (key === selectedKey || (isDirty && !window.confirm(DISCARD_CONFIRM))) return
+    loadTarget(key)
   }
 
   useEffect(() => {
@@ -100,8 +118,8 @@ const SignUpCreateForm = ({ events }: Props) => {
       ? (targets.find((t) => t.key === requested) ??
         targets.find((t) => t.event.slug === requested))
       : undefined
-    const initial = targetOptions.find((o) => o.key === requestedTarget?.key) ?? targetOptions[0]
-    if (initial) loadEvent(initial.label)
+    const initial = requestedTarget ?? targets[0]
+    if (initial) loadTarget(initial.key)
     if (requested) {
       const query = { ...router.query }
       delete query.event
@@ -110,35 +128,49 @@ const SignUpCreateForm = ({ events }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady])
 
+  // Keeps the selected event visible in the row of events
+  useEffect(() => {
+    if (!selectedKey) return
+    cardRefs.current.get(selectedKey)?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [selectedKey])
+
+  // Asks before the page is closed with unsaved changes
+  useEffect(() => {
+    if (!isDirty) return
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [isDirty])
+
   const hasDuplicateIds = duplicateFieldIds(draft).size > 0
   const duplicatePoolNames = hasDuplicatePoolNames(draft)
 
-  const onSubmit = async (data: Inputs) => {
+  const save = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!selectedKey) return
     const result = draftToForm(draft)
     if ('error' in result) {
-      setMessage(`Error: ${result.error}`)
+      toast(`Error: ${result.error}`, { isError: true })
       return
     }
-    const signupKey = keyForLabel(data.target)
-    if (!signupKey) {
-      setMessage('Error: choose a time & place.')
-      return
-    }
-
+    setBusy(true)
     try {
-      const saved = await saveSignupEvent({ key: signupKey, ...result.form })
+      const saved = await saveSignupEvent({ key: selectedKey, ...result.form })
+      const next = { ...draft, pools: saved.pools }
       setSignupData(saved)
-      setDraft((old) => ({ ...old, pools: saved.pools }))
-      setMessage('Saved!')
-      setTimeout(() => setMessage(null), 2000)
-    } catch (e) {
-      setMessage(`Error: ${e instanceof Error ? e.message : e}`)
+      setDraft(next)
+      setSavedDraft(JSON.stringify(next))
+      toast('Saved.')
+    } catch (err) {
+      toast(`Error: ${err instanceof Error ? err.message : err}`, { isError: true })
+    } finally {
+      setBusy(false)
     }
   }
 
   const deleteEvent = async () => {
     if (!signupData) return
-    const label = getValues('target')
+    const label = labelFor(signupData.key)
     const count = participants.length
     if (
       !window.confirm(
@@ -151,14 +183,14 @@ const SignUpCreateForm = ({ events }: Props) => {
     if (answer?.trim().toUpperCase() !== 'DELETE') return
     try {
       await deleteSignupEvent(signupData.key)
-      setDraft(emptyFormDraft())
-      setValue('target', label)
+      const empty = emptyFormDraft()
+      setDraft(empty)
+      setSavedDraft(JSON.stringify(empty))
       setSignupData(null)
       setParticipants([])
-      setMessage('Sign-up deleted.')
-      setTimeout(() => setMessage(null), 2000)
+      toast('Sign-up deleted.')
     } catch (e) {
-      setMessage(`Error: ${e instanceof Error ? e.message : e}`)
+      toast(`Error: ${e instanceof Error ? e.message : e}`, { isError: true })
     }
   }
 
@@ -170,103 +202,175 @@ const SignUpCreateForm = ({ events }: Props) => {
     )
   }
 
+  const tabClass = (active: boolean) =>
+    `px-4 py-2 -mb-px border-b-2 ${active ? 'border-red' : 'border-transparent text-lightgray hover:text-red'}`
+
   return (
-    <div>
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col items-center text-xl">
-        <div className="grid grid-cols-input w-2/3">
-          <Input
-            register={register}
-            name="target"
-            displayName="Event"
-            options={targetOptions.map((o) => o.label)}
-            onChangeDo={(value) => loadEvent(value)}
-            control={control}
-            required
-          />
-          {selectedTarget && (
-            <>
-              <div />
-              <div className="flex flex-wrap gap-2 -mt-6 mb-8 md:mx-4 md:mt-0 text-sm">
-                <a
-                  href={`/events/${selectedTarget.event.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 border border-lightgray rounded-md px-3 py-1 hover:border-red"
-                >
-                  <FaExternalLinkAlt size={12} />
-                  Event page
-                </a>
-                <a
-                  href={`/cms/#/collections/event/entries/${selectedTarget.event.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 border border-lightgray rounded-md px-3 py-1 hover:border-red"
-                >
-                  <FaEdit size={12} />
-                  Edit event info
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setIsCopyOpen(true)}
-                  className="flex items-center gap-2 border border-lightgray rounded-md px-3 py-1 hover:border-red"
-                >
-                  <FaCopy size={12} />
-                  Copy sign-up from existing event
-                </button>
-              </div>
-            </>
-          )}
-          <SignupFormSettings value={draft} onChange={setDraft} eventStart={selectedStart} />
+    <div className="flex flex-col gap-6">
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        {targets.map((target) => {
+          const isSelected = target.key === selectedKey
+          const start = startOf(target)
+          const isDefaultImage = !target.event.image || target.event.image === DEFAULT_EVENT_IMAGE
+          return (
+            <button
+              key={target.key}
+              ref={(el) => {
+                if (el) cardRefs.current.set(target.key, el)
+                else cardRefs.current.delete(target.key)
+              }}
+              type="button"
+              onClick={() => select(target.key)}
+              className={`w-28 shrink-0 flex flex-col gap-1 text-left rounded-md p-1 border-2 ${
+                isSelected ? 'border-red' : 'border-transparent hover:border-lightgray'
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={target.event.image || DEFAULT_EVENT_IMAGE}
+                alt=""
+                loading="lazy"
+                className={`w-full aspect-square rounded-md bg-black ${
+                  isDefaultImage ? 'object-contain p-3' : 'object-cover'
+                }`}
+              />
+              <span className="text-sm leading-tight line-clamp-2">{target.event.name}</span>
+              <span className="text-xs text-lightgray">
+                {target.session?.name ? `${target.session.name} · ` : ''}
+                {start?.format('D.M.YYYY') ?? ''}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {selectedTarget && (
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-2xl font-normal mr-2">{labelFor(selectedTarget.key)}</h2>
+          <a
+            href={`/events/${selectedTarget.event.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={iconLink}
+            title="Event page"
+            aria-label="Event page"
+          >
+            <FaExternalLinkAlt size={14} />
+          </a>
+          <a
+            href={`/cms/#/collections/event/entries/${selectedTarget.event.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={iconLink}
+            title="Edit event info in the CMS"
+            aria-label="Edit event info in the CMS"
+          >
+            <FaEdit size={14} />
+          </a>
+          <button
+            type="button"
+            onClick={() => setIsCopyOpen(true)}
+            className={iconLink}
+            title="Copy sign-up from another event"
+            aria-label="Copy sign-up from another event"
+          >
+            <FaCopy size={14} />
+          </button>
         </div>
-        <div className="flex flex-col md:flex-row w-full">
-          <div className="w-full md:w-1/2">
-            <SignupFieldsEditor value={draft} onChange={setDraft} />
-            <div className="text-center h-4 mb-8 mt-4">{message}</div>
-            <div className="flex flex-col items-center mb-16">
-              {hasDuplicateIds && (
-                <div className="text-red mb-2">
-                  Two or more fields share the same ID. IDs must be unique.
-                </div>
-              )}
-              <div className="flex flex-wrap justify-center gap-4">
+      )}
+
+      <div className="flex border-b border-lightgray">
+        <button type="button" className={tabClass(tab === 'fields')} onClick={() => setTab('fields')}>
+          Sign-up fields
+        </button>
+        <button
+          type="button"
+          className={tabClass(tab === 'signups')}
+          onClick={() => setTab('signups')}
+        >
+          Signed up{signupData ? ` (${participants.length})` : ''}
+        </button>
+      </div>
+
+      {tab === 'fields' ? (
+        <form onSubmit={save} className="flex flex-col lg:flex-row gap-8 lg:items-start">
+          <div className="flex-1 min-w-0 flex flex-col gap-8">
+            {!signupData && (
+              <div className="text-sm text-lightgray">
+                This event has no sign-up form yet. It is created when you save.
+              </div>
+            )}
+            <SignupFormSettings value={draft} onChange={setDraft} eventStart={selectedStart} />
+            <SignupFieldsEditor
+              value={draft}
+              onChange={setDraft}
+              hasSignups={participants.length > 0}
+            />
+          </div>
+          <div className="sticky bottom-0 lg:bottom-auto lg:top-24 z-10 lg:w-56 shrink-0 flex flex-col gap-2 bg-white text-black border border-gray-300 rounded-md p-3">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="submit"
+                className="mainbutton flex items-center gap-2"
+                disabled={busy || !isDirty || hasDuplicateIds || duplicatePoolNames}
+              >
+                <FaSave size={14} />
+                Save
+              </button>
+              <button
+                type="button"
+                className="borderbutton flex items-center gap-2"
+                onClick={() => setIsPreviewOpen(true)}
+                disabled={!selectedTarget}
+                title="Try the form as a participant. Nothing is saved."
+              >
+                <FaEye size={14} />
+                Preview
+              </button>
+              {isDirty && (
                 <button
                   type="button"
                   className="borderbutton"
-                  onClick={() => setIsPreviewOpen(true)}
-                  disabled={!selectedTarget}
-                  title="Try the form as a participant. Nothing is saved."
+                  onClick={() => setDraft(JSON.parse(savedDraft))}
+                  disabled={busy}
+                  title="Discard changes"
+                  aria-label="Discard changes"
                 >
-                  Preview
+                  <FaUndo size={14} />
                 </button>
-                <button
-                  type="submit"
-                  className="mainbutton"
-                  disabled={hasDuplicateIds || duplicatePoolNames}
-                >
-                  Save changes
-                </button>
-              </div>
+              )}
               {signupData && (
-                <button type="button" className="borderbutton mt-8 text-base" onClick={deleteEvent}>
-                  Delete entire sign-up
+                <button
+                  type="button"
+                  className="borderbutton hover:!text-red"
+                  onClick={deleteEvent}
+                  disabled={busy}
+                  title="Delete the entire sign-up"
+                  aria-label="Delete the entire sign-up"
+                >
+                  <FaTrash size={14} />
                 </button>
               )}
             </div>
-          </div>
-          <div className="flex flex-col w-full md:w-1/2">
-            {signupData && (
-              <ParticipantTable
-                signupData={signupData}
-                participants={participants}
-                showPrivateData
-                allowEdit
-                onChange={() => loadParticipants(signupData.key)}
-                csvName={`signups-${signupData.key.replace(/[^a-z0-9-]+/gi, '-')}`}
-              />
+            {isDirty && <div className="text-sm text-lightgray">Unsaved changes</div>}
+            {hasDuplicateIds && (
+              <div className="text-sm text-red">Two or more fields share the same ID.</div>
             )}
           </div>
-        </div>
-      </form>
+        </form>
+      ) : !signupData || participants.length === 0 ? (
+        <div className="text-lightgray">No one has signed up yet.</div>
+      ) : (
+        <ParticipantTable
+          signupData={signupData}
+          participants={participants}
+          showPrivateData
+          allowEdit
+          onChange={() => loadParticipants(signupData.key)}
+          csvName={`signups-${signupData.key.replace(/[^a-z0-9-]+/gi, '-')}`}
+        />
+      )}
+
       {isPreviewOpen && selectedTarget && (
         <SignupPreview
           target={selectedTarget}
@@ -278,14 +382,13 @@ const SignUpCreateForm = ({ events }: Props) => {
       {isCopyOpen && selectedTarget && (
         <CopySignupDialog
           targetKey={selectedTarget.key}
-          targetLabel={getValues('target')}
+          targetLabel={labelFor(selectedTarget.key)}
           labels={targetOptions.map(({ key, label }) => ({ value: key, label }))}
           participantCount={signupData ? participants.length : 0}
           onClose={() => setIsCopyOpen(false)}
           onCopied={async () => {
-            await loadEvent(getValues('target'))
-            setMessage('Sign-up copied!')
-            setTimeout(() => setMessage(null), 2000)
+            await loadTarget(selectedTarget.key)
+            toast('Sign-up copied!')
           }}
         />
       )}

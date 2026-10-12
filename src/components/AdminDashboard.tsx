@@ -18,11 +18,11 @@ type Props = {
 const tabClass = (active: boolean) => `text-4xl ${active ? 'underline' : ''}`
 
 const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
-  // The posts pages are in light mode
+  // The posts and signups pages are in light mode
   useEffect(() => {
-    if (section !== 'posts') return
-    document.body.classList.add('posts-light')
-    return () => document.body.classList.remove('posts-light')
+    if (section !== 'posts' && section !== 'signups') return
+    document.body.classList.add('admin-light')
+    return () => document.body.classList.remove('admin-light')
   }, [section])
 
   return (

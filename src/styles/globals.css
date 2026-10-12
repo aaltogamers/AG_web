@@ -430,41 +430,45 @@
   }
 }
 
-/* Light mode of the posts admin pages (AdminDashboard sets the class). Not in a
-   layer, so it overrides the colour utilities. */
-html:has(body.posts-light),
-body.posts-light {
+/* Light mode of the posts and signups admin pages (AdminDashboard sets the class).
+   Not in a layer, so it overrides the colour utilities. Anything inside .keep-dark,
+   e.g. the sign-up preview, stays as participants see it. */
+html:has(body.admin-light),
+body.admin-light {
   background-color: #f6f6f8;
   color: #1c1d26;
   font-weight: 300;
 }
-body.posts-light nav {
+body.admin-light nav {
   border-bottom: 1px solid #e2e3e8;
 }
-body.posts-light .bg-darkgray {
+body.admin-light .dialog-panel:not(.keep-dark *) {
+  color: #1c1d26;
+}
+body.admin-light .bg-darkgray:not(.keep-dark *) {
   background-color: #ffffff;
 }
-body.posts-light .bg-black {
+body.admin-light .bg-black:not(.keep-dark *) {
   background-color: #eceef1;
 }
-body.posts-light .text-lightgray {
+body.admin-light .text-lightgray:not(.keep-dark *) {
   color: #6b6c75;
 }
-body.posts-light .border-lightgray {
+body.admin-light .border-lightgray:not(.keep-dark *) {
   border-color: #cfd0d6;
 }
-body.posts-light .text-yellow-400 {
+body.admin-light .text-yellow-400:not(.keep-dark *) {
   color: #b45309;
 }
-body.posts-light .border-yellow-400 {
+body.admin-light .border-yellow-400:not(.keep-dark *) {
   border-color: #f59e0b;
 }
-body.posts-light .text-green-400 {
+body.admin-light .text-green-400:not(.keep-dark *) {
   color: #15803d;
 }
-/* Smaller buttons on the posts pages */
-body.posts-light .mainbutton,
-body.posts-light .borderbutton {
+/* Smaller buttons on the light admin pages */
+body.admin-light .mainbutton:not(.keep-dark *),
+body.admin-light .borderbutton:not(.keep-dark *) {
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.25rem;
@@ -475,28 +479,29 @@ body.posts-light .borderbutton {
     border-color 0.15s,
     filter 0.15s;
 }
-body.posts-light .mainbutton:hover {
+body.admin-light .mainbutton:hover:not(.keep-dark *) {
   filter: brightness(0.9);
 }
-body.posts-light .borderbutton {
+body.admin-light .borderbutton:not(.keep-dark *) {
   color: #1c1d26;
   background-color: #ffffff;
   border-color: #cfd0d6;
 }
-body.posts-light .borderbutton:hover {
+body.admin-light .borderbutton:hover:not(.keep-dark *) {
   border-color: #1c1d26;
 }
-body.posts-light .borderbutton:disabled,
-body.posts-light .mainbutton:disabled {
+body.admin-light .borderbutton:disabled:not(.keep-dark *),
+body.admin-light .mainbutton:disabled:not(.keep-dark *) {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 @layer base {
-  /* Utilities still win, e.g. EditableInput's bottom border */
-  body.posts-light input:not([type='checkbox']):not([type='radio']):not([type='file']),
-  body.posts-light select,
-  body.posts-light textarea {
+  /* Utilities still win */
+  body.admin-light
+    input:not([type='checkbox']):not([type='radio']):not([type='file']):not(.keep-dark *),
+  body.admin-light select:not(.keep-dark *),
+  body.admin-light textarea:not(.keep-dark *) {
     border: 1px solid #cfd0d6;
   }
 }
