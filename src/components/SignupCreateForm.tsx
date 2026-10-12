@@ -303,7 +303,7 @@ const SignUpCreateForm = ({ events }: Props) => {
       </div>
 
       {tab === 'fields' ? (
-        <form onSubmit={save} className="flex flex-col lg:flex-row gap-8 lg:items-start max-w-5xl">
+        <form onSubmit={save} className="flex flex-col lg:flex-row gap-8 lg:items-start xl:w-3/4">
           <div className="flex-1 min-w-0 flex flex-col gap-8">
             {!signupData && (
               <div className="text-sm text-lightgray">
