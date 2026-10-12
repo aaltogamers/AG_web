@@ -14,7 +14,7 @@ sessions:
     location: Village Living room, Jämeräntaival 5 A
     id: ezc43axg
 signupMode: session
-image: /images/board-game-night-2026-fall.png
+image: /images/board-game-night-2026-october.jpg
 visibleOnCalendar: true
 visibleOnEventsPage: true
 description: >-
