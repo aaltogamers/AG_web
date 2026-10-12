@@ -2,22 +2,52 @@
 name: AG CS2 Masters 2026
 sessions:
   - name: Qualifiers
-    start: 2026-11-07T12:00:00
-    end: 2026-11-07T20:00:00
+    start: '2026-11-07T12:00:00'
+    end: '2026-11-07T20:00:00'
     location: AG Discord
     id: 0avvczp6
   - name: Finals
-    start: 2026-11-14T12:00:00
-    end: 2026-11-14T16:00:00
-    location: Design Factory, Puumiehenkuja 5, Espoo
+    start: '2026-11-14T12:00:00'
+    end: '2026-11-14T16:00:00'
+    location: 'Design Factory, Puumiehenkuja 5, Espoo'
     id: qw0ehzc6
 signupMode: none
 image: /images/Black-ag.png
 visibleOnCalendar: true
 visibleOnEventsPage: false
-description: TBA
+description: 'Gather a team of friends and get ready to compete in AG CS2 Masters 2026, the Aalto Gamers Counter-Strike 2 tournament!'
 recordings: []
 ---
+
+### SIGN-UP
+
+Team signup: [https://forms.gle/DfEVHQheFMsU6UPd9](https://forms.gle/DfEVHQheFMsU6UPd9)
+
+### Format
+
+#### Qualifiers
+
+Online qualifiers will take place on 7.11. in the AG Discord.
+
+#### Finals
+
+The finals will take place on 14.11. at Design Factory, Puumiehenkuja 5, Espoo.
+
+### Schedule
+
+#### Qualifiers 7.11.
+
+Players ready on Discord 11:30
+
+Matches start at 12:00
+
+#### Finals 14.11.
+
+Players ready at the venue 11:30
+
+Matches start at 12:00
+
+Times are not exact, and may vary by multiple hours in both directions.
 
 ### Rules
 
