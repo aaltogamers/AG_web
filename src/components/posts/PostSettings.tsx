@@ -27,7 +27,7 @@ const inputClass = 'p-2 rounded-md bg-white text-black'
 
 const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="border border-lightgray/40 rounded-md p-4 flex flex-col gap-3 text-base">
-    <h3 className="text-2xl">{title}</h3>
+    <h3 className="text-xl font-normal">{title}</h3>
     {children}
   </section>
 )
@@ -534,7 +534,7 @@ const PostSettings = () => {
         <Link href="/admin/posts" className="link">
           ← Posts
         </Link>
-        <h2 className="text-3xl">Post settings</h2>
+        <h2 className="text-2xl">Post settings</h2>
       </div>
       {!data ? (
         <div>Loading…</div>

@@ -117,7 +117,7 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
         <div className="flex items-center gap-6">
           <ViewSwitch view={view} onChange={setView} />
           <Link href="/admin/posts/settings" aria-label="Settings and channels" title="Settings and channels">
-            <FaCog size={26} />
+            <FaCog size={20} />
           </Link>
         </div>
       </div>

@@ -1597,10 +1597,14 @@ export const getMedia = async (id: string) => {
   return result.rows[0] ?? null
 }
 
-// Uploads that never ended up in a post
+// Uploads that never ended up in a post, or in a saved version of one (history)
 export const deleteUnusedMedia = async () => {
   await pool.query(
     `DELETE FROM post_media m WHERE m.created_at < now() - interval '2 days'
-       AND NOT EXISTS (SELECT 1 FROM post_images i WHERE i.media_id = m.id)`
+       AND NOT EXISTS (SELECT 1 FROM post_images i WHERE i.media_id = m.id)
+       AND NOT EXISTS (
+         SELECT 1 FROM post_events e, jsonb_array_elements(e.snapshot->'images') img
+         WHERE img->>'mediaId' = m.id::text
+       )`
   )
 }

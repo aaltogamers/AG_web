@@ -86,7 +86,7 @@ const DELETE_CONFIRM =
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col gap-3">
-    <h3 className="text-2xl">{title}</h3>
+    <h3 className="text-xl font-normal">{title}</h3>
     {children}
   </section>
 )
@@ -581,7 +581,7 @@ const PostEditor = ({
                 {editable && (
                   <button
                     type="button"
-                    className="borderbutton self-start text-base"
+                    className="borderbutton self-start"
                     onClick={() =>
                       set({
                         websiteChange: {
@@ -613,26 +613,26 @@ const PostEditor = ({
                   approved again.
                 </div>
               )}
-              {isDirty && editable && status !== 'done' && (
+              {isDirty && editable && !unschedulesOnSave && status !== 'done' && (
                 <div className="text-sm text-lightgray">Save the changes to approve the post.</div>
               )}
-              <div className="flex flex-wrap gap-3 text-base">
+              <div className="flex flex-wrap gap-2">
                 {editable && isDirty && (
-                  <button
-                    type="button"
-                    className="borderbutton"
-                    disabled={busy}
-                    onClick={() =>
-                      (!unschedulesOnSave || window.confirm(UNSCHEDULE_CONFIRM)) && save()
-                    }
-                  >
-                    Save as draft
-                  </button>
-                )}
-                {editable && isDirty && (
-                  <button type="button" className="borderbutton" disabled={busy} onClick={discard}>
-                    Discard changes
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="mainbutton"
+                      disabled={busy}
+                      onClick={() =>
+                        (!unschedulesOnSave || window.confirm(UNSCHEDULE_CONFIRM)) && save()
+                      }
+                    >
+                      Save as draft
+                    </button>
+                    <button type="button" className="borderbutton" disabled={busy} onClick={discard}>
+                      Discard changes
+                    </button>
+                  </>
                 )}
                 {postId && !isDirty && (status === 'draft' || status === 'awaiting_approval') && (
                   <button
