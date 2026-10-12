@@ -540,10 +540,6 @@ const PostEditor = ({
 
         <div className="lg:w-1/2 min-w-0 flex flex-col gap-8">
           <div className="lg:sticky lg:top-24 flex flex-col gap-8">
-            <Section title="Preview">
-              <PostPreviewPanel preview={preview} loading={previewLoading} />
-            </Section>
-
             <Section title="Approval">
               {isDirty && unschedulesOnSave && (
                 <div className="border-2 border-yellow-400 rounded-md p-3 text-base">
@@ -691,6 +687,10 @@ const PostEditor = ({
                   Fix the problems in the preview before approving.
                 </div>
               )}
+            </Section>
+
+            <Section title="Preview">
+              <PostPreviewPanel preview={preview} loading={previewLoading} />
             </Section>
 
             {history.length > 0 && (

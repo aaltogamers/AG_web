@@ -26,8 +26,14 @@ type Props = {
 
 const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
 
-// The image and visibility aren't edited here: a new event gets the post's first
-// image (or the AG logo) and is shown everywhere, and a changed event keeps them
+// The image isn't edited here: a new event gets the post's first image (or the AG
+// logo) and a changed event keeps its own. A new event is shown everywhere, and a
+// hidden event can only be made visible.
+type VisibilityField = 'visibleOnEventsPage' | 'visibleOnCalendar'
+const VISIBILITY_LABELS: Record<VisibilityField, string> = {
+  visibleOnEventsPage: 'Make the event visible in the event list',
+  visibleOnCalendar: 'Make the event visible in the calendar',
+}
 type EditedField = Exclude<EventField, 'image' | 'visibleOnCalendar' | 'visibleOnEventsPage'>
 const FIELD_LABELS: Record<EditedField, string> = {
   name: 'Name',
@@ -252,6 +258,18 @@ const WebsiteChangeEditor = ({ value, onChange, events, leadMinutes, eventStart 
               {isOn(field) && renderField(field)}
             </div>
           ))}
+          {(Object.keys(VISIBILITY_LABELS) as VisibilityField[])
+            .filter((field) => !isCreate && (current?.[field] === false || value.changed.includes(field)))
+            .map((field) => (
+              <label key={field} className="flex items-center gap-2 font-bold">
+                <input
+                  type="checkbox"
+                  checked={value.changed.includes(field) && value.event[field]}
+                  onChange={(e) => (e.target.checked ? setEvent(field, true) : toggleField(field, false))}
+                />
+                {VISIBILITY_LABELS[field]}
+              </label>
+            ))}
         </div>
       )}
 
