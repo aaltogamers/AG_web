@@ -138,6 +138,8 @@ export type PostHistoryEntry = {
   action: string
   actor: string
   createdAt: string
+  // The post as it was saved, for "created" and "edited"
+  snapshot?: Post | null
 }
 
 export type Post = {

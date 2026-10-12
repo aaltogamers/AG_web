@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import moment from 'moment'
+import { useToast } from '../Toast'
 import {
   connectBot,
   createChannel,
@@ -510,21 +511,20 @@ const ChannelsCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
 // /admin/posts/settings: bots, review chat, approvers and channels
 const PostSettings = () => {
   const [data, setData] = useState<SettingsResponse | null>(null)
-  const [message, setMessage] = useState<{ text: string; isError?: boolean } | null>(null)
+  const toast = useToast()
 
   const load = useCallback(async () => setData(await fetchSettings()), [])
   useEffect(() => {
-    load().catch((e) => setMessage({ text: e.message, isError: true }))
-  }, [load])
+    load().catch((e) => toast(e.message, { isError: true }))
+  }, [load, toast])
 
   const run: Run = async (work, done) => {
-    setMessage(null)
     try {
       await work()
       await load()
-      if (done) setMessage({ text: done })
+      if (done) toast(done)
     } catch (e) {
-      setMessage({ text: e instanceof Error ? e.message : String(e), isError: true })
+      toast(e instanceof Error ? e.message : String(e), { isError: true })
     }
   }
 
@@ -536,7 +536,6 @@ const PostSettings = () => {
         </Link>
         <h2 className="text-3xl">Post settings</h2>
       </div>
-      {message && <div className={`sticky top-20 z-10 bg-black p-2 ${message.isError ? 'text-red' : 'text-green-400'}`}>{message.text}</div>}
       {!data ? (
         <div>Loading…</div>
       ) : (

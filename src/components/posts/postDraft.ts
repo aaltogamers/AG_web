@@ -285,3 +285,51 @@ export const postEventStart = (draft: PostDraft, events: AGEvent[]): moment.Mome
     .sort((a, b) => a.valueOf() - b.valueOf())
   return starts.find((s) => s.isAfter(moment())) ?? starts[0] ?? null
 }
+
+// An earlier version of the post in the editor. Messages and website changes that
+// have already been sent stay as they are now.
+export const restoreDraft = (current: PostDraft, snapshot: Post, events: AGEvent[]): PostDraft => {
+  const restored = postToDraft(snapshot, events)
+  const locked = current.targets.filter((t) => t.locked)
+  const changeLocked = !!current.websiteChange?.locked
+  return {
+    ...restored,
+    eventSlug: changeLocked ? current.eventSlug : restored.eventSlug,
+    targets: [
+      ...locked,
+      ...restored.targets
+        .filter((t) => !locked.some((l) => l.channelId === t.channelId))
+        .map((t) => ({ ...t, locked: false })),
+    ],
+    websiteChange: changeLocked
+      ? current.websiteChange
+      : restored.websiteChange && { ...restored.websiteChange, locked: false },
+  }
+}
+
+// Unsaved changes are kept in the browser, e.g. if the page is closed by accident
+type StoredDraft = { draft: PostDraft; version: number | null; savedAt: string }
+
+const storageKey = (postId: string | null) => `post-draft:${postId ?? 'new'}`
+
+export const readStoredDraft = (postId: string | null): StoredDraft | null => {
+  try {
+    const stored = localStorage.getItem(storageKey(postId))
+    return stored ? (JSON.parse(stored) as StoredDraft) : null
+  } catch {
+    return null
+  }
+}
+
+export const storeDraft = (postId: string | null, draft: PostDraft | null, version: number | null) => {
+  try {
+    if (draft) {
+      const stored: StoredDraft = { draft, version, savedAt: new Date().toISOString() }
+      localStorage.setItem(storageKey(postId), JSON.stringify(stored))
+    } else {
+      localStorage.removeItem(storageKey(postId))
+    }
+  } catch {
+    // E.g. a private window; the changes just aren't kept
+  }
+}

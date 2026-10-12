@@ -58,8 +58,6 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
   const [leadMinutes, setLeadMinutes] = useState(10)
   const [awaiting, setAwaiting] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  // Shown in the editor of a post that was just created
-  const [savedMessage, setSavedMessage] = useState<{ text: string; isError?: boolean } | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -89,14 +87,8 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
       shallow: true,
     })
   }
-  const openFromList = (id: string) => {
-    setSavedMessage(null)
-    open(id)
-  }
-  const createAt = (sendAt: Date) => {
-    setSavedMessage(null)
-    open('new', toLocal(sendAt.toISOString()))
-  }
+  const openFromList = (id: string) => open(id)
+  const createAt = (sendAt: Date) => open('new', toLocal(sendAt.toISOString()))
 
   if (openId) {
     return (
@@ -105,13 +97,8 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
         postId={openId === 'new' ? null : openId}
         initialSendAt={openId === 'new' ? newAt : ''}
         events={events}
-        initialMessage={savedMessage}
-        onSaved={(id, message) => {
-          setSavedMessage(message)
-          open(id)
-        }}
+        onSaved={(id) => open(id)}
         onClose={() => {
-          setSavedMessage(null)
           const query = { ...router.query }
           delete query.id
           delete query.at

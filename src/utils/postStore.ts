@@ -630,8 +630,9 @@ export const getPostHistory = async (postId: string): Promise<PostHistoryEntry[]
     action: string
     actor: string
     created_at: Date
+    snapshot: Post | null
   }>(
-    'SELECT version, action, actor, created_at FROM post_events WHERE post_id = $1 ORDER BY id',
+    'SELECT version, action, actor, created_at, snapshot FROM post_events WHERE post_id = $1 ORDER BY id',
     [postId]
   )
   return result.rows.map((r) => ({
@@ -639,7 +640,17 @@ export const getPostHistory = async (postId: string): Promise<PostHistoryEntry[]
     action: r.action,
     actor: r.actor,
     createdAt: r.created_at.toISOString(),
+    snapshot: r.snapshot,
   }))
+}
+
+// Stores the saved post in its "created" or "edited" history entry
+const addPostSnapshot = async (post: Post) => {
+  await pool.query(
+    `UPDATE post_events SET snapshot = $3::jsonb
+     WHERE post_id = $1 AND version = $2 AND action IN ('created', 'edited')`,
+    [post.id, post.version, JSON.stringify(post)]
+  )
 }
 
 export const addPostEvent = async (
@@ -1029,7 +1040,9 @@ export const createPost = async (input: PostInput, actor: Actor): Promise<Post> 
     await addPostEvent(postId, 1, 'created', actor, client)
     return postId
   })
-  return getPostOrThrow(id)
+  const post = await getPostOrThrow(id)
+  await addPostSnapshot(post)
+  return post
 }
 
 // Edits a post as a new version, taking it off the schedule: back to awaiting
@@ -1087,7 +1100,9 @@ export const updatePost = async (
     await writeWebsiteChange(client, id, data.websiteChange, existing.websiteChange)
     await addPostEvent(id, existing.version + 1, 'edited', actor, client)
   })
-  return { post: await getPostOrThrow(id), previousStatus: existing.status }
+  const post = await getPostOrThrow(id)
+  await addPostSnapshot(post)
+  return { post, previousStatus: existing.status }
 }
 
 // Status changes. Each checks the version, so a button on an old review does nothing.

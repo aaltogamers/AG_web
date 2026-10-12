@@ -37,23 +37,23 @@ import {
   eventToDraft,
   postEventStart,
   postToDraft,
+  readStoredDraft,
+  restoreDraft,
+  storeDraft,
   type EventField,
   type PostDraft,
   type TargetDraft,
 } from './postDraft'
 import WebsiteChangeEditor from './WebsiteChangeEditor'
-
-type Message = { text: string; isError?: boolean }
+import { useToast } from '../Toast'
 
 type Props = {
   // null for a new post
   postId: string | null
   events: AGEvent[]
-  // A new post was saved; `message` is shown in its editor
-  onSaved: (postId: string, message: Message) => void
+  // A new post was saved
+  onSaved: (postId: string) => void
   onClose: () => void
-  // E.g. the result of saving a new post
-  initialMessage?: Message | null
   // The send time of a new post, e.g. the day clicked in the calendar
   initialSendAt?: string
 }
@@ -62,12 +62,12 @@ const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray
 
 const actorLabel = (actor: string) =>
   actor === 'admin'
-    ? 'admin'
+    ? 'on website'
     : actor === 'agent'
-      ? 'AI agent'
+      ? 'by AI agent'
       : actor.startsWith('tg:')
-        ? `Telegram ${actor.slice(3)}`
-        : actor
+        ? `by Telegram ${actor.slice(3)}`
+        : `by ${actor}`
 
 const TARGET_STATUS_LABELS: Record<string, string> = {
   pending: '',
@@ -80,6 +80,7 @@ const TARGET_STATUS_LABELS: Record<string, string> = {
 
 const UNSCHEDULE_CONFIRM =
   'This post is approved. Saving it as a draft takes it off the schedule, so nothing more is sent until it is approved again. Save anyway?'
+const RESTORE_CONFIRM = 'Replace your unsaved changes with this version?'
 const DELETE_CONFIRM =
   'Delete this post? Unsent messages and website changes are not sent, and the post and its history are gone for good.'
 
@@ -95,7 +96,6 @@ const PostEditor = ({
   events,
   onSaved,
   onClose,
-  initialMessage = null,
   initialSendAt = '',
 }: Props) => {
   const [post, setPost] = useState<Post | null>(null)
@@ -104,13 +104,18 @@ const PostEditor = ({
   // For Discord pings; null while loading
   const [discordRoles, setDiscordRoles] = useState<DiscordRoleOption[] | null>(null)
   const [leadMinutes, setLeadMinutes] = useState(10)
-  const [draft, setDraft] = useState<PostDraft>({ ...emptyPostDraft(), sendAt: initialSendAt })
-  const [savedDraft, setSavedDraft] = useState<string>(JSON.stringify(emptyPostDraft()))
+  const [draft, setDraft] = useState<PostDraft>(() => ({ ...emptyPostDraft(), sendAt: initialSendAt }))
+  const [savedDraft, setSavedDraft] = useState<string>(() => JSON.stringify(draft))
+  // Unsaved changes kept in the browser that were made on an older version of the post
+  const [olderChanges, setOlderChanges] = useState<ReturnType<typeof readStoredDraft>>(null)
+  // Whether the changes kept in the browser have been looked at
+  const storageChecked = useRef(false)
   const [preview, setPreview] = useState<PostPreview | null>(null)
   // The saved post's preview, shown again when the changes are undone
   const [savedPreview, setSavedPreview] = useState<PostPreview | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
-  const [message, setMessage] = useState<Message | null>(initialMessage)
+  const toast = useToast()
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [newTime, setNewTime] = useState('')
 
@@ -126,22 +131,46 @@ const PostEditor = ({
         .then((res) => setDiscordRoles(res.roles))
         .catch(() => setDiscordRoles([]))
     }
-    if (!postId) return
-    const res = await fetchPost(postId)
-    const loaded = postToDraft(res.post, events)
-    setPost(res.post)
-    setHistory(res.history)
-    setPreview(res.preview)
-    setSavedPreview(res.preview)
-    setDraft(loaded)
-    setSavedDraft(JSON.stringify(loaded))
-  }, [postId, events])
+    const res = postId ? await fetchPost(postId) : null
+    if (res) {
+      const loaded = postToDraft(res.post, events)
+      setPost(res.post)
+      setHistory(res.history)
+      setPreview(res.preview)
+      setSavedPreview(res.preview)
+      setDraft(loaded)
+      setSavedDraft(JSON.stringify(loaded))
+    }
+    if (storageChecked.current) return
+    storageChecked.current = true
+    const stored = readStoredDraft(postId)
+    if (!stored) return
+    if (stored.version === (res?.post.version ?? null)) {
+      setDraft(stored.draft)
+      toast(`Restored your unsaved changes from ${moment(stored.savedAt).format('D.M. HH:mm')}.`)
+    } else {
+      setOlderChanges(stored)
+    }
+  }, [postId, events, toast])
 
   useEffect(() => {
-    load().catch((e) => setMessage({ text: e.message, isError: true }))
-  }, [load])
+    load().catch((e) => {
+      setLoadError(e.message)
+      toast(e.message, { isError: true })
+    })
+  }, [load, toast])
 
   const isDirty = JSON.stringify(draft) !== savedDraft
+
+  // Keeps the unsaved changes in the browser, and asks before the page is closed
+  useEffect(() => {
+    if (!storageChecked.current || (olderChanges && !isDirty)) return
+    storeDraft(postId, isDirty ? draft : null, post?.version ?? null)
+    if (!isDirty) return
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [draft, isDirty, olderChanges, postId, post?.version])
 
   // Live preview of the unsaved post
   const previewTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -212,14 +241,13 @@ const PostEditor = ({
 
   const run = async (work: () => Promise<{ post: Post; note?: string } | void>, done: string) => {
     setBusy(true)
-    setMessage(null)
     try {
       const result = await work()
       if (!postId) return
       if (result?.post) await load()
-      setMessage({ text: result?.note ? `${done} ${result.note}` : done })
+      toast(result?.note ? `${done} ${result.note}` : done)
     } catch (e) {
-      setMessage({ text: e instanceof Error ? e.message : String(e), isError: true })
+      toast(e instanceof Error ? e.message : String(e), { isError: true })
       if (postId && !(e as { keepDraft?: boolean }).keepDraft) await load().catch(() => undefined)
     } finally {
       setBusy(false)
@@ -231,7 +259,9 @@ const PostEditor = ({
       const input = draftToInput(draft)
       if (!postId) {
         const { post: created } = await createPost(input)
-        onSaved(created.id, { text: 'Saved.' })
+        storeDraft(null, null, null)
+        toast('Saved.')
+        onSaved(created.id)
         return
       }
       if (!post) throw new Error('The post has not loaded yet')
@@ -252,7 +282,6 @@ const PostEditor = ({
   const duplicate = async () => {
     if (!post) return
     setBusy(true)
-    setMessage(null)
     try {
       const copy = duplicateDraft(post, events)
       // Disabled channels can't be used for new posts
@@ -260,24 +289,31 @@ const PostEditor = ({
         channels.some((c) => c.id === t.channelId && c.enabled)
       )
       const { post: created } = await createPost(draftToInput(copy))
-      onSaved(created.id, {
-        text: 'This is a copy of the post. Choose its send times and edit its text.',
-      })
+      toast('This is a copy of the post. Choose its send times and edit its text.')
+      onSaved(created.id)
     } catch (e) {
-      setMessage({ text: e instanceof Error ? e.message : String(e), isError: true })
+      toast(e instanceof Error ? e.message : String(e), { isError: true })
       setBusy(false)
     }
+  }
+
+  const discard = () => setDraft(JSON.parse(savedDraft))
+
+  // Puts an earlier version in the editor; it's kept when it is saved
+  const restore = (h: PostHistoryEntry) => {
+    if (!h.snapshot || (isDirty && !window.confirm(RESTORE_CONFIRM))) return
+    setDraft(restoreDraft(draft, h.snapshot, events))
+    toast(`Version ${h.version} is in the editor. Save it to keep it, or discard the changes.`)
   }
 
   const remove = async () => {
     if (!postId || !window.confirm(DELETE_CONFIRM)) return
     setBusy(true)
-    setMessage(null)
     try {
       await deletePost(postId)
       onClose()
     } catch (e) {
-      setMessage({ text: e instanceof Error ? e.message : String(e), isError: true })
+      toast(e instanceof Error ? e.message : String(e), { isError: true })
       setBusy(false)
     }
   }
@@ -306,7 +342,9 @@ const PostEditor = ({
     [events]
   )
 
-  if (postId && !post && !message) return <div className="text-center">Loading…</div>
+  if (postId && !post) {
+    return <div className="text-center">{loadError ? <span className="text-red">{loadError}</span> : 'Loading…'}</div>
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -321,8 +359,33 @@ const PostEditor = ({
           </span>
         )}
       </div>
-      {message && (
-        <div className={message.isError ? 'text-red' : 'text-green-400'}>{message.text}</div>
+      {olderChanges && (
+        <div className="flex flex-wrap items-center gap-3 border-2 border-yellow-400 rounded-md p-3 text-base">
+          <span>
+            You have unsaved changes from{' '}
+            {moment(olderChanges.savedAt).format('D.M. HH:mm')}, but the post has been saved since.
+          </span>
+          <button
+            type="button"
+            className="borderbutton"
+            onClick={() => {
+              setDraft(olderChanges.draft)
+              setOlderChanges(null)
+            }}
+          >
+            Restore them
+          </button>
+          <button
+            type="button"
+            className="borderbutton"
+            onClick={() => {
+              storeDraft(postId, null, null)
+              setOlderChanges(null)
+            }}
+          >
+            Discard them
+          </button>
+        </div>
       )}
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -566,6 +629,11 @@ const PostEditor = ({
                     Save as draft
                   </button>
                 )}
+                {editable && isDirty && (
+                  <button type="button" className="borderbutton" disabled={busy} onClick={discard}>
+                    Discard changes
+                  </button>
+                )}
                 {postId && !isDirty && (status === 'draft' || status === 'awaiting_approval') && (
                   <button
                     type="button"
@@ -698,8 +766,21 @@ const PostEditor = ({
                 <ul className="text-sm flex flex-col gap-1">
                   {history.map((h, i) => (
                     <li key={i}>
-                      {moment(h.createdAt).format('D.M. HH:mm')} · {h.action} by{' '}
+                      {moment(h.createdAt).format('D.M. HH:mm')} · v{h.version} {h.action}{' '}
                       {actorLabel(h.actor)}
+                      {h.snapshot && editable && (h.version !== post?.version || isDirty) && (
+                        <>
+                          {' · '}
+                          <button
+                            type="button"
+                            className="link"
+                            disabled={busy}
+                            onClick={() => restore(h)}
+                          >
+                            {h.version === post?.version ? 'Back to this' : 'Restore'}
+                          </button>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ul>

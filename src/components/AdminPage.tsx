@@ -3,6 +3,7 @@ import Head from 'next/head'
 import PageWrapper from './PageWrapper'
 import AdminLoginForm from './AdminLoginForm'
 import AdminDashboard from './AdminDashboard'
+import { ToastProvider } from './Toast'
 import { AGEvent } from '../types/types'
 import { checkAdminSession, logoutAdmin } from '../utils/adminAuth'
 import { AdminSection } from '../utils/adminSections'
@@ -41,9 +42,11 @@ const AdminPage = ({ events, section, children }: Props) => {
         {!checkedSession ? (
           <div className="text-center">Checking session…</div>
         ) : isLoggedIn ? (
-          <AdminDashboard section={section} events={events} onLogout={onLogout}>
-            {children}
-          </AdminDashboard>
+          <ToastProvider>
+            <AdminDashboard section={section} events={events} onLogout={onLogout}>
+              {children}
+            </AdminDashboard>
+          </ToastProvider>
         ) : (
           <AdminLoginForm onLoggedIn={() => setIsLoggedIn(true)} />
         )}
