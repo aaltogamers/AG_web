@@ -225,6 +225,7 @@ export const buildPreview = async (post: Post, ctx?: PreviewContext): Promise<Po
         timing: post.websiteChange?.timing ?? 'on_approval',
         runAt: websiteRunAt(post, settings.website.leadMinutes),
         diff: eventContext.website.diff,
+        page: eventContext.website.page,
         errors: eventContext.website.errors,
         warnings: eventContext.website.warnings,
       }

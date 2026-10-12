@@ -255,7 +255,12 @@ export const describePreview = (preview: PostPreview) => ({
     errors: t.errors,
     warnings: t.warnings,
   })),
-  website: preview.website && { ...preview.website, runAt: time(preview.website.runAt) },
+  website: preview.website && {
+    ...preview.website,
+    runAt: time(preview.website.runAt),
+    // The editor's page preview; the diff has the same
+    page: undefined,
+  },
 })
 
 export const AGENT: Actor = 'agent'

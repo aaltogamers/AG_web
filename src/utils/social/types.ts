@@ -252,6 +252,10 @@ export type WebsiteChangePreview = {
   // null with the timing on_approval (until it is approved)
   runAt: string | null
   diff: DiffLine[]
+  // The event after the change, for showing its page and card like the CMS
+  // preview does: its frontmatter with content and slug, and the URLs of images
+  // that aren't on the site yet
+  page: { event: Record<string, unknown>; imageUrls: Record<string, string> } | null
   errors: string[]
   warnings: string[]
 }

@@ -4,6 +4,7 @@ import { PLATFORM_LABELS, type Platform, type PostPreview } from '../../utils/so
 import { BlockMarkdown } from '../../utils/markdownLinks'
 import { showDiscordRoles } from '../../utils/social/render'
 import TelegramHtml from './TelegramHtml'
+import WebsitePagePreview from './WebsitePagePreview'
 
 const formatTime = (iso: string | null) => (iso ? moment(iso).format('ddd D.M.YYYY HH:mm') : 'no time')
 
@@ -114,19 +115,16 @@ const PostPreviewPanel = ({ preview, loading, testPlatforms = [], onTestSend }: 
               ⚠️ {w}
             </div>
           ))}
-          <table className="w-full text-sm border-collapse">
-            <tbody>
-              {website.diff.map((d) => (
-                <tr key={d.field} className="border-b border-lightgray/30 align-top">
-                  <td className="py-2 pr-4 font-bold whitespace-nowrap">{d.field}</td>
-                  {website.kind === 'update_event' && (
-                    <td className="py-2 pr-4 whitespace-pre-wrap text-lightgray line-through">{d.from}</td>
-                  )}
-                  <td className="py-2 whitespace-pre-wrap">{d.to}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {website.kind === 'update_event' && website.diff.length > 0 && (
+            <div className="text-sm text-lightgray">Changes: {website.diff.map((d) => d.field).join(', ')}</div>
+          )}
+          {website.page?.event.visibleOnEventsPage === false && (
+            <div className="text-sm text-lightgray">Not shown on the events page</div>
+          )}
+          {website.page?.event.visibleOnCalendar === false && (
+            <div className="text-sm text-lightgray">Not shown on the calendar</div>
+          )}
+          {website.page && <WebsitePagePreview page={website.page} />}
         </div>
       )}
     </div>

@@ -280,7 +280,7 @@ export const previewWebsiteChange = async (
   const errors: string[] = []
   const warnings: string[] = []
   const { file, slug, slugIsFinal } = await loadChangeTarget(change)
-  const empty = { kind: change.kind, eventSlug: slug, timing: change.timing, runAt, diff: [], resolved: null }
+  const empty = { kind: change.kind, eventSlug: slug, timing: change.timing, runAt, diff: [], page: null, resolved: null }
 
   if (change.kind === 'update_event' && !file) {
     return { ...empty, errors: [`No event with slug "${change.eventSlug}"`], warnings }
@@ -319,7 +319,13 @@ export const previewWebsiteChange = async (
     }
   }
 
-  return { kind: change.kind, eventSlug: slug, timing: change.timing, runAt, diff, errors, warnings, resolved }
+  const page = {
+    event: { ...resolved.data, content: resolved.body, slug: slug ?? '' },
+    imageUrls: resolved.upload
+      ? { [String(resolved.data.image)]: `/api/posts/media/${resolved.upload.mediaId}` }
+      : {},
+  }
+  return { kind: change.kind, eventSlug: slug, timing: change.timing, runAt, diff, page, errors, warnings, resolved }
 }
 
 export class WebsiteChangeConflict extends Error {}

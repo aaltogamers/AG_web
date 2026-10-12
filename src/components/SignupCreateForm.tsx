@@ -18,6 +18,7 @@ import {
   getSignupTargetStart,
   SignupTarget,
 } from '../utils/eventUtils'
+import { imageLoader } from './AGImage'
 import ParticipantTable from './ParticipantTable'
 import CopySignupDialog from './CopySignupDialog'
 import SignupPreview from './SignupPreview'
@@ -50,6 +51,24 @@ const DISCARD_CONFIRM = 'You have unsaved changes. Discard them?'
 
 const iconLink =
   'p-2 rounded-md border border-lightgray bg-white hover:border-red hover:text-red text-black'
+
+// The event's image, or the AG logo if it has none or it doesn't load
+const EventThumbnail = ({ image }: { image: string }) => {
+  const [failed, setFailed] = useState(false)
+  const src = failed || !image ? DEFAULT_EVENT_IMAGE : image
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={imageLoader({ src, width: 256 })}
+      alt=""
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className={`w-full aspect-square rounded-md bg-black ${
+        src === DEFAULT_EVENT_IMAGE ? 'object-contain p-3' : 'object-cover'
+      }`}
+    />
+  )
+}
 
 const SignUpCreateForm = ({ events }: Props) => {
   const router = useRouter()
@@ -211,7 +230,6 @@ const SignUpCreateForm = ({ events }: Props) => {
         {targets.map((target) => {
           const isSelected = target.key === selectedKey
           const start = startOf(target)
-          const isDefaultImage = !target.event.image || target.event.image === DEFAULT_EVENT_IMAGE
           return (
             <button
               key={target.key}
@@ -225,15 +243,7 @@ const SignUpCreateForm = ({ events }: Props) => {
                 isSelected ? 'border-red' : 'border-transparent hover:border-lightgray'
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={target.event.image || DEFAULT_EVENT_IMAGE}
-                alt=""
-                loading="lazy"
-                className={`w-full aspect-square rounded-md bg-black ${
-                  isDefaultImage ? 'object-contain p-3' : 'object-cover'
-                }`}
-              />
+              <EventThumbnail image={target.event.image} />
               <span className="text-sm leading-tight line-clamp-2">{target.event.name}</span>
               <span className="text-xs text-lightgray">
                 {target.session?.name ? `${target.session.name} · ` : ''}
@@ -293,7 +303,7 @@ const SignUpCreateForm = ({ events }: Props) => {
       </div>
 
       {tab === 'fields' ? (
-        <form onSubmit={save} className="flex flex-col lg:flex-row gap-8 lg:items-start">
+        <form onSubmit={save} className="flex flex-col lg:flex-row gap-8 lg:items-start max-w-5xl">
           <div className="flex-1 min-w-0 flex flex-col gap-8">
             {!signupData && (
               <div className="text-sm text-lightgray">

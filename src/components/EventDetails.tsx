@@ -64,7 +64,7 @@ const SignupPanel = ({
   isSignedUp: boolean
   onSignUp: (key: string) => void
   confirmed?: ConfirmedInfo
-  // On its own card, which already has a heading, rather than under a session
+  // On its own card rather than under a session
   standalone?: boolean
 }) => {
   const status = now && getSignupStatus(summary, now)
@@ -80,7 +80,7 @@ const SignupPanel = ({
 
   return (
     <div
-      className={`flex flex-col gap-3 ${standalone ? 'mt-3' : 'border-t border-gray-600 mt-4 pt-4'}`}
+      className={`flex flex-col gap-3 ${standalone ? '' : 'border-t border-gray-600 mt-4 pt-4'}`}
     >
       <div className="flex flex-wrap gap-x-4 gap-y-1 items-center justify-between">
         <div className="uppercase tracking-widest text-sm text-lightgray">Sign-up</div>
@@ -183,7 +183,6 @@ const EventDetails = ({
 
   const eventSignupCard = eventTarget && (
     <Card>
-      <Label>Sign-up</Label>
       {signupPanel(eventTarget, true)}
     </Card>
   )
