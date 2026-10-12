@@ -255,7 +255,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
                               ]
                                 .filter(Boolean)
                                 .join(' · ')
-                            : 'All dates'}
+                            : 'Whole event'}
                         </button>
                       )
                     })}

@@ -184,9 +184,6 @@ const EventDetails = ({
   const eventSignupCard = eventTarget && (
     <Card>
       <Label>Sign-up</Label>
-      <div className="text-xl">
-        {sessions.length > 1 ? 'One sign-up for all dates' : 'Sign up for the event'}
-      </div>
       {signupPanel(eventTarget, true)}
     </Card>
   )
