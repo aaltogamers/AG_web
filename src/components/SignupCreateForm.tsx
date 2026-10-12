@@ -63,7 +63,7 @@ const EventThumbnail = ({ image }: { image: string }) => {
       alt=""
       loading="lazy"
       onError={() => setFailed(true)}
-      className={`w-full aspect-square rounded-md bg-black ${
+      className={`w-full aspect-square rounded-md bg-neutral-950 ${
         src === DEFAULT_EVENT_IMAGE ? 'object-contain p-3' : 'object-cover'
       }`}
     />
