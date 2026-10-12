@@ -50,6 +50,42 @@ export const clearStoredSignup = (signupKey: string): void => {
   localStorage.removeItem(tokenKey(signupKey))
 }
 
+// Unsent answers are kept in the browser, e.g. if the dialog or page is closed by accident.
+// signupId is the sign-up being edited (null for a new one), so a draft is never
+// restored onto a different sign-up.
+export type SignupDraft = { answers: AnswerMap; poolId: number; signupId: string | null }
+
+const draftKey = (signupKey: string) => `signup-draft:${signupKey}`
+
+export const readSignupDraft = (signupKey: string): SignupDraft | null => {
+  try {
+    const stored = localStorage.getItem(draftKey(signupKey))
+    return stored ? (JSON.parse(stored) as SignupDraft) : null
+  } catch {
+    return null
+  }
+}
+
+export const storeSignupDraft = (signupKey: string, draft: SignupDraft | null): void => {
+  try {
+    if (!draft) {
+      localStorage.removeItem(draftKey(signupKey))
+      return
+    }
+    try {
+      localStorage.setItem(draftKey(signupKey), JSON.stringify(draft))
+    } catch {
+      // Too big for the storage; keep the answers without the new images
+      const withoutImages = JSON.stringify(draft, (_, value) =>
+        typeof value === 'string' && value.startsWith('data:') ? undefined : value
+      )
+      localStorage.setItem(draftKey(signupKey), withoutImages)
+    }
+  } catch {
+    // E.g. a private window; the answers just aren't kept
+  }
+}
+
 export const listSignupEvents = async (): Promise<SignupEvent[]> => {
   const res = await fetch('/api/signup-events', { credentials: 'same-origin' })
   if (!res.ok) return []

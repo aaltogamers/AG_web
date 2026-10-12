@@ -141,7 +141,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ error: 'Wrong password' })
     }
 
-    // Signup window enforcement (admins still blocked here; they edit via PUT).
+    // Admins can sign up outside the sign-up window, e.g. the organizers before it opens
     const now = Date.now()
     if (now < new Date(openfrom).getTime() || now > new Date(openuntil).getTime()) {
       if (!isAdminAuthorized(req)) {

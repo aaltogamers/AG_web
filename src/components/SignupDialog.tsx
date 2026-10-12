@@ -1,8 +1,8 @@
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { FaCheck, FaCircleNotch, FaCopy, FaLock } from 'react-icons/fa'
 import Select from 'react-select'
 import { DataValue, SignupInput, SignupPool, SignupRow } from '../types/types'
-import { formatSessionTime, SignupTarget } from '../utils/eventUtils'
+import { formatSessionTime, getSignupStatus, SignupTarget } from '../utils/eventUtils'
 import {
   AnswerMap,
   clearStoredSignup,
@@ -10,7 +10,9 @@ import {
   deleteSignup,
   FileMap,
   getStoredSignup,
+  readSignupDraft,
   setStoredSignup,
+  storeSignupDraft,
   signupEditLink,
   SignupSummary,
   updateSignup,
@@ -74,6 +76,8 @@ const SignupDialog = ({
   const { pools, counts } = summary
   const inputs = useMemo(() => sortedInputs(summary.inputs), [summary.inputs])
   const own = participants.find((p) => p.id === ownSignupId)
+  // Only admins get to open the dialog before the sign-up opens
+  const [isEarly] = useState(() => !preview && getSignupStatus(summary) === 'notOpen')
   const hasAlreadySignedUp = !!own && (!!preview || !!getStoredSignup(key))
 
   // Suggest the first public pool with room, since private ones need a password
@@ -84,8 +88,19 @@ const SignupDialog = ({
     pools[0]
 
   const [initial] = useState(() => initialAnswers(inputs, own?.answers))
-  const [values, setValues] = useState<AnswerMap>(initial)
-  const [poolId, setPoolId] = useState(defaultPool.id)
+  // Unsent answers from an earlier visit, unless they were for another sign-up
+  const [draft] = useState(() => {
+    if (preview) return null
+    const stored = readSignupDraft(key)
+    return stored && stored.signupId === (own?.id ?? null) ? stored : null
+  })
+  const [values, setValues] = useState<AnswerMap>(() =>
+    draft ? initialAnswers(inputs, draft.answers) : initial
+  )
+  const [poolId, setPoolId] = useState(() =>
+    draft && pools.some((p) => p.id === draft.poolId) ? draft.poolId : defaultPool.id
+  )
+  const [isDraftRestored, setIsDraftRestored] = useState(!!draft)
   const [poolPassword, setPoolPassword] = useState('')
   const [hasTriedSubmit, setHasTriedSubmit] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -104,11 +119,17 @@ const SignupDialog = ({
   const needsPassword = (pool: SignupPool) =>
     !preview && !!pool.private && pool.id !== (own && resolvePoolId(pools, own.pool_id))
 
-  const close = () => {
-    if (!result && isDirty && !window.confirm('Close without saving? Your answers will be lost.')) {
-      return
-    }
-    onClose()
+  // Keeps the unsent answers in the browser, so closing the dialog or the page loses nothing
+  useEffect(() => {
+    if (preview || result) return
+    storeSignupDraft(key, isDirty ? { answers: values, poolId, signupId: own?.id ?? null } : null)
+  }, [preview, result, key, isDirty, values, poolId, own?.id])
+
+  const startOver = () => {
+    if (!window.confirm('Clear your unsent answers?')) return
+    setValues(initial)
+    setPoolId(defaultPool.id)
+    setIsDraftRestored(false)
   }
 
   const run = async (action: () => Promise<void>) => {
@@ -162,6 +183,7 @@ const SignupDialog = ({
         const res = await createSignup(key, answers, files, selectedPool.id, password)
         setStoredSignup(key, res.id, res.submission_token)
       }
+      storeSignupDraft(key, null)
       await onChanged?.()
       setResult('saved')
     })
@@ -178,6 +200,7 @@ const SignupDialog = ({
       if (!stored) return
       await deleteSignup(stored.id, stored.token)
       clearStoredSignup(key)
+      storeSignupDraft(key, null)
       await onChanged?.()
       setResult('removed')
     })
@@ -198,6 +221,11 @@ const SignupDialog = ({
       {preview && (
         <div className="mt-2 text-base text-white border border-red/70 px-3 py-1 w-fit">
           Preview: nothing is saved
+        </div>
+      )}
+      {isEarly && (
+        <div className="mt-2 text-base text-white border border-red/70 px-3 py-1 w-fit">
+          The sign-up isn&apos;t open yet. You can sign up because you&apos;re an admin.
         </div>
       )}
     </div>
@@ -294,7 +322,7 @@ const SignupDialog = ({
 
   return (
     <Dialog
-      onClose={close}
+      onClose={onClose}
       title={hasAlreadySignedUp ? 'Edit sign-up' : 'Sign up'}
       busy={isBusy}
       maxWidthClass="max-w-4xl"
@@ -303,6 +331,14 @@ const SignupDialog = ({
       className="keep-dark"
     >
       {subtitle}
+      {isDraftRestored && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border border-gray-600 px-3 py-2 text-base text-lightgray">
+          <span>Your unsent answers were restored.</span>
+          <button type="button" className="underline hover:text-red" onClick={startOver}>
+            Start over
+          </button>
+        </div>
+      )}
       <form onSubmit={onSubmit} className="flex flex-col text-lg" noValidate>
         {pools.length > MAX_POOL_OPTIONS && (
           <div className="flex flex-col gap-2 mb-6">

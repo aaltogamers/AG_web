@@ -15,6 +15,7 @@ import { poolFill } from '../utils/signupPools'
 import { useNow } from '../utils/useNow'
 import CapacityBar from './CapacityBar'
 import ConfirmedMessage, { ConfirmedInfo } from './ConfirmedMessage'
+import { useNavBarAdmin } from './NavBarAdminProvider'
 import SignupStatusTag from './SignupStatusTag'
 
 type Props = {
@@ -68,6 +69,8 @@ const SignupPanel = ({
   standalone?: boolean
 }) => {
   const status = now && getSignupStatus(summary, now)
+  // Admins can sign up before the sign-up opens, e.g. the organizers
+  const isAdminEarly = useNavBarAdmin() === true && status === 'notOpen'
   const { pools, counts } = summary
   const statusText =
     status === 'notOpen'
@@ -86,13 +89,14 @@ const SignupPanel = ({
         <div className="uppercase tracking-widest text-sm text-lightgray">Sign-up</div>
         {now && <SignupStatusTag summary={summary} now={now} />}
       </div>
-      {status === 'open' && (
+      {(status === 'open' || isAdminEarly) && (
         <button
           type="button"
-          className={`${isSignedUp ? 'borderbutton' : 'mainbutton'} !text-lg !py-2 !px-6`}
+          className={`${isSignedUp || isAdminEarly ? 'borderbutton' : 'mainbutton'} !text-lg !py-2 !px-6`}
           onClick={() => onSignUp(target.key)}
         >
           {isSignedUp ? 'Edit sign-up' : 'Sign up'}
+          {isAdminEarly && ' (admin)'}
         </button>
       )}
       <div className="text-base text-lightgray">{statusText}</div>
