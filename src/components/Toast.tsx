@@ -29,15 +29,16 @@ const ToastItem = ({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
   return (
     <div
       role={toast.isError ? 'alert' : 'status'}
-      className={`pointer-events-auto flex items-start gap-3 bg-darkgray border-2 rounded-md px-4 py-3 text-base shadow-lg ${
-        toast.isError ? 'border-red' : 'border-green-400'
+      className={`pointer-events-auto flex items-start gap-3 rounded-md px-4 py-3 text-base text-white shadow-lg ${
+        // Darker than the theme red and green-400 so white text stays readable
+        toast.isError ? 'bg-[#C41E1E]' : 'bg-green-700'
       }`}
     >
       <span className="flex-1 break-words">{toast.text}</span>
       <button
         type="button"
         aria-label="Close"
-        className="text-lightgray hover:text-white"
+        className="text-white/80 hover:text-white"
         onClick={() => onClose(toast.id)}
       >
         ✕
