@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import moment from 'moment'
 import type { AGEvent } from '../../types/types'
-import { eventMoment } from '../../utils/eventUtils'
 import {
   createPost,
   deletePost,
@@ -26,6 +25,7 @@ import {
   type PostPreview,
 } from '../../utils/social/types'
 import DiscordPingsPicker from './DiscordPingsPicker'
+import EventPicker from './EventPicker'
 import ImagePicker from './ImagePicker'
 import MarkdownEditor from './MarkdownEditor'
 import PostPreviewPanel from './PostPreviewPanel'
@@ -339,15 +339,6 @@ const PostEditor = ({
   const availableChannels = channels.filter(
     (c) => (c.enabled && !c.deleted) || draft.targets.some((t) => t.channelId === c.id)
   )
-  const sortedEvents = useMemo(
-    () =>
-      [...events].sort(
-        (a, b) =>
-          (b.sessions[0] ? eventMoment(b.sessions[0].start).valueOf() : 0) -
-          (a.sessions[0] ? eventMoment(a.sessions[0].start).valueOf() : 0)
-      ),
-    [events]
-  )
 
   if (postId && !post) {
     return <div className="text-center">{loadError ? <span className="text-red">{loadError}</span> : 'Loading…'}</div>
@@ -405,24 +396,13 @@ const PostEditor = ({
               className={inputClass}
               disabled={!editable}
             />
-            <select
+            <EventPicker
+              events={events}
               value={draft.eventSlug}
-              onChange={(e) => setEvent(e.target.value)}
-              className={inputClass}
+              onChange={setEvent}
+              noEventLabel={draft.websiteChange ? 'No event: the website change creates one' : 'No event'}
               disabled={!editable || !!draft.websiteChange?.locked}
-            >
-              <option value="">
-                {draft.websiteChange
-                  ? 'No event: the website change creates a new one'
-                  : 'No event'}
-              </option>
-              {sortedEvents.map((e) => (
-                <option key={e.slug} value={e.slug}>
-                  {e.name}
-                  {e.sessions[0] ? ` (${eventMoment(e.sessions[0].start).format('D.M.YYYY')})` : ''}
-                </option>
-              ))}
-            </select>
+            />
             <MarkdownEditor
               value={draft.bodyMd}
               onChange={(bodyMd) => set({ bodyMd })}

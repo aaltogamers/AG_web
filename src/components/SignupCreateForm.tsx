@@ -11,14 +11,13 @@ import {
 } from 'react-icons/fa'
 import { AGEvent, SignupRow } from '../types/types'
 import {
-  DEFAULT_EVENT_IMAGE,
   eventMoment,
   getSignupTargetLabel,
   getSignupTargets,
   getSignupTargetStart,
   SignupTarget,
 } from '../utils/eventUtils'
-import { imageLoader } from './AGImage'
+import EventThumbnail from './EventThumbnail'
 import ParticipantTable from './ParticipantTable'
 import CopySignupDialog from './CopySignupDialog'
 import SignupPreview from './SignupPreview'
@@ -51,24 +50,6 @@ const DISCARD_CONFIRM = 'You have unsaved changes. Discard them?'
 
 const iconLink =
   'p-2 rounded-md border border-lightgray bg-white hover:border-red hover:text-red text-black'
-
-// The event's image, or the AG logo if it has none or it doesn't load
-const EventThumbnail = ({ image }: { image: string }) => {
-  const [failed, setFailed] = useState(false)
-  const src = failed || !image ? DEFAULT_EVENT_IMAGE : image
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={imageLoader({ src, width: 256 })}
-      alt=""
-      loading="lazy"
-      onError={() => setFailed(true)}
-      className={`w-full aspect-square rounded-md bg-neutral-950 ${
-        src === DEFAULT_EVENT_IMAGE ? 'object-contain p-3' : 'object-cover'
-      }`}
-    />
-  )
-}
 
 const SignUpCreateForm = ({ events }: Props) => {
   const router = useRouter()
