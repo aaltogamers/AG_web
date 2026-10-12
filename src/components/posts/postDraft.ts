@@ -12,7 +12,6 @@ import type {
   WebsiteChangeKind,
   WebsiteChangeTiming,
 } from '../../utils/social/types'
-import { draftToForm, formToDraft, type FormDraft } from '../SignupFormEditor'
 
 const LOCAL = 'YYYY-MM-DDTHH:mm'
 
@@ -63,8 +62,6 @@ export type EventDraft = {
 
 export type EventField = keyof EventDraft
 
-export type FormSlotDraft = { sessionId?: string; draft: FormDraft }
-
 export type WebsiteChangeDraft = {
   kind: WebsiteChangeKind
   eventSlug: string
@@ -72,7 +69,6 @@ export type WebsiteChangeDraft = {
   runAt: string
   event: EventDraft
   changed: EventField[]
-  forms: FormSlotDraft[]
   locked: boolean
 }
 
@@ -166,7 +162,6 @@ export const postToDraft = (post: Post, events: AGEvent[]): PostDraft => {
       runAt: toLocal(change.runAt),
       event,
       changed: (Object.keys(e) as EventField[]).filter((k) => e[k] !== undefined),
-      forms: change.signupForms.map(({ sessionId, form }) => ({ sessionId, draft: formToDraft(form) })),
       locked: ['sending', 'done', 'skipped'].includes(change.status),
     }
   }
@@ -234,9 +229,7 @@ const postEventSlug = (draft: PostDraft) => {
   return change.kind === 'update_event' ? change.eventSlug || null : null
 }
 
-// Throws with a message if a sign-up form is incomplete; `lenient` leaves such forms
-// out instead, for the live preview
-export const draftToInput = (draft: PostDraft, { lenient = false } = {}): PostInput => {
+export const draftToInput = (draft: PostDraft): PostInput => {
   const change = draft.websiteChange
   return {
     title: draft.title,
@@ -258,14 +251,6 @@ export const draftToInput = (draft: PostDraft, { lenient = false } = {}): PostIn
       timing: change.timing,
       runAt: change.timing === 'at' ? fromLocal(change.runAt) : null,
       event: eventToChange(change, draft.images),
-      signupForms: change.forms.flatMap(({ sessionId, draft: formDraft }) => {
-        const result = draftToForm(formDraft)
-        if ('error' in result) {
-          if (lenient) return []
-          throw new Error(`Sign-up form: ${result.error}`)
-        }
-        return [{ ...(sessionId && { sessionId }), form: result.form }]
-      }),
     },
   }
 }

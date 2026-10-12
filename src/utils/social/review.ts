@@ -168,10 +168,6 @@ const websiteMessage = (preview: PostPreview): Message | null => {
         ? `<b>${esc(d.field)}</b>: ${esc(cut(d.to))}`
         : `<b>${esc(d.field)}</b>: ${esc(cut(d.from))} → ${esc(cut(d.to))}`
     ),
-    ...w.forms.map(
-      (f) =>
-        `📝 Sign-up form ${esc(f.label)}: ${f.isNew ? 'new' : `changed, already has ${f.signups} sign-up(s)`}`
-    ),
     ...w.errors.map((e) => `❗ ${esc(e)}`),
     ...w.warnings.map((e) => `⚠️ ${esc(e)}`),
   ]

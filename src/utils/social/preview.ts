@@ -20,7 +20,7 @@ import {
   type PlaceholderSession,
 } from './render'
 import { isTelegramConfigured } from './telegram'
-import type { Channel, Post, PostPreview, PostTarget, RenderedText, SignupFormChange, SocialSettings } from './types'
+import type { Channel, Post, PostPreview, PostTarget, RenderedText, SocialSettings } from './types'
 import { previewWebsiteChange, signupSessionsAfterChange } from './website'
 
 let linkSlugsCache: string[] | null = null
@@ -54,23 +54,14 @@ export const loadPreviewContext = async (): Promise<PreviewContext> => {
   return { channels, settings }
 }
 
-// The event's sessions with when their sign-up opens: from the website change's
-// forms, or the saved forms (`savedForms`: the event exists)
-const placeholderSessions = async (
-  event: AGEvent,
-  formChanges: SignupFormChange[],
-  savedForms: boolean
-): Promise<PlaceholderSession[]> => {
+// The event's sessions with when their sign-up opens, from the saved forms
+// (`savedForms`: the event exists)
+const placeholderSessions = async (event: AGEvent, savedForms: boolean): Promise<PlaceholderSession[]> => {
   const targets = getSignupTargets(event)
   return Promise.all(
     event.sessions.map(async (session) => {
       const target = event.signupMode === 'event' ? targets[0] : targets.find((t) => t.session === session)
-      const changed = target && formChanges.find((f) => (f.sessionId ?? '') === (target.session?.id ?? ''))
-      const signupOpens = changed
-        ? changed.form.openfrom
-        : target && savedForms
-          ? ((await getSignupForm(target.key))?.openfrom ?? null)
-          : null
+      const signupOpens = target && savedForms ? ((await getSignupForm(target.key))?.openfrom ?? null) : null
       return {
         label: session.name || eventMoment(session.start).format('D.M.YYYY'),
         start: session.start,
@@ -102,7 +93,7 @@ const resolveEventContext = async (
       eventSlug: preview.eventSlug,
       signupSessions: resolved ? signupSessionsAfterChange(resolved) : null,
       sessions: event
-        ? await placeholderSessions(event, change.signupForms, change.kind === 'update_event' || change.status === 'done')
+        ? await placeholderSessions(event, change.kind === 'update_event' || change.status === 'done')
         : null,
       website: preview,
     }
@@ -120,7 +111,7 @@ const resolveEventContext = async (
         : event.signupMode === 'event'
           ? []
           : targets.map((t) => t.session?.name || t.session?.start.slice(0, 10)),
-    sessions: await placeholderSessions(event, [], true),
+    sessions: await placeholderSessions(event, true),
     website: null,
   }
 }
@@ -234,7 +225,6 @@ export const buildPreview = async (post: Post, ctx?: PreviewContext): Promise<Po
         timing: post.websiteChange?.timing ?? 'on_approval',
         runAt: websiteRunAt(post, settings.website.leadMinutes),
         diff: eventContext.website.diff,
-        forms: eventContext.website.forms,
         errors: eventContext.website.errors,
         warnings: eventContext.website.warnings,
       }

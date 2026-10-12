@@ -106,12 +106,6 @@ const PostPreviewPanel = ({ preview, loading }: Props) => {
               ))}
             </tbody>
           </table>
-          {website.forms.map((f) => (
-            <div key={f.key} className="text-sm">
-              📝 Sign-up form {f.label}:{' '}
-              {f.isNew ? 'new' : `changed; it already has ${f.signups} sign-up(s)`}
-            </div>
-          ))}
         </div>
       )}
     </div>

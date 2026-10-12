@@ -10,9 +10,7 @@ import {
   parseAgentTime,
   requireString,
 } from './agentApi'
-import { parseFields, parsePools } from './agentEvents'
 import { getSettings, type Actor } from './postStore'
-import { getSignupForm } from './signupForms'
 import { saveUploadedImage, MAX_UPLOAD_BYTES } from './social/media'
 import type {
   Channel,
@@ -23,11 +21,9 @@ import type {
   PostImage,
   PostInput,
   PostPreview,
-  SignupFormChange,
   TextChoice,
   WebsiteChangeTiming,
 } from './social/types'
-import type { SignupPool } from '../types/types'
 
 const toIso = (value: unknown, name: string) =>
   value === null ? null : parseAgentTime(value, name).toISOString()
@@ -95,51 +91,9 @@ const parseEvent = (raw: unknown): EventChange => {
   return Object.fromEntries(Object.entries(event).filter(([, v]) => v !== undefined))
 }
 
-// Private pools keep their current password unless a new one is given: the one
-// in the post's website change, or the existing sign-up form's
-const currentPools = async (
-  existing: Post | null,
-  eventSlug: string | null,
-  sessionId?: string
-): Promise<SignupPool[]> => {
-  const inPost = existing?.websiteChange?.signupForms.find((f) => (f.sessionId ?? '') === (sessionId ?? ''))
-  if (inPost) return inPost.form.pools
-  if (!eventSlug) return []
-  return (await getSignupForm(sessionId ? `${eventSlug}:${sessionId}` : eventSlug))?.pools ?? []
-}
-
-const parseForms = async (
-  raw: unknown,
-  existing: Post | null,
-  eventSlug: string | null
-): Promise<SignupFormChange[]> =>
-  Promise.all(
-    (optionalArray(raw, 'websiteChange.signupForms') ?? []).map(async (rawForm, i) => {
-      const f = asRecord(rawForm, `websiteChange.signupForms[${i}]`)
-      const openfrom = parseAgentTime(f.openFrom, `signupForms[${i}].openFrom`)
-      const openuntil = parseAgentTime(f.openUntil, `signupForms[${i}].openUntil`)
-      if (!openuntil.isAfter(openfrom)) throw new AgentError(400, `signupForms[${i}]: openUntil must be after openFrom`)
-      const sessionId = optionalString(f.sessionId, `signupForms[${i}].sessionId`)
-      return {
-        ...(sessionId && { sessionId }),
-        form: {
-          openfrom: openfrom.toISOString(),
-          openuntil: openuntil.toISOString(),
-          pools: parsePools(f.pools, await currentPools(existing, eventSlug, sessionId)),
-          inputs: parseFields(f.fields),
-          confirmedMessage: optionalString(f.confirmedMessage, 'confirmedMessage') ?? '',
-          confirmedLink: optionalString(f.confirmedLink, 'confirmedLink') ?? '',
-        },
-      }
-    })
-  )
-
 // Turns the arguments of create_post / update_post into a PostInput. Only given
-// fields are set. `existing` is the post being updated.
-export const parsePostArgs = async (
-  args: Record<string, unknown>,
-  existing: Post | null = null
-): Promise<PostInput> => {
+// fields are set.
+export const parsePostArgs = async (args: Record<string, unknown>): Promise<PostInput> => {
   const input: PostInput = {}
   if ('title' in args) input.title = requireString(args.title, 'title')
   if ('body' in args) input.bodyMd = typeof args.body === 'string' ? args.body : ''
@@ -172,7 +126,6 @@ export const parsePostArgs = async (
         ...(w.timing !== undefined && { timing: w.timing as WebsiteChangeTiming }),
         runAt: w.runAt ? toIso(w.runAt, 'websiteChange.runAt') : null,
         event: parseEvent(w.event),
-        signupForms: await parseForms(w.signupForms, existing, kind === 'update_event' ? eventSlug : null),
       }
     }
   }
@@ -212,15 +165,6 @@ const describeWebsiteChange = (post: Post) => {
       description: text(w.event.description),
       body: text(w.event.body),
     },
-    signupForms: w.signupForms.map(({ sessionId, form }) => ({
-      sessionId,
-      openFrom: time(form.openfrom),
-      openUntil: time(form.openuntil),
-      pools: form.pools,
-      fields: form.inputs,
-      confirmedMessage: form.confirmedMessage || undefined,
-      confirmedLink: form.confirmedLink || undefined,
-    })),
   }
 }
 
@@ -311,13 +255,7 @@ export const describePreview = (preview: PostPreview) => ({
     errors: t.errors,
     warnings: t.warnings,
   })),
-  website: preview.website && {
-    ...preview.website,
-    runAt: time(preview.website.runAt),
-    // Only counts of sign-ups, never their answers
-    signupForms: preview.website.forms,
-    forms: undefined,
-  },
+  website: preview.website && { ...preview.website, runAt: time(preview.website.runAt) },
 })
 
 export const AGENT: Actor = 'agent'

@@ -1,7 +1,6 @@
-// Website changes of posts: the event (eventFiles.ts) and its sign-up forms
-// (signupForms.ts), their diffs and the conflict check before running.
+// Website changes of posts: the event (eventFiles.ts), its diff and the conflict
+// check before running. Sign-up forms are edited on the sign-ups page.
 import slugify from 'slug'
-import moment from 'moment-timezone'
 import { AgentError } from '../agentApi'
 import {
   type EventFile,
@@ -13,14 +12,7 @@ import {
   saveEventFile,
 } from '../eventFiles'
 import { eventMoment, formatSessionTime, getSignupTargets } from '../eventUtils'
-import {
-  deleteSignupForms,
-  formChangeError,
-  getSignupFormKeysOfEvent,
-  getSignupSummaries,
-  saveSignupForm,
-  totalSignups,
-} from '../signupForms'
+import { deleteSignupForms, getSignupFormKeysOfEvent, getSignupSummaries, totalSignups } from '../signupForms'
 import pool from '../db_pg'
 import { getMedia } from '../postStore'
 import { fillPlaceholders, type PlaceholderSession } from './render'
@@ -61,21 +53,15 @@ const FIELD_LABELS: Record<ChangeField, string> = {
 const changedFields = (event: EventChange): ChangeField[] =>
   CHANGE_FIELDS.filter((field) => event[field] !== undefined)
 
-// The sessions after the change for {{date}} etc., with when the website change's
-// sign-up forms open
-const placeholderSessions = (data: Record<string, unknown>, change: WebsiteChange): PlaceholderSession[] =>
+// The sessions after the change for {{date}} etc.
+const placeholderSessions = (data: Record<string, unknown>): PlaceholderSession[] =>
   (Array.isArray(data.sessions) ? (data.sessions as SessionChange[]) : [])
-    .map((s) => {
-      const form = change.signupForms.find((f) =>
-        data.signupMode === 'session' ? f.sessionId === s.id : data.signupMode === 'event' && !f.sessionId
-      )
-      return {
-        label: s.name || eventMoment(s.start).format('D.M.YYYY'),
-        start: s.start,
-        location: s.location,
-        signupOpens: form?.form.openfrom ?? null,
-      }
-    })
+    .map((s) => ({
+      label: s.name || eventMoment(s.start).format('D.M.YYYY'),
+      start: s.start,
+      location: s.location,
+      signupOpens: null,
+    }))
     .sort((a, b) => eventMoment(a.start).valueOf() - eventMoment(b.start).valueOf())
 
 // Text of an event field: the post's text with placeholders filled in (no ref,
@@ -165,7 +151,7 @@ export const resolveEvent = (
   }
   // Texts last, so that their sign-up links know the event's sessions
   const signupSessions = signupSessionsAfterChange({ data, body })
-  const sessions = placeholderSessions(data, change)
+  const sessions = placeholderSessions(data)
   if (event.description !== undefined) {
     data.description = resolveText(event.description, post, slug, signupSessions, sessions)
   }
@@ -240,9 +226,6 @@ const conflictingFields = (base: Record<string, unknown>, file: EventFile) =>
     (field) => comparable(base[field]) !== comparable(currentValue(field, file))
   )
 
-// Sign-up form key of a form change, once the slug is known
-const formKey = (slug: string, sessionId?: string) => (sessionId ? `${slug}:${sessionId}` : slug)
-
 // Slugs taken by other approved, not yet run new events
 const reservedSlugs = async (postId: string): Promise<string[]> => {
   const result = await pool.query<{ event_slug: string }>(
@@ -288,10 +271,7 @@ export const signupSessionsAfterChange = (resolved: Pick<ResolvedEvent, 'data' |
   return null
 }
 
-const sessionLabel = (session?: SessionChange) =>
-  session ? session.name || eventMoment(session.start).format('ddd D.M.YYYY HH:mm') : 'Whole event'
-
-// Diff, sign-up form counts and problems of a website change
+// Diff and problems of a website change
 export const previewWebsiteChange = async (
   post: Post,
   change: WebsiteChange,
@@ -300,7 +280,7 @@ export const previewWebsiteChange = async (
   const errors: string[] = []
   const warnings: string[] = []
   const { file, slug, slugIsFinal } = await loadChangeTarget(change)
-  const empty = { kind: change.kind, eventSlug: slug, timing: change.timing, runAt, diff: [], forms: [], resolved: null }
+  const empty = { kind: change.kind, eventSlug: slug, timing: change.timing, runAt, diff: [], resolved: null }
 
   if (change.kind === 'update_event' && !file) {
     return { ...empty, errors: [`No event with slug "${change.eventSlug}"`], warnings }
@@ -309,7 +289,7 @@ export const previewWebsiteChange = async (
     if (!change.event.name) errors.push('The new event needs a name')
     if (change.event.description === undefined) errors.push('The new event needs a short description')
     if (!slugIsFinal) warnings.push(`The event's address is chosen when the post is approved: /events/${slug} if it's still free`)
-  } else if (!changedFields(change.event).length && !change.signupForms.length) {
+  } else if (!changedFields(change.event).length) {
     errors.push('The website change changes nothing')
   }
   if (change.event.image && 'postImage' in change.event.image && !post.images[change.event.image.postImage]) {
@@ -319,43 +299,8 @@ export const previewWebsiteChange = async (
   const resolved = resolveEvent(post, change, file, slug)
   const diff = diffEvent(change, file, resolved)
   const newEvent = eventFromFile({ slug: slug ?? '', data: resolved.data, body: resolved.body, sha: '' })
-  const sessions = (Array.isArray(resolved.data.sessions) ? resolved.data.sessions : []) as SessionChange[]
-  const mode = newEvent.signupMode
-
-  // Sign-up forms
   const existingKeys = slug && file ? await getSignupFormKeysOfEvent(slug) : []
   const summaries = await getSignupSummaries(existingKeys)
-  const forms: WebsiteChangePreview['forms'] = []
-  for (const [i, { sessionId, form }] of change.signupForms.entries()) {
-    const session = sessions.find((s) => s.id === sessionId)
-    if (mode === 'none') {
-      errors.push('Sign-up forms need the event to have sign-ups (sign-up mode "event" or "session")')
-      break
-    }
-    if (mode === 'event' && sessionId) {
-      errors.push(`Sign-up form ${i + 1} is for a session, but the event has one sign-up for the whole event`)
-      continue
-    }
-    if (mode === 'session' && !session) {
-      errors.push(`Sign-up form ${i + 1} is for a session the event doesn't have; the event has one sign-up per session`)
-      continue
-    }
-    const key = slug ? formKey(slug, sessionId) : '(new event)'
-    const existing = summaries.find((s) => s.key === key)
-    if (existing && file) {
-      const problem = await formChangeError(key, form)
-      if (problem) errors.push(problem)
-    }
-    if (moment(form.openuntil).isBefore(moment())) {
-      warnings.push(`Sign-up form for ${sessionLabel(session)} closes before now`)
-    }
-    forms.push({
-      key,
-      label: sessionLabel(session),
-      isNew: !existing,
-      signups: existing ? totalSignups(existing) : 0,
-    })
-  }
 
   // Forms that would be left without a session or sign-up mode
   if (file && slug) {
@@ -374,7 +319,7 @@ export const previewWebsiteChange = async (
     }
   }
 
-  return { kind: change.kind, eventSlug: slug, timing: change.timing, runAt, diff, forms, errors, warnings, resolved }
+  return { kind: change.kind, eventSlug: slug, timing: change.timing, runAt, diff, errors, warnings, resolved }
 }
 
 export class WebsiteChangeConflict extends Error {}
@@ -389,8 +334,7 @@ export const committedByPost = async (post: Post, slug: string) => {
   return last?.message.includes(commitMarker(post)) ? last.sha : null
 }
 
-// Runs the change: commits the event file (with an uploaded image), then saves
-// the sign-up forms. A conflict throws WebsiteChangeConflict, which is not retried.
+// Runs the change: commits the event file (with an uploaded image). A conflict throws WebsiteChangeConflict, which is not retried.
 export const runWebsiteChange = async (
   post: Post,
   change: WebsiteChange,
@@ -462,13 +406,6 @@ export const runWebsiteChange = async (
     }
   }
 
-  for (const { sessionId, form } of change.signupForms) {
-    const key = formKey(slug, sessionId)
-    const problem = await formChangeError(key, form)
-    if (problem) throw new WebsiteChangeConflict(problem)
-    const result = await saveSignupForm({ key, ...form })
-    if ('error' in result) throw new WebsiteChangeConflict(`Sign-up form "${key}": ${result.error}`)
-  }
   return commitSha
 }
 

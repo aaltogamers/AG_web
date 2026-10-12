@@ -108,9 +108,9 @@ do Telegram messages; Instagram shows links as their text. A post can be sent
 right when it is approved instead of at a time. "Duplicate" makes a copy of a
 post without its times or website change, e.g. for a reminder.
 
-A post can include one website change (creating or changing an event and its
-sign-up forms), which runs when the post is approved (default), 10 minutes
-before the first message, or at a set time. If it
+A post can include one website change (creating or changing an event; its
+sign-up forms are edited on the sign-ups page), which runs when the post is
+approved (default), 10 minutes before the first message, or at a set time. If it
 fails, e.g. because the same fields were edited in the CMS, the messages wait
 until someone presses Retry (overwrites) or Send anyway.
 

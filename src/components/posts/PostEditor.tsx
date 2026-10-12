@@ -161,7 +161,7 @@ const PostEditor = ({
     previewTimer.current = setTimeout(async () => {
       setPreviewLoading(true)
       try {
-        const result = await previewPost(postId, draftToInput(draft, { lenient: true }))
+        const result = await previewPost(postId, draftToInput(draft))
         if (!stale) setPreview(result.preview)
       } catch (e) {
         if (stale) return
@@ -194,8 +194,8 @@ const PostEditor = ({
       changed.push('description')
     }
     return existing
-      ? { kind: 'update_event' as const, eventSlug, event, changed, forms: [] }
-      : { kind: 'create_event' as const, eventSlug: '', event, changed: [], forms: [] }
+      ? { kind: 'update_event' as const, eventSlug, event, changed }
+      : { kind: 'create_event' as const, eventSlug: '', event, changed: [] }
   }
   const setEvent = (eventSlug: string) =>
     set({
@@ -494,7 +494,6 @@ const PostEditor = ({
                   value={draft.websiteChange}
                   onChange={(websiteChange) => set({ websiteChange })}
                   events={events}
-                  preview={preview?.website ?? null}
                   leadMinutes={leadMinutes}
                   eventStart={eventStart}
                 />
@@ -514,8 +513,7 @@ const PostEditor = ({
             ) : (
               <div className="flex flex-col gap-2">
                 <div className="text-sm text-lightgray">
-                  Create a new event or change an existing one (and its sign-up forms) before the
-                  messages go out.
+                  Create a new event or change an existing one before the messages go out.
                 </div>
                 {editable && (
                   <button

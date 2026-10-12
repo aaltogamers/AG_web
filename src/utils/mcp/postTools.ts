@@ -16,7 +16,6 @@ import { buildPreview } from '../social/preview'
 import { PLACEHOLDER_HELP } from '../social/render'
 import { POST_STATUSES } from '../social/types'
 import { sessionSchema } from './eventTools'
-import { fieldSchema, poolSchema } from './signupFormTools'
 import { givenArgs, runTool } from './server'
 
 const TIME_HINT = 'Helsinki time, e.g. 2026-10-24T18:00'
@@ -55,21 +54,6 @@ const channelSchema = z.object({
     ),
 })
 
-const signupFormSchema = z.object({
-  sessionId: z
-    .string()
-    .optional()
-    .describe(
-      "The session's id, for an event with a sign-up per session. Leave out for an event with one sign-up for the whole event."
-    ),
-  openFrom: z.string().describe(`When sign-up opens. ${TIME_HINT}`),
-  openUntil: z.string().describe(`When sign-up closes. ${TIME_HINT}`),
-  pools: z.array(poolSchema).min(1),
-  fields: z.array(fieldSchema).optional(),
-  confirmedMessage: z.string().optional(),
-  confirmedLink: z.string().optional(),
-})
-
 const websiteChangeSchema = z.object({
   kind: z
     .enum(['create_event', 'update_event'])
@@ -92,7 +76,7 @@ const websiteChangeSchema = z.object({
         .array(sessionSchema)
         .optional()
         .describe(
-          'All sessions after the change. Keep existing sessions with their ids; new sessions get an id when the post is saved (see get_post), which sign-up forms refer to.'
+          'All sessions after the change. Keep existing sessions with their ids; new sessions get an id when the post is saved (see get_post).'
         ),
       signupMode: z.enum(['none', 'event', 'session']).optional(),
       image: z
@@ -112,10 +96,6 @@ const websiteChangeSchema = z.object({
     .describe(
       'For create_event, the new event (name and description are required). For update_event, only the fields to change.'
     ),
-  signupForms: z
-    .array(signupFormSchema)
-    .optional()
-    .describe('Sign-up forms to create or replace. Pools with sign-ups and answered questions cannot be removed.'),
 })
 
 const postFields = {
@@ -137,7 +117,7 @@ const postFields = {
   websiteChange: websiteChangeSchema
     .nullable()
     .describe(
-      'A scheduled change to the website made before the messages go out: a new event, or changes to an existing one, and its sign-up forms. Replaces the whole website change; null removes it.'
+      'A scheduled change to the website made before the messages go out: a new event, or changes to an existing one. Sign-up forms are not part of it: make them with create_signup_form / update_signup_form once the event exists. Replaces the whole website change; null removes it.'
     ),
 }
 const optionalPostFields = z.object(postFields).partial().shape
@@ -257,7 +237,7 @@ export const registerPostTools = (server: McpServer) => {
       annotations: { idempotentHint: true },
     },
     runTool('update_post', async ({ postId, ...fields }) => {
-      const input = await parsePostArgs(givenArgs(fields), await getPostOrThrow(postId))
+      const input = await parsePostArgs(givenArgs(fields))
       if (!Object.keys(input).length) throw new AgentError(400, 'Nothing to update')
       const { post, note } = await editPost(postId, input, AGENT)
       return {
@@ -272,7 +252,7 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Preview post',
       description:
-        "Shows each channel's text exactly as it will be sent, with character counts and limit problems, and the website change as a diff with the sign-up counts of forms that will change. A post with errors can't be approved.",
+        "Shows each channel's text exactly as it will be sent, with character counts and limit problems, and the website change as a diff. A post with errors can't be approved.",
       inputSchema: { postId: z.string() },
       annotations: { readOnlyHint: true },
     },

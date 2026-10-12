@@ -6,8 +6,6 @@ import pool from './db_pg'
 import { AgentError } from './agentApi'
 import { randomSessionId } from './eventFiles'
 import { EVENT_TIMEZONE } from './eventUtils'
-import { normalizePools } from './signupPools'
-import type { SignupInput } from '../types/types'
 import {
   DEFAULT_SETTINGS,
   DISCORD_PINGS,
@@ -24,7 +22,6 @@ import {
   type PostStatus,
   type PostTarget,
   type SessionChange,
-  type SignupFormChange,
   type SocialSettings,
   type TargetStatus,
   type TextChoice,
@@ -427,7 +424,6 @@ type WebsiteChangeRow = {
   kind: WebsiteChange['kind']
   event_slug: string | null
   event: EventChange
-  signup_forms: SignupFormChange[]
   base: Record<string, unknown> | null
   status: WebsiteChangeStatus
   commit_sha: string | null
@@ -472,7 +468,6 @@ const rowToWebsiteChange = (row: WebsiteChangeRow): WebsiteChange => ({
   timing: row.timing,
   runAt: toISO(row.run_at),
   event: row.event ?? {},
-  signupForms: row.signup_forms ?? [],
   status: row.status,
   commitSha: row.commit_sha,
   error: row.error,
@@ -779,54 +774,6 @@ const parseEventChange = (raw: EventChange, imageCount: number): EventChange => 
   return event
 }
 
-// Keeps given field ids and gives new fields max+1, like saveSignupForm
-const ensureInputIds = (inputs: SignupInput[]): SignupInput[] => {
-  let maxId = Math.max(0, ...inputs.map((i) => Number(i.id)).filter(Number.isFinite))
-  return inputs.map((input, i) => {
-    const id = Number(input.id)
-    return { ...input, number: i + 1, id: Number.isFinite(id) && id > 0 ? id : ++maxId }
-  })
-}
-
-const parseSignupForms = (raw: unknown): SignupFormChange[] => {
-  if (!Array.isArray(raw)) throw new AgentError(400, 'signupForms must be a list')
-  const seen = new Set<string>()
-  return raw.map((entry, i) => {
-    const { sessionId, form } = (entry ?? {}) as Partial<SignupFormChange>
-    const key = sessionId ? String(sessionId) : ''
-    if (seen.has(key)) throw new AgentError(400, `signupForms[${i}]: two forms for the same session`)
-    seen.add(key)
-    if (!form) throw new AgentError(400, `signupForms[${i}].form is required`)
-    const openfrom = parseIsoTime(form.openfrom, `signupForms[${i}].form.openfrom`)
-    const openuntil = parseIsoTime(form.openuntil, `signupForms[${i}].form.openuntil`)
-    if (!openfrom || !openuntil) {
-      throw new AgentError(400, `signupForms[${i}]: when sign-up opens and closes is required`)
-    }
-    if (openuntil <= openfrom) {
-      throw new AgentError(400, `signupForms[${i}]: sign-up must close after it opens`)
-    }
-    const pools = normalizePools(form.pools)
-    if (pools.some((p) => p.private && !p.password)) {
-      throw new AgentError(400, `signupForms[${i}]: private pools need a password`)
-    }
-    const confirmedLink = String(form.confirmedLink ?? '').trim()
-    if (confirmedLink && !/^https?:\/\/\S+$/i.test(confirmedLink)) {
-      throw new AgentError(400, `signupForms[${i}]: the link for participants must start with https://`)
-    }
-    return {
-      ...(key && { sessionId: key }),
-      form: {
-        openfrom,
-        openuntil,
-        pools,
-        inputs: ensureInputIds(Array.isArray(form.inputs) ? form.inputs : []),
-        confirmedMessage: String(form.confirmedMessage ?? '').trim(),
-        confirmedLink,
-      },
-    }
-  })
-}
-
 type NormalizedInput = {
   title?: string
   bodyMd?: string
@@ -847,7 +794,6 @@ type NormalizedInput = {
     timing: WebsiteChangeTiming
     runAt: string | null
     event: EventChange
-    signupForms: SignupFormChange[]
   } | null
 }
 
@@ -940,7 +886,6 @@ const normalizePostInput = async (
         timing,
         runAt: timing === 'at' ? runAt : null,
         event: parseEventChange(raw.event ?? {}, imageCount),
-        signupForms: parseSignupForms(raw.signupForms ?? []),
       }
       if (raw.kind === 'update_event' && out.eventSlug === undefined && !existing?.eventSlug) {
         out.eventSlug = eventSlug
@@ -1061,19 +1006,11 @@ const writeWebsiteChange = async (
     return
   }
   await client.query(
-    `INSERT INTO post_website_changes (post_id, timing, run_at, kind, event_slug, event, signup_forms, status)
-     VALUES ($1, $7, $2, $3, $4, $5::jsonb, $6::jsonb, 'pending')
+    `INSERT INTO post_website_changes (post_id, timing, run_at, kind, event_slug, event, status)
+     VALUES ($1, $6, $2, $3, $4, $5::jsonb, 'pending')
      ON CONFLICT (post_id) DO UPDATE SET timing = EXCLUDED.timing, run_at = EXCLUDED.run_at, kind = EXCLUDED.kind,
-       event_slug = EXCLUDED.event_slug, event = EXCLUDED.event, signup_forms = EXCLUDED.signup_forms`,
-    [
-      postId,
-      change.runAt,
-      change.kind,
-      change.eventSlug,
-      JSON.stringify(change.event),
-      JSON.stringify(change.signupForms),
-      change.timing,
-    ]
+       event_slug = EXCLUDED.event_slug, event = EXCLUDED.event`,
+    [postId, change.runAt, change.kind, change.eventSlug, JSON.stringify(change.event), change.timing]
   )
 }
 

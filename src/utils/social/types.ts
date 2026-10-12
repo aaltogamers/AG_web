@@ -1,5 +1,5 @@
 // Types of scheduled posts, shared by the server and the admin UI
-import type { SignupInput, SignupMode, SignupPool } from '../../types/types'
+import type { SignupMode } from '../../types/types'
 
 export const PLATFORMS = ['telegram', 'discord', 'instagram'] as const
 export type Platform = (typeof PLATFORMS)[number]
@@ -112,18 +112,6 @@ export type EventChange = {
   body?: TextChoice
 }
 
-export type SignupFormData = {
-  openfrom: string
-  openuntil: string
-  pools: SignupPool[]
-  inputs: SignupInput[]
-  confirmedMessage?: string
-  confirmedLink?: string
-}
-
-// A sign-up form to create or change: the event's form (no sessionId) or a session's
-export type SignupFormChange = { sessionId?: string; form: SignupFormData }
-
 export type WebsiteChangeKind = 'create_event' | 'update_event'
 
 // When a website change runs: when the post is approved, the lead time before
@@ -139,7 +127,6 @@ export type WebsiteChange = {
   // When the change runs (ISO), with the timing "at"
   runAt: string | null
   event: EventChange
-  signupForms: SignupFormChange[]
   status: WebsiteChangeStatus
   commitSha?: string | null
   error?: string | null
@@ -197,7 +184,6 @@ export type PostInput = {
     timing?: WebsiteChangeTiming
     runAt?: string | null
     event: EventChange
-    signupForms?: SignupFormChange[]
   } | null
 }
 
@@ -257,7 +243,6 @@ export type WebsiteChangePreview = {
   // null with the timing on_approval (until it is approved)
   runAt: string | null
   diff: DiffLine[]
-  forms: { key: string; label: string; isNew: boolean; signups: number }[]
   errors: string[]
   warnings: string[]
 }
