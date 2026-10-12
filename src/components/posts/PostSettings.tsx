@@ -125,6 +125,41 @@ const TelegramCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
         />
       </div>
 
+      <h4 className="text-lg mt-2">Test channel</h4>
+      <div className="text-sm text-lightgray">
+        &quot;Post on test channel&quot; in a post&apos;s preview sends its Telegram text here. Posts can&apos;t pick it as a channel.
+      </div>
+      <select
+        className={inputClass}
+        value=""
+        onChange={(e) => {
+          const chat = data.knownChats.find((c) => `${c.chatId}/${c.threadId}` === e.target.value)
+          if (chat) setTelegram({ ...telegram, testChatId: chat.chatId, testThreadId: chat.threadId })
+        }}
+      >
+        <option value="">Pick a chat the bot knows…</option>
+        {data.knownChats.map((c) => (
+          <option key={`${c.chatId}/${c.threadId}`} value={`${c.chatId}/${c.threadId}`}>
+            {c.title} ({c.chatId}
+            {c.threadId && `, topic ${c.threadId}`})
+          </option>
+        ))}
+      </select>
+      <div className="flex flex-wrap gap-2">
+        <input
+          className={inputClass}
+          value={telegram.testChatId}
+          onChange={(e) => setTelegram({ ...telegram, testChatId: e.target.value })}
+          placeholder="Chat id or @channel (empty: none)"
+        />
+        <input
+          className={inputClass}
+          value={telegram.testThreadId}
+          onChange={(e) => setTelegram({ ...telegram, testThreadId: e.target.value })}
+          placeholder="Topic id (optional)"
+        />
+      </div>
+
       <h4 className="text-lg mt-2">Approvers</h4>
       <div className="text-sm text-lightgray">
         Only these Telegram users can press Approve / Reject and use the bot&apos;s commands.
@@ -176,9 +211,17 @@ const TelegramCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
   )
 }
 
-const DiscordCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
-  const [guildId, setGuildId] = useState(data.settings.discord.guildId)
-  useEffect(() => setGuildId(data.settings.discord.guildId), [data.settings.discord.guildId])
+const DiscordCard = ({
+  data,
+  run,
+  discordChannels,
+}: {
+  data: SettingsResponse
+  run: Run
+  discordChannels: DiscordChannelOption[] | null
+}) => {
+  const [discord, setDiscord] = useState(data.settings.discord)
+  useEffect(() => setDiscord(data.settings.discord), [data.settings.discord])
   return (
     <Card title="Discord">
       <Status ok={data.configured.discord}>
@@ -186,14 +229,46 @@ const DiscordCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
       </Status>
       <label className="flex flex-col gap-1">
         Server id
-        <input className={inputClass} value={guildId} onChange={(e) => setGuildId(e.target.value)} />
+        <input
+          className={inputClass}
+          value={discord.guildId}
+          onChange={(e) => setDiscord({ ...discord, guildId: e.target.value })}
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        Test channel
+        <span className="text-sm text-lightgray">
+          &quot;Post on test channel&quot; in a post&apos;s preview sends its Discord text here, without pinging.
+          Posts can&apos;t pick it as a channel.
+        </span>
+        {discordChannels ? (
+          <select
+            className={inputClass}
+            value={discord.testChannelId}
+            onChange={(e) => setDiscord({ ...discord, testChannelId: e.target.value })}
+          >
+            <option value="">None</option>
+            {discordChannels.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.category ? `${c.category} / ` : ''}#{c.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            className={inputClass}
+            value={discord.testChannelId}
+            onChange={(e) => setDiscord({ ...discord, testChannelId: e.target.value })}
+            placeholder="Channel id (empty: none)"
+          />
+        )}
       </label>
       <button
         type="button"
         className="mainbutton self-start"
-        onClick={() => run(() => saveSettings({ discord: { guildId } }), 'Discord server saved.')}
+        onClick={() => run(() => saveSettings({ discord }), 'Discord settings saved.')}
       >
-        Save Discord server
+        Save Discord settings
       </button>
     </Card>
   )
@@ -452,14 +527,16 @@ const ChannelRow = ({
   )
 }
 
-const ChannelsCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
+const ChannelsCard = ({
+  data,
+  run,
+  discordChannels,
+}: {
+  data: SettingsResponse
+  run: Run
+  discordChannels: DiscordChannelOption[] | null
+}) => {
   const [adding, setAdding] = useState<ChannelInput | null>(null)
-  const [discordChannels, setDiscordChannels] = useState<DiscordChannelOption[] | null>(null)
-  useEffect(() => {
-    if (data.configured.discord && data.settings.discord.guildId) {
-      fetchDiscordChannels().then((r) => setDiscordChannels(r.channels)).catch(() => setDiscordChannels(null))
-    }
-  }, [data.configured.discord, data.settings.discord.guildId])
 
   const visible = data.channels.filter((c) => !c.deleted)
   return (
@@ -511,7 +588,14 @@ const ChannelsCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
 // /admin/posts/settings: bots, review chat, approvers and channels
 const PostSettings = () => {
   const [data, setData] = useState<SettingsResponse | null>(null)
+  const [discordChannels, setDiscordChannels] = useState<DiscordChannelOption[] | null>(null)
   const toast = useToast()
+  const discordReady = !!data?.configured.discord && !!data.settings.discord.guildId
+  useEffect(() => {
+    if (discordReady) {
+      fetchDiscordChannels().then((r) => setDiscordChannels(r.channels)).catch(() => setDiscordChannels(null))
+    }
+  }, [discordReady, data?.settings.discord.guildId])
 
   const load = useCallback(async () => setData(await fetchSettings()), [])
   useEffect(() => {
@@ -542,11 +626,11 @@ const PostSettings = () => {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <TelegramCard data={data} run={run} />
           <div className="flex flex-col gap-6">
-            <DiscordCard data={data} run={run} />
+            <DiscordCard data={data} run={run} discordChannels={discordChannels} />
             <InstagramCard data={data} run={run} />
           </div>
           <div className="xl:col-span-2">
-            <ChannelsCard data={data} run={run} />
+            <ChannelsCard data={data} run={run} discordChannels={discordChannels} />
           </div>
         </div>
       )}

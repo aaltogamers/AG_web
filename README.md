@@ -129,8 +129,15 @@ show the bot or our channel as the sender) and a "✅ Forwarded" button that
 anyone in the review topic can press. Give it a footer like
 `Join us: {{link:telegram}}` and its own ref.
 
+The settings can have one Telegram and one Discord test channel. They aren't
+channels, so posts can't pick them; "Post on test channel" in the editor's
+preview sends the open Telegram or Discord tab's text (with the images) there,
+right away and without approval. On Discord the pings are written out as
+"Would ping @here and @Role" instead of pinging. Only on the website, not
+through the MCP server.
+
 Settings (`/admin/posts/settings`): the review chat, the approvers (Telegram
-users who can press the buttons), the Discord server and the channels. Posts bot commands, for approvers:
+users who can press the buttons), the Discord server, the test channels and the channels. Posts bot commands, for approvers:
 
 - `/review_here` — reviews go to this group or topic. Not in channels, since
   channel posts don't say who sent them.

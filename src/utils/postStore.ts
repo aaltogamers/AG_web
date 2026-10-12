@@ -105,12 +105,25 @@ export const saveSettings = async (changes: Partial<SocialSettings>): Promise<So
     if (approvers.some((a) => !/^\d+$/.test(a.id))) {
       throw new AgentError(400, 'Approvers must be numeric Telegram user ids')
     }
-    await writeSetting('telegram', { reviewChatId, reviewThreadId, approvers })
+    const testChatId = String(t.testChatId ?? '').trim()
+    const testThreadId = String(t.testThreadId ?? '').trim()
+    if (testChatId && !idPattern.test(testChatId) && !/^@\w{4,}$/.test(testChatId)) {
+      throw new AgentError(400, 'The test chat id must be a number like -1001234567890 or @channelname')
+    }
+    if (testThreadId && !/^\d+$/.test(testThreadId)) {
+      throw new AgentError(400, 'The test topic id must be a number')
+    }
+    await writeSetting('telegram', { reviewChatId, reviewThreadId, approvers, testChatId, testThreadId })
   }
   if (changes.discord) {
-    const guildId = String(changes.discord.guildId ?? '').trim()
+    const d = { ...current.discord, ...changes.discord }
+    const guildId = String(d.guildId ?? '').trim()
+    const testChannelId = String(d.testChannelId ?? '').trim()
     if (guildId && !/^\d+$/.test(guildId)) throw new AgentError(400, 'The server id must be a number')
-    await writeSetting('discord', { guildId })
+    if (testChannelId && !/^\d+$/.test(testChannelId)) {
+      throw new AgentError(400, 'The test channel id must be a number')
+    }
+    await writeSetting('discord', { guildId, testChannelId })
   }
   if (changes.website) {
     const w = { ...current.website, ...changes.website }

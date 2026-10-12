@@ -43,6 +43,10 @@ export const savePost = (id: string, version: number, post: PostInput) =>
 export const previewPost = (id: string | null, post: PostInput) =>
   request<{ preview: PostPreview }>('/api/posts/preview', 'POST', { id: id ?? undefined, post })
 
+// Sends one channel's text to the platform's test channel
+export const sendTestPost = (id: string | null, post: PostInput, channelId: string) =>
+  request<object>('/api/posts/test-send', 'POST', { id: id ?? undefined, post, channelId })
+
 export type PostAction =
   | 'request-approval'
   | 'approve'

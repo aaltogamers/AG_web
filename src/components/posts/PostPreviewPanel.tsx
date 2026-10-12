@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import moment from 'moment'
-import { PLATFORM_LABELS, type PostPreview } from '../../utils/social/types'
+import { PLATFORM_LABELS, type Platform, type PostPreview } from '../../utils/social/types'
 import { BlockMarkdown } from '../../utils/markdownLinks'
 import { showDiscordRoles } from '../../utils/social/render'
 import TelegramHtml from './TelegramHtml'
@@ -10,11 +10,16 @@ const formatTime = (iso: string | null) => (iso ? moment(iso).format('ddd D.M.YY
 type Props = {
   preview: PostPreview | null
   loading?: boolean
+  // Platforms with a test channel in the settings
+  testPlatforms?: Platform[]
+  // Sends the channel's text to its platform's test channel
+  onTestSend?: (channelId: string) => Promise<void>
 }
 
 // A tab per channel with its text exactly as it will be sent, and the website change
-const PostPreviewPanel = ({ preview, loading }: Props) => {
+const PostPreviewPanel = ({ preview, loading, testPlatforms = [], onTestSend }: Props) => {
   const [tab, setTab] = useState(0)
+  const [testSending, setTestSending] = useState(false)
   if (!preview) return <div className="text-lightgray">{loading ? 'Loading preview…' : 'No preview yet'}</div>
   const tabs = [
     ...preview.texts.map((t) => `${PLATFORM_LABELS[t.platform]}: ${t.channelName}`),
@@ -55,6 +60,22 @@ const PostPreviewPanel = ({ preview, loading }: Props) => {
               {text.length} / {text.limit} characters
             </span>
             {text.platform !== 'telegram' && ' · formatting is approximate'}
+            {onTestSend && testPlatforms.includes(text.platform) && (
+              <>
+                {' · '}
+                <button
+                  type="button"
+                  className="link"
+                  disabled={testSending}
+                  onClick={async () => {
+                    setTestSending(true)
+                    await onTestSend(text.channelId).finally(() => setTestSending(false))
+                  }}
+                >
+                  {testSending ? 'Posting…' : 'Post on test channel'}
+                </button>
+              </>
+            )}
           </div>
           {text.errors.map((e) => (
             <div key={e} className="text-red text-sm">

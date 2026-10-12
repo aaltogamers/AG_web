@@ -193,9 +193,16 @@ export type TelegramSettings = {
   reviewChatId: string
   reviewThreadId: string
   approvers: { id: string; name: string }[]
+  // Where "Post on test channel" sends; not a channel, so posts can't pick it
+  testChatId: string
+  testThreadId: string
 }
 
-export type DiscordSettings = { guildId: string }
+export type DiscordSettings = {
+  guildId: string
+  // Where "Post on test channel" sends
+  testChannelId: string
+}
 
 export type WebsiteSettings = {
   // Base URL for tracked links and image URLs, e.g. https://aaltogamers.fi
@@ -211,8 +218,8 @@ export type SocialSettings = {
 }
 
 export const DEFAULT_SETTINGS: SocialSettings = {
-  telegram: { reviewChatId: '', reviewThreadId: '', approvers: [] },
-  discord: { guildId: '' },
+  telegram: { reviewChatId: '', reviewThreadId: '', approvers: [], testChatId: '', testThreadId: '' },
+  discord: { guildId: '', testChannelId: '' },
   website: { baseUrl: 'https://aaltogamers.fi', leadMinutes: 10 },
 }
 

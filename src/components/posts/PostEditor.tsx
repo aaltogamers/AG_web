@@ -12,6 +12,7 @@ import {
   postAction,
   previewPost,
   savePost,
+  sendTestPost,
   type DiscordRoleOption,
   type PostAction,
 } from '../../utils/social/postsClient'
@@ -19,6 +20,7 @@ import {
   PLATFORM_LABELS,
   POST_STATUS_LABELS,
   type Channel,
+  type Platform,
   type Post,
   type PostHistoryEntry,
   type PostPreview,
@@ -104,6 +106,7 @@ const PostEditor = ({
   // For Discord pings; null while loading
   const [discordRoles, setDiscordRoles] = useState<DiscordRoleOption[] | null>(null)
   const [leadMinutes, setLeadMinutes] = useState(10)
+  const [testPlatforms, setTestPlatforms] = useState<Platform[]>([])
   const [draft, setDraft] = useState<PostDraft>(() => ({ ...emptyPostDraft(), sendAt: initialSendAt }))
   const [savedDraft, setSavedDraft] = useState<string>(() => JSON.stringify(draft))
   // Unsaved changes kept in the browser that were made on an older version of the post
@@ -123,6 +126,10 @@ const PostEditor = ({
     const settingsRes = await fetchSettings()
     setChannels(settingsRes.channels)
     setLeadMinutes(settingsRes.settings.website.leadMinutes)
+    setTestPlatforms([
+      ...(settingsRes.settings.telegram.testChatId ? (['telegram'] as const) : []),
+      ...(settingsRes.settings.discord.testChannelId ? (['discord'] as const) : []),
+    ])
     if (
       settingsRes.configured.discord &&
       settingsRes.channels.some((c) => c.platform === 'discord')
@@ -758,7 +765,19 @@ const PostEditor = ({
             </Section>
 
             <Section title="Preview">
-              <PostPreviewPanel preview={preview} loading={previewLoading} />
+              <PostPreviewPanel
+                preview={preview}
+                loading={previewLoading}
+                testPlatforms={testPlatforms}
+                onTestSend={async (channelId) => {
+                  try {
+                    await sendTestPost(postId, draftToInput(draft), channelId)
+                    toast('Posted on the test channel.')
+                  } catch (e) {
+                    toast(e instanceof Error ? e.message : String(e), { isError: true })
+                  }
+                }}
+              />
             </Section>
 
             {history.length > 0 && (
