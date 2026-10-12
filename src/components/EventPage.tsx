@@ -130,11 +130,18 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
   }
 
   // An edit link from the sign-up dialog (`?signup=<key>&id=<id>&token=<token>`) makes
-  // this browser the sign-up's owner and opens it for editing
+  // this browser the sign-up's owner and opens it for editing.
+  // A plain `?signup` opens the default sign-up once it has loaded.
   const router = useRouter()
+  const [isAutoOpenPending, setIsAutoOpenPending] = useState(false)
   useEffect(() => {
     if (!showSignUp || !router.isReady) return
     const { signup: key, id, token, ...rest } = router.query
+    if (key === '') {
+      setIsAutoOpenPending(true)
+      router.replace({ pathname: router.pathname, query: rest }, undefined, { shallow: true })
+      return
+    }
     if (typeof key !== 'string' || typeof id !== 'string' || typeof token !== 'string') return
     if (getSignupTargets(event).some((t) => t.key === key)) {
       setStoredSignup(key, id, token)
@@ -165,6 +172,14 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
 
   const isSelectedOpen =
     !!now && !!selectedSummary && getSignupStatus(selectedSummary, now) === 'open'
+  // Only open the form when it can be sent; otherwise show the sign-ups and their status
+  useEffect(() => {
+    if (!isAutoOpenPending || !now || !selectedSummary || !currentList) return
+    setIsAutoOpenPending(false)
+    if (isSelectedOpen) setIsDialogOpen(true)
+    else scrollToSignups()
+  }, [isAutoOpenPending, now, selectedSummary, currentList, isSelectedOpen])
+
   const showStickyBar = isSelectedOpen && !isSignupInView && !isDialogOpen
   const selectedFill = selectedSummary && totalFill(selectedSummary.pools, selectedSummary.counts)
 
