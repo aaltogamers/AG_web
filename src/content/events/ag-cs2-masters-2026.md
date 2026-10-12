@@ -27,32 +27,37 @@ recordings: []
 
 Team signup: [https://forms.gle/DfEVHQheFMsU6UPd9](https://forms.gle/DfEVHQheFMsU6UPd9)
 
+DL. 2.11. or when 32 teams have signed up  
+
+### Prizes
+
+Prize pool TBA
+
 ### Format
 
 #### Qualifiers
-Online on the AG Discord server 7,
-Max 32 teams → Swiss best of 1 (3 games) →
-16 teams → Single elimination best of 1 (4 games) → 2 teams
-All games BO1
+Online on the AG Discord server 7   
+Max 32 teams → Swiss best of 1 (3 games) → 16 teams → Single elimination best of 1 (4 games) → 2 teams  
+All games BO1  
 
 #### Finals
-Live at Design Factory, Puumiehenkuja 5, Espoo.
-Single BO3 game between finalists
+Live at Design Factory, Puumiehenkuja 5, Espoo.  
+Single BO3 game between finalists  
 
 ### Schedule
 
 #### Qualifiers 7.11.
-Captains ready on Discord 11:30
-Swiss stage 12:00-15:00
-Break 15:00-15:45
-Round of 16 15:45-16:45
-Quarter finals 16:45 - 17:45
-Semi-finals 17:45 - 18:45
+Captains ready on Discord 11:30  
+Swiss stage 12:00-15:00  
+Break 15:00-15:45  
+Round of 16 15:45-16:45  
+Quarter finals 16:45 - 17:45  
+Semi-finals 17:45 - 18:45  
 
 #### Finals 14.11.
-Players ready at the venue 13:00
-Matches start at 14:00
-Matches end at ~17:00
+Players ready at the venue 13:00  
+Matches start at 14:00  
+Matches end at ~17:00  
 
 Times are not exact, and may vary by multiple hours in both directions.
 
