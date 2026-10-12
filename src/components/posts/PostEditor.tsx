@@ -356,7 +356,7 @@ const PostEditor = ({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-4">
-        <button type="button" className="link" onClick={onClose}>
+        <button type="button" className="borderbutton" onClick={onClose}>
           ← All posts
         </button>
         {post && (
@@ -570,7 +570,7 @@ const PostEditor = ({
                 {!draft.websiteChange.locked && editable && (
                   <button
                     type="button"
-                    className="link self-start text-sm"
+                    className="borderbutton self-start"
                     onClick={() => set({ websiteChange: null })}
                   >
                     Remove the website change
@@ -784,21 +784,19 @@ const PostEditor = ({
               <Section title="History">
                 <ul className="text-sm flex flex-col gap-1">
                   {history.map((h, i) => (
-                    <li key={i}>
-                      {moment(h.createdAt).format('D.M. HH:mm')} · v{h.version} {h.action}{' '}
-                      {actorLabel(h.actor)}
+                    <li key={i} className="flex items-center gap-3 min-h-8">
+                      <span>
+                        {moment(h.createdAt).format('D.M. HH:mm')} · v{h.version} {h.action} {actorLabel(h.actor)}
+                      </span>
                       {h.snapshot && editable && (h.version !== post?.version || isDirty) && (
-                        <>
-                          {' · '}
-                          <button
-                            type="button"
-                            className="link"
-                            disabled={busy}
-                            onClick={() => restore(h)}
-                          >
-                            {h.version === post?.version ? 'Back to this' : 'Restore'}
-                          </button>
-                        </>
+                        <button
+                          type="button"
+                          className="borderbutton ml-auto"
+                          disabled={busy}
+                          onClick={() => restore(h)}
+                        >
+                          {h.version === post?.version ? 'Back to this' : 'Restore'}
+                        </button>
                       )}
                     </li>
                   ))}

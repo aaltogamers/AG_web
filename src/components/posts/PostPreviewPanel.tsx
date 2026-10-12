@@ -55,27 +55,26 @@ const PostPreviewPanel = ({ preview, loading, testPlatforms = [], onTestSend }: 
       </div>
       {text && (
         <div className="flex flex-col gap-2">
-          <div className="text-sm text-lightgray">
-            {text.onApproval ? 'when approved' : formatTime(text.sendAt)} ·{' '}
-            <span className={text.length > text.limit ? 'text-red' : ''}>
-              {text.length} / {text.limit} characters
-            </span>
-            {text.platform !== 'telegram' && ' · formatting is approximate'}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-sm text-lightgray">
+              {text.onApproval ? 'when approved' : formatTime(text.sendAt)} ·{' '}
+              <span className={text.length > text.limit ? 'text-red' : ''}>
+                {text.length} / {text.limit} characters
+              </span>
+              {text.platform !== 'telegram' && ' · formatting is approximate'}
+            </div>
             {onTestSend && testPlatforms.includes(text.platform) && (
-              <>
-                {' · '}
-                <button
-                  type="button"
-                  className="link"
-                  disabled={testSending}
-                  onClick={async () => {
-                    setTestSending(true)
-                    await onTestSend(text.channelId).finally(() => setTestSending(false))
-                  }}
-                >
-                  {testSending ? 'Posting…' : 'Post on test channel'}
-                </button>
-              </>
+              <button
+                type="button"
+                className="borderbutton"
+                disabled={testSending}
+                onClick={async () => {
+                  setTestSending(true)
+                  await onTestSend(text.channelId).finally(() => setTestSending(false))
+                }}
+              >
+                {testSending ? 'Posting…' : 'Post on test channel'}
+              </button>
             )}
           </div>
           {text.errors.map((e) => (

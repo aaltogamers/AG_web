@@ -72,7 +72,7 @@ const OverrideDialog = ({
           Remove
         </button>
       )}
-      <button type="button" className="link" onClick={onClose}>
+      <button type="button" className="borderbutton" onClick={onClose}>
         Cancel
       </button>
     </div>

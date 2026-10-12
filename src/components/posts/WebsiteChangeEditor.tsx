@@ -145,7 +145,7 @@ const SessionsInput = ({
           </div>
         </div>
       ))}
-      <button type="button" className="link text-sm self-start" onClick={add}>
+      <button type="button" className="borderbutton self-start" onClick={add}>
         + Add session
       </button>
     </div>

@@ -170,10 +170,10 @@ const TelegramCard = ({ data, run }: { data: SettingsResponse; run: Run }) => {
             {a.name || 'Unknown'} ({a.id})
             <button
               type="button"
-              className="link text-sm"
+              className="borderbutton"
               onClick={() => setTelegram({ ...telegram, approvers: telegram.approvers.filter((o) => o.id !== a.id) })}
             >
-              remove
+              Remove
             </button>
           </li>
         ))}
@@ -455,11 +455,11 @@ const ChannelRow = ({
           {where} · ref {channel.ref}
           {!channel.enabled && ' · disabled'}
         </span>
-        <div className="flex gap-3 ml-auto text-sm">
+        <div className="flex gap-2 ml-auto">
           {channel.platform === 'discord' && (
             <button
               type="button"
-              className="link"
+              className="borderbutton"
               onClick={() =>
                 run(async () => {
                   const result = await testDiscordChannel(channel.config.channelId ?? '', !!channel.config.crosspost)
@@ -470,12 +470,12 @@ const ChannelRow = ({
               Test
             </button>
           )}
-          <button type="button" className="link" onClick={() => setEditing(editing ? null : { ...channel })}>
+          <button type="button" className="borderbutton" onClick={() => setEditing(editing ? null : { ...channel })}>
             {editing ? 'Close' : 'Edit'}
           </button>
           <button
             type="button"
-            className="link"
+            className="borderbutton"
             onClick={() =>
               (!channel.enabled ||
                 window.confirm(`Disable ${channel.name}? Approved posts that haven't been sent to it yet won't be.`)) &&
@@ -486,7 +486,7 @@ const ChannelRow = ({
           </button>
           <button
             type="button"
-            className="link"
+            className="borderbutton"
             onClick={() =>
               window.confirm(`Delete ${channel.name}? Approved posts that haven't been sent to it yet won't be. Channels that have posts are only disabled.`) &&
               run(async () => {
@@ -575,7 +575,7 @@ const ChannelsCard = ({
               </div>
             </div>
           ) : (
-            <button type="button" className="link self-start text-sm" onClick={() => setAdding(emptyChannel(platform))}>
+            <button type="button" className="borderbutton self-start" onClick={() => setAdding(emptyChannel(platform))}>
               + Add {PLATFORM_LABELS[platform]} channel
             </button>
           )}
@@ -615,7 +615,7 @@ const PostSettings = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-4">
-        <Link href="/admin/posts" className="link">
+        <Link href="/admin/posts" className="borderbutton">
           ← Posts
         </Link>
         <h2 className="text-2xl">Post settings</h2>
