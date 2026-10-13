@@ -29,7 +29,7 @@ There might be additional prizes for the audience & MVP!
 
 #### Qualifiers
 
-Online on the AG Discord server\
+Online on the [AG Discord](https://aaltogamers.fi/link/discord) server\
 Max 32 teams → Swiss best of 1 (3 games) → 16 teams → Single elimination best of 1 (4 games) → 2 teams\
 All games BO1  
 
