@@ -21,15 +21,11 @@ recordings: []
 ---
 🚗💨 Mario Kart 8 Tournament – OtaKart 🏆
 
-
 Ready to hit the track and show who’s the fastest racer on campus? Join us for an action-packed Mario Kart tournament where glory and prizes are on the line! 🎮🏁
-
 
 Races will be held in OK20, with a spectator lounge downstairs, and the games themselves upstairs!
 
-
 ⚡️ SIGN UP NOW, ONLY 6 SPOTS PER STUDENT ORGANIZATION ARE AVAILABLE!
-
 
 📅 Date & Time: Oct 19 | 16->
 
@@ -39,5 +35,6 @@ Races will be held in OK20, with a spectator lounge downstairs, and the games th
 
 🏁 Format: 150cc, 6v6 teams, normal items, random maps. 
 
-
-Get ready to race, compete, and claim the title of Otaniemis Fastest Karters for your guild/organization! 🏆
+Get ready to race, compete, and claim the title of Otaniemis Fastest Karters for your guild/organization! 🏆\
+\
+Organized by AaltoGamers, KIK Esportsjaos, TiK PeliTMK and Athene's Gameboys
