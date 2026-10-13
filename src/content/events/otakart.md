@@ -29,7 +29,7 @@ Races will be held in OK20, with a spectator lounge downstairs, and the games th
 
 📅 Date & Time: Oct 19 | 16->
 📍 Location: OK20
-👥 Sign-up: On our website (https://aaltogamers.fi/events/otakart) with teams of 6 only, and all team members must be from the same guild
+👥 Sign-up: HERE with teams of 6 only, and all team members must be from the same guild
 🏁 Format: 150cc, 6v6 teams, normal items, random maps. 
 
 Get ready to race, compete, and claim the title of Otaniemis Fastest Karters for your guild/organization! 🏆
