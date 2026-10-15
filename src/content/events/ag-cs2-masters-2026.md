@@ -12,7 +12,7 @@ sessions:
     location: Design Factory, Puumiehenkuja 5, Espoo
     id: qw0ehzc6
 signupMode: event
-image: ""
+image: /images/ag-cs2-masters-2026.png
 visibleOnCalendar: true
 visibleOnEventsPage: false
 description: Gather your team and get ready to compete with the best players the
