@@ -13,7 +13,9 @@
     "migrate": "node-pg-migrate",
     "migrate:up": "node-pg-migrate up",
     "migrate:create": "node-pg-migrate create",
-    "move-post-media": "tsx scripts/movePostMedia.ts"
+    "move-post-media": "tsx --env-file-if-exists=.env scripts/movePostMedia.ts",
+    "import-events": "tsx --env-file-if-exists=.env scripts/importEvents.ts",
+    "seed-events": "tsx --env-file-if-exists=.env scripts/importEvents.ts --ref pre-db-events"
   },
   "keywords": [],
   "author": "Otju",

@@ -2,7 +2,7 @@
 // webhook, the scheduler and the MCP server. See "Scheduled posts" in README.md.
 import moment from 'moment-timezone'
 import type { PoolClient } from 'pg'
-import pool from './db_pg'
+import pool, { withTransaction } from './db_pg'
 import { AgentError } from './agentApi'
 import { randomSessionId } from './eventFiles'
 import { EVENT_TIMEZONE } from './eventUtils'
@@ -37,21 +37,6 @@ import { MAX_IMAGES } from './social/render'
 export type Actor = 'admin' | 'agent' | `tg:${string}`
 
 const toISO = (d: Date | null | undefined) => (d ? d.toISOString() : null)
-
-const withTransaction = async <T>(run: (client: PoolClient) => Promise<T>): Promise<T> => {
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    const result = await run(client)
-    await client.query('COMMIT')
-    return result
-  } catch (err) {
-    await client.query('ROLLBACK')
-    throw err
-  } finally {
-    client.release()
-  }
-}
 
 // Settings
 
