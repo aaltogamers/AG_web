@@ -191,6 +191,11 @@ const EntryView = ({ event }: { event: CalendarEntry }) => (
   </span>
 )
 
+// Moments like a message or a sign-up opening are shown 30 minutes long, but not past
+// midnight, so that one late in the evening isn't shown on the next day too
+const shortEnd = (start: Date) =>
+  new Date(Math.min(start.getTime() + 30 * 60_000, moment(start).endOf('day').valueOf()))
+
 // When the website change runs: when the post was approved, its own time, or the
 // lead time before the first message
 const websiteRunAt = (post: Post, leadMinutes: number) => {
@@ -238,7 +243,7 @@ const toEntries = (
           kind: 'post',
           title,
           start,
-          end: allDay ? start : new Date(start.getTime() + 30 * 60_000),
+          end: allDay ? start : shortEnd(start),
           postId: post.id,
           status: post.status,
           platforms,
@@ -317,7 +322,7 @@ const toSignupEntries = (
         kind: 'signup',
         title: `Sign-up ${what}: ${label}`,
         start,
-        end: new Date(start.getTime() + 30 * 60_000),
+        end: shortEnd(start),
         color: eventColor(target.event.slug, eventColors),
         eventSlug: target.event.slug,
         signupKey: form.key,
@@ -451,7 +456,7 @@ const PostCalendar = ({
         <span className="flex items-center gap-1 px-2 rounded-sm border-2 border-dotted border-gray-500 bg-white">
           <FaClipboardList /> Sign-up opens / closes
         </span>
-        {(['telegram', 'instagram', 'discord', 'website'] as const).map((platform) => {
+        {(['telegram', 'instagram', 'discord'] as const).map((platform) => {
           const { Icon } = PLATFORM_STYLE[platform]
           return (
             <span key={platform} className="flex items-center gap-1 capitalize">
@@ -470,7 +475,8 @@ const PostCalendar = ({
       </div>
       <HoveredDay.Provider value={{ day: hoveredDay, onCreate: (day) => onCreate(atNoon(day)) }}>
         <div
-          className="h-[700px] text-base bg-white [&_.rbc-month-view_.rbc-day-bg]:cursor-pointer"
+          // Tall enough in the month view for a day to show at least three entries before "+N more"
+          className={`${view === 'month' ? 'h-[900px]' : 'h-[700px]'} text-sm bg-white [&_.rbc-month-view_.rbc-day-bg]:cursor-pointer`}
           onMouseMove={(e) => setHoveredDay(hoveredDayAt(e.nativeEvent))}
           onMouseLeave={() => setHoveredDay(null)}
         >

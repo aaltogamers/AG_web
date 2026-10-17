@@ -91,7 +91,7 @@ const UNSCHEDULE_CONFIRM =
   'This post is approved. Saving it as a draft takes it off the schedule, so nothing more is sent until it is approved again. Save anyway?'
 const RESTORE_CONFIRM = 'Replace your unsaved changes with this version?'
 const DELETE_CONFIRM =
-  'Delete this post? Unsent messages and website changes are not sent, and the post and its history are gone for good.'
+  'Delete this post? Unsent messages are not sent, and the post and its history are gone for good.'
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col gap-3">
@@ -586,55 +586,30 @@ const PostEditor = ({
             })}
           </Section>
 
-          <Section title="Website change">
-            {draft.websiteChange ? (
-              <>
-                <WebsiteChangeEditor
-                  value={draft.websiteChange}
-                  onChange={(websiteChange) => set({ websiteChange })}
-                  events={events}
-                  leadMinutes={leadMinutes}
-                  eventStart={eventStart}
-                />
-                {!draft.websiteChange.locked && editable && (
-                  <button
-                    type="button"
-                    className="borderbutton self-start"
-                    onClick={() => set({ websiteChange: null })}
-                  >
-                    Remove the website change
-                  </button>
-                )}
-                {post?.websiteChange?.error && (
-                  <div className="text-red text-sm">❗ {post.websiteChange.error}</div>
-                )}
-              </>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <div className="text-sm text-lightgray">
-                  Create a new event or change an existing one before the messages go out.
-                </div>
-                {editable && (
-                  <button
-                    type="button"
-                    className="borderbutton self-start"
-                    onClick={() =>
-                      set({
-                        websiteChange: {
-                          ...websiteChangeFor(draft.eventSlug),
-                          timing: 'on_approval',
-                          runAt: '',
-                          locked: false,
-                        },
-                      })
-                    }
-                  >
-                    Add a website change
-                  </button>
-                )}
-              </div>
-            )}
-          </Section>
+          {/* Website changes are hidden for now: only a post that already has one shows it */}
+          {draft.websiteChange && (
+            <Section title="Website change">
+              <WebsiteChangeEditor
+                value={draft.websiteChange}
+                onChange={(websiteChange) => set({ websiteChange })}
+                events={events}
+                leadMinutes={leadMinutes}
+                eventStart={eventStart}
+              />
+              {!draft.websiteChange.locked && editable && (
+                <button
+                  type="button"
+                  className="borderbutton self-start"
+                  onClick={() => set({ websiteChange: null })}
+                >
+                  Remove the website change
+                </button>
+              )}
+              {post?.websiteChange?.error && (
+                <div className="text-red text-sm">❗ {post.websiteChange.error}</div>
+              )}
+            </Section>
+          )}
         </div>
 
         <div className="lg:w-1/2 min-w-0 flex flex-col gap-8">
@@ -721,7 +696,7 @@ const PostEditor = ({
                     type="button"
                     className="borderbutton"
                     disabled={busy}
-                    title="Saves a copy of the saved version as a new draft, without times or a website change, e.g. for a reminder"
+                    title="Saves a copy of the saved version as a new draft, without times, e.g. for a reminder"
                     onClick={duplicate}
                   >
                     Duplicate

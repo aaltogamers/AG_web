@@ -15,23 +15,16 @@ import { resolveAssignees } from './taskStore'
 import { saveUploadedImage, MAX_UPLOAD_BYTES } from './social/media'
 import type {
   Channel,
-  EventChange,
-  ImageChoice,
   Post,
   PostHistoryEntry,
   PostImage,
   PostInput,
   PostPerson,
   PostPreview,
-  TextChoice,
-  WebsiteChangeTiming,
 } from './social/types'
 
 const toIso = (value: unknown, name: string) =>
   value === null ? null : parseAgentTime(value, name).toISOString()
-
-const toContentTime = (value: unknown, name: string) =>
-  parseAgentTime(value, name).format('YYYY-MM-DDTHH:mm:ss')
 
 // Images from a URL are downloaded and stored like uploads
 const downloadImage = async (url: string, name: string): Promise<PostImage> => {
@@ -67,42 +60,6 @@ const parsePerson = async (raw: unknown, name: string): Promise<PostPerson | nul
   return { id, name: assignees[0].tgUserName }
 }
 
-const textChoice = (text: unknown, fromPost: unknown, name: string): TextChoice | undefined => {
-  if (optionalBoolean(fromPost, `${name}FromPost`)) return { fromPost: true }
-  if (text === undefined) return undefined
-  return { text: typeof text === 'string' ? text : '' }
-}
-
-const parseEvent = (raw: unknown): EventChange => {
-  const e = asRecord(raw ?? {}, 'websiteChange.event')
-  const event: EventChange = {}
-  if (e.name !== undefined) event.name = requireString(e.name, 'websiteChange.event.name')
-  if (e.sessions !== undefined) {
-    event.sessions = (optionalArray(e.sessions, 'websiteChange.event.sessions') ?? []).map((rawSession, i) => {
-      const s = asRecord(rawSession, `websiteChange.event.sessions[${i}]`)
-      const start = toContentTime(s.start, `websiteChange.event.sessions[${i}].start`)
-      return {
-        id: optionalString(s.id, `websiteChange.event.sessions[${i}].id`) ?? '',
-        name: optionalString(s.name, `websiteChange.event.sessions[${i}].name`),
-        start,
-        end: s.end ? toContentTime(s.end, `websiteChange.event.sessions[${i}].end`) : '',
-        location: requireString(s.location, `websiteChange.event.sessions[${i}].location`),
-      }
-    })
-  }
-  if (e.signupMode !== undefined) event.signupMode = e.signupMode as EventChange['signupMode']
-  if (e.image !== undefined) event.image = e.image as ImageChoice | null
-  if (e.visibleOnCalendar !== undefined) {
-    event.visibleOnCalendar = optionalBoolean(e.visibleOnCalendar, 'visibleOnCalendar')
-  }
-  if (e.visibleOnEventsPage !== undefined) {
-    event.visibleOnEventsPage = optionalBoolean(e.visibleOnEventsPage, 'visibleOnEventsPage')
-  }
-  event.description = textChoice(e.description, e.descriptionFromPost, 'description')
-  event.body = textChoice(e.body, e.bodyFromPost, 'body')
-  return Object.fromEntries(Object.entries(event).filter(([, v]) => v !== undefined))
-}
-
 // Turns the arguments of create_post / update_post into a PostInput. Only given
 // fields are set.
 export const parsePostArgs = async (args: Record<string, unknown>): Promise<PostInput> => {
@@ -130,22 +87,6 @@ export const parsePostArgs = async (args: Record<string, unknown>): Promise<Post
       }
     })
   }
-  if ('websiteChange' in args) {
-    if (args.websiteChange === null) {
-      input.websiteChange = null
-    } else {
-      const w = asRecord(args.websiteChange, 'websiteChange')
-      const kind = w.kind as 'create_event' | 'update_event'
-      const eventSlug = optionalString(w.eventSlug, 'websiteChange.eventSlug') ?? null
-      input.websiteChange = {
-        kind,
-        eventSlug,
-        ...(w.timing !== undefined && { timing: w.timing as WebsiteChangeTiming }),
-        runAt: w.runAt ? toIso(w.runAt, 'websiteChange.runAt') : null,
-        event: parseEvent(w.event),
-      }
-    }
-  }
   return input
 }
 
@@ -163,27 +104,6 @@ export const describeChannel = (c: Channel) => ({
   // The bot sends it to the review topic for a human to forward
   ...(c.config.manual && { forwardedByHand: true }),
 })
-
-const describeWebsiteChange = (post: Post) => {
-  const w = post.websiteChange
-  if (!w) return null
-  const text = (choice?: TextChoice) =>
-    choice && ('fromPost' in choice ? { fromPost: true } : choice.text)
-  return {
-    kind: w.kind,
-    eventSlug: w.eventSlug,
-    timing: w.timing,
-    runAt: time(w.runAt) ?? undefined,
-    status: w.status,
-    ...(w.error && { error: w.error }),
-    event: {
-      ...w.event,
-      sessions: w.event.sessions?.map((s) => ({ ...s, start: s.start.slice(0, 16), end: s.end.slice(0, 16) })),
-      description: text(w.event.description),
-      body: text(w.event.body),
-    },
-  }
-}
 
 export const describePost = async (
   post: Post,
@@ -221,13 +141,6 @@ export const describePost = async (
       }),
     }
   }),
-  websiteChange: full
-    ? describeWebsiteChange(post)
-    : post.websiteChange && {
-        kind: post.websiteChange.kind,
-        eventSlug: post.websiteChange.eventSlug,
-        status: post.websiteChange.status,
-      },
   ...(history && {
     history: history.map((h) => ({
       version: h.version,
@@ -274,13 +187,7 @@ export const describePreview = (preview: PostPreview) => ({
     limit: t.limit,
     errors: t.errors,
     warnings: t.warnings,
-  })),
-  website: preview.website && {
-    ...preview.website,
-    runAt: time(preview.website.runAt),
-    // The editor's page preview; the diff has the same
-    page: undefined,
-  },
+  }))
 })
 
 export const AGENT: Actor = 'agent'

@@ -15,7 +15,6 @@ import { isDiscordConfigured, listGuildRoles } from '../social/discord'
 import { buildPreview } from '../social/preview'
 import { PLACEHOLDER_HELP } from '../social/render'
 import { POST_STATUSES } from '../social/types'
-import { sessionSchema } from './eventTools'
 import { givenArgs, runTool } from './server'
 
 const TIME_HINT = 'Helsinki time, e.g. 2026-10-24T18:00'
@@ -30,7 +29,7 @@ const imageSchema = z.object({
   eventImage: z
     .literal(true)
     .optional()
-    .describe("The post's event's image as it is when the post is sent (or as the website change sets it). At most once."),
+    .describe("The post's event's image as it is when the post is sent. At most once."),
 })
 
 const channelSchema = z.object({
@@ -55,52 +54,6 @@ const channelSchema = z.object({
     .optional()
     .describe(
       'Discord only: who the message pings, put before the text: "here", "everyone" or role ids from list_channels\' discordRoles. Defaults to ["here"] for a new Discord channel of the post; [] pings no one.'
-    ),
-})
-
-const websiteChangeSchema = z.object({
-  kind: z
-    .enum(['create_event', 'update_event'])
-    .describe('create_event makes a new event; update_event changes an existing one'),
-  eventSlug: z.string().optional().describe('The event to change (update_event)'),
-  timing: z
-    .enum(['on_approval', 'before_post', 'at'])
-    .optional()
-    .describe(
-      'When the change is made: on_approval (right when a human approves the post), before_post (the lead time, by default 10 minutes, before the first message) or at (runAt). Defaults to at when runAt is given, otherwise on_approval.'
-    ),
-  runAt: z
-    .string()
-    .optional()
-    .describe(`When the change is made, with the timing "at". ${TIME_HINT}.`),
-  event: z
-    .object({
-      name: z.string().optional(),
-      sessions: z
-        .array(sessionSchema)
-        .optional()
-        .describe(
-          'All sessions after the change. Keep existing sessions with their ids; new sessions get an id when the post is saved (see get_post).'
-        ),
-      signupMode: z.enum(['none', 'event', 'session']).optional(),
-      image: z
-        .union([
-          z.object({ postImage: z.number().int().describe("Position of one of the post's images, from 0") }),
-          z.object({
-            sitePath: z.string().describe("Another event's image (from get_event) or a site image like /images/foo.png"),
-          }),
-        ])
-        .nullable()
-        .optional(),
-      visibleOnCalendar: z.boolean().optional(),
-      visibleOnEventsPage: z.boolean().optional(),
-      description: z.string().optional().describe('Short description (markdown)'),
-      descriptionFromPost: z.boolean().optional().describe("Use the post's body as the short description"),
-      body: z.string().optional().describe('Long description (markdown). Empty: the short description'),
-      bodyFromPost: z.boolean().optional().describe("Use the post's body as the long description"),
-    })
-    .describe(
-      'For create_event, the new event (name and description are required). For update_event, only the fields to change.'
     ),
 })
 
@@ -131,11 +84,6 @@ const postFields = {
   channels: z
     .array(channelSchema)
     .describe('Where the post goes. Replaces all channels; channels already sent to are kept as they are.'),
-  websiteChange: websiteChangeSchema
-    .nullable()
-    .describe(
-      'A scheduled change to the website made before the messages go out: a new event, or changes to an existing one. Sign-up forms are not part of it: make them with create_signup_form / update_signup_form once the event exists. Replaces the whole website change; null removes it.'
-    ),
 }
 const optionalPostFields = z.object(postFields).partial().shape
 
@@ -216,7 +164,7 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Get post',
       description:
-        'Gets a post with its text, channels, website change and history.',
+        'Gets a post with its text, channels and history.',
       inputSchema: { postId: z.string() },
       annotations: { readOnlyHint: true },
     },
@@ -232,7 +180,7 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Create post',
       description:
-        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels, optionally with a scheduled website change. Write it like the posts from get_example_posts. Check it with preview_post, then ask a human to approve it with request_approval. Nothing is sent before a human approves it.',
+        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels. Write it like the posts from get_example_posts. Check it with preview_post, then ask a human to approve it with request_approval. Nothing is sent before a human approves it.',
       inputSchema: { ...optionalPostFields, title: postFields.title, body: postFields.body },
     },
     runTool('create_post', async (args) => {
@@ -269,7 +217,7 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Preview post',
       description:
-        "Shows each channel's text exactly as it will be sent, with character counts and limit problems, and the website change as a diff. A post with errors can't be approved.",
+        "Shows each channel's text exactly as it will be sent, with character counts and limit problems. A post with errors can't be approved.",
       inputSchema: { postId: z.string() },
       annotations: { readOnlyHint: true },
     },
@@ -311,7 +259,7 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Delete post',
       description:
-        'Deletes a draft or a post awaiting approval that the AI agent made, with its website change. Posts made by a human, and approved or sent posts, can only be deleted by a human.',
+        'Deletes a draft or a post awaiting approval that the AI agent made. Posts made by a human, and approved or sent posts, can only be deleted by a human.',
       inputSchema: { postId: z.string() },
       annotations: { destructiveHint: true },
     },

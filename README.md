@@ -151,6 +151,9 @@ review topic is reminded 5, 2 and 1 days before its first message
 (`src/utils/social/reminders.ts`), mentioning the responsible user, and the
 image maker while the post has no image.
 
+Website changes are hidden for now: the post editor only shows one a post
+already has, and the MCP server can't make or see them.
+
 A post can include one website change (creating or changing an event; its
 sign-up forms are edited in the event editor), which runs when the post is
 approved (default), 10 minutes before the first message, or at a set time. It
