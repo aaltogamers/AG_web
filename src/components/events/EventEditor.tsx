@@ -5,8 +5,8 @@ import type { StoredEvent } from '../../utils/eventStore'
 import { DEFAULT_EVENT_IMAGE } from '../../utils/eventUtils'
 import { createEvent, deleteEvent, updateEvent, uploadEventImage } from '../../utils/eventsClient'
 import EventPostsList from './EventPostsList'
+import EventImageDialog from './EventImageDialog'
 import EventSignupsList from './EventSignupsList'
-import { SiteImageDialog } from '../posts/ImagePicker'
 import MarkdownEditor from '../posts/MarkdownEditor'
 import { inputClass, SessionsInput } from '../posts/WebsiteChangeEditor'
 import WebsitePagePreview from '../posts/WebsitePagePreview'
@@ -144,17 +144,17 @@ const ImageInput = ({
           />
         </label>
         <button type="button" className="borderbutton" onClick={() => setIsPicking(true)}>
-          Pick an existing image
+          Pick existing event image
         </button>
         {value && (
           <button type="button" className="borderbutton" onClick={() => onChange('')}>
-            Use the AG logo
+            Remove image
           </button>
         )}
       </div>
       {error && <div className="text-red text-sm">{error}</div>}
       {isPicking && (
-        <SiteImageDialog
+        <EventImageDialog
           events={siteEvents}
           onClose={() => setIsPicking(false)}
           onPick={(path) => {

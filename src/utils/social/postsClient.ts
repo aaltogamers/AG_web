@@ -78,8 +78,6 @@ export const uploadImage = async (file: File) => {
   })
 }
 
-export const fetchSiteImages = () => request<{ images: string[] }>('/api/posts/site-images')
-
 export type TgUserOption = { id: string; name: string; username?: string }
 
 export type SettingsResponse = {

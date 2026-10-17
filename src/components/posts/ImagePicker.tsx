@@ -1,11 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { FaArrowLeft, FaArrowRight, FaTimes } from 'react-icons/fa'
-import type { AGEvent } from '../../types/types'
-import { DEFAULT_EVENT_IMAGE } from '../../utils/eventUtils'
-import { fetchSiteImages, uploadImage } from '../../utils/social/postsClient'
+import { uploadImage } from '../../utils/social/postsClient'
 import { MAX_IMAGES } from '../../utils/social/render'
 import { imagePreviewUrl, type PostImage } from '../../utils/social/types'
-import Dialog from '../Dialog'
 
 type Props = {
   value: PostImage[]
@@ -14,67 +11,6 @@ type Props = {
   hasEvent: boolean
   // The image the post's event will have, null if none or not known yet
   eventImage: string | null
-}
-
-// Picks an existing image for the event editor: event images first, then
-// uploaded event images and everything under /images
-export const SiteImageDialog = ({
-  events,
-  onPick,
-  onClose,
-}: {
-  events: AGEvent[]
-  onPick: (path: string) => void
-  onClose: () => void
-}) => {
-  const [images, setImages] = useState<string[] | null>(null)
-  const [query, setQuery] = useState('')
-  useEffect(() => {
-    fetchSiteImages()
-      .then((res) => setImages(res.images))
-      .catch(() => setImages([]))
-  }, [])
-
-  const eventImages = events
-    .filter((e) => e.image && e.image !== DEFAULT_EVENT_IMAGE)
-    .map((e) => ({ path: e.image, label: e.name }))
-    .filter((e, i, all) => all.findIndex((o) => o.path === e.path) === i)
-  const q = query.toLowerCase()
-  const options = [
-    ...eventImages,
-    ...(images ?? [])
-      .filter((path) => !eventImages.some((e) => e.path === path))
-      .map((path) => ({
-        path,
-        label: path.startsWith('/images/') ? path.replace(/^\/images\//, '') : 'Uploaded image',
-      })),
-  ].filter((o) => !q || o.label.toLowerCase().includes(q) || o.path.toLowerCase().includes(q))
-
-  return (
-    <Dialog onClose={onClose} title="Pick a site image" maxWidthClass="max-w-4xl" fullScreenOnMobile>
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by event or file name"
-        className="p-2 rounded-md bg-white text-black"
-      />
-      {!images && <div>Loading…</div>}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {options.slice(0, 120).map((o) => (
-          <button
-            key={o.path}
-            type="button"
-            onClick={() => onPick(o.path)}
-            className="flex flex-col gap-1 items-center border border-lightgray hover:border-red rounded-md p-2"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={o.path} alt="" className="h-24 object-contain" loading="lazy" />
-            <span className="text-xs break-all">{o.label}</span>
-          </button>
-        ))}
-      </div>
-    </Dialog>
-  )
 }
 
 const ImagePicker = ({ value, onChange, hasEvent, eventImage }: Props) => {

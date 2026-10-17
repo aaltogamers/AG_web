@@ -1,4 +1,5 @@
 import moment from 'moment'
+import { FaChevronRight } from 'react-icons/fa'
 import type { Channel, Post, PostStatus } from '../../utils/social/types'
 import { POST_STATUS_LABELS } from '../../utils/social/types'
 import ChannelChip, { TargetChip } from './ChannelChip'
@@ -16,14 +17,14 @@ export const nextTime = (post: Post) => {
 
 // Drafts and posts awaiting approval stand out from scheduled ones
 const ROW_CLASS: Partial<Record<PostStatus, string>> = {
-  draft: 'border-dashed border-lightgray text-lightgray italic',
+  draft: 'border-dashed border-lightgray',
   awaiting_approval: 'border-yellow-400',
 }
 
 const BADGE_CLASS: Record<PostStatus, string> = {
   draft: 'border border-dashed border-lightgray',
   awaiting_approval: 'border border-yellow-400 text-yellow-400',
-  scheduled: 'bg-red text-white not-italic',
+  scheduled: 'bg-red text-white',
   done: 'border border-lightgray/40',
   cancelled: 'border border-lightgray/40 line-through',
 }
@@ -47,20 +48,25 @@ const PostList = ({ posts, channels, onOpen }: Props) => {
             key={post.id}
             type="button"
             onClick={() => onOpen(post.id)}
-            className={`text-left border hover:border-red rounded-md p-3 bg-white flex flex-col md:flex-row md:items-center gap-2 md:gap-6 ${ROW_CLASS[post.status] ?? 'border-lightgray/40'}`}
+            className={`group text-left border hover:border-red hover:shadow-md transition rounded-md px-3 py-2 bg-white flex flex-col md:flex-row md:items-center gap-2 md:gap-4 cursor-pointer ${ROW_CLASS[post.status] ?? 'border-lightgray/40'}`}
           >
-            <span className="md:w-40 text-sm">
+            <span className="md:w-28 shrink-0 text-sm whitespace-nowrap">
               <span className={`rounded-sm px-2 ${BADGE_CLASS[post.status]}`}>{POST_STATUS_LABELS[post.status]}</span>
               {problems > 0 && <span className="text-red"> · ❗ {problems}</span>}
             </span>
-            <span className="flex-1 font-bold">{post.title || 'Untitled post'}</span>
-            <span className="flex flex-wrap gap-1 not-italic md:max-w-[50%]">
-              {post.targets.map((t) => (
-                <TargetChip key={t.channelId} channel={channels.find((c) => c.id === t.channelId)} />
-              ))}
-              {post.websiteChange && <ChannelChip platform="website" label="Website" />}
+            <span className="flex-1 min-w-0 flex flex-col gap-1">
+              <span className="group-hover:text-red">{post.title || 'Untitled post'}</span>
+              <span className="flex flex-wrap gap-1">
+                {post.targets.map((t) => (
+                  <TargetChip key={t.channelId} channel={channels.find((c) => c.id === t.channelId)} />
+                ))}
+                {post.websiteChange && <ChannelChip platform="website" label="Website" />}
+              </span>
             </span>
-            <span className="md:w-36 text-sm">{time ? moment(time).format('ddd D.M. HH:mm') : 'no time'}</span>
+            <span className="md:w-28 shrink-0 text-sm whitespace-nowrap text-lightgray">
+              {time ? moment(time).format('ddd D.M. HH:mm') : 'no time'}
+            </span>
+            <FaChevronRight className="hidden md:block shrink-0 text-lightgray group-hover:text-red" />
           </button>
         )
       })}
