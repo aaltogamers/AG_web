@@ -6,11 +6,12 @@ sessions:
     location: Aalto Design Factory, Puumiehenkuja 5
     id: jl1y49vb
 signupMode: none
-image: /images/Black-ag.png
+image: /images/otalan-2026.png
 visibleOnCalendar: true
-visibleOnEventsPage: false
-description: TBA
+visibleOnEventsPage: true
+description: |-
+  Greatest LAN party in Aalto!
+
+  Read more at **[OtaLAN.fi](https://otalan.fi)**
 recordings: []
 ---
-
-TBA
