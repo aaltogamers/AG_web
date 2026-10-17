@@ -6,6 +6,7 @@ import BetManagement from './BetManagement'
 import MapBanMangement from './MapBanManagement'
 import { AdminSection } from '../utils/adminSections'
 import PostsSection from './posts/PostsSection'
+import EventsSection from './events/EventsSection'
 
 type Props = {
   section: AdminSection
@@ -18,9 +19,9 @@ type Props = {
 const tabClass = (active: boolean) => `text-4xl ${active ? 'underline' : ''}`
 
 const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
-  // The posts and signups pages are in light mode
+  // The events, posts and signups pages are in light mode
   useEffect(() => {
-    if (section !== 'posts' && section !== 'signups') return
+    if (section !== 'events' && section !== 'posts' && section !== 'signups') return
     document.body.classList.add('admin-light')
     return () => document.body.classList.remove('admin-light')
   }, [section])
@@ -28,6 +29,9 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
   return (
     <div>
       <div className="flex flex-wrap gap-8 justify-center mb-8 text-4xl">
+        <Link href="/admin/events" className={tabClass(section === 'events')}>
+          Events
+        </Link>
         <Link href="/admin/signups" className={tabClass(section === 'signups')}>
           Signups
         </Link>
@@ -54,6 +58,8 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
       </div>
       {children ? (
         children
+      ) : section === 'events' ? (
+        <EventsSection events={events} />
       ) : section === 'signups' ? (
         <SignUpCreateForm events={events} />
       ) : section === 'posts' ? (

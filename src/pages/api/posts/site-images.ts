@@ -1,7 +1,7 @@
+import { listImages } from '../../../utils/mediaStore'
 import { adminRoute } from '../../../utils/social/adminApi'
-import { listSiteImages } from '../../../utils/social/media'
 
-// Admin: existing site images to pick from
+// Admin: existing site images to pick from: uploaded event images and public/images
 export default adminRoute({
-  GET: async () => ({ images: await listSiteImages() }),
+  GET: async () => ({ images: await listImages() }),
 })

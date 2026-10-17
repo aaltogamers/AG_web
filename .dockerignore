@@ -4,3 +4,6 @@
 !.next/static
 !public-compressed
 !migrations
+# TEMPORARY: imported at the first start (src/utils/startupMigrations.ts)
+!src/content/events
+!public/images

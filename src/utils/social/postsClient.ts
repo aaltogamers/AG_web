@@ -12,7 +12,7 @@ import type {
   SocialSettings,
 } from './types'
 
-const request = async <T>(url: string, method = 'GET', body?: unknown): Promise<T> => {
+export const request = async <T>(url: string, method = 'GET', body?: unknown): Promise<T> => {
   const res = await fetch(url, {
     method,
     credentials: 'same-origin',

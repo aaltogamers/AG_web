@@ -2,10 +2,11 @@
 // webhook, the scheduler and the MCP server. See "Scheduled posts" in README.md.
 import moment from 'moment-timezone'
 import type { PoolClient } from 'pg'
-import pool from './db_pg'
+import pool, { withTransaction } from './db_pg'
 import { AgentError } from './agentApi'
-import { randomSessionId } from './eventFiles'
+import { randomSessionId } from './eventStore'
 import { EVENT_TIMEZONE } from './eventUtils'
+import { deletePostImages, isMediaUrl, uploadPostImage } from './mediaStore'
 import {
   DEFAULT_SETTINGS,
   DISCORD_PINGS,
@@ -36,21 +37,6 @@ import { MAX_IMAGES } from './social/render'
 export type Actor = 'admin' | 'agent' | `tg:${string}`
 
 const toISO = (d: Date | null | undefined) => (d ? d.toISOString() : null)
-
-const withTransaction = async <T>(run: (client: PoolClient) => Promise<T>): Promise<T> => {
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    const result = await run(client)
-    await client.query('COMMIT')
-    return result
-  } catch (err) {
-    await client.query('ROLLBACK')
-    throw err
-  } finally {
-    client.release()
-  }
-}
 
 // Settings
 
@@ -439,8 +425,7 @@ type WebsiteChangeRow = {
   event: EventChange
   base: Record<string, unknown> | null
   status: WebsiteChangeStatus
-  commit_sha: string | null
-  event_saved_at: Date | null
+  event_version: number | null
   error: string | null
   attempts: number
   ran_at: Date | null
@@ -482,7 +467,7 @@ const rowToWebsiteChange = (row: WebsiteChangeRow): WebsiteChange => ({
   runAt: toISO(row.run_at),
   event: row.event ?? {},
   status: row.status,
-  commitSha: row.commit_sha,
+  eventVersion: row.event_version,
   error: row.error,
   ranAt: toISO(row.ran_at),
 })
@@ -553,14 +538,11 @@ export const getPostOrThrow = async (id: string): Promise<Post> => {
 
 // The base of a website change, stored at approval to detect conflicts
 export const getWebsiteChangeBase = async (postId: string) => {
-  const result = await pool.query<{ base: Record<string, unknown> | null; event_saved_at: Date | null }>(
-    'SELECT base, event_saved_at FROM post_website_changes WHERE post_id = $1',
+  const result = await pool.query<{ base: Record<string, unknown> | null }>(
+    'SELECT base FROM post_website_changes WHERE post_id = $1',
     [postId]
   )
-  return {
-    base: result.rows[0]?.base ?? null,
-    eventSaved: !!result.rows[0]?.event_saved_at,
-  }
+  return result.rows[0]?.base ?? null
 }
 
 // When a channel's message goes out
@@ -704,7 +686,9 @@ const parseContentTime = (value: unknown, name: string): string => {
 
 const SITE_PATH = /^\/[A-Za-z0-9._\-/ ]+\.(png|jpe?g|webp|gif)$/i
 
-export const isSafeSitePath = (path: string) => SITE_PATH.test(path) && !path.includes('..')
+// An image under public/ like /images/foo.png, or an uploaded event image (mediaStore.ts)
+export const isSafeSitePath = (path: string) =>
+  (SITE_PATH.test(path) && !path.includes('..')) || isMediaUrl(path)
 
 const parseImages = async (raw: PostImage[]): Promise<PostImage[]> => {
   if (!Array.isArray(raw)) throw new AgentError(400, 'images must be a list')
@@ -1302,20 +1286,11 @@ export const releaseWebsiteChangeClaim = async (postId: string) => {
   )
 }
 
+// A failed website change. A successful one is finished by markEventSaved.
 export const finishWebsiteChange = async (
   postId: string,
-  result:
-    | { ok: true; commitSha: string | null }
-    | { ok: false; error: string; retryInMinutes?: number }
+  result: { error: string; retryInMinutes?: number }
 ) => {
-  if (result.ok) {
-    await pool.query(
-      `UPDATE post_website_changes SET status = 'done', commit_sha = COALESCE($2, commit_sha),
-         error = NULL, ran_at = now() WHERE post_id = $1`,
-      [postId, result.commitSha]
-    )
-    return
-  }
   if (result.retryInMinutes) {
     await pool.query(
       `UPDATE post_website_changes SET status = 'pending', error = $2,
@@ -1337,10 +1312,13 @@ export const finishWebsiteChange = async (
   })
 }
 
-export const markEventSaved = async (postId: string, commitSha: string | null) => {
-  await pool.query(
-    `UPDATE post_website_changes SET event_saved_at = now(), commit_sha = $2 WHERE post_id = $1`,
-    [postId, commitSha]
+// The website change saved the event. In the same transaction as the save, so
+// a change is never left running after its event was saved.
+export const markEventSaved = async (postId: string, eventVersion: number, client: PoolClient) => {
+  await client.query(
+    `UPDATE post_website_changes SET status = 'done', event_saved_at = now(), event_version = $2,
+       error = NULL, ran_at = now() WHERE post_id = $1`,
+    [postId, eventVersion]
   )
 }
 
@@ -1592,32 +1570,53 @@ export const deletePreviewMessage = async (chatId: string, messageId: number) =>
 
 // Uploaded images
 
-export const saveMedia = async (data: Buffer, width: number, height: number) => {
-  const result = await pool.query<{ id: string }>(
-    `INSERT INTO post_media (data, content_type, width, height) VALUES ($1, 'image/jpeg', $2, $3)
-     RETURNING id`,
-    [data, width, height]
+// The file is uploaded first (mediaStore.ts), with `id` as its name
+export const saveMedia = async (id: string, width: number, height: number) => {
+  await pool.query(
+    `INSERT INTO post_media (id, content_type, width, height) VALUES ($1, 'image/jpeg', $2, $3)`,
+    [id, width, height]
   )
-  return { mediaId: result.rows[0].id, width, height }
+  return { mediaId: id, width, height }
 }
 
+// `data` is only set for images uploaded before they were moved to mediaStore
+// (scripts/movePostMedia.ts); the others are read with readMedia
 export const getMedia = async (id: string) => {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null
-  const result = await pool.query<{ data: Buffer; content_type: string; width: number; height: number }>(
+  const result = await pool.query<{ data: Buffer | null; content_type: string; width: number; height: number }>(
     'SELECT data, content_type, width, height FROM post_media WHERE id = $1',
     [id]
   )
   return result.rows[0] ?? null
 }
 
-// Uploads that never ended up in a post, or in a saved version of one (history)
+// TEMPORARY: moves images uploaded before mediaStore out of post_media.data,
+// keeping their ids. Runs when the server starts (startupMigrations.ts) until none
+// are left; then drop post_media.data, this and the fallbacks that read it.
+export const moveOldPostMedia = async (log = console.log) => {
+  const { rows } = await pool.query<{ id: string }>('SELECT id FROM post_media WHERE data IS NOT NULL')
+  for (const { id } of rows) {
+    const result = await pool.query<{ data: Buffer | null }>('SELECT data FROM post_media WHERE id = $1', [id])
+    const data = result.rows[0]?.data
+    if (!data) continue
+    await uploadPostImage(data, id)
+    await pool.query('UPDATE post_media SET data = NULL WHERE id = $1', [id])
+  }
+  if (rows.length) log(`[posts] moved ${rows.length} uploaded images to mediaStore`)
+}
+
+// Uploads that never ended up in a post, or in a saved version of one (history).
+// The foreign keys keep a row that a post starts using at the same time. A failed
+// file delete only leaves an unused file behind.
 export const deleteUnusedMedia = async () => {
-  await pool.query(
+  const result = await pool.query<{ id: string }>(
     `DELETE FROM post_media m WHERE m.created_at < now() - interval '2 days'
        AND NOT EXISTS (SELECT 1 FROM post_images i WHERE i.media_id = m.id)
        AND NOT EXISTS (
          SELECT 1 FROM post_events e, jsonb_array_elements(e.snapshot->'images') img
          WHERE img->>'mediaId' = m.id::text
-       )`
+       )
+     RETURNING id`
   )
+  await deletePostImages(result.rows.map((r) => r.id))
 }

@@ -1,5 +1,6 @@
 import Head from 'next/head'
-import { getEvents, getFile, getFolder } from '../utils/fileUtils'
+import { getFile, getFolder } from '../utils/fileUtils'
+import { getEvents } from '../utils/eventStore'
 import Banner from '../components/Banner'
 import SideInfoBox from '../components/SideInfoBox'
 import { AGEvent, LandingInfo } from '../types/types'
@@ -44,7 +45,7 @@ const Home = ({ landingInfos, events, imageShowCase }: Props) => {
           />
           <hr className="bg-gray w-full md:my-16" />
           <EventShowCase events={events} />
-          <CmsEditLink cmsPath="collections/event" label="Edit events" className="mb-4" />
+          <CmsEditLink href="/admin/events" label="Edit events" className="mb-4" />
           <Calendar events={events} />
         </main>
       </div>
@@ -54,10 +55,10 @@ const Home = ({ landingInfos, events, imageShowCase }: Props) => {
 
 export default Home
 
-export const getStaticProps = () => ({
+export const getServerSideProps = async () => ({
   props: {
     landingInfos: getFolder('landingInfos'),
-    events: getEvents(),
+    events: await getEvents(),
     imageShowCase: getFile('imageShowCase'),
   },
 })

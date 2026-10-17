@@ -94,7 +94,8 @@ const main = async () => {
 
   console.log('Copying other public folder items')
   fs.readdirSync(startDir, { withFileTypes: true }).forEach((dirent) => {
-    if (dirent.name === 'images') {
+    // Uploaded images in development (src/utils/mediaStore.ts) aren't deployed
+    if (dirent.name === 'images' || dirent.name === 'media') {
       return
     }
     // Clear first so files deleted from public/ don't linger in a cached endDir

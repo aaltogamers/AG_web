@@ -1,8 +1,6 @@
 import matter from 'gray-matter'
 import fs from 'fs'
 import jsYaml from 'js-yaml'
-import { AGEvent } from '../types/types'
-import { normalizeEvent } from './eventUtils'
 
 // JSON schema keeps unquoted times like 2024-05-01T18:00:00 as strings
 export const parseMarkdown = (file: string) =>
@@ -40,9 +38,3 @@ export const getFile = (fileName: string, folder: string = './src/content/') => 
     slug: fileName,
   }
 }
-
-export const getEvents = (): AGEvent[] =>
-  getFolder('events').map((raw) => normalizeEvent(raw as Record<string, unknown>))
-
-export const getEvent = (slug: string): AGEvent =>
-  normalizeEvent({ ...getFile(`events/${slug}`), slug })

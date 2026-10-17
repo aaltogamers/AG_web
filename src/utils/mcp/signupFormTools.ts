@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type { SignUpData } from '../../types/types'
 import { AgentError, optionalString, parseAgentTime } from '../agentApi'
 import { describeForm, parseFields, parsePools, participantsError } from '../agentEvents'
-import { eventFromFile, getEventFile } from '../eventFiles'
+import { eventFromStored, getEvent } from '../eventStore'
 import { getSignupTargets } from '../eventUtils'
 import {
   deleteSignupForms,
@@ -116,9 +116,9 @@ const formFields = {
 }
 
 const getEventOrThrow = async (slug: string) => {
-  const file = await getEventFile(slug)
-  if (!file) throw new AgentError(404, `No event with slug "${slug}"`)
-  return eventFromFile(file)
+  const stored = await getEvent(slug)
+  if (!stored) throw new AgentError(404, `No event with slug "${slug}"`)
+  return eventFromStored(stored)
 }
 
 const getFormOrThrow = async (key: string) => {

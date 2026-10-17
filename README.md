@@ -43,6 +43,11 @@ Migrations (`migrations/`) are applied automatically on first DB access by
 docker compose exec web npm run migrate:up
 ```
 
+While `src/content/events` still exists, an empty database gets those events
+when the server starts (see "Events and images" below). Afterwards, import them
+from the last commit that had them: `npm run seed-events` (needs the
+`pre-db-events` tag: `git fetch --tags`).
+
 To reset the database, stop compose and remove the volume:
 
 ```
@@ -68,6 +73,39 @@ docker compose down -v
 - `RCON_IP`, `RCON_PASSWORD`, `RCON_PORT` — Minecraft whitelist endpoint.
 - `APP_ID`, `PRIVATE_KEY`, `INSTALLATION_ID` — GitHub App credentials for
   the Decap CMS auth handshake (`/api/auth`).
+- `MEDIA_STORAGE_CONNECTION_STRING`, `MEDIA_BASE_URL` — the Blob Storage
+  account for uploaded images and the public URL of its `media` container
+  (set by `infra/main.tf`). Without them, uploads go to `public/media` and
+  are served from `/media`, e.g. in development.
+
+### Events and images
+
+Events are in Postgres (`events`), not in git, so every change is on the site
+right away. They are edited in the "Events" admin tab (`/admin/events`), by
+the MCP server and by the website changes of scheduled posts, all through
+`src/utils/eventStore.ts`. Each save needs the version it was made on, so
+nobody saves over someone else's change. Every save and delete is also
+written to `event_revisions` (with who made it), for undoing a bad edit by
+hand; database backups (35 days) cover the rest. The pages read the events
+from an in-memory list that is reloaded after every change and every 60 s.
+
+Uploaded images (event images and post images) are in Blob Storage, through
+`src/utils/mediaStore.ts`. An event image is stored as WebP for the site and
+as the original without metadata, named by its hash, and never deleted.
+Sign-up uploads stay in Postgres, since they are participants' answers.
+
+Moving to the database needs no manual steps: when the server starts,
+`src/utils/startupMigrations.ts` (temporary) imports the event files shipped in
+the Docker image into an empty database, all or nothing, and moves post images
+uploaded before Blob Storage out of `post_media.data`. Once production has run
+it, delete it with its call in `instrumentation.ts`, `src/utils/eventImport.ts`,
+the event files and their images, their lines in `Dockerfile` and
+`.dockerignore`, and in a migration `post_media.data` with the fallbacks that
+read it (`getMedia`, `loadImage`, `/api/posts/media/[id]`, `copyAsEventImage`).
+
+`npm run import-events -- --ref <git ref>` imports the event files and their
+images of a git ref, e.g. into a local database; running it again only updates
+events that differ. `npm run seed-events` imports the tag `pre-db-events`.
 
 ### Live data & APIs
 
@@ -85,8 +123,7 @@ Client Tool with "HTTP Streamable" and Bearer auth; in Claude Code run
 `claude mcp add --transport http aaltogamers https://aaltogamers.fi/api/mcp --header "Authorization: Bearer <key>"`.
 
 Tools return participants' sign-up counts, never their answers. Event
-changes are committed to the repo, so they show on the site after the next
-rebuild. Tools are defined in `src/utils/mcp/`.
+changes show on the site right away. Tools are defined in `src/utils/mcp/`.
 
 The post tools only make drafts and ask for approval; the agent can never
 approve, schedule or send a post. It can delete its own drafts and posts
@@ -110,8 +147,9 @@ post without its times or website change, e.g. for a reminder.
 
 A post can include one website change (creating or changing an event; its
 sign-up forms are edited on the sign-ups page), which runs when the post is
-approved (default), 10 minutes before the first message, or at a set time. If it
-fails, e.g. because the same fields were edited in the CMS, the messages wait
+approved (default), 10 minutes before the first message, or at a set time. It
+runs in one transaction, so it either happens fully or not at all. If it
+fails, e.g. because the same fields were edited in the event editor, the messages wait
 until someone presses Retry (overwrites) or Send anyway.
 
 Only the approved version of a post is sent; any edit needs a new approval, on
@@ -175,7 +213,8 @@ In production, set the env variables as GitHub Actions secrets and run the
 
 ### Content manager (Decap CMS)
 
-The CMS at `/cms` is Decap CMS **3.16.3**, served from prebuilt files in
+The CMS at `/cms` edits the other pages (about, partners...); events have
+their own editor (see "Events and images"). It is Decap CMS **3.16.3**, served from prebuilt files in
 `public/cms/` (it is not an npm dependency). `config.yml` holds the CMS
 config. To upgrade, run `npm pack decap-cms@<version>` and copy from its
 `package/dist/`: `decap-cms.js`, all `*.decap-cms.js` chunks, the `*.wasm`

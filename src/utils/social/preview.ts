@@ -2,7 +2,7 @@
 // diff. Shown in the admin editor, by preview_post and in the review topic.
 import fs from 'fs/promises'
 import path from 'path'
-import { eventFromFile, getEventFile } from '../eventFiles'
+import { eventFromStored, getEvent } from '../eventStore'
 import { eventMoment, getSignupTargets } from '../eventUtils'
 import { getSettings, listChannels, targetSendAt, websiteRunAt } from '../postStore'
 import { parseMarkdown } from '../fileUtils'
@@ -88,7 +88,7 @@ const resolveEventContext = async (
     const preview = await previewWebsiteChange(post, change, null)
     const { resolved } = preview
     const event =
-      resolved && eventFromFile({ slug: preview.eventSlug ?? '', data: resolved.data, body: resolved.body, sha: '' })
+      resolved && eventFromStored({ slug: preview.eventSlug ?? '', data: resolved.data, body: resolved.body })
     return {
       eventSlug: preview.eventSlug,
       signupSessions: resolved ? signupSessionsAfterChange(resolved) : null,
@@ -99,9 +99,9 @@ const resolveEventContext = async (
     }
   }
   if (!post.eventSlug) return { eventSlug: null, signupSessions: null, sessions: null, website: null }
-  const file = await getEventFile(post.eventSlug)
-  if (!file) return { eventSlug: post.eventSlug, signupSessions: null, sessions: null, website: null }
-  const event = eventFromFile(file)
+  const stored = await getEvent(post.eventSlug)
+  if (!stored) return { eventSlug: post.eventSlug, signupSessions: null, sessions: null, website: null }
+  const event = eventFromStored(stored)
   const targets = getSignupTargets(event)
   return {
     eventSlug: post.eventSlug,

@@ -13,8 +13,9 @@ type Props = {
   events: AGEvent[]
 }
 
-// Picks an existing site image: event images first, then everything under /images
-const SiteImageDialog = ({
+// Picks an existing image: event images first, then uploaded event images and
+// everything under /images. Also used by the event editor.
+export const SiteImageDialog = ({
   events,
   onPick,
   onClose,
@@ -40,7 +41,10 @@ const SiteImageDialog = ({
     ...eventImages,
     ...(images ?? [])
       .filter((path) => !eventImages.some((e) => e.path === path))
-      .map((path) => ({ path, label: path.replace(/^\/images\//, '') })),
+      .map((path) => ({
+        path,
+        label: path.startsWith('/images/') ? path.replace(/^\/images\//, '') : 'Uploaded image',
+      })),
   ].filter((o) => !q || o.label.toLowerCase().includes(q) || o.path.toLowerCase().includes(q))
 
   return (

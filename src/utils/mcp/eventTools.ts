@@ -7,15 +7,9 @@ import {
   formsWithParticipants,
   parseEventInput,
   participantsError,
+  uploadImageFromUrl,
 } from '../agentEvents'
-import {
-  deleteEventFile,
-  eventFromFile,
-  getEventFile,
-  getFreeSlug,
-  listEventFiles,
-  saveEventFile,
-} from '../eventFiles'
+import { deleteEvent, eventFromStored, getEvent, getFreeSlug, listEvents, saveEvent } from '../eventStore'
 import { eventMoment, getSignupTargets } from '../eventUtils'
 import { deleteSignupForms, getSignupFormKeysOfEvent } from '../signupForms'
 import { givenArgs, runTool } from './server'
@@ -35,7 +29,9 @@ export const sessionSchema = z.object({
   location: z.string(),
 })
 
-// Fields of create_event and update_event, in the order of the CMS
+const AUTHOR = 'AI agent'
+
+// Fields of create_event and update_event, in the order of the event editor
 const eventFields = {
   name: z.string(),
   sessions: z
@@ -51,7 +47,9 @@ const eventFields = {
   image: z
     .string()
     .nullable()
-    .describe('Image path like /images/foo.png. If empty, the AG logo is shown.'),
+    .describe(
+      "An image another event has (its image from get_event), a site image path like /images/foo.png, or an https URL of an image to download, e.g. a poster. If empty, the AG logo is shown."
+    ),
   visibleOnCalendar: z.boolean().describe('Defaults to true'),
   visibleOnEventsPage: z.boolean().describe('Defaults to true'),
   description: z.string().describe('Short description in markdown, shown in the event list'),
@@ -67,11 +65,14 @@ const eventFields = {
 }
 const optionalEventFields = z.object(eventFields).partial().shape
 
-const getFileOrThrow = async (slug: string) => {
-  const file = await getEventFile(slug)
-  if (!file) throw new AgentError(404, `No event with slug "${slug}"`)
-  return file
+const getEventOrThrow = async (slug: string) => {
+  const stored = await getEvent(slug)
+  if (!stored) throw new AgentError(404, `No event with slug "${slug}"`)
+  return stored
 }
+
+const withUploadedImage = async (args: Record<string, unknown>) =>
+  'image' in args ? { ...args, image: await uploadImageFromUrl(args.image) } : args
 
 export const registerEventTools = (server: McpServer) => {
   server.registerTool(
@@ -90,8 +91,8 @@ export const registerEventTools = (server: McpServer) => {
       const firstStart = (sessions: { start: string }[]) =>
         sessions.length ? eventMoment(sessions[0].start).valueOf() : Infinity
 
-      const events = (await listEventFiles())
-        .map(eventFromFile)
+      const events = (await listEvents())
+        .map(eventFromStored)
         .filter((event) => {
           if (scope === 'all') return true
           const hasEnded = event.sessions.length > 0 && lastEnd(event.sessions) < now
@@ -115,7 +116,7 @@ export const registerEventTools = (server: McpServer) => {
       annotations: { readOnlyHint: true },
     },
     runTool('get_event', async ({ slug }) => ({
-      event: describeEvent(eventFromFile(await getFileOrThrow(slug)), true),
+      event: describeEvent(eventFromStored(await getEventOrThrow(slug)), true),
     }))
   )
 
@@ -132,23 +133,18 @@ export const registerEventTools = (server: McpServer) => {
       },
     },
     runTool('create_event', async (args) => {
-      const { data, body } = parseEventInput(givenArgs(args), new Set())
+      const { data, body } = parseEventInput(await withUploadedImage(givenArgs(args)), new Set())
       const slug = await getFreeSlug(data.name as string)
-      const fullData = {
-        sessions: [],
-        signupMode: 'none',
-        visibleOnCalendar: true,
-        visibleOnEventsPage: true,
-        recordings: [],
-        ...data,
-      }
-      await saveEventFile(slug, fullData, body ?? '', `Create Event “${slug}” (AI agent)`)
+      const saved = await saveEvent({
+        slug,
+        data: { recordings: [], ...data },
+        body: body ?? '',
+        version: null,
+        author: AUTHOR,
+      })
       return {
-        event: describeEvent(
-          eventFromFile({ slug, data: fullData, body: body ?? '', sha: '' }),
-          true
-        ),
-        note: `Created. It appears on ${eventUrl(slug)} after the site has been rebuilt, in 2-3 minutes. Sign-up forms can be created right away. Link the event to the user.`,
+        event: describeEvent(eventFromStored(saved), true),
+        note: `Created; it is on ${eventUrl(slug)} right away. Sign-up forms can be created for it now. Link the event to the user.`,
       }
     })
   )
@@ -163,16 +159,16 @@ export const registerEventTools = (server: McpServer) => {
       annotations: { destructiveHint: true, idempotentHint: true },
     },
     runTool('update_event', async ({ slug, ...fields }) => {
-      const file = await getFileOrThrow(slug)
-      const oldEvent = eventFromFile(file)
+      const file = await getEventOrThrow(slug)
+      const oldEvent = eventFromStored(file)
       const sessionIds = new Set(oldEvent.sessions.flatMap((s) => s.id ?? []))
-      const { data, body } = parseEventInput(givenArgs(fields), sessionIds)
+      const { data, body } = parseEventInput(await withUploadedImage(givenArgs(fields)), sessionIds)
       if (!Object.keys(data).length && body === undefined) {
         throw new AgentError(400, 'Nothing to update')
       }
 
       const updated = { ...file, data: { ...file.data, ...data }, body: body ?? file.body }
-      const newEvent = eventFromFile(updated)
+      const newEvent = eventFromStored(updated)
 
       // Sign-up forms of sessions that are removed, or of a sign-up mode that is
       // changed, would be left without an event
@@ -189,18 +185,12 @@ export const registerEventTools = (server: McpServer) => {
         )
       }
 
-      await saveEventFile(
-        file.slug,
-        updated.data,
-        updated.body,
-        `Update Event “${file.slug}” (AI agent)`,
-        file.sha
-      )
+      const saved = await saveEvent({ ...updated, author: AUTHOR })
       await deleteSignupForms(orphaned)
       return {
-        event: describeEvent(newEvent, true),
+        event: describeEvent(eventFromStored(saved), true),
         deletedEmptySignupForms: orphaned,
-        note: `Saved. The change is visible on ${eventUrl(file.slug)} after the site has been rebuilt, in 2-3 minutes. Link the event to the user.`,
+        note: `Saved; the change is on ${eventUrl(file.slug)} right away. Link the event to the user.`,
       }
     })
   )
@@ -215,12 +205,12 @@ export const registerEventTools = (server: McpServer) => {
       annotations: { destructiveHint: true },
     },
     runTool('delete_event', async ({ slug }) => {
-      const file = await getFileOrThrow(slug)
+      const file = await getEventOrThrow(slug)
       const keys = await getSignupFormKeysOfEvent(file.slug)
       const blocking = await formsWithParticipants(keys)
       if (blocking.length) throw participantsError(blocking, 'delete the event')
 
-      await deleteEventFile(file, `Delete Event “${file.slug}” (AI agent)`)
+      await deleteEvent(file.slug, file.version, AUTHOR)
       await deleteSignupForms(keys)
       return { deleted: file.slug, deletedEmptySignupForms: keys }
     })

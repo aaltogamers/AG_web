@@ -116,6 +116,13 @@ async function checkDailyNotifications(): Promise<void> {
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // TEMPORARY: imports the event files and moves old post images (see startupMigrations.ts)
+    try {
+      const { runStartupMigrations } = await import('./utils/startupMigrations')
+      await runStartupMigrations()
+    } catch (err) {
+      console.error('[startup] data migrations failed:', err)
+    }
     setInterval(checkDailyNotifications, DAILY_CHECK_INTERVAL_MS)
     console.log('[task-notify] Daily notification check started — checking every 60 seconds')
     // Scheduled posts: website changes and messages that are due

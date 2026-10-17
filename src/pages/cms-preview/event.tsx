@@ -5,9 +5,9 @@ import EventCard from '../../components/Event'
 import EventPage from '../../components/EventPage'
 import { normalizeEvent } from '../../utils/eventUtils'
 
-// Rendered inside the Decap CMS preview pane (see public/cms/index.html).
-// The CMS posts the entry being edited here, and it is rendered with the same
-// components as the real site.
+// Rendered in a frame by the event editor and the post editor's website change
+// preview (WebsitePagePreview.tsx). They post the event being edited here, and
+// it is rendered with the same components as the real site.
 
 type PreviewMessage = {
   type: 'ag-cms-preview'
