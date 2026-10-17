@@ -196,7 +196,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
         >
           {adminSignupKey && (
             <AdminLinkButton
-              href={`/admin/signups?event=${encodeURIComponent(adminSignupKey)}`}
+              href={`/admin/events?event=${encodeURIComponent(event.slug)}&signup=${encodeURIComponent(adminSignupKey)}`}
               label="Edit sign-up"
             />
           )}

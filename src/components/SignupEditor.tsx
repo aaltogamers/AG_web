@@ -1,23 +1,19 @@
-import { FormEvent, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/router'
+import { FormEvent, useEffect, useState } from 'react'
 import {
   FaCopy,
-  FaEdit,
   FaExternalLinkAlt,
   FaEye,
   FaSave,
   FaTrash,
   FaUndo,
 } from 'react-icons/fa'
-import { AGEvent, SignupRow } from '../types/types'
+import { SignupRow } from '../types/types'
 import {
   eventMoment,
   getSignupTargetLabel,
-  getSignupTargets,
   getSignupTargetStart,
   SignupTarget,
 } from '../utils/eventUtils'
-import EventThumbnail from './EventThumbnail'
 import ParticipantTable from './ParticipantTable'
 import CopySignupDialog from './CopySignupDialog'
 import SignupPreview from './SignupPreview'
@@ -41,7 +37,13 @@ import {
 import { useToast } from './Toast'
 
 type Props = {
-  events: AGEvent[]
+  // The sign-up being edited
+  target: SignupTarget
+  // All sign-ups, for copying from another one
+  allTargets: SignupTarget[]
+  // The label of the back button; the event's name by default
+  backLabel?: string
+  onClose: () => void
 }
 
 type Tab = 'fields' | 'signups'
@@ -51,41 +53,40 @@ const DISCARD_CONFIRM = 'You have unsaved changes. Discard them?'
 const iconLink =
   'p-2 rounded-md border border-lightgray bg-white hover:border-red hover:text-red text-black'
 
-const SignUpCreateForm = ({ events }: Props) => {
-  const router = useRouter()
+const startOf = (target: SignupTarget) => {
+  const start = getSignupTargetStart(target)
+  return start ? eventMoment(start) : null
+}
+
+// Edits the sign-up form of an event or one of its sessions, and shows who has signed up
+const SignupEditor = ({ target, allTargets, backLabel, onClose }: Props) => {
   const toast = useToast()
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [signupData, setSignupData] = useState<SignupEvent | null>(null)
   const [participants, setParticipants] = useState<SignupRow[]>([])
   const [draft, setDraft] = useState<FormDraft>(emptyFormDraft())
   const [savedDraft, setSavedDraft] = useState(() => JSON.stringify(draft))
+  const [isLoaded, setIsLoaded] = useState(false)
   const [tab, setTab] = useState<Tab>('fields')
   const [busy, setBusy] = useState(false)
   const [isCopyOpen, setIsCopyOpen] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
-  const cardRefs = useRef(new Map<string, HTMLButtonElement>())
 
-  // Only events with sign-ups enabled, newest first
-  const startOf = (target: SignupTarget) => {
-    const start = getSignupTargetStart(target)
-    return start ? eventMoment(start) : null
-  }
-  const targets = events
-    .flatMap(getSignupTargets)
-    .sort((a, b) => (startOf(b)?.valueOf() ?? 0) - (startOf(a)?.valueOf() ?? 0))
-  const targetOptions = targets.map((target) => {
-    const label = getSignupTargetLabel(target)
-    const isDuplicate = targets.filter((t) => getSignupTargetLabel(t) === label).length > 1
+  // Newest first
+  const targets = [...allTargets].sort(
+    (a, b) => (startOf(b)?.valueOf() ?? 0) - (startOf(a)?.valueOf() ?? 0)
+  )
+  const targetOptions = targets.map((t) => {
+    const label = getSignupTargetLabel(t)
+    const isDuplicate = targets.filter((other) => getSignupTargetLabel(other) === label).length > 1
     return {
-      key: target.key,
-      label: isDuplicate ? `${label} ${startOf(target)?.format('HH:mm') ?? ''}` : label,
+      key: t.key,
+      label: isDuplicate ? `${label} ${startOf(t)?.format('HH:mm') ?? ''}` : label,
     }
   })
-  const labelFor = (key: string) => targetOptions.find((o) => o.key === key)?.label ?? key
+  const label = targetOptions.find((o) => o.key === target.key)?.label ?? getSignupTargetLabel(target)
 
-  const selectedTarget = targets.find((t) => t.key === selectedKey)
   // Presets in the time pickers are relative to this, in the browser's local time
-  const selectedStart = selectedTarget ? (startOf(selectedTarget)?.clone().local() ?? null) : null
+  const selectedStart = startOf(target)?.clone().local() ?? null
 
   const isDirty = JSON.stringify(draft) !== savedDraft
 
@@ -94,45 +95,21 @@ const SignUpCreateForm = ({ events }: Props) => {
     setParticipants(signups)
   }
 
-  const loadTarget = async (key: string) => {
-    setSelectedKey(key)
-    const event = await getSignupEvent(key)
+  const loadTarget = async () => {
+    const event = await getSignupEvent(target.key)
     const loaded = event ? formToDraft(event) : emptyFormDraft()
     setDraft(loaded)
     setSavedDraft(JSON.stringify(loaded))
     setSignupData(event)
     if (event) await loadParticipants(event.key)
     else setParticipants([])
-  }
-
-  const select = (key: string) => {
-    if (key === selectedKey || (isDirty && !window.confirm(DISCARD_CONFIRM))) return
-    loadTarget(key)
+    setIsLoaded(true)
   }
 
   useEffect(() => {
-    if (!router.isReady) return
-    // `?event=<sign-up key or event slug>` (from the event page) preselects that event once
-    const requested = typeof router.query.event === 'string' ? router.query.event : null
-    const requestedTarget = requested
-      ? (targets.find((t) => t.key === requested) ??
-        targets.find((t) => t.event.slug === requested))
-      : undefined
-    const initial = requestedTarget ?? targets[0]
-    if (initial) loadTarget(initial.key)
-    if (requested) {
-      const query = { ...router.query }
-      delete query.event
-      router.replace({ pathname: router.pathname, query }, undefined, { shallow: true })
-    }
+    loadTarget()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.isReady])
-
-  // Keeps the selected event visible in the row of events
-  useEffect(() => {
-    if (!selectedKey) return
-    cardRefs.current.get(selectedKey)?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-  }, [selectedKey])
+  }, [target.key])
 
   // Asks before the page is closed with unsaved changes
   useEffect(() => {
@@ -147,7 +124,6 @@ const SignUpCreateForm = ({ events }: Props) => {
 
   const save = async (e: FormEvent) => {
     e.preventDefault()
-    if (!selectedKey) return
     const result = draftToForm(draft)
     if ('error' in result) {
       toast(`Error: ${result.error}`, { isError: true })
@@ -155,7 +131,7 @@ const SignUpCreateForm = ({ events }: Props) => {
     }
     setBusy(true)
     try {
-      const saved = await saveSignupEvent({ key: selectedKey, ...result.form })
+      const saved = await saveSignupEvent({ key: target.key, ...result.form })
       const next = { ...draft, pools: saved.pools }
       setSignupData(saved)
       setDraft(next)
@@ -168,9 +144,8 @@ const SignUpCreateForm = ({ events }: Props) => {
     }
   }
 
-  const deleteEvent = async () => {
+  const deleteForm = async () => {
     if (!signupData) return
-    const label = labelFor(signupData.key)
     const count = participants.length
     if (
       !window.confirm(
@@ -183,92 +158,51 @@ const SignUpCreateForm = ({ events }: Props) => {
     if (answer?.trim().toUpperCase() !== 'DELETE') return
     try {
       await deleteSignupEvent(signupData.key)
-      const empty = emptyFormDraft()
-      setDraft(empty)
-      setSavedDraft(JSON.stringify(empty))
-      setSignupData(null)
-      setParticipants([])
+      setSavedDraft(JSON.stringify(draft))
       toast('Sign-up deleted.')
+      onClose()
     } catch (e) {
       toast(`Error: ${e instanceof Error ? e.message : e}`, { isError: true })
     }
   }
 
-  if (!targets.length) {
-    return (
-      <p className="text-center">
-        No events have sign-ups enabled. Choose a sign-up option for an event in the event editor.
-      </p>
-    )
-  }
+  const close = () => (!isDirty || window.confirm(DISCARD_CONFIRM)) && onClose()
+
+  if (!isLoaded) return <div className="text-center">Loading…</div>
 
   const tabClass = (active: boolean) =>
     `px-4 py-2 -mb-px border-b-2 ${active ? 'border-red' : 'border-transparent text-lightgray hover:text-red'}`
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex gap-3 overflow-x-auto pb-2">
-        {targets.map((target) => {
-          const isSelected = target.key === selectedKey
-          const start = startOf(target)
-          return (
-            <button
-              key={target.key}
-              ref={(el) => {
-                if (el) cardRefs.current.set(target.key, el)
-                else cardRefs.current.delete(target.key)
-              }}
-              type="button"
-              onClick={() => select(target.key)}
-              className={`w-28 shrink-0 flex flex-col gap-1 text-left rounded-md p-1 border-2 ${
-                isSelected ? 'border-red' : 'border-transparent hover:border-lightgray'
-              }`}
-            >
-              <EventThumbnail image={target.event.image} />
-              <span className="text-sm leading-tight line-clamp-2">{target.event.name}</span>
-              <span className="text-xs text-lightgray">
-                {target.session?.name ? `${target.session.name} · ` : ''}
-                {start?.format('D.M.YYYY') ?? ''}
-              </span>
-            </button>
-          )
-        })}
+      <div>
+        <button type="button" className="borderbutton" onClick={close}>
+          ← {backLabel ?? target.event.name}
+        </button>
       </div>
 
-      {selectedTarget && (
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-2xl font-normal mr-2">{labelFor(selectedTarget.key)}</h2>
-          <a
-            href={`/events/${selectedTarget.event.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={iconLink}
-            title="Event page"
-            aria-label="Event page"
-          >
-            <FaExternalLinkAlt size={14} />
-          </a>
-          <a
-            href={`/admin/events?event=${encodeURIComponent(selectedTarget.event.slug)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={iconLink}
-            title="Edit event info"
-            aria-label="Edit event info"
-          >
-            <FaEdit size={14} />
-          </a>
-          <button
-            type="button"
-            onClick={() => setIsCopyOpen(true)}
-            className={iconLink}
-            title="Copy sign-up from another event"
-            aria-label="Copy sign-up from another event"
-          >
-            <FaCopy size={14} />
-          </button>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="text-2xl font-normal mr-2">Sign-up: {label}</h2>
+        <a
+          href={`/events/${target.event.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={iconLink}
+          title="Event page"
+          aria-label="Event page"
+        >
+          <FaExternalLinkAlt size={14} />
+        </a>
+        <button
+          type="button"
+          onClick={() => setIsCopyOpen(true)}
+          className={iconLink}
+          title="Copy sign-up from another event"
+          aria-label="Copy sign-up from another event"
+        >
+          <FaCopy size={14} />
+        </button>
+      </div>
 
       <div className="flex border-b border-lightgray">
         <button type="button" className={tabClass(tab === 'fields')} onClick={() => setTab('fields')}>
@@ -288,7 +222,7 @@ const SignUpCreateForm = ({ events }: Props) => {
           <div className="flex-1 min-w-0 flex flex-col gap-8">
             {!signupData && (
               <div className="text-sm text-lightgray">
-                This event has no sign-up form yet. It is created when you save.
+                This sign-up form is created when you save.
               </div>
             )}
             <SignupFormSettings value={draft} onChange={setDraft} eventStart={selectedStart} />
@@ -312,7 +246,6 @@ const SignUpCreateForm = ({ events }: Props) => {
                 type="button"
                 className="borderbutton flex items-center gap-2"
                 onClick={() => setIsPreviewOpen(true)}
-                disabled={!selectedTarget}
                 title="Try the form as a participant. Nothing is saved."
               >
                 <FaEye size={14} />
@@ -334,7 +267,7 @@ const SignUpCreateForm = ({ events }: Props) => {
                 <button
                   type="button"
                   className="borderbutton hover:!text-red"
-                  onClick={deleteEvent}
+                  onClick={deleteForm}
                   disabled={busy}
                   title="Delete the entire sign-up"
                   aria-label="Delete the entire sign-up"
@@ -362,23 +295,23 @@ const SignUpCreateForm = ({ events }: Props) => {
         />
       )}
 
-      {isPreviewOpen && selectedTarget && (
+      {isPreviewOpen && (
         <SignupPreview
-          target={selectedTarget}
+          target={target}
           draft={draft}
           participants={signupData ? participants : []}
           onClose={() => setIsPreviewOpen(false)}
         />
       )}
-      {isCopyOpen && selectedTarget && (
+      {isCopyOpen && (
         <CopySignupDialog
-          targetKey={selectedTarget.key}
-          targetLabel={labelFor(selectedTarget.key)}
+          targetKey={target.key}
+          targetLabel={label}
           labels={targetOptions.map(({ key, label }) => ({ value: key, label }))}
           participantCount={signupData ? participants.length : 0}
           onClose={() => setIsCopyOpen(false)}
           onCopied={async () => {
-            await loadTarget(selectedTarget.key)
+            await loadTarget()
             toast('Sign-up copied!')
           }}
         />
@@ -387,4 +320,4 @@ const SignUpCreateForm = ({ events }: Props) => {
   )
 }
 
-export default SignUpCreateForm
+export default SignupEditor

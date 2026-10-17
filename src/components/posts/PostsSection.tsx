@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { FaCalendarAlt, FaCog, FaList } from 'react-icons/fa'
 import type { AGEvent } from '../../types/types'
 import { fetchPosts, fetchSettings } from '../../utils/social/postsClient'
+import { listSignupEvents, type SignupEvent } from '../../utils/signupApi'
 import { POST_STATUS_LABELS, type Channel, type Post, type PostStatus } from '../../utils/social/types'
 import PostCalendar from './PostCalendar'
 import PostEditor from './PostEditor'
@@ -45,8 +46,9 @@ const FILTERS: { label: string; statuses: PostStatus[] }[] = [
   { label: 'All', statuses: [] },
 ]
 
-// The "Posts" admin tab: the list or calendar of posts, and the editor of one
-// (/admin/posts?id=<id> or ?id=new, with ?at=<local time> when created from the calendar)
+// The "Calendar" admin tab: the calendar of events, sign-ups and posts (or the list of posts),
+// and the editor of a post (/admin/posts?id=<id> or ?id=new, with ?at=<local time> when
+// created from the calendar). Events and sign-ups are edited in the "Events" tab.
 const PostsSection = ({ events }: { events: AGEvent[] }) => {
   const router = useRouter()
   const openId = typeof router.query.id === 'string' ? router.query.id : null
@@ -55,16 +57,19 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
   const [view, setView] = useState<'list' | 'calendar'>('calendar')
   const [posts, setPosts] = useState<Post[]>([])
   const [channels, setChannels] = useState<Channel[]>([])
+  const [signupForms, setSignupForms] = useState<SignupEvent[]>([])
   const [leadMinutes, setLeadMinutes] = useState(10)
   const [awaiting, setAwaiting] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const [res, settings] = await Promise.all([
+      const [res, settings, forms] = await Promise.all([
         fetchPosts(view === 'calendar' ? [] : FILTERS[filter].statuses),
         fetchSettings(),
+        listSignupEvents(),
       ])
+      setSignupForms(forms)
       const sorted = [...res.posts].sort((a, b) => (nextTime(b) ?? '').localeCompare(nextTime(a) ?? ''))
       setPosts(sorted)
       setAwaiting(res.awaitingApproval)
@@ -140,7 +145,19 @@ const PostsSection = ({ events }: { events: AGEvent[] }) => {
           <PostList posts={posts} channels={channels} onOpen={openFromList} />
         </>
       ) : (
-        <PostCalendar posts={posts} channels={channels} events={events} leadMinutes={leadMinutes} onOpen={openFromList} onCreate={createAt} />
+        <PostCalendar
+          posts={posts}
+          channels={channels}
+          events={events}
+          signupForms={signupForms}
+          leadMinutes={leadMinutes}
+          onOpen={openFromList}
+          onCreate={createAt}
+          onOpenEvent={(slug) => router.push(`/admin/events?event=${encodeURIComponent(slug)}&from=calendar`)}
+          onOpenSignup={(slug, key) =>
+            router.push(`/admin/events?event=${encodeURIComponent(slug)}&signup=${encodeURIComponent(key)}&from=calendar`)
+          }
+        />
       )}
     </div>
   )

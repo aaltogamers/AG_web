@@ -61,6 +61,10 @@ type Props = {
   onClose: () => void
   // The send time of a new post, e.g. the day clicked in the calendar
   initialSendAt?: string
+  // The event of a new post, when it's made in the event editor
+  initialEventSlug?: string
+  // The label of the back button
+  backLabel?: string
 }
 
 const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
@@ -102,6 +106,8 @@ const PostEditor = ({
   onSaved,
   onClose,
   initialSendAt = '',
+  initialEventSlug = '',
+  backLabel = 'Calendar',
 }: Props) => {
   const [post, setPost] = useState<Post | null>(null)
   const [history, setHistory] = useState<PostHistoryEntry[]>([])
@@ -111,7 +117,11 @@ const PostEditor = ({
   const [leadMinutes, setLeadMinutes] = useState(10)
   const [testPlatforms, setTestPlatforms] = useState<Platform[]>([])
   const [tgUsers, setTgUsers] = useState<TgUserOption[]>([])
-  const [draft, setDraft] = useState<PostDraft>(() => ({ ...emptyPostDraft(), sendAt: initialSendAt }))
+  const [draft, setDraft] = useState<PostDraft>(() => ({
+    ...emptyPostDraft(),
+    sendAt: initialSendAt,
+    eventSlug: initialEventSlug,
+  }))
   const [savedDraft, setSavedDraft] = useState<string>(() => JSON.stringify(draft))
   // Unsaved changes kept in the browser that were made on an older version of the post
   const [olderChanges, setOlderChanges] = useState<ReturnType<typeof readStoredDraft>>(null)
@@ -353,7 +363,7 @@ const PostEditor = ({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-4">
         <button type="button" className="borderbutton" onClick={onClose}>
-          ← All posts
+          ← {backLabel}
         </button>
         {post && (
           <span className="border border-lightgray rounded-md px-2 py-1 text-sm">

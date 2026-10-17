@@ -26,10 +26,13 @@ export const request = async <T>(url: string, method = 'GET', body?: unknown): P
   return data
 }
 
-export const fetchPosts = (statuses: PostStatus[] = []) =>
-  request<{ posts: Post[]; awaitingApproval: number }>(
-    `/api/posts${statuses.length ? `?status=${statuses.join(',')}` : ''}`
-  )
+export const fetchPosts = (statuses: PostStatus[] = [], eventSlug?: string) => {
+  const params = new URLSearchParams({
+    ...(statuses.length && { status: statuses.join(',') }),
+    ...(eventSlug && { event: eventSlug }),
+  })
+  return request<{ posts: Post[]; awaitingApproval: number }>(`/api/posts${params.size ? `?${params}` : ''}`)
+}
 
 export const fetchPost = (id: string) =>
   request<{ post: Post; history: PostHistoryEntry[]; preview: PostPreview }>(`/api/posts/${id}`)

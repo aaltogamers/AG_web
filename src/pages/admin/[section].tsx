@@ -20,8 +20,17 @@ const AdminSectionPage = ({ events, section }: Props) => (
 
 export default AdminSectionPage
 
-export const getServerSideProps: GetServerSideProps<Props, Params> = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps<Props, Params> = async ({ params, query }) => {
   const raw = params?.section
+  // Sign-up forms are edited in the event editor now; old links (?event=<sign-up key>) go there
+  if (raw === 'signups') {
+    const key = typeof query.event === 'string' ? query.event : ''
+    const slug = key.split(':')[0]
+    const destination = slug
+      ? `/admin/events?event=${encodeURIComponent(slug)}&signup=${encodeURIComponent(key)}`
+      : '/admin/events'
+    return { redirect: { destination, permanent: false } }
+  }
   if (!isAdminSection(raw)) {
     return { notFound: true }
   }

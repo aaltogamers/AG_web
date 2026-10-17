@@ -4,6 +4,8 @@ import type { AGEvent, SignupMode } from '../../types/types'
 import type { StoredEvent } from '../../utils/eventStore'
 import { DEFAULT_EVENT_IMAGE } from '../../utils/eventUtils'
 import { createEvent, deleteEvent, updateEvent, uploadEventImage } from '../../utils/eventsClient'
+import EventPostsList from './EventPostsList'
+import EventSignupsList from './EventSignupsList'
 import { SiteImageDialog } from '../posts/ImagePicker'
 import MarkdownEditor from '../posts/MarkdownEditor'
 import { inputClass, SessionsInput } from '../posts/WebsiteChangeEditor'
@@ -16,6 +18,7 @@ type Recording = { name: string; url: string }
 type Draft = {
   name: string
   sessions: SessionDraft[]
+  // Not edited directly: adding a sign-up form sets it
   signupMode: SignupMode
   // Empty: the AG logo
   image: string
@@ -34,6 +37,11 @@ type Props = {
   onSaved: (event: StoredEvent) => void
   onDeleted: () => void
   onClose: () => void
+  // The label of the back button
+  backLabel: string
+  // Opens the editor of a sign-up form (by its key) or a post ('new' for a new one)
+  onOpenSignup: (key: string) => void
+  onOpenPost: (id: string) => void
 }
 
 const str = (value: unknown) => (typeof value === 'string' ? value : '')
@@ -200,7 +208,7 @@ const RecordingsInput = ({ value, onChange }: { value: Recording[]; onChange: (v
 }
 
 // Creates or edits an event. It is on the site as soon as it is saved.
-const EventEditor = ({ event, siteEvents, onSaved, onDeleted, onClose }: Props) => {
+const EventEditor = ({ event, siteEvents, onSaved, onDeleted, onClose, backLabel, onOpenSignup, onOpenPost }: Props) => {
   const toast = useToast()
   const initial = useMemo(() => toDraft(event), [event])
   const [draft, setDraft] = useState(initial)
@@ -260,13 +268,25 @@ const EventEditor = ({ event, siteEvents, onSaved, onDeleted, onClose }: Props) 
       onDeleted()
     })
 
-  const close = () => (!isDirty || window.confirm('Discard your unsaved changes?')) && onClose()
+  const confirmLeave = () => !isDirty || window.confirm('Discard your unsaved changes?')
+  const close = () => confirmLeave() && onClose()
+
+  // Adding a sign-up form of another kind than the event has changes the event's sign-up mode first
+  const addSignup = (mode: SignupMode, key: string) =>
+    event &&
+    run(async () => {
+      if (mode !== initial.signupMode) {
+        const result = await updateEvent(event.slug, event.version, toData({ ...initial, signupMode: mode }), initial.body)
+        onSaved(result.event)
+      }
+      onOpenSignup(key)
+    })
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <button type="button" className="borderbutton" onClick={close}>
-          ← All events
+          ← {backLabel}
         </button>
         {event && (
           <a href={`/events/${event.slug}`} target="_blank" rel="noreferrer" className="link">
@@ -280,33 +300,28 @@ const EventEditor = ({ event, siteEvents, onSaved, onDeleted, onClose }: Props) 
             <input value={draft.name} onChange={(e) => set({ name: e.target.value })} className={inputClass} />
           </Field>
           <Field
-            label="Times and places"
+            label="Sessions"
             hint="One per day or part of the event, e.g. Qualifiers and Finals. Leave empty if the time is not known yet. Times are Helsinki times."
           >
             <SessionsInput value={draft.sessions} onChange={(sessions) => set({ sessions })} />
           </Field>
-          <Field
-            label="Sign-up"
-            hint="The sign-up form itself is made on the sign-ups page. Changing this after sign-ups have opened starts new, empty sign-up lists."
-          >
-            <select
-              value={draft.signupMode}
-              onChange={(e) => set({ signupMode: e.target.value as SignupMode })}
-              className={inputClass}
-            >
-              <option value="none">No sign-up</option>
-              <option value="event">One sign-up for the whole event</option>
-              <option value="session">A separate sign-up for each time and place</option>
-            </select>
-            {event && draft.signupMode !== 'none' && (
-              <a
-                href={`/admin/signups?event=${encodeURIComponent(event.slug)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="link text-sm"
-              >
-                Sign-up forms
-              </a>
+          <Field label="Sign-ups">
+            {event ? (
+              <EventSignupsList
+                event={event}
+                disabled={busy || isDirty}
+                onOpen={(key) => confirmLeave() && onOpenSignup(key)}
+                onAdd={addSignup}
+              />
+            ) : (
+              <span className="text-sm text-lightgray">Sign-up forms can be added once the event is created.</span>
+            )}
+          </Field>
+          <Field label="Posts">
+            {event ? (
+              <EventPostsList eventSlug={event.slug} onOpen={(id) => confirmLeave() && onOpenPost(id)} />
+            ) : (
+              <span className="text-sm text-lightgray">Posts can be added once the event is created.</span>
             )}
           </Field>
           <Field label="Image">
@@ -340,7 +355,7 @@ const EventEditor = ({ event, siteEvents, onSaved, onDeleted, onClose }: Props) 
           </Field>
           <Field
             label="Long description"
-            hint="Shown on the event page, below the times and places. If empty, the short description is shown there instead."
+            hint="Shown on the event page, below the sessions. If empty, the short description is shown there instead."
           >
             <MarkdownEditor value={draft.body} onChange={(body) => set({ body })} rows={10} placeholders={null} />
           </Field>

@@ -20,7 +20,7 @@ const AdminIndex = () => {
 
   useEffect(() => {
     if (!checkedSession || !isLoggedIn) return
-    void router.replace('/admin/signups')
+    void router.replace('/admin/events')
   }, [checkedSession, isLoggedIn, router])
 
   return (

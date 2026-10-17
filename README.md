@@ -88,6 +88,10 @@ written to `event_revisions` (with who made it), for undoing a bad edit by
 hand; database backups (35 days) cover the rest. The pages read the events
 from an in-memory list that is reloaded after every change and every 60 s.
 
+In the event editor, an event's sign-up forms (`&signup=<key>`) and posts
+(`&post=<id>`) are listed, opened and added. Adding a form for the whole event
+or for a session sets the event's `signupMode`; an event has one kind at a time.
+
 Uploaded images (event images and post images) are in Blob Storage, through
 `src/utils/mediaStore.ts`. An event image is stored as WebP for the site and
 as the original without metadata, named by its hash, and never deleted.
@@ -123,8 +127,10 @@ sent posts (`get_example_posts`) first and write new posts the same way.
 
 ### Scheduled posts
 
-The "Posts" admin tab (`/admin/posts`) schedules posts to Telegram, Discord
-and Instagram channels. A post is written once in Markdown and rendered for
+The "Calendar" admin tab (`/admin/posts`) shows posts together with the
+events' sessions and when their sign-ups open and close; posts are also
+listed in the event editor. Posts go to Telegram, Discord and Instagram
+channels. A post is written once in Markdown and rendered for
 each channel, with the placeholders `{{link:<name>}}` (a `/link/<name>`
 redirect), `{{event}}`, `{{signup}}` and `{{signup:<session name>}}`, all with
 `?ref=<channel ref>`, and `{{date}}`, `{{time}}`, `{{location}}` and
@@ -146,7 +152,7 @@ review topic is reminded 5, 2 and 1 days before its first message
 image maker while the post has no image.
 
 A post can include one website change (creating or changing an event; its
-sign-up forms are edited on the sign-ups page), which runs when the post is
+sign-up forms are edited in the event editor), which runs when the post is
 approved (default), 10 minutes before the first message, or at a set time. It
 runs in one transaction, so it either happens fully or not at all. If it
 fails, e.g. because the same fields were edited in the event editor, the messages wait

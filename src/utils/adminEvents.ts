@@ -37,7 +37,7 @@ export const updateEventAsAdmin = async (
   if (withSignups.length) {
     throw new AgentError(
       409,
-      `These sign-up forms would be left without a session or sign-up mode: ${formsList(withSignups)}. Keep their sessions and the sign-up mode, or delete the forms on the sign-ups page first.`
+      `These sign-up forms would be left without a session or sign-up mode: ${formsList(withSignups)}. Keep their sessions, or delete the forms in the event editor first.`
     )
   }
   const deletedSignupForms = leftOver.map((f) => f.key)
@@ -57,7 +57,7 @@ export const deleteEventAsAdmin = async (slug: string, version: number) => {
   if (withSignups.length) {
     throw new AgentError(
       409,
-      `The event has sign-ups: ${formsList(withSignups)}. Delete the sign-up forms on the sign-ups page first.`
+      `The event has sign-ups: ${formsList(withSignups)}. Delete the sign-up forms in the event editor first.`
     )
   }
   await withTransaction(async (client) => {

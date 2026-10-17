@@ -1,7 +1,6 @@
 import { ReactNode, useEffect } from 'react'
 import Link from 'next/link'
 import { AGEvent } from '../types/types'
-import SignUpCreateForm from './SignupCreateForm'
 import BetManagement from './BetManagement'
 import MapBanMangement from './MapBanManagement'
 import { AdminSection } from '../utils/adminSections'
@@ -19,9 +18,9 @@ type Props = {
 const tabClass = (active: boolean) => `text-4xl ${active ? 'underline' : ''}`
 
 const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
-  // The events, posts and signups pages are in light mode
+  // The events and calendar pages are in light mode
   useEffect(() => {
-    if (section !== 'events' && section !== 'posts' && section !== 'signups') return
+    if (section !== 'events' && section !== 'posts') return
     document.body.classList.add('admin-light')
     return () => document.body.classList.remove('admin-light')
   }, [section])
@@ -32,11 +31,8 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
         <Link href="/admin/events" className={tabClass(section === 'events')}>
           Events
         </Link>
-        <Link href="/admin/signups" className={tabClass(section === 'signups')}>
-          Signups
-        </Link>
         <Link href="/admin/posts" className={tabClass(section === 'posts')}>
-          Posts
+          Calendar
         </Link>
         <Link href="/admin/bets" className={tabClass(section === 'bets')}>
           Bets
@@ -60,8 +56,6 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
         children
       ) : section === 'events' ? (
         <EventsSection events={events} />
-      ) : section === 'signups' ? (
-        <SignUpCreateForm events={events} />
       ) : section === 'posts' ? (
         <PostsSection events={events} />
       ) : section === 'bets' ? (

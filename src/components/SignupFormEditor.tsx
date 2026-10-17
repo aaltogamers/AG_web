@@ -1,4 +1,4 @@
-// Controlled sign-up form editor, used by the Signups tab. Turn the FormDraft into
+// Controlled sign-up form editor, used by the sign-up editor (SignupEditor.tsx). Turn the FormDraft into
 // SignUpData with draftToForm.
 import moment, { Moment } from 'moment'
 import { FaLock, FaLockOpen, FaTrash } from 'react-icons/fa'

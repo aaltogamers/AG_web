@@ -1,5 +1,5 @@
 // Website changes of posts: the event (eventStore.ts), its diff and the conflict
-// check before running. Sign-up forms are edited on the sign-ups page.
+// check before running. Sign-up forms are edited in the event editor.
 import slugify from 'slug'
 import { AgentError } from '../agentApi'
 import pool, { withTransaction } from '../db_pg'
@@ -42,7 +42,7 @@ type ChangeField = (typeof CHANGE_FIELDS)[number]
 
 const FIELD_LABELS: Record<ChangeField, string> = {
   name: 'Name',
-  sessions: 'Times and places',
+  sessions: 'Sessions',
   signupMode: 'Sign-up',
   image: 'Image',
   visibleOnCalendar: 'Shown on calendar',

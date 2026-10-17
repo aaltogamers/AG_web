@@ -37,7 +37,7 @@ const VISIBILITY_LABELS: Record<VisibilityField, string> = {
 type EditedField = Exclude<EventField, 'image' | 'visibleOnCalendar' | 'visibleOnEventsPage'>
 const FIELD_LABELS: Record<EditedField, string> = {
   name: 'Name',
-  sessions: 'Times and places',
+  sessions: 'Sessions',
   signupMode: 'Sign-up',
   description: 'Short description',
   body: 'Long description',
@@ -276,17 +276,17 @@ const WebsiteChangeEditor = ({ value, onChange, events, leadMinutes, eventStart 
       {(isCreate || value.event.signupMode !== 'none') && (
         <div className="text-sm text-lightgray">
           {isCreate ? (
-            'Sign-up forms are made on the sign-ups page once the event is on the website.'
+            'Sign-up forms are made in the event editor once the event is on the website.'
           ) : (
             <>
-              Sign-up forms are edited on the{' '}
+              Sign-up forms are edited in the{' '}
               <a
-                href={`/admin/signups?event=${encodeURIComponent(value.eventSlug ?? '')}`}
+                href={`/admin/events?event=${encodeURIComponent(value.eventSlug ?? '')}`}
                 target="_blank"
                 rel="noreferrer"
                 className="link"
               >
-                sign-ups page
+                event editor
               </a>
               .
             </>
