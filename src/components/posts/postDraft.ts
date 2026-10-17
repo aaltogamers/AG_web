@@ -1,5 +1,5 @@
 // The post editor's state and its PostInput. Times are in the browser's time,
-// except session times, which are Helsinki times like in the CMS.
+// except session times, which are Helsinki times like in events.
 import moment from 'moment'
 import { eventMoment } from '../../utils/eventUtils'
 import type { AGEvent, SignupMode } from '../../types/types'
@@ -18,7 +18,7 @@ const LOCAL = 'YYYY-MM-DDTHH:mm'
 export const toLocal = (iso: string | null | undefined) => (iso ? moment(iso).format(LOCAL) : '')
 export const fromLocal = (local: string) => (local ? new Date(local).toISOString() : null)
 
-// Same format as the CMS gives sessions (randomSessionId in eventFiles.ts)
+// Same format as eventStore gives sessions (randomSessionId in eventStore.ts)
 export const randomSessionId = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => (b % 36).toString(36)).join('')
 

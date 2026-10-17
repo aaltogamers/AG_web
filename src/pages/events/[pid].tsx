@@ -1,7 +1,7 @@
-import { GetStaticPropsContext } from 'next'
+import { GetServerSidePropsContext } from 'next'
 import EventPage from '../../components/EventPage'
 import { AGEvent } from '../../types/types'
-import { getEvent, getFolder } from '../../utils/fileUtils'
+import { getEvents } from '../../utils/eventStore'
 import { getRelevantAlbumsForEvents } from '../../utils/getAlbumRelevantToEvent'
 import { getLycheeAlbums } from '../../utils/lychee'
 
@@ -13,18 +13,10 @@ const Event = ({ event }: Props) => <EventPage event={event} />
 
 export default Event
 
-export async function getStaticPaths() {
-  const events = getFolder('events')
-
-  return {
-    paths: events.map((event) => ({ params: { pid: event.slug } })),
-    fallback: false,
-  }
-}
-
-export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const event = getEvent(String(context?.params?.pid))
-  const albums = await getLycheeAlbums()
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
+  const [events, albums] = await Promise.all([getEvents(), getLycheeAlbums()])
+  const event = events.find((e) => e.slug === String(context.params?.pid))
+  if (!event) return { notFound: true }
 
   getRelevantAlbumsForEvents([event], albums)
 

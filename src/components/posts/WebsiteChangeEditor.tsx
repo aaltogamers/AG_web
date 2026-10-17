@@ -24,7 +24,7 @@ type Props = {
   eventStart: moment.Moment | null
 }
 
-const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
+export const inputClass = 'p-2 rounded-md bg-white text-black w-full border border-gray-300'
 
 // The image isn't edited here: a new event gets the post's first image (or the AG
 // logo) and a changed event keeps its own. A new event is shown everywhere, and a
@@ -71,7 +71,8 @@ const TextChoiceInput = ({
   </div>
 )
 
-const SessionsInput = ({
+// Also used by the event editor
+export const SessionsInput = ({
   value,
   onChange,
 }: {
@@ -238,7 +239,6 @@ const WebsiteChangeEditor = ({ value, onChange, events, leadMinutes, eventStart 
         {value.timing === 'at' && (
           <PostTimePicker value={value.runAt} onChange={(runAt) => set({ runAt })} eventStart={eventStart} />
         )}
-        <div className="text-sm text-lightgray">The site is rebuilt 2–3 minutes after the change.</div>
       </div>
 
       {(isCreate || value.eventSlug) && (

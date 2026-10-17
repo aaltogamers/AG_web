@@ -1,8 +1,10 @@
 // Sign-up form database access shared by the admin API (/api/signup-events,
 // /api/signup-summaries) and the AI agent MCP server (/api/mcp).
 // Never returns participants' answers.
+import type { PoolClient } from 'pg'
 import pool from './db_pg'
-import type { SignupInput, SignupPool, SignUpData } from '../types/types'
+import type { AGEvent, SignupInput, SignupPool, SignUpData } from '../types/types'
+import { getSignupTargets } from './eventUtils'
 import type { SignupEvent, SignupSummary } from './signupApi'
 import { normalizePools, publicPools, resolvePoolId } from './signupPools'
 import { inputsError } from './signupAnswers'
@@ -122,10 +124,10 @@ export const saveSignupForm = async (
   return { event: rowToSignupEvent(result.rows[0]) }
 }
 
-// Deletes forms together with all their sign-ups
-export const deleteSignupForms = async (keys: string[]): Promise<void> => {
+// Deletes forms together with all their sign-ups. With a client, in the caller's transaction.
+export const deleteSignupForms = async (keys: string[], client?: PoolClient): Promise<void> => {
   if (!keys.length) return
-  await pool.query('DELETE FROM signup_events WHERE signup_key = ANY($1)', [keys])
+  await (client ?? pool).query('DELETE FROM signup_events WHERE signup_key = ANY($1)', [keys])
 }
 
 // A form as shown to non-admins: without pool passwords and the message and
@@ -173,6 +175,14 @@ export const getSignupFormKeysOfEvent = async (slug: string): Promise<string[]> 
     [slug]
   )
   return result.rows.map((r) => r.signup_key)
+}
+
+// Forms of the event that it has no session or sign-up mode for (e.g. after a
+// change), including forms of sessions removed earlier
+export const signupFormsLeftOver = async (event: AGEvent): Promise<SignupSummary[]> => {
+  const keys = new Set(getSignupTargets(event).map((t) => t.key))
+  const forms = await getSignupSummaries(await getSignupFormKeysOfEvent(event.slug))
+  return forms.filter((form) => !keys.has(form.key))
 }
 
 export const totalSignups = (summary: SignupSummary): number =>

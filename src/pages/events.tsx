@@ -2,7 +2,7 @@ import Head from 'next/head'
 import EventList from '../components/EventList'
 import PageWrapper from '../components/PageWrapper'
 import { AGEvent } from '../types/types'
-import { getEvents } from '../utils/fileUtils'
+import { getEvents } from '../utils/eventStore'
 import { parseEvents } from '../utils/parseEvents'
 import Calendar from '../components/Calendar'
 import Header from '../components/Header'
@@ -23,7 +23,7 @@ const Events = ({ events }: Props) => {
       </Head>
       <div>
         <Header>Event Calendar</Header>
-        <CmsEditLink cmsPath="collections/event" label="Edit events" className="mt-4" />
+        <CmsEditLink href="/admin/events" label="Edit events" className="mt-4" />
         <Calendar events={events} />
         <EventList name="Events right now" events={todayEvents} />
         <EventList name="Upcoming events" events={upcomingEvents} />
@@ -35,9 +35,8 @@ const Events = ({ events }: Props) => {
 
 export default Events
 
-export const getStaticProps = async () => {
-  const events = getEvents()
-  const albums = await getLycheeAlbums()
+export const getServerSideProps = async () => {
+  const [events, albums] = await Promise.all([getEvents(), getLycheeAlbums()])
 
   getRelevantAlbumsForEvents(events, albums)
 

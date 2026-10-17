@@ -25,7 +25,7 @@ const imageSchema = z.object({
   sitePath: z
     .string()
     .optional()
-    .describe("An existing site image, e.g. an event's image like /images/foo.png"),
+    .describe("An existing image: an event's image (from get_event) or a site image like /images/foo.png"),
   mediaId: z.string().optional().describe('An image the post already has, from get_post'),
 })
 
@@ -82,7 +82,9 @@ const websiteChangeSchema = z.object({
       image: z
         .union([
           z.object({ postImage: z.number().int().describe("Position of one of the post's images, from 0") }),
-          z.object({ sitePath: z.string() }),
+          z.object({
+            sitePath: z.string().describe("Another event's image (from get_event) or a site image like /images/foo.png"),
+          }),
         ])
         .nullable()
         .optional(),

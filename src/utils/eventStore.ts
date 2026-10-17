@@ -100,6 +100,13 @@ export const getEvent = async (slug: string, client?: PoolClient): Promise<Store
   return result.rows[0] ?? null
 }
 
+// One event, locked until the end of the client's transaction
+export const lockEvent = async (slug: string, client: PoolClient): Promise<StoredEvent | null> => {
+  if (!isValidSlug(slug)) return null
+  const result = await client.query<EventRow>(`SELECT ${COLUMNS} FROM events WHERE slug = $1 FOR UPDATE`, [slug])
+  return result.rows[0] ?? null
+}
+
 // Like Decap: the slug comes from the name, with -1, -2... if it's taken
 export const getFreeSlug = async (name: string): Promise<string> => {
   const base = slugify(name) || 'event'

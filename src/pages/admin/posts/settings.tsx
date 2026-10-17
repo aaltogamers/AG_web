@@ -1,8 +1,8 @@
-import type { GetStaticProps } from 'next'
+import type { GetServerSideProps } from 'next'
 import AdminPage from '../../../components/AdminPage'
 import PostSettings from '../../../components/posts/PostSettings'
 import { AGEvent } from '../../../types/types'
-import { getEvents } from '../../../utils/fileUtils'
+import { getEvents } from '../../../utils/eventStore'
 
 type Props = { events: AGEvent[] }
 
@@ -15,4 +15,6 @@ const PostSettingsPage = ({ events }: Props) => (
 
 export default PostSettingsPage
 
-export const getStaticProps: GetStaticProps<Props> = () => ({ props: { events: getEvents() } })
+export const getServerSideProps: GetServerSideProps<Props> = async () => ({
+  props: { events: await getEvents() },
+})

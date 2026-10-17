@@ -18,7 +18,6 @@ import {
   getPost,
   getSettings,
   getWebsiteChangeBase,
-  markEventSaved,
   releaseTargetClaim,
   releaseWebsiteChangeClaim,
   saveInstagramTokenState,
@@ -53,20 +52,16 @@ const runWebsiteChanges = async () => {
     const change = post.websiteChange
     if (!change) continue
     try {
-      const { base, eventSaved } = await getWebsiteChangeBase(postId)
-      const commitSha = await runWebsiteChange(post, change, base, eventSaved, (sha) =>
-        markEventSaved(postId, sha)
-      )
-      await finishWebsiteChange(postId, { ok: true, commitSha })
+      await runWebsiteChange(post, change, await getWebsiteChangeBase(postId))
       console.log(`[posts] website change of post #${postId} done`)
     } catch (err) {
       const error = errorText(err)
       console.error(`[posts] website change of post #${postId} failed:`, err)
       if (!isConflict(err) && attempts < MAX_ATTEMPTS) {
-        await finishWebsiteChange(postId, { ok: false, error, retryInMinutes: 2 * attempts })
+        await finishWebsiteChange(postId, { error, retryInMinutes: 2 * attempts })
         continue
       }
-      await finishWebsiteChange(postId, { ok: false, error })
+      await finishWebsiteChange(postId, { error })
       const held = post.targets.some((t) => t.status === 'pending')
       await sendNotice(
         post,

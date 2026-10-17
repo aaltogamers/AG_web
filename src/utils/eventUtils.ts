@@ -82,7 +82,7 @@ export const formatSignupTime = (time: Moment) => time.format('D.M.YYYY HH:mm')
 
 export type SignupTarget = {
   // `eventSlug` for one sign-up for the whole event, `eventSlug:sessionId` for one per session.
-  // The slug keeps session ids unique when the CMS duplicates an event.
+  // The slug keeps session ids unique when an event is duplicated.
   key: string
   event: AGEvent
   session?: EventSession
@@ -94,7 +94,7 @@ export const getSignupTargets = (event: AGEvent): SignupTarget[] => {
   }
   if (event.signupMode === 'session') {
     return event.sessions.map((session) => ({
-      // Sessions saved by the CMS always have an id; the start time is only a fallback
+      // Saved sessions always have an id; the start time is only a fallback
       key: `${event.slug}:${session.id || eventMoment(session.start).format('YYYYMMDDHHmm')}`,
       event,
       session,

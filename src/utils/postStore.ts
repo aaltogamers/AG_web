@@ -4,7 +4,7 @@ import moment from 'moment-timezone'
 import type { PoolClient } from 'pg'
 import pool, { withTransaction } from './db_pg'
 import { AgentError } from './agentApi'
-import { randomSessionId } from './eventFiles'
+import { randomSessionId } from './eventStore'
 import { EVENT_TIMEZONE } from './eventUtils'
 import { deletePostImages, isMediaUrl } from './mediaStore'
 import {
@@ -425,8 +425,7 @@ type WebsiteChangeRow = {
   event: EventChange
   base: Record<string, unknown> | null
   status: WebsiteChangeStatus
-  commit_sha: string | null
-  event_saved_at: Date | null
+  event_version: number | null
   error: string | null
   attempts: number
   ran_at: Date | null
@@ -468,7 +467,7 @@ const rowToWebsiteChange = (row: WebsiteChangeRow): WebsiteChange => ({
   runAt: toISO(row.run_at),
   event: row.event ?? {},
   status: row.status,
-  commitSha: row.commit_sha,
+  eventVersion: row.event_version,
   error: row.error,
   ranAt: toISO(row.ran_at),
 })
@@ -539,14 +538,11 @@ export const getPostOrThrow = async (id: string): Promise<Post> => {
 
 // The base of a website change, stored at approval to detect conflicts
 export const getWebsiteChangeBase = async (postId: string) => {
-  const result = await pool.query<{ base: Record<string, unknown> | null; event_saved_at: Date | null }>(
-    'SELECT base, event_saved_at FROM post_website_changes WHERE post_id = $1',
+  const result = await pool.query<{ base: Record<string, unknown> | null }>(
+    'SELECT base FROM post_website_changes WHERE post_id = $1',
     [postId]
   )
-  return {
-    base: result.rows[0]?.base ?? null,
-    eventSaved: !!result.rows[0]?.event_saved_at,
-  }
+  return result.rows[0]?.base ?? null
 }
 
 // When a channel's message goes out
@@ -1290,20 +1286,11 @@ export const releaseWebsiteChangeClaim = async (postId: string) => {
   )
 }
 
+// A failed website change. A successful one is finished by markEventSaved.
 export const finishWebsiteChange = async (
   postId: string,
-  result:
-    | { ok: true; commitSha: string | null }
-    | { ok: false; error: string; retryInMinutes?: number }
+  result: { error: string; retryInMinutes?: number }
 ) => {
-  if (result.ok) {
-    await pool.query(
-      `UPDATE post_website_changes SET status = 'done', commit_sha = COALESCE($2, commit_sha),
-         error = NULL, ran_at = now() WHERE post_id = $1`,
-      [postId, result.commitSha]
-    )
-    return
-  }
   if (result.retryInMinutes) {
     await pool.query(
       `UPDATE post_website_changes SET status = 'pending', error = $2,
@@ -1325,10 +1312,13 @@ export const finishWebsiteChange = async (
   })
 }
 
-export const markEventSaved = async (postId: string, commitSha: string | null) => {
-  await pool.query(
-    `UPDATE post_website_changes SET event_saved_at = now(), commit_sha = $2 WHERE post_id = $1`,
-    [postId, commitSha]
+// The website change saved the event. In the same transaction as the save, so
+// a change is never left running after its event was saved.
+export const markEventSaved = async (postId: string, eventVersion: number, client: PoolClient) => {
+  await client.query(
+    `UPDATE post_website_changes SET status = 'done', event_saved_at = now(), event_version = $2,
+       error = NULL, ran_at = now() WHERE post_id = $1`,
+    [postId, eventVersion]
   )
 }
 

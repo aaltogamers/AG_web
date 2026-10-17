@@ -23,8 +23,10 @@ export const AdminLinkButton = ({ href, label }: ButtonProps) => (
 )
 
 type Props = {
-  // Decap CMS route, e.g. `collections/event/entries/my-event` (see public/cms/config.yml)
-  cmsPath: string
+  // Decap CMS route, e.g. `collections/partner` (see public/cms/config.yml)
+  cmsPath?: string
+  // Or another editor, e.g. the event editor
+  href?: string
   label: string
   className?: string
   // Extra AdminLinkButtons shown on the same row
@@ -32,13 +34,13 @@ type Props = {
 }
 
 /** Small "edit in CMS" button, only shown to logged-in admins. */
-const CmsEditLink = ({ cmsPath, label, className = '', children }: Props) => {
+const CmsEditLink = ({ cmsPath, href, label, className = '', children }: Props) => {
   const isAdmin = useNavBarAdmin()
   if (isAdmin !== true) return null
 
   return (
     <div className={`flex flex-wrap justify-center gap-2 ${className}`}>
-      <AdminLinkButton href={`/cms/#/${cmsPath}`} label={label} />
+      <AdminLinkButton href={href ?? `/cms/#/${cmsPath}`} label={label} />
       {children}
     </div>
   )

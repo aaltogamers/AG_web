@@ -1,21 +1,21 @@
-// Website changes of posts: the event (eventFiles.ts), its diff and the conflict
+// Website changes of posts: the event (eventStore.ts), its diff and the conflict
 // check before running. Sign-up forms are edited on the sign-ups page.
 import slugify from 'slug'
 import { AgentError } from '../agentApi'
+import pool, { withTransaction } from '../db_pg'
 import {
-  type EventFile,
-  eventFromFile,
-  getEventFile,
+  eventFromStored,
+  eventsChanged,
+  getEvent,
   getFreeSlug,
-  getLastEventCommit,
-  IMAGES_DIR,
-  saveEventFile,
-} from '../eventFiles'
+  lockEvent,
+  saveEvent,
+  type StoredEvent,
+} from '../eventStore'
 import { eventMoment, formatSessionTime, getSignupTargets } from '../eventUtils'
+import { postImageUrl, readMedia, uploadEventImage } from '../mediaStore'
 import { deleteSignupForms, getSignupFormKeysOfEvent, getSignupSummaries, totalSignups } from '../signupForms'
-import pool from '../db_pg'
-import { postImageUrl, readMedia } from '../mediaStore'
-import { getMedia } from '../postStore'
+import { getMedia, markEventSaved } from '../postStore'
 import { fillPlaceholders, type PlaceholderSession } from './render'
 import type {
   DiffLine,
@@ -84,17 +84,11 @@ const resolveText = (
       }).text.trim()
     : choice.text.trim()
 
-// Repo path and site path of an uploaded image committed as the event's image
-const uploadedImagePaths = (slug: string, mediaId: string) => {
-  const name = `${slug}-${mediaId.slice(0, 8)}.jpg`
-  return { repoPath: `${IMAGES_DIR}/${name}`, sitePath: `/images/${name}` }
-}
-
 type ResolvedEvent = {
   data: Record<string, unknown>
   body: string
-  // An uploaded image to commit with the event
-  upload?: { mediaId: string; repoPath: string }
+  // An uploaded post image that becomes the event's image
+  upload?: { mediaId: string }
 }
 
 const sessionsToContent = (sessions: SessionChange[]) =>
@@ -106,12 +100,14 @@ const sessionsToContent = (sessions: SessionChange[]) =>
     id: s.id,
   }))
 
-// The event's frontmatter and long description after the change
+// The event's fields and long description after the change. An uploaded post
+// image is the post's file until it has been copied as an event image (`eventImageUrl`).
 export const resolveEvent = (
   post: Post,
   change: WebsiteChange,
-  file: EventFile | null,
-  slug: string | null
+  file: StoredEvent | null,
+  slug: string | null,
+  eventImageUrl?: string
 ): ResolvedEvent => {
   const { event } = change
   const data: Record<string, unknown> =
@@ -144,9 +140,8 @@ export const resolveEvent = (
       if (image && 'sitePath' in image) {
         data.image = image.sitePath
       } else if (image) {
-        const paths = uploadedImagePaths(slug ?? 'event', image.mediaId)
-        data.image = paths.sitePath
-        upload = { mediaId: image.mediaId, repoPath: paths.repoPath }
+        data.image = eventImageUrl ?? postImageUrl(image.mediaId)
+        upload = { mediaId: image.mediaId }
       }
     }
   }
@@ -183,7 +178,7 @@ const formatValue = (field: ChangeField, value: unknown): string => {
   return String(value)
 }
 
-const currentValue = (field: ChangeField, file: EventFile | null): unknown => {
+const currentValue = (field: ChangeField, file: StoredEvent | null): unknown => {
   if (!file) return undefined
   if (field === 'body') return file.body
   if (field === 'visibleOnCalendar' || field === 'visibleOnEventsPage') {
@@ -199,7 +194,7 @@ const newValue = (field: ChangeField, resolved: ResolvedEvent) =>
 // Current → new for each field the change sets
 export const diffEvent = (
   change: WebsiteChange,
-  file: EventFile | null,
+  file: StoredEvent | null,
   resolved: ResolvedEvent
 ): DiffLine[] => {
   const fields: ChangeField[] =
@@ -217,12 +212,12 @@ export const diffEvent = (
 const comparable = (value: unknown) => JSON.stringify(value ?? null)
 
 // Values of the changed fields now, stored at approval to detect conflicts
-export const snapshotBase = (change: WebsiteChange, file: EventFile | null) =>
+export const snapshotBase = (change: WebsiteChange, file: StoredEvent | null) =>
   change.kind === 'update_event' && file
     ? Object.fromEntries(changedFields(change.event).map((f) => [f, currentValue(f, file) ?? null]))
     : null
 
-const conflictingFields = (base: Record<string, unknown>, file: EventFile) =>
+const conflictingFields = (base: Record<string, unknown>, file: StoredEvent) =>
   (Object.keys(base) as ChangeField[]).filter(
     (field) => comparable(base[field]) !== comparable(currentValue(field, file))
   )
@@ -238,7 +233,7 @@ const reservedSlugs = async (postId: string): Promise<string[]> => {
   return result.rows.map((r) => r.event_slug)
 }
 
-// The slug a new event gets: like the CMS, from the name with -1, -2... if taken
+// The slug a new event gets: like getFreeSlug, from the name with -1, -2... if taken
 export const chooseNewEventSlug = async (post: Post, change: WebsiteChange) => {
   const name = change.event.name ?? 'event'
   const reserved = await reservedSlugs(post.id)
@@ -253,7 +248,7 @@ export const chooseNewEventSlug = async (post: Post, change: WebsiteChange) => {
 // The event the change applies to, and its slug (a guess for a new event before approval)
 export const loadChangeTarget = async (change: WebsiteChange) => {
   if (change.kind === 'update_event') {
-    const file = change.eventSlug ? await getEventFile(change.eventSlug) : null
+    const file = change.eventSlug ? await getEvent(change.eventSlug) : null
     return { file, slug: change.eventSlug, slugIsFinal: true }
   }
   if (change.eventSlug) return { file: null, slug: change.eventSlug, slugIsFinal: true }
@@ -299,7 +294,7 @@ export const previewWebsiteChange = async (
 
   const resolved = resolveEvent(post, change, file, slug)
   const diff = diffEvent(change, file, resolved)
-  const newEvent = eventFromFile({ slug: slug ?? '', data: resolved.data, body: resolved.body, sha: '' })
+  const newEvent = eventFromStored({ slug: slug ?? '', data: resolved.data, body: resolved.body })
   const existingKeys = slug && file ? await getSignupFormKeysOfEvent(slug) : []
   const summaries = await getSignupSummaries(existingKeys)
 
@@ -322,6 +317,7 @@ export const previewWebsiteChange = async (
 
   const page = {
     event: { ...resolved.data, content: resolved.body, slug: slug ?? '' },
+    // Also works for images not yet moved to mediaStore (scripts/movePostMedia.ts)
     imageUrls: resolved.upload
       ? { [String(resolved.data.image)]: `/api/posts/media/${resolved.upload.mediaId}` }
       : {},
@@ -331,41 +327,32 @@ export const previewWebsiteChange = async (
 
 export class WebsiteChangeConflict extends Error {}
 
-// In the commit message, so that a run interrupted after committing (before
-// markEventSaved) isn't mistaken for a conflict and committed again
-const commitMarker = (post: Post) => `(scheduled post #${post.id} v${post.version})`
-
-// The commit, if this version of the post was the last to change the event
-export const committedByPost = async (post: Post, slug: string) => {
-  const last = await getLastEventCommit(slug)
-  return last?.message.includes(commitMarker(post)) ? last.sha : null
+// An uploaded post image copied as an event image: post uploads are cleaned up,
+// event images aren't. A retry gets the same name, so nothing is copied twice.
+const copyAsEventImage = async (mediaId: string) => {
+  const media = await getMedia(mediaId)
+  const data = media && (media.data ?? (await readMedia(postImageUrl(mediaId))))
+  if (!data) throw new WebsiteChangeConflict('The uploaded event image no longer exists')
+  return uploadEventImage(data)
 }
 
-// Runs the change: commits the event file (with an uploaded image). A conflict throws WebsiteChangeConflict, which is not retried.
+// Runs the change in one transaction: saves the event, deletes the empty sign-up
+// forms that no longer belong to it and marks the change done. Returns the
+// event's new version. A conflict throws WebsiteChangeConflict, which is not retried.
 export const runWebsiteChange = async (
   post: Post,
   change: WebsiteChange,
-  base: Record<string, unknown> | null,
-  eventSavedBefore: boolean,
-  onEventSaved: (commitSha: string | null) => Promise<void>
-): Promise<string | null> => {
+  base: Record<string, unknown> | null
+): Promise<number> => {
   const slug = change.eventSlug
   if (!slug) throw new WebsiteChangeConflict('The event has no slug; approve the post again')
-  const file = await getEventFile(slug)
-  let commitSha = change.commitSha ?? null
-  let eventSaved = eventSavedBefore
+  const preview = await previewWebsiteChange(post, change, null)
+  if (preview.errors.length) throw new WebsiteChangeConflict(preview.errors.join('; '))
+  const upload = preview.resolved?.upload
+  const eventImageUrl = upload ? await copyAsEventImage(upload.mediaId) : undefined
 
-  // An earlier run committed the event but was interrupted before it could record that
-  if (!eventSaved && file) {
-    const sha = await committedByPost(post, slug)
-    if (sha) {
-      commitSha = sha
-      await onEventSaved(sha)
-      eventSaved = true
-    }
-  }
-
-  if (!eventSaved) {
+  const version = await withTransaction(async (client) => {
+    const file = await lockEvent(slug, client)
     if (change.kind === 'create_event' && file) {
       throw new WebsiteChangeConflict(
         `The address /events/${slug} has been taken since the post was approved. Retry to pick a new one.`
@@ -376,45 +363,41 @@ export const runWebsiteChange = async (
       const conflicts = base ? conflictingFields(base, file) : []
       if (conflicts.length) {
         throw new WebsiteChangeConflict(
-          `${conflicts.map((f) => FIELD_LABELS[f]).join(', ')} of the event ${conflicts.length > 1 ? 'have' : 'has'} been changed (e.g. in the CMS) since the post was approved. Retry overwrites ${conflicts.length > 1 ? 'them' : 'it'} with the post's version.`
+          `${conflicts.map((f) => FIELD_LABELS[f]).join(', ')} of the event ${conflicts.length > 1 ? 'have' : 'has'} been changed (e.g. in the event editor) since the post was approved. Retry overwrites ${conflicts.length > 1 ? 'them' : 'it'} with the post's version.`
         )
       }
     }
 
-    const preview = await previewWebsiteChange(post, change, null)
-    if (preview.errors.length) throw new WebsiteChangeConflict(preview.errors.join('; '))
-    const resolved = resolveEvent(post, change, file, slug)
-    const extraFiles = []
-    if (resolved.upload) {
-      const media = await getMedia(resolved.upload.mediaId)
-      const data = media && (media.data ?? (await readMedia(postImageUrl(resolved.upload.mediaId))))
-      if (!data) throw new WebsiteChangeConflict('The uploaded event image no longer exists')
-      extraFiles.push({ path: resolved.upload.repoPath, content: data })
-    }
-    const verb = change.kind === 'create_event' ? 'Create' : 'Update'
-    commitSha =
-      (await saveEventFile(
+    const resolved = resolveEvent(post, change, file, slug, eventImageUrl)
+    const saved = await saveEvent(
+      {
         slug,
-        resolved.data,
-        resolved.body,
-        `${verb} Event “${slug}” ${commitMarker(post)}`,
-        file?.sha || undefined,
-        extraFiles
-      )) ?? null
-    await onEventSaved(commitSha)
+        data: resolved.data,
+        body: resolved.body,
+        version: file?.version ?? null,
+        author: `post #${post.id} v${post.version}`,
+      },
+      client
+    ).catch((err) => {
+      // Invalid fields don't get better by trying again
+      if (err instanceof AgentError && err.status === 400) throw new WebsiteChangeConflict(err.message)
+      throw err
+    })
 
     // Like update_event: empty forms that no longer belong to the event
     if (file) {
-      const newEvent = eventFromFile({ slug, data: resolved.data, body: resolved.body, sha: '' })
-      const newKeys = new Set(getSignupTargets(newEvent).map((t) => t.key))
+      const newKeys = new Set(getSignupTargets(eventFromStored(saved)).map((t) => t.key))
       const existing = await getSignupSummaries(await getSignupFormKeysOfEvent(slug))
       await deleteSignupForms(
-        existing.filter((s) => !newKeys.has(s.key) && totalSignups(s) === 0).map((s) => s.key)
+        existing.filter((s) => !newKeys.has(s.key) && totalSignups(s) === 0).map((s) => s.key),
+        client
       )
     }
-  }
-
-  return commitSha
+    await markEventSaved(post.id, saved.version, client)
+    return saved.version
+  })
+  eventsChanged()
+  return version
 }
 
 export const isConflict = (err: unknown) =>

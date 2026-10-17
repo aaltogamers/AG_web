@@ -1,9 +1,9 @@
-import type { GetStaticPaths, GetStaticProps } from 'next'
+import type { GetServerSideProps } from 'next'
 import type { ParsedUrlQuery } from 'querystring'
 import AdminPage from '../../components/AdminPage'
 import { AGEvent } from '../../types/types'
-import { getEvents } from '../../utils/fileUtils'
-import { ADMIN_SECTIONS, AdminSection, isAdminSection } from '../../utils/adminSections'
+import { getEvents } from '../../utils/eventStore'
+import { AdminSection, isAdminSection } from '../../utils/adminSections'
 
 type Props = {
   events: AGEvent[]
@@ -20,19 +20,14 @@ const AdminSectionPage = ({ events, section }: Props) => (
 
 export default AdminSectionPage
 
-export const getStaticPaths: GetStaticPaths<Params> = () => ({
-  paths: ADMIN_SECTIONS.map((section) => ({ params: { section } })),
-  fallback: false,
-})
-
-export const getStaticProps: GetStaticProps<Props, Params> = ({ params }) => {
+export const getServerSideProps: GetServerSideProps<Props, Params> = async ({ params }) => {
   const raw = params?.section
   if (!isAdminSection(raw)) {
     return { notFound: true }
   }
   return {
     props: {
-      events: getEvents(),
+      events: await getEvents(),
       section: raw,
     },
   }

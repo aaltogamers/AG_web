@@ -51,7 +51,7 @@ export const createMcpServer = () => {
       instructions:
         'Manages Aalto Gamers events, their sign-up forms, the task board and scheduled marketing posts. ' +
         'Times are Helsinki wall-clock times like 2026-10-24T18:00, unless they have an offset. ' +
-        'Event changes are visible on aaltogamers.fi after the site has been rebuilt, in 2-3 minutes. ' +
+        'Event changes are visible on aaltogamers.fi right away. ' +
         'When telling the user about an event, sign-up form or task, link it with the url (or taskBoardUrl) from the tool result. ' +
         'Marketing posts to Telegram, Discord and Instagram are written once in markdown with placeholders like {{event}}, {{signup}} and {{link:discord}}, filled in for each channel; their times are Helsinki times too. ' +
         'Before writing a post, read earlier posts with get_example_posts and write it the same way they are written, so all posts look alike. ' +

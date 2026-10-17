@@ -1,14 +1,13 @@
 import { createEvents } from 'ics'
 import moment from 'moment-timezone' // Import moment-timezone
-import { getEvents } from '../../utils/fileUtils'
+import { getEvents } from '../../utils/eventStore'
 import { convertEventsToCalendarFormat } from '../../utils/eventUtils'
 
-export const dynamic = 'force-static'
-export const revalidate = false
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const events = getEvents()
+    const events = await getEvents()
     const calendarEvents = convertEventsToCalendarFormat(events)
 
     const icsEvents = calendarEvents.map((event) => {

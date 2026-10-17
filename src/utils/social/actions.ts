@@ -1,7 +1,7 @@
 // Post status changes: the database change (postStore.ts) and the review topic
 // messages. Only the admin API and the webhook (humans) can approve.
 import { AgentError } from '../agentApi'
-import { getEventFile } from '../eventFiles'
+import { getEvent } from '../eventStore'
 import {
   type Actor,
   createPost,
@@ -24,7 +24,7 @@ import { buildPreview, previewErrors } from './preview'
 import { escapeTelegramHtml as esc } from './telegram'
 import { announceDecision, approvalNote, closeMessages, closeOpenMessages, sendReview } from './review'
 import type { Post, PostInput } from './types'
-import { chooseNewEventSlug, committedByPost, snapshotBase } from './website'
+import { chooseNewEventSlug, snapshotBase } from './website'
 
 // Times up to this much in the past still count as "now" when approving
 const GRACE_MS = 2 * 60_000
@@ -118,7 +118,7 @@ export const approvePost = async (id: string, version: number, actor: Actor) => 
     if (change.kind === 'create_event') {
       eventSlug = await chooseNewEventSlug(post, change)
     } else {
-      base = snapshotBase(change, change.eventSlug ? await getEventFile(change.eventSlug) : null)
+      base = snapshotBase(change, change.eventSlug ? await getEvent(change.eventSlug) : null)
     }
     scheduledRunAt = websiteRunAt(timed, settings.website.leadMinutes)
     if (change.timing === 'on_approval' || (scheduledRunAt && new Date(scheduledRunAt).getTime() < now)) {
@@ -177,18 +177,13 @@ export const releaseHeldPost = async (
   if (!change || change.status !== 'failed') throw new AgentError(409, 'The website change has not failed')
   let base: Record<string, unknown> | null = null
   if (mode === 'retry') {
-    // A new address only if someone else took it; not if an interrupted run of this post created the event
-    if (
-      change.kind === 'create_event' &&
-      change.eventSlug &&
-      (await getEventFile(change.eventSlug)) &&
-      !(await committedByPost(post, change.eventSlug))
-    ) {
+    // A new address if someone else took it
+    if (change.kind === 'create_event' && change.eventSlug && (await getEvent(change.eventSlug))) {
       const slug = await chooseNewEventSlug(post, change)
       await setWebsiteChangeSlug(post.id, slug)
     }
     if (change.kind === 'update_event' && change.eventSlug) {
-      base = snapshotBase(change, await getEventFile(change.eventSlug))
+      base = snapshotBase(change, await getEvent(change.eventSlug))
     }
   }
   await releaseHeld(post, version, actor, mode, newTime, base)

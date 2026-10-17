@@ -90,7 +90,7 @@ export type TextChoice = { fromPost: true } | { text: string }
 export type ImageChoice = { postImage: number } | { sitePath: string }
 
 export type SessionChange = {
-  // Generated for new sessions when the post is saved, like the CMS preSave handler
+  // Generated for new sessions when the post is saved, like eventStore does
   id: string
   name?: string
   // Helsinki wall-clock times like the event content, YYYY-MM-DDTHH:mm:ss
@@ -128,7 +128,8 @@ export type WebsiteChange = {
   runAt: string | null
   event: EventChange
   status: WebsiteChangeStatus
-  commitSha?: string | null
+  // The event's version the change saved
+  eventVersion?: number | null
   error?: string | null
   ranAt?: string | null
 }

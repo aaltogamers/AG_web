@@ -11,8 +11,9 @@ import {
   parseAgentTime,
   requireString,
 } from './agentApi'
-import { randomSessionId } from './eventFiles'
+import { isEventImage, randomSessionId } from './eventStore'
 import { eventMoment, getSignupStatus, getSignupTargets, type SignupTarget } from './eventUtils'
+import { isMediaUrl, MAX_UPLOAD_BYTES, uploadEventImage } from './mediaStore'
 import { getSignupSummaries, totalSignups } from './signupForms'
 import type { SignupSummary } from './signupApi'
 import { poolFill } from './signupPools'
@@ -30,7 +31,7 @@ const EVENT_FIELDS = [
   'recordings',
 ]
 
-// Same format as the CMS datetime widget
+// Same format as event times in eventStore.ts
 const toContentTime = (time: moment.Moment) => time.format('YYYY-MM-DDTHH:mm:ss')
 
 const parseSession = (raw: unknown, i: number, existingIds: Set<string>) => {
@@ -81,7 +82,13 @@ export const parseEventInput = (
     if (!mode) throw new AgentError(400, `signupMode must be one of ${SIGNUP_MODES.join(', ')}`)
     data.signupMode = mode
   }
-  if ('image' in input) data.image = optionalString(input.image, 'image')
+  if ('image' in input) {
+    const image = optionalString(input.image, 'image')
+    if (image && !isEventImage(image)) {
+      throw new AgentError(400, 'image must be an image of an event, a path like /images/foo.png or an https URL to download')
+    }
+    data.image = image
+  }
   if ('visibleOnCalendar' in input) {
     data.visibleOnCalendar = optionalBoolean(input.visibleOnCalendar, 'visibleOnCalendar') ?? true
   }
@@ -101,6 +108,17 @@ export const parseEventInput = (
 
   const body = 'body' in input ? (optionalString(input.body, 'body') ?? '') : undefined
   return { data, body }
+}
+
+// An image URL given as the event's image is downloaded and uploaded as an event
+// image; other values are returned as they are
+export const uploadImageFromUrl = async (image: unknown): Promise<unknown> => {
+  if (typeof image !== 'string' || !/^https?:\/\//i.test(image) || isMediaUrl(image)) return image
+  const res = await fetch(image, { signal: AbortSignal.timeout(30_000) }).catch(() => null)
+  if (!res?.ok) throw new AgentError(400, `image: could not download ${image}`)
+  const data = Buffer.from(await res.arrayBuffer())
+  if (data.length > MAX_UPLOAD_BYTES) throw new AgentError(400, 'image: the image is larger than 15 MB')
+  return uploadEventImage(data)
 }
 
 export const eventUrl = (slug: string) => `https://aaltogamers.fi/events/${slug}`

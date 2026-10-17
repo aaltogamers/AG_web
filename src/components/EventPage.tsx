@@ -63,7 +63,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
   const [signupList, setSignupList] = useState<SignupList | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  // Enabling sign-ups in the CMS does nothing until the form is created in the admin panel
+  // Enabling sign-ups in the event editor does nothing until the form is created in the admin panel
   const targets = getSignupTargets(event).filter((t) => summaries[t.key])
   const targetKeys = getSignupTargets(event)
     .map((t) => t.key)
@@ -94,7 +94,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
   const selectedTarget = targets.find((t) => t.key === selectedKey) ?? defaultTarget
   const selectedSummary = selectedTarget && summaries[selectedTarget.key]
   const selectedTargetKey = selectedTarget?.key
-  // Also link sign-ups that are enabled in the CMS but not yet created in the admin panel
+  // Also link sign-ups that are enabled in the event editor but not yet created in the admin panel
   const adminSignupKey = selectedTargetKey ?? targetKeys.split(',')[0]
 
   useEffect(() => {
@@ -190,7 +190,7 @@ const EventPage = ({ event, showSignUp = true }: Props) => {
       <Header className="mt-20 md:mt-10">{event.name}</Header>
       {showSignUp && (
         <CmsEditLink
-          cmsPath={`collections/event/entries/${event.slug}`}
+          href={`/admin/events?event=${encodeURIComponent(event.slug)}`}
           label="Edit event"
           className="mt-4"
         >

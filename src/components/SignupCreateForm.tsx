@@ -65,7 +65,7 @@ const SignUpCreateForm = ({ events }: Props) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const cardRefs = useRef(new Map<string, HTMLButtonElement>())
 
-  // Only events with sign-ups enabled in the CMS, newest first
+  // Only events with sign-ups enabled, newest first
   const startOf = (target: SignupTarget) => {
     const start = getSignupTargetStart(target)
     return start ? eventMoment(start) : null
@@ -197,7 +197,7 @@ const SignUpCreateForm = ({ events }: Props) => {
   if (!targets.length) {
     return (
       <p className="text-center">
-        No events have sign-ups enabled. Choose a sign-up option for an event in the CMS.
+        No events have sign-ups enabled. Choose a sign-up option for an event in the event editor.
       </p>
     )
   }
@@ -249,12 +249,12 @@ const SignUpCreateForm = ({ events }: Props) => {
             <FaExternalLinkAlt size={14} />
           </a>
           <a
-            href={`/cms/#/collections/event/entries/${selectedTarget.event.slug}`}
+            href={`/admin/events?event=${encodeURIComponent(selectedTarget.event.slug)}`}
             target="_blank"
             rel="noopener noreferrer"
             className={iconLink}
-            title="Edit event info in the CMS"
-            aria-label="Edit event info in the CMS"
+            title="Edit event info"
+            aria-label="Edit event info"
           >
             <FaEdit size={14} />
           </a>

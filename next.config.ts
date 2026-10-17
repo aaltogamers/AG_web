@@ -30,6 +30,8 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/db-health': ['./node_modules/node-pg-migrate/**/*'],
     '/api/tasks/**/*': ['./node_modules/node-pg-migrate/**/*'],
+    // The front page reads these on every request (getServerSideProps)
+    '/': ['./src/content/landingInfos/**/*', './src/content/imageShowCase.md'],
   },
   serverExternalPackages: ['node-pg-migrate', 'pg'],
   async redirects() {
