@@ -36,3 +36,12 @@ output "database_url" {
   value     = "postgresql://${azurerm_postgresql_flexible_server.main.administrator_login}:${var.postgresql_admin_password}@${azurerm_postgresql_flexible_server.main.fqdn}:5432/${azurerm_postgresql_flexible_server_database.app.name}?sslmode=require"
   sensitive = true
 }
+
+output "media_base_url" {
+  value = "${azurerm_storage_account.media.primary_blob_endpoint}${azurerm_storage_container.media.name}"
+}
+
+output "media_storage_connection_string" {
+  value     = azurerm_storage_account.media.primary_connection_string
+  sensitive = true
+}
