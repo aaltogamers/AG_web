@@ -1,11 +1,5 @@
 // GitHub App access to the site repo, used for the Decap CMS login (/api/auth)
-// and for editing CMS content from the AI agent MCP server (/api/mcp).
 import { App } from 'octokit'
-
-// Same repo and branch as the backend in public/cms/config.yml
-export const REPO_OWNER = 'aaltogamers'
-export const REPO_NAME = 'AG_web'
-export const REPO_BRANCH = 'master'
 
 let app: App | null = null
 
@@ -48,6 +42,3 @@ export const mintInstallationToken = async (): Promise<string> => {
   )
   return res.data.token
 }
-
-export const getRepoOctokit = () =>
-  getApp().getInstallationOctokit(Number(process.env.INSTALLATION_ID))

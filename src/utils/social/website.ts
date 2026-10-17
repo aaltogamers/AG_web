@@ -15,7 +15,7 @@ import {
 import { eventMoment, formatSessionTime, getSignupTargets } from '../eventUtils'
 import { postImageUrl, readMedia, uploadEventImage } from '../mediaStore'
 import { deleteSignupForms, getSignupFormKeysOfEvent, getSignupSummaries, totalSignups } from '../signupForms'
-import { getMedia, markEventSaved } from '../postStore'
+import { markEventSaved } from '../postStore'
 import { fillPlaceholders, type PlaceholderSession } from './render'
 import type {
   DiffLine,
@@ -317,7 +317,6 @@ export const previewWebsiteChange = async (
 
   const page = {
     event: { ...resolved.data, content: resolved.body, slug: slug ?? '' },
-    // Also works for images not yet moved to mediaStore (scripts/movePostMedia.ts)
     imageUrls: resolved.upload
       ? { [String(resolved.data.image)]: `/api/posts/media/${resolved.upload.mediaId}` }
       : {},
@@ -330,8 +329,7 @@ export class WebsiteChangeConflict extends Error {}
 // An uploaded post image copied as an event image: post uploads are cleaned up,
 // event images aren't. A retry gets the same name, so nothing is copied twice.
 const copyAsEventImage = async (mediaId: string) => {
-  const media = await getMedia(mediaId)
-  const data = media && (media.data ?? (await readMedia(postImageUrl(mediaId))))
+  const data = await readMedia(postImageUrl(mediaId))
   if (!data) throw new WebsiteChangeConflict('The uploaded event image no longer exists')
   return uploadEventImage(data)
 }

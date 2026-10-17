@@ -1,7 +1,6 @@
 // Imports the event files (src/content/events/*.md) and their images of a git
 // ref into the database, e.g. to seed a local database:
 //   npm run import-events -- --ref <git ref>
-// Production imports them by itself when it first starts (startupMigrations.ts).
 // Running it again only updates events whose file differs from their row.
 import { execFileSync } from 'child_process'
 import pool, { ensureMigrated } from '../src/utils/db_pg'

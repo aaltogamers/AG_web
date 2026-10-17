@@ -43,9 +43,8 @@ Migrations (`migrations/`) are applied automatically on first DB access by
 docker compose exec web npm run migrate:up
 ```
 
-While `src/content/events` still exists, an empty database gets those events
-when the server starts (see "Events and images" below). Afterwards, import them
-from the last commit that had them: `npm run seed-events` (needs the
+The database starts without events. Import them from the last commit that had
+event files (see "Events and images" below): `npm run seed-events` (needs the
 `pre-db-events` tag: `git fetch --tags`).
 
 To reset the database, stop compose and remove the volume:
@@ -94,15 +93,7 @@ Uploaded images (event images and post images) are in Blob Storage, through
 as the original without metadata, named by its hash, and never deleted.
 Sign-up uploads stay in Postgres, since they are participants' answers.
 
-Moving to the database needs no manual steps: when the server starts,
-`src/utils/startupMigrations.ts` (temporary) imports the event files shipped in
-the Docker image into an empty database, all or nothing, and moves post images
-uploaded before Blob Storage out of `post_media.data`. Once production has run
-it, delete it with its call in `instrumentation.ts`, `src/utils/eventImport.ts`,
-the event files and their images, their lines in `Dockerfile` and
-`.dockerignore`, and in a migration `post_media.data` with the fallbacks that
-read it (`getMedia`, `loadImage`, `/api/posts/media/[id]`, `copyAsEventImage`).
-
+Events were files in `src/content/events` until the tag `pre-db-events`.
 `npm run import-events -- --ref <git ref>` imports the event files and their
 images of a git ref, e.g. into a local database; running it again only updates
 events that differ. `npm run seed-events` imports the tag `pre-db-events`.

@@ -6,7 +6,7 @@ import pool, { withTransaction } from './db_pg'
 import { AgentError } from './agentApi'
 import { randomSessionId } from './eventStore'
 import { EVENT_TIMEZONE } from './eventUtils'
-import { deletePostImages, isMediaUrl, uploadPostImage } from './mediaStore'
+import { deletePostImages, isMediaUrl } from './mediaStore'
 import {
   DEFAULT_SETTINGS,
   DISCORD_PINGS,
@@ -1579,30 +1579,13 @@ export const saveMedia = async (id: string, width: number, height: number) => {
   return { mediaId: id, width, height }
 }
 
-// `data` is only set for images uploaded before they were moved to mediaStore
-// (scripts/movePostMedia.ts); the others are read with readMedia
 export const getMedia = async (id: string) => {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null
-  const result = await pool.query<{ data: Buffer | null; content_type: string; width: number; height: number }>(
-    'SELECT data, content_type, width, height FROM post_media WHERE id = $1',
+  const result = await pool.query<{ content_type: string; width: number; height: number }>(
+    'SELECT content_type, width, height FROM post_media WHERE id = $1',
     [id]
   )
   return result.rows[0] ?? null
-}
-
-// TEMPORARY: moves images uploaded before mediaStore out of post_media.data,
-// keeping their ids. Runs when the server starts (startupMigrations.ts) until none
-// are left; then drop post_media.data, this and the fallbacks that read it.
-export const moveOldPostMedia = async (log = console.log) => {
-  const { rows } = await pool.query<{ id: string }>('SELECT id FROM post_media WHERE data IS NOT NULL')
-  for (const { id } of rows) {
-    const result = await pool.query<{ data: Buffer | null }>('SELECT data FROM post_media WHERE id = $1', [id])
-    const data = result.rows[0]?.data
-    if (!data) continue
-    await uploadPostImage(data, id)
-    await pool.query('UPDATE post_media SET data = NULL WHERE id = $1', [id])
-  }
-  if (rows.length) log(`[posts] moved ${rows.length} uploaded images to mediaStore`)
 }
 
 // Uploads that never ended up in a post, or in a saved version of one (history).
