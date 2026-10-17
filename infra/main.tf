@@ -79,6 +79,8 @@ resource "azurerm_linux_web_app" "main" {
       APP_ID                              = var.github_app_id
       PRIVATE_KEY                         = var.github_app_private_key_base64
       INSTALLATION_ID                     = var.github_app_installation_id
+      MEDIA_STORAGE_CONNECTION_STRING     = azurerm_storage_account.media.primary_connection_string
+      MEDIA_BASE_URL                      = "${azurerm_storage_account.media.primary_blob_endpoint}${azurerm_storage_container.media.name}"
     },
     var.app_settings,
   )
@@ -97,6 +99,8 @@ resource "azurerm_postgresql_flexible_server" "main" {
   public_network_access_enabled = true
   storage_mb                    = 32768
   zone                          = "1"
+  # Events are only in the database, so keep the longest point-in-time restore
+  backup_retention_days         = 35
   tags                          = local.tags
 
   sku_name = "B_Standard_B1ms"
@@ -115,6 +119,37 @@ resource "azurerm_postgresql_flexible_server_database" "app" {
   server_id = azurerm_postgresql_flexible_server.main.id
   collation = "en_US.utf8"
   charset   = "utf8"
+}
+
+# ──────────────────────────────────────────────
+# Blob Storage for uploaded images (src/utils/mediaStore.ts). Anyone can read
+# them; only the web app writes, with the connection string.
+# ──────────────────────────────────────────────
+resource "azurerm_storage_account" "media" {
+  name                            = replace("${local.prefix}media", "-", "")
+  resource_group_name             = data.azurerm_resource_group.main.name
+  location                        = data.azurerm_resource_group.main.location
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  access_tier                     = "Hot"
+  min_tls_version                 = "TLS1_2"
+  allow_nested_items_to_be_public = true
+  tags                            = local.tags
+
+  blob_properties {
+    delete_retention_policy {
+      days = 30
+    }
+    container_delete_retention_policy {
+      days = 30
+    }
+  }
+}
+
+resource "azurerm_storage_container" "media" {
+  name                  = "media"
+  storage_account_id    = azurerm_storage_account.media.id
+  container_access_type = "blob"
 }
 
 # ──────────────────────────────────────────────

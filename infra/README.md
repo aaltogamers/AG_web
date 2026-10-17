@@ -66,6 +66,8 @@ copy terraform.tfvars.example terraform.tfvars
 | **github_app_installation_id** | GitHub App installation ID on the repo/org             | See **GitHub App credentials** section below. Exposed to the app as `INSTALLATION_ID`. |
 | **app_settings**              | Optional extra environment variables for the Next.js app | Key-value map. See **RCON** below. |
 
+The main stack also creates the Blob Storage account for uploaded images (container `media`, public read, deleted blobs kept 30 days) and sets the app's `MEDIA_STORAGE_CONNECTION_STRING` and `MEDIA_BASE_URL`; it needs no variables. Postgres backups are kept 35 days, since events are only in the database.
+
 **Note:** Do not commit `terraform.tfvars` (it contains secrets). It is typically listed in `.gitignore`.
 
 #### RCON (Minecraft / game server)
