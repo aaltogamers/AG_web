@@ -41,6 +41,10 @@ export const isMediaUrl = (url: string) => nameOf(url) !== null
 
 const put = async (name: string, data: Buffer, contentType: string) => {
   const blobs = getContainer()
+  // The container's disk is lost on every deployment
+  if (!blobs && process.env.NODE_ENV === 'production') {
+    throw new Error('MEDIA_STORAGE_CONNECTION_STRING is not set')
+  }
   if (!blobs) {
     const file = path.join(LOCAL_DIR, name)
     await fs.mkdir(path.dirname(file), { recursive: true })
