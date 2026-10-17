@@ -27,6 +27,10 @@ const imageSchema = z.object({
     .optional()
     .describe("An existing image: an event's image (from get_event) or a site image like /images/foo.png"),
   mediaId: z.string().optional().describe('An image the post already has, from get_post'),
+  eventImage: z
+    .literal(true)
+    .optional()
+    .describe("The post's event's image as it is when the post is sent (or as the website change sets it). At most once."),
 })
 
 const channelSchema = z.object({
@@ -113,6 +117,17 @@ const postFields = {
     .boolean()
     .describe('Send the channels without their own sendAt right when a human approves the post, instead of at sendAt'),
   images: z.array(imageSchema).describe('Up to 10 images; Instagram needs at least one. Replaces all images.'),
+  responsible: z
+    .string()
+    .nullable()
+    .describe(
+      'Telegram user id (from find_task_users) of who finishes the post and gets it approved. Reminded in the review topic 5, 2 and 1 days before the first message while the post is not approved.'
+    ),
+  shouldHaveImage: z.boolean().describe("The post can't be approved without an image"),
+  imageResponsible: z
+    .string()
+    .nullable()
+    .describe('Telegram user id (from find_task_users) of who makes the image, reminded with the post while it has none'),
   channels: z
     .array(channelSchema)
     .describe('Where the post goes. Replaces all channels; channels already sent to are kept as they are.'),

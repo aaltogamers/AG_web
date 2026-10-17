@@ -14,6 +14,7 @@ import {
   sendTestPost,
   type DiscordRoleOption,
   type PostAction,
+  type TgUserOption,
 } from '../../utils/social/postsClient'
 import {
   PLATFORM_LABELS,
@@ -28,6 +29,7 @@ import DiscordPingsPicker from './DiscordPingsPicker'
 import EventPicker from './EventPicker'
 import ImagePicker from './ImagePicker'
 import MarkdownEditor from './MarkdownEditor'
+import PersonPicker from './PersonPicker'
 import PostPreviewPanel from './PostPreviewPanel'
 import PostTimePicker from './PostTimePicker'
 import TargetOverrideChips from './TargetOverrideChips'
@@ -37,6 +39,7 @@ import {
   emptyEventDraft,
   emptyPostDraft,
   eventToDraft,
+  postEventImage,
   postEventStart,
   postToDraft,
   readStoredDraft,
@@ -107,6 +110,7 @@ const PostEditor = ({
   const [discordRoles, setDiscordRoles] = useState<DiscordRoleOption[] | null>(null)
   const [leadMinutes, setLeadMinutes] = useState(10)
   const [testPlatforms, setTestPlatforms] = useState<Platform[]>([])
+  const [tgUsers, setTgUsers] = useState<TgUserOption[]>([])
   const [draft, setDraft] = useState<PostDraft>(() => ({ ...emptyPostDraft(), sendAt: initialSendAt }))
   const [savedDraft, setSavedDraft] = useState<string>(() => JSON.stringify(draft))
   // Unsaved changes kept in the browser that were made on an older version of the post
@@ -125,6 +129,7 @@ const PostEditor = ({
   const load = useCallback(async () => {
     const settingsRes = await fetchSettings()
     setChannels(settingsRes.channels)
+    setTgUsers(settingsRes.tgUsers)
     setLeadMinutes(settingsRes.settings.website.leadMinutes)
     setTestPlatforms([
       ...(settingsRes.settings.telegram.testChatId ? (['telegram'] as const) : []),
@@ -403,6 +408,15 @@ const PostEditor = ({
               noEventLabel={draft.websiteChange ? 'No event: the website change creates one' : 'No event'}
               disabled={!editable || !!draft.websiteChange?.locked}
             />
+            <label className="flex flex-col gap-1 text-base">
+              Responsible
+              <PersonPicker
+                value={draft.responsible ?? null}
+                onChange={(responsible) => set({ responsible })}
+                users={tgUsers}
+                disabled={!editable}
+              />
+            </label>
             <MarkdownEditor
               value={draft.bodyMd}
               onChange={(bodyMd) => set({ bodyMd })}
@@ -418,11 +432,36 @@ const PostEditor = ({
               <ImagePicker
                 value={draft.images}
                 onChange={(images) => set({ images })}
-                events={events}
+                hasEvent={!!(draft.eventSlug || draft.websiteChange)}
+                eventImage={postEventImage(draft, events)}
               />
             ) : (
               <div>{draft.images.length} image(s)</div>
             )}
+            <label className="flex items-center gap-2 text-base">
+              <input
+                type="checkbox"
+                checked={draft.shouldHaveImage ?? false}
+                onChange={(e) => set({ shouldHaveImage: e.target.checked })}
+                disabled={!editable}
+              />
+              Should have an image (can&apos;t be approved without one)
+            </label>
+            {draft.shouldHaveImage && (
+              <label className="flex flex-col gap-1 text-base">
+                Who makes the image
+                <PersonPicker
+                  value={draft.imageResponsible ?? null}
+                  onChange={(imageResponsible) => set({ imageResponsible })}
+                  users={tgUsers}
+                  disabled={!editable}
+                />
+              </label>
+            )}
+            <div className="text-sm text-lightgray">
+              Until the post is approved, the review topic is reminded 5, 2 and 1 days before its first message,
+              mentioning who is responsible (and who makes the image, while it has none).
+            </div>
           </Section>
 
           <Section title="Channels and times">

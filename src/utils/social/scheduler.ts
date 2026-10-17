@@ -25,8 +25,9 @@ import {
 } from '../postStore'
 import { sendToDiscordChannel } from './discord'
 import { isInstagramConfigured, publishInstagramPost, refreshInstagramToken } from './instagram'
-import { loadImage, publicImageUrl } from './media'
+import { loadImage, publicImageUrl, resolvePostImages } from './media'
 import { buildPreview } from './preview'
+import { sendReminders } from './reminders'
 import { formatTime, sendForForwarding, sendNotice, sendReviewText } from './review'
 import { sendToTelegramChannel, escapeTelegramHtml as esc } from './telegram'
 import type { Post } from './types'
@@ -87,16 +88,18 @@ const sendTarget = async (due: DueTarget, post: Post): Promise<{ externalMessage
   const rendered = preview.texts[0]
   const problems = rendered?.errors ?? ['Nothing to send']
   if (problems.length) throw new PermanentError(problems.join('; '))
+  const { images: postImages, errors: imageErrors } = await resolvePostImages(post)
+  if (imageErrors.length) throw new PermanentError(imageErrors.join('; '))
 
   if (channel.platform === 'instagram') {
     const settings = await getSettings()
     const id = await publishInstagramPost(
-      post.images.map((image) => publicImageUrl(image, settings.website.baseUrl)),
+      postImages.map((image) => publicImageUrl(image, settings.website.baseUrl)),
       rendered.text
     )
     return { externalMessageId: id }
   }
-  const images = await Promise.all(post.images.map(loadImage))
+  const images = await Promise.all(postImages.map(loadImage))
   if (channel.platform === 'telegram') {
     if (channel.config.manual) {
       return { externalMessageId: await sendForForwarding(post, due.targetId, channel.name, rendered.text, images) }
@@ -236,6 +239,7 @@ export const runSchedulerTick = async () => {
     await sendDueTargets()
     await finishDonePosts()
     await reportMissedApprovals()
+    await sendReminders()
     await runDaily()
   } catch (err) {
     console.error('[posts] scheduler tick failed:', err)

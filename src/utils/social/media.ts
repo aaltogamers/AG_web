@@ -4,9 +4,11 @@ import fs from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
 import { AgentError } from '../agentApi'
+import { getEvent } from '../eventStore'
+import { DEFAULT_EVENT_IMAGE } from '../eventUtils'
 import { isMediaUrl, MAX_UPLOAD_BYTES, postImageUrl, readMedia, uploadPostImage } from '../mediaStore'
 import { getMedia, isSafeSitePath, saveMedia } from '../postStore'
-import type { PostImage } from './types'
+import type { FixedImage, Post } from './types'
 
 export { MAX_UPLOAD_BYTES }
 // Instagram's largest feed image width
@@ -71,7 +73,36 @@ export const siteImageSize = async (sitePath: string) => {
   return { width: meta.width ?? 0, height: meta.height ?? 0 }
 }
 
-export const loadImage = async (image: PostImage, index: number): Promise<LoadedImage> => {
+// The image the post's event has when the messages go out: the one its website
+// change gives it (which runs first), or the event's image now
+const postEventImage = async (post: Post): Promise<FixedImage | null> => {
+  const change = post.websiteChange
+  const choice = change && ['pending', 'sending', 'failed'].includes(change.status) ? change.event.image : undefined
+  if (choice === null) return null
+  if (choice) {
+    if ('sitePath' in choice) return { sitePath: choice.sitePath }
+    const image = post.images[choice.postImage]
+    return image && !('eventImage' in image) ? image : null
+  }
+  const slug = post.eventSlug ?? change?.eventSlug
+  const image = slug ? (await getEvent(slug))?.data.image : null
+  return typeof image === 'string' && image && image !== DEFAULT_EVENT_IMAGE ? { sitePath: image } : null
+}
+
+// The post's images with the event's image filled in. An event image that
+// can't be found is left out, with an error.
+export const resolvePostImages = async (post: Post): Promise<{ images: FixedImage[]; errors: string[] }> => {
+  if (!post.images.some((i) => 'eventImage' in i)) return { images: post.images as FixedImage[], errors: [] }
+  const eventImage = await postEventImage(post)
+  return {
+    images: post.images.flatMap((i) => ('eventImage' in i ? (eventImage ? [eventImage] : []) : [i])),
+    errors: eventImage
+      ? []
+      : [post.eventSlug || post.websiteChange ? "The post's event has no image" : "The post has no event, so it has no event image"],
+  }
+}
+
+export const loadImage = async (image: FixedImage, index: number): Promise<LoadedImage> => {
   if ('mediaId' in image) {
     const media = await getMedia(image.mediaId)
     const data = media && (await readMedia(postImageUrl(image.mediaId)))
@@ -86,7 +117,7 @@ export const loadImage = async (image: PostImage, index: number): Promise<Loaded
 }
 
 // A public JPEG URL of the image, e.g. for Instagram, which fetches images itself
-export const publicImageUrl = (image: PostImage, baseUrl: string) => {
+export const publicImageUrl = (image: FixedImage, baseUrl: string) => {
   const base = baseUrl.replace(/\/+$/, '')
   if ('sitePath' in image) return `${base}/api/posts/site-image?path=${encodeURIComponent(image.sitePath)}`
   const url = postImageUrl(image.mediaId)

@@ -1,7 +1,7 @@
 // The post editor's state and its PostInput. Times are in the browser's time,
 // except session times, which are Helsinki times like in events.
 import moment from 'moment'
-import { eventMoment } from '../../utils/eventUtils'
+import { DEFAULT_EVENT_IMAGE, eventMoment } from '../../utils/eventUtils'
 import type { AGEvent, SignupMode } from '../../types/types'
 import type {
   EventChange,
@@ -9,9 +9,11 @@ import type {
   Post,
   PostImage,
   PostInput,
+  PostPerson,
   WebsiteChangeKind,
   WebsiteChangeTiming,
 } from '../../utils/social/types'
+import { imagePreviewUrl } from '../../utils/social/types'
 
 const LOCAL = 'YYYY-MM-DDTHH:mm'
 
@@ -79,6 +81,9 @@ export type PostDraft = {
   sendAt: string
   sendOnApproval: boolean
   images: PostImage[]
+  responsible: PostPerson | null
+  shouldHaveImage: boolean
+  imageResponsible: PostPerson | null
   targets: TargetDraft[]
   websiteChange: WebsiteChangeDraft | null
 }
@@ -90,6 +95,9 @@ export const emptyPostDraft = (): PostDraft => ({
   sendAt: '',
   sendOnApproval: false,
   images: [],
+  responsible: null,
+  shouldHaveImage: false,
+  imageResponsible: null,
   targets: [],
   websiteChange: null,
 })
@@ -174,6 +182,9 @@ export const postToDraft = (post: Post, events: AGEvent[]): PostDraft => {
     sendAt: post.sendOnApproval ? '' : toLocal(post.sendAt),
     sendOnApproval: post.sendOnApproval,
     images: post.images,
+    responsible: post.responsible,
+    shouldHaveImage: post.shouldHaveImage,
+    imageResponsible: post.imageResponsible,
     targets: post.targets
       .filter((t) => t.status !== 'cancelled')
       .map((t) => ({
@@ -214,7 +225,8 @@ const eventToChange = (draft: WebsiteChangeDraft, images: PostImage[]): EventCha
   // A new event has the post's first image (or none: the AG logo) and is shown everywhere
   if (draft.kind === 'create_event') {
     const created: EventChange = { ...all, visibleOnCalendar: true, visibleOnEventsPage: true }
-    if (images.length) created.image = { postImage: 0 }
+    const first = images.findIndex((image) => !('eventImage' in image))
+    if (first >= 0) created.image = { postImage: first }
     else delete created.image
     return created
   }
@@ -238,6 +250,10 @@ export const draftToInput = (draft: PostDraft): PostInput => {
     sendAt: draft.sendOnApproval ? null : fromLocal(draft.sendAt),
     sendOnApproval: draft.sendOnApproval,
     images: draft.images,
+    // Unsaved changes kept in the browser from before these fields don't have them
+    responsible: draft.responsible ?? null,
+    shouldHaveImage: draft.shouldHaveImage ?? false,
+    imageResponsible: draft.imageResponsible ?? null,
     targets: draft.targets.map((t) => ({
       channelId: t.channelId,
       sendAt: t.ownTime ? fromLocal(t.sendAt) : null,
@@ -268,6 +284,18 @@ export const duplicateDraft = (post: Post, events: AGEvent[]): PostDraft => {
     targets: draft.targets.map((t) => ({ ...t, ownTime: false, sendAt: '', locked: false })),
     websiteChange: null,
   }
+}
+
+// The image the post's event will have, for showing the "event image": a new
+// event's is the post's first other image
+export const postEventImage = (draft: PostDraft, events: AGEvent[]): string | null => {
+  const change = draft.websiteChange
+  if (change?.kind === 'create_event' && !change.locked) {
+    const first = draft.images.find((image) => !('eventImage' in image))
+    return first ? imagePreviewUrl(first, null) : null
+  }
+  const image = events.find((e) => e.slug === (change?.eventSlug || draft.eventSlug))?.image
+  return image && image !== DEFAULT_EVENT_IMAGE ? image : null
 }
 
 // When the post's event starts (in the browser's time), for the time pickers: its

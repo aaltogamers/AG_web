@@ -3,7 +3,7 @@
 import { AgentError } from '../agentApi'
 import { getSettings } from '../postStore'
 import { listGuildRoles, sendToDiscordChannel } from './discord'
-import { loadImage } from './media'
+import { loadImage, resolvePostImages } from './media'
 import { buildPreview } from './preview'
 import { escapeDiscordPings } from './render'
 import { sendToTelegramChannel } from './telegram'
@@ -27,11 +27,12 @@ export const sendTestPost = async (post: Post, channelId: string) => {
   const rendered = preview.texts[0]
   if (!rendered) throw new AgentError(400, 'No such channel')
   const label = PLATFORM_LABELS[rendered.platform]
+  const loadImages = async () => Promise.all((await resolvePostImages(post)).images.map(loadImage))
 
   if (rendered.platform === 'telegram') {
     const { testChatId, testThreadId } = settings.telegram
     if (!testChatId) throw new AgentError(400, `No ${label} test channel is set in the posts settings`)
-    const images = await Promise.all(post.images.map(loadImage))
+    const images = await loadImages()
     await sendToTelegramChannel({ chatId: testChatId, threadId: testThreadId || undefined }, rendered.text, images)
     return
   }
@@ -40,7 +41,7 @@ export const sendTestPost = async (post: Post, channelId: string) => {
     if (!testChannelId) throw new AgentError(400, `No ${label} test channel is set in the posts settings`)
     const pingLine = target.pings.length ? await describePings(target.pings, guildId) : ''
     const text = [pingLine, rendered.text].filter(Boolean).join('\n')
-    const images = await Promise.all(post.images.map(loadImage))
+    const images = await loadImages()
     await sendToDiscordChannel({ channelId: testChannelId }, text, images, [])
     return
   }

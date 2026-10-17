@@ -11,7 +11,7 @@ import {
   savePreviewMessage,
   websiteRunAt,
 } from '../postStore'
-import { loadImage, type LoadedImage } from './media'
+import { loadImage, resolvePostImages, type LoadedImage } from './media'
 import { buildPreview, previewErrors } from './preview'
 import { showDiscordRoles, telegramLength, toTelegramHtml } from './render'
 import {
@@ -217,8 +217,9 @@ export const sendReview = async (
   await closeOpenMessages(post.id, '<i>Out of date: replaced by a newer version</i>')
 
   const preview = await buildPreview(post)
-  if (post.images.length) {
-    const images = await Promise.all(post.images.map(loadImage)).catch(() => [])
+  const { images: postImages } = await resolvePostImages(post)
+  if (postImages.length) {
+    const images = await Promise.all(postImages.map(loadImage)).catch(() => [])
     if (images.length) await sendReviewImages(chat.chatId, chat.threadId, images)
   }
   // The title goes on the first message, and the errors and the buttons on the last

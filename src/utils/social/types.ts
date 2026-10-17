@@ -55,11 +55,24 @@ export type Channel = {
 }
 
 // An uploaded image (served from /api/posts/media/:id) or an existing site image
-export type PostImage = { mediaId: string; width?: number; height?: number } | { sitePath: string }
+export type FixedImage = { mediaId: string; width?: number; height?: number } | { sitePath: string }
 
-// URL of the image for showing it in the admin page
-export const imagePreviewUrl = (image: PostImage) =>
-  'mediaId' in image ? `/api/posts/media/${image.mediaId}` : image.sitePath
+// A post image: a fixed image, or the image of the post's event when it is sent
+// (resolvePostImages in media.ts)
+export type PostImage = FixedImage | { eventImage: true }
+
+// URL of the image for showing it in the admin page; `eventImage` is the post's
+// event's image
+export const imagePreviewUrl = (image: PostImage, eventImage: string | null) =>
+  'eventImage' in image ? eventImage : 'mediaId' in image ? `/api/posts/media/${image.mediaId}` : image.sitePath
+
+// A Telegram user who is responsible for a post or its image, reminded in the
+// review topic (REMINDER_DAYS)
+export type PostPerson = { id: string; name: string }
+
+// Days before the first message when the responsible people of an unapproved
+// post are reminded
+export const REMINDER_DAYS = [5, 2, 1] as const
 
 // Discord pings other than roles
 export const DISCORD_PINGS = ['here', 'everyone'] as const
@@ -161,6 +174,12 @@ export type Post = {
   createdAt: string
   updatedAt: string
   images: PostImage[]
+  // Who finishes the post and gets it approved
+  responsible: PostPerson | null
+  // The post can't be approved without an image
+  shouldHaveImage: boolean
+  // Who makes the image
+  imageResponsible: PostPerson | null
   targets: PostTarget[]
   websiteChange: WebsiteChange | null
 }
@@ -173,6 +192,9 @@ export type PostInput = {
   sendAt?: string | null
   sendOnApproval?: boolean
   images?: PostImage[]
+  responsible?: PostPerson | null
+  shouldHaveImage?: boolean
+  imageResponsible?: PostPerson | null
   targets?: {
     channelId: string
     sendAt?: string | null

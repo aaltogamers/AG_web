@@ -136,6 +136,15 @@ do Telegram messages; Instagram shows links as their text. A post can be sent
 right when it is approved instead of at a time. "Duplicate" makes a copy of a
 post without its times or website change, e.g. for a reminder.
 
+A post's images are uploads or "Use event image", the image the post's event
+has when the post is sent (or the one its website change gives the event). A
+post can have a responsible Telegram user (from those who have opened the task
+board), and "Should have an image" with someone who makes it; such a post can't
+be approved without an image. Until a post with a send time is approved, the
+review topic is reminded 5, 2 and 1 days before its first message
+(`src/utils/social/reminders.ts`), mentioning the responsible user, and the
+image maker while the post has no image.
+
 A post can include one website change (creating or changing an event; its
 sign-up forms are edited on the sign-ups page), which runs when the post is
 approved (default), 10 minutes before the first message, or at a set time. It

@@ -10,11 +10,14 @@ import Dialog from '../Dialog'
 type Props = {
   value: PostImage[]
   onChange: (images: PostImage[]) => void
-  events: AGEvent[]
+  // The post has an event (or its website change creates one)
+  hasEvent: boolean
+  // The image the post's event will have, null if none or not known yet
+  eventImage: string | null
 }
 
-// Picks an existing image: event images first, then uploaded event images and
-// everything under /images. Also used by the event editor.
+// Picks an existing image for the event editor: event images first, then
+// uploaded event images and everything under /images
 export const SiteImageDialog = ({
   events,
   onPick,
@@ -74,11 +77,11 @@ export const SiteImageDialog = ({
   )
 }
 
-const ImagePicker = ({ value, onChange, events }: Props) => {
+const ImagePicker = ({ value, onChange, hasEvent, eventImage }: Props) => {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isPicking, setIsPicking] = useState(false)
   const isFull = value.length >= MAX_IMAGES
+  const hasEventImage = value.some((image) => 'eventImage' in image)
 
   const upload = async (files: FileList | null) => {
     if (!files?.length) return
@@ -107,33 +110,42 @@ const ImagePicker = ({ value, onChange, events }: Props) => {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-3">
-        {value.map((image, i) => (
-          <div key={`${imagePreviewUrl(image)}-${i}`} className="relative border border-lightgray rounded-md p-1 flex flex-col items-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imagePreviewUrl(image)} alt="" className="h-24 w-24 object-contain" />
-            <div className="flex gap-3 text-lightgray text-sm mt-1">
-              <span>{i + 1}</span>
-              {i > 0 && (
-                <button type="button" aria-label="Move left" onClick={() => move(i, -1)}>
-                  <FaArrowLeft />
-                </button>
+        {value.map((image, i) => {
+          const url = imagePreviewUrl(image, eventImage)
+          return (
+            <div key={`${url}-${i}`} className="relative border border-lightgray rounded-md p-1 flex flex-col items-center">
+              {url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={url} alt="" className="h-24 w-24 object-contain" />
+              ) : (
+                <div className="h-24 w-24 flex items-center justify-center text-center text-sm text-lightgray">
+                  {hasEvent ? 'The event has no image yet' : 'No event'}
+                </div>
               )}
-              {i < value.length - 1 && (
-                <button type="button" aria-label="Move right" onClick={() => move(i, 1)}>
-                  <FaArrowRight />
+              <div className="flex gap-3 text-lightgray text-sm mt-1">
+                <span>{'eventImage' in image ? `${i + 1} · Event image` : i + 1}</span>
+                {i > 0 && (
+                  <button type="button" aria-label="Move left" onClick={() => move(i, -1)}>
+                    <FaArrowLeft />
+                  </button>
+                )}
+                {i < value.length - 1 && (
+                  <button type="button" aria-label="Move right" onClick={() => move(i, 1)}>
+                    <FaArrowRight />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  aria-label="Remove image"
+                  className="hover:text-red"
+                  onClick={() => onChange(value.filter((_, j) => j !== i))}
+                >
+                  <FaTimes />
                 </button>
-              )}
-              <button
-                type="button"
-                aria-label="Remove image"
-                className="hover:text-red"
-                onClick={() => onChange(value.filter((_, j) => j !== i))}
-              >
-                <FaTimes />
-              </button>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       <div className="flex flex-wrap gap-2 text-base">
         <label className={`borderbutton cursor-pointer ${isFull || busy ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -149,24 +161,21 @@ const ImagePicker = ({ value, onChange, events }: Props) => {
             }}
           />
         </label>
-        <button type="button" className="borderbutton" disabled={isFull} onClick={() => setIsPicking(true)}>
-          Pick a site image
+        <button
+          type="button"
+          className="borderbutton"
+          disabled={isFull || hasEventImage || !hasEvent}
+          title={hasEvent ? undefined : "Choose the post's event first"}
+          onClick={() => onChange([...value, { eventImage: true }])}
+        >
+          Use event image
         </button>
       </div>
       <div className="text-sm text-lightgray">
-        Up to {MAX_IMAGES}. Uploads are converted to JPEG. Instagram needs at least one image, between 4:5 and 1.91:1.
+        Up to {MAX_IMAGES}. Uploads are converted to JPEG. The event image is the image the event has when the post
+        is sent. Instagram needs at least one image, between 4:5 and 1.91:1.
       </div>
       {error && <div className="text-red text-sm">{error}</div>}
-      {isPicking && (
-        <SiteImageDialog
-          events={events}
-          onClose={() => setIsPicking(false)}
-          onPick={(sitePath) => {
-            onChange([...value, { sitePath }])
-            setIsPicking(false)
-          }}
-        />
-      )}
     </div>
   )
 }

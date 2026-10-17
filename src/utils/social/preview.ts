@@ -10,7 +10,7 @@ import { getSignupForm } from '../signupForms'
 import type { AGEvent } from '../../types/types'
 import { isDiscordConfigured, listGuildRoles, type DiscordRole } from './discord'
 import { isInstagramConfigured } from './instagram'
-import { instagramRatioProblem, siteImageSize } from './media'
+import { instagramRatioProblem, resolvePostImages, siteImageSize } from './media'
 import {
   discordPingLine,
   escapeDiscordPings,
@@ -195,20 +195,24 @@ export const buildPreview = async (post: Post, ctx?: PreviewContext): Promise<Po
     errors.push('A post needs at least one channel or a website change')
   }
 
-  const [eventContext, linkSlugs, discordRoles] = await Promise.all([
+  const [eventContext, linkSlugs, discordRoles, images] = await Promise.all([
     resolveEventContext(post),
     getLinkSlugs(),
     loadDiscordRoles(post, channels, settings),
+    resolvePostImages(post),
   ])
+  errors.push(...images.errors)
+  if (post.shouldHaveImage && !post.images.length) errors.push('The post should have an image')
+  const withImages = { ...post, images: images.images }
   const texts = activeTargets.flatMap((target) => {
     const channel = channels.find((c) => c.id === target.channelId)
-    return channel ? [renderTarget(post, target, channel, settings, eventContext, linkSlugs, discordRoles)] : []
+    return channel ? [renderTarget(withImages, target, channel, settings, eventContext, linkSlugs, discordRoles)] : []
   })
 
   // Instagram needs images between 4:5 and 1.91:1
   const instagram = texts.filter((t) => t.platform === 'instagram')
   if (instagram.length) {
-    for (const [i, image] of post.images.entries()) {
+    for (const [i, image] of images.images.entries()) {
       const size =
         'mediaId' in image
           ? { width: image.width ?? 0, height: image.height ?? 0 }

@@ -11,6 +11,7 @@ import {
   requireString,
 } from './agentApi'
 import { getSettings, type Actor } from './postStore'
+import { resolveAssignees } from './taskStore'
 import { saveUploadedImage, MAX_UPLOAD_BYTES } from './social/media'
 import type {
   Channel,
@@ -20,6 +21,7 @@ import type {
   PostHistoryEntry,
   PostImage,
   PostInput,
+  PostPerson,
   PostPreview,
   TextChoice,
   WebsiteChangeTiming,
@@ -48,12 +50,22 @@ const parseImages = async (raw: unknown): Promise<PostImage[]> =>
       const mediaId = optionalString(image.mediaId, `images[${i}].mediaId`)
       const sitePath = optionalString(image.sitePath, `images[${i}].sitePath`)
       const url = optionalString(image.url, `images[${i}].url`)
+      if (optionalBoolean(image.eventImage, `images[${i}].eventImage`)) return { eventImage: true as const }
       if (mediaId) return { mediaId }
       if (sitePath) return { sitePath }
       if (url) return downloadImage(url, `images[${i}]`)
-      throw new AgentError(400, `images[${i}] needs a url, sitePath or mediaId`)
+      throw new AgentError(400, `images[${i}] needs a url, sitePath, mediaId or eventImage`)
     })
   )
+
+// A Telegram user id from find_task_users as the user's id and name
+const parsePerson = async (raw: unknown, name: string): Promise<PostPerson | null> => {
+  const id = optionalString(raw, name)
+  if (!id) return null
+  const { assignees } = await resolveAssignees([id])
+  if (!assignees.length) throw new AgentError(400, `${name}: no Telegram user with id "${id}"; see find_task_users`)
+  return { id, name: assignees[0].tgUserName }
+}
 
 const textChoice = (text: unknown, fromPost: unknown, name: string): TextChoice | undefined => {
   if (optionalBoolean(fromPost, `${name}FromPost`)) return { fromPost: true }
@@ -101,6 +113,11 @@ export const parsePostArgs = async (args: Record<string, unknown>): Promise<Post
   if ('sendAt' in args) input.sendAt = args.sendAt === null ? null : toIso(args.sendAt, 'sendAt')
   if ('sendOnApproval' in args) input.sendOnApproval = optionalBoolean(args.sendOnApproval, 'sendOnApproval')
   if ('images' in args) input.images = await parseImages(args.images)
+  if ('responsible' in args) input.responsible = await parsePerson(args.responsible, 'responsible')
+  if ('shouldHaveImage' in args) input.shouldHaveImage = optionalBoolean(args.shouldHaveImage, 'shouldHaveImage')
+  if ('imageResponsible' in args) {
+    input.imageResponsible = await parsePerson(args.imageResponsible, 'imageResponsible')
+  }
   if ('channels' in args) {
     input.targets = (optionalArray(args.channels, 'channels') ?? []).map((raw, i) => {
       const t = asRecord(raw, `channels[${i}]`)
@@ -183,6 +200,9 @@ export const describePost = async (
   sendAt: time(post.sendAt),
   sendOnApproval: post.sendOnApproval,
   ...(full && { body: post.bodyMd, images: post.images }),
+  responsible: post.responsible,
+  shouldHaveImage: post.shouldHaveImage,
+  imageResponsible: post.imageResponsible,
   channels: post.targets.map((t) => {
     const channel = channels.find((c) => c.id === t.channelId)
     return {

@@ -20,6 +20,7 @@ import {
   type PostHistoryEntry,
   type PostImage,
   type PostInput,
+  type PostPerson,
   type PostStatus,
   type PostTarget,
   type SessionChange,
@@ -392,6 +393,9 @@ type PostRow = {
   approved_at: Date | null
   send_at: Date | null
   send_on_approval: boolean
+  responsible: PostPerson | null
+  should_have_image: boolean
+  image_responsible: PostPerson | null
   created_by: string
   updated_by: string
   created_at: Date
@@ -435,12 +439,14 @@ type ImageRow = {
   post_id: string
   media_id: string | null
   site_path: string | null
+  event_image: boolean
   width: number | null
   height: number | null
 }
 
 const POST_COLUMNS = `id, title, body_md, event_slug, status, version, approved_version, approved_by,
-  approved_at, send_at, send_on_approval, created_by, updated_by, created_at, updated_at`
+  approved_at, send_at, send_on_approval, responsible, should_have_image, image_responsible, created_by,
+  updated_by, created_at, updated_at`
 const TARGET_COLUMNS = `id, post_id, channel_id, send_at, body_override_md, footer_override_md, pings, status,
   external_message_id, sent_at, error, attempts, forwarded_by, forwarded_at`
 
@@ -473,7 +479,9 @@ const rowToWebsiteChange = (row: WebsiteChangeRow): WebsiteChange => ({
 })
 
 const rowToImage = (row: ImageRow): PostImage =>
-  row.media_id
+  row.event_image
+    ? { eventImage: true }
+    : row.media_id
     ? {
         mediaId: row.media_id,
         ...(row.width && { width: row.width }),
@@ -486,7 +494,7 @@ const loadPosts = async (rows: PostRow[]): Promise<Post[]> => {
   const ids = rows.map((r) => r.id)
   const [images, targets, changes] = await Promise.all([
     pool.query<ImageRow>(
-      `SELECT i.post_id, i.media_id, i.site_path, m.width, m.height
+      `SELECT i.post_id, i.media_id, i.site_path, i.event_image, m.width, m.height
        FROM post_images i LEFT JOIN post_media m ON m.id = i.media_id
        WHERE i.post_id = ANY($1) ORDER BY i.position`,
       [ids]
@@ -518,6 +526,9 @@ const loadPosts = async (rows: PostRow[]): Promise<Post[]> => {
       createdAt: row.created_at.toISOString(),
       updatedAt: row.updated_at.toISOString(),
       images: images.rows.filter((i) => String(i.post_id) === String(row.id)).map(rowToImage),
+      responsible: row.responsible,
+      shouldHaveImage: row.should_have_image,
+      imageResponsible: row.image_responsible,
       targets: targets.rows.filter((t) => String(t.post_id) === String(row.id)).map(rowToTarget),
       websiteChange: change ? rowToWebsiteChange(change) : null,
     }
@@ -694,6 +705,7 @@ const parseImages = async (raw: PostImage[]): Promise<PostImage[]> => {
   if (!Array.isArray(raw)) throw new AgentError(400, 'images must be a list')
   if (raw.length > MAX_IMAGES) throw new AgentError(400, `A post can have at most ${MAX_IMAGES} images`)
   const images = raw.map((img, i): PostImage => {
+    if (img && 'eventImage' in img && img.eventImage) return { eventImage: true }
     if (img && 'mediaId' in img && img.mediaId) return { mediaId: String(img.mediaId) }
     if (img && 'sitePath' in img && img.sitePath) {
       const sitePath = String(img.sitePath).trim()
@@ -702,8 +714,11 @@ const parseImages = async (raw: PostImage[]): Promise<PostImage[]> => {
       }
       return { sitePath }
     }
-    throw new AgentError(400, `images[${i}] must have a mediaId or a sitePath`)
+    throw new AgentError(400, `images[${i}] must have a mediaId or a sitePath, or be the event image`)
   })
+  if (images.filter((i) => 'eventImage' in i).length > 1) {
+    throw new AgentError(400, "A post can have the event's image only once")
+  }
   const mediaIds = images.flatMap((i) => ('mediaId' in i ? [i.mediaId] : []))
   if (mediaIds.length) {
     const valid = mediaIds.every((id) => /^[0-9a-f-]{36}$/i.test(id))
@@ -725,12 +740,15 @@ const parseTextChoice = (raw: unknown, name: string): TextChoice => {
   throw new AgentError(400, `${name} must be { fromPost: true } or { text }`)
 }
 
-const parseImageChoice = (raw: unknown, imageCount: number): ImageChoice | null => {
+const parseImageChoice = (raw: unknown, images: PostImage[]): ImageChoice | null => {
   if (raw === null) return null
   const value = raw as Partial<{ postImage: number; sitePath: string }>
   if (typeof value?.postImage === 'number') {
-    if (!Number.isInteger(value.postImage) || value.postImage < 0 || value.postImage >= imageCount) {
-      throw new AgentError(400, `event.image.postImage must be the position of one of the post's ${imageCount} images, from 0`)
+    if (!Number.isInteger(value.postImage) || value.postImage < 0 || value.postImage >= images.length) {
+      throw new AgentError(400, `event.image.postImage must be the position of one of the post's ${images.length} images, from 0`)
+    }
+    if ('eventImage' in images[value.postImage]) {
+      throw new AgentError(400, "event.image.postImage can't be the event's own image")
     }
     return { postImage: value.postImage }
   }
@@ -758,7 +776,7 @@ const parseSessions = (raw: unknown): SessionChange[] => {
   })
 }
 
-const parseEventChange = (raw: EventChange, imageCount: number): EventChange => {
+const parseEventChange = (raw: EventChange, images: PostImage[]): EventChange => {
   const event: EventChange = {}
   if (raw.name !== undefined) {
     const name = String(raw.name).trim()
@@ -772,7 +790,7 @@ const parseEventChange = (raw: EventChange, imageCount: number): EventChange => 
     }
     event.signupMode = raw.signupMode
   }
-  if (raw.image !== undefined) event.image = parseImageChoice(raw.image, imageCount)
+  if (raw.image !== undefined) event.image = parseImageChoice(raw.image, images)
   if (raw.visibleOnCalendar !== undefined) event.visibleOnCalendar = !!raw.visibleOnCalendar
   if (raw.visibleOnEventsPage !== undefined) event.visibleOnEventsPage = !!raw.visibleOnEventsPage
   if (raw.description !== undefined) {
@@ -789,6 +807,9 @@ type NormalizedInput = {
   sendAt?: string | null
   sendOnApproval?: boolean
   images?: PostImage[]
+  responsible?: PostPerson | null
+  shouldHaveImage?: boolean
+  imageResponsible?: PostPerson | null
   targets?: {
     channelId: string
     sendAt: string | null
@@ -816,6 +837,14 @@ const parsePings = (raw: unknown, i: number): string[] => {
   return pings
 }
 
+const parsePerson = (raw: unknown, name: string): PostPerson | null => {
+  if (raw === null || raw === undefined) return null
+  const person = raw as Partial<PostPerson>
+  const id = String(person?.id ?? '').trim()
+  if (!/^\d+$/.test(id)) throw new AgentError(400, `${name}.id must be a numeric Telegram user id`)
+  return { id, name: String(person.name ?? '').trim().slice(0, 100) || id }
+}
+
 const nullableText = (value: unknown) =>
   value === null || value === undefined || String(value).trim() === '' ? null : String(value)
 
@@ -837,7 +866,12 @@ const normalizePostInput = async (
   else if (out.sendAt) out.sendOnApproval = false
   if (out.sendOnApproval ?? existing?.sendOnApproval) out.sendAt = null
   if (input.images !== undefined) out.images = await parseImages(input.images)
-  const imageCount = (out.images ?? existing?.images ?? []).length
+  const images = out.images ?? existing?.images ?? []
+  if (input.responsible !== undefined) out.responsible = parsePerson(input.responsible, 'responsible')
+  if (input.shouldHaveImage !== undefined) out.shouldHaveImage = !!input.shouldHaveImage
+  if (input.imageResponsible !== undefined) {
+    out.imageResponsible = parsePerson(input.imageResponsible, 'imageResponsible')
+  }
 
   if (input.targets !== undefined) {
     if (!Array.isArray(input.targets)) throw new AgentError(400, 'channels must be a list')
@@ -893,7 +927,7 @@ const normalizePostInput = async (
         eventSlug: raw.kind === 'update_event' ? eventSlug : null,
         timing,
         runAt: timing === 'at' ? runAt : null,
-        event: parseEventChange(raw.event ?? {}, imageCount),
+        event: parseEventChange(raw.event ?? {}, images),
       }
       if (raw.kind === 'update_event' && out.eventSlug === undefined && !existing?.eventSlug) {
         out.eventSlug = eventSlug
@@ -922,6 +956,9 @@ export const postFromInput = async (input: PostInput, existing: Post | null): Pr
     approvedAt: null,
     sendAt: null,
     sendOnApproval: false,
+    responsible: null,
+    shouldHaveImage: false,
+    imageResponsible: null,
     createdBy: 'admin',
     updatedBy: 'admin',
     createdAt: now,
@@ -940,6 +977,9 @@ export const postFromInput = async (input: PostInput, existing: Post | null): Pr
     sendAt: data.sendAt !== undefined ? data.sendAt : base.sendAt,
     sendOnApproval: data.sendOnApproval ?? base.sendOnApproval,
     images: data.images ?? base.images,
+    responsible: data.responsible !== undefined ? data.responsible : base.responsible,
+    shouldHaveImage: data.shouldHaveImage ?? base.shouldHaveImage,
+    imageResponsible: data.imageResponsible !== undefined ? data.imageResponsible : base.imageResponsible,
     targets: data.targets
       ? [
           ...lockedTargets,
@@ -966,12 +1006,13 @@ const writeImages = async (client: PoolClient, postId: string, images: PostImage
   await client.query('DELETE FROM post_images WHERE post_id = $1', [postId])
   for (const [position, image] of images.entries()) {
     await client.query(
-      'INSERT INTO post_images (post_id, position, media_id, site_path) VALUES ($1, $2, $3, $4)',
+      'INSERT INTO post_images (post_id, position, media_id, site_path, event_image) VALUES ($1, $2, $3, $4, $5)',
       [
         postId,
         position,
         'mediaId' in image ? image.mediaId : null,
         'sitePath' in image ? image.sitePath : null,
+        'eventImage' in image,
       ]
     )
   }
@@ -1026,9 +1067,20 @@ export const createPost = async (input: PostInput, actor: Actor): Promise<Post> 
   const data = await normalizePostInput(input, null)
   const id = await withTransaction(async (client) => {
     const result = await client.query<{ id: string }>(
-      `INSERT INTO posts (title, body_md, event_slug, send_at, send_on_approval, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $6, $5, $5) RETURNING id`,
-      [data.title ?? '', data.bodyMd ?? '', data.eventSlug ?? null, data.sendAt ?? null, actor, data.sendOnApproval ?? false]
+      `INSERT INTO posts (title, body_md, event_slug, send_at, send_on_approval, created_by, updated_by,
+         responsible, should_have_image, image_responsible)
+       VALUES ($1, $2, $3, $4, $6, $5, $5, $7::jsonb, $8, $9::jsonb) RETURNING id`,
+      [
+        data.title ?? '',
+        data.bodyMd ?? '',
+        data.eventSlug ?? null,
+        data.sendAt ?? null,
+        actor,
+        data.sendOnApproval ?? false,
+        JSON.stringify(data.responsible ?? null),
+        data.shouldHaveImage ?? false,
+        JSON.stringify(data.imageResponsible ?? null),
+      ]
     )
     const postId = String(result.rows[0].id)
     await writeImages(client, postId, data.images ?? [])
@@ -1079,7 +1131,7 @@ export const updatePost = async (
     await client.query(
       `UPDATE posts SET title = $2, body_md = $3, event_slug = $4, send_at = $5, status = $6,
          version = version + 1, updated_by = $7, updated_at = now(), missed_notice_at = NULL,
-         send_on_approval = $8
+         send_on_approval = $8, responsible = $9::jsonb, should_have_image = $10, image_responsible = $11::jsonb
        WHERE id = $1`,
       [
         id,
@@ -1090,6 +1142,9 @@ export const updatePost = async (
         nextStatus,
         actor,
         data.sendOnApproval ?? existing.sendOnApproval,
+        JSON.stringify(data.responsible !== undefined ? data.responsible : existing.responsible),
+        data.shouldHaveImage ?? existing.shouldHaveImage,
+        JSON.stringify(data.imageResponsible !== undefined ? data.imageResponsible : existing.imageResponsible),
       ]
     )
     if (data.images) await writeImages(client, id, data.images)
@@ -1505,6 +1560,30 @@ export const claimMissedApprovals = async (leadMinutes: number): Promise<string[
     [leadMinutes]
   )
   return result.rows.map((r) => String(r.id))
+}
+
+// Unapproved posts with a send time whose responsible people haven't been
+// reminded since the last of `days` before the first message (social/reminders.ts)
+export const listPostsToRemind = async (days: readonly number[]): Promise<{ post: Post; firstSendAt: string }[]> => {
+  const result = await pool.query<PostRow & { first_send_at: Date }>(
+    `SELECT * FROM (
+       SELECT p.*, (SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t
+                    WHERE t.post_id = p.id AND t.status = 'pending') AS first_send_at
+       FROM posts p WHERE p.status IN ('draft', 'awaiting_approval') AND NOT p.send_on_approval
+     ) p
+     WHERE first_send_at > now() AND first_send_at <= now() + make_interval(days => $2)
+       AND (reminded_at IS NULL OR reminded_at < (
+         SELECT MAX(first_send_at - make_interval(days => d)) FROM unnest($1::int[]) d
+         WHERE first_send_at - make_interval(days => d) <= now()
+       ))`,
+    [days, Math.max(...days)]
+  )
+  const posts = await loadPosts(result.rows)
+  return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at.toISOString() }))
+}
+
+export const markReminded = async (postId: string) => {
+  await pool.query('UPDATE posts SET reminded_at = now() WHERE id = $1', [postId])
 }
 
 // Review topic messages

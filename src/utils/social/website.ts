@@ -139,7 +139,7 @@ export const resolveEvent = (
       const image = post.images[event.image.postImage]
       if (image && 'sitePath' in image) {
         data.image = image.sitePath
-      } else if (image) {
+      } else if (image && 'mediaId' in image) {
         data.image = eventImageUrl ?? postImageUrl(image.mediaId)
         upload = { mediaId: image.mediaId }
       }
@@ -288,8 +288,10 @@ export const previewWebsiteChange = async (
   } else if (!changedFields(change.event).length) {
     errors.push('The website change changes nothing')
   }
-  if (change.event.image && 'postImage' in change.event.image && !post.images[change.event.image.postImage]) {
-    errors.push(`The event image is image ${change.event.image.postImage + 1} of the post, which doesn't exist`)
+  if (change.event.image && 'postImage' in change.event.image) {
+    const image = post.images[change.event.image.postImage]
+    if (!image) errors.push(`The event image is image ${change.event.image.postImage + 1} of the post, which doesn't exist`)
+    else if ('eventImage' in image) errors.push("The event image can't be the post's event image itself")
   }
 
   const resolved = resolveEvent(post, change, file, slug)
