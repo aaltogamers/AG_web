@@ -1,12 +1,14 @@
-// Post images: uploads and site images (public/), as JPEG for Instagram
+// Post images: uploads (mediaStore.ts) and site images (public/ or event images
+// in mediaStore), as JPEG for Instagram
 import fs from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
 import { AgentError } from '../agentApi'
+import { isMediaUrl, MAX_UPLOAD_BYTES, postImageUrl, readMedia, uploadPostImage } from '../mediaStore'
 import { getMedia, isSafeSitePath, saveMedia } from '../postStore'
 import type { PostImage } from './types'
 
-export const MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+export { MAX_UPLOAD_BYTES }
 // Instagram's largest feed image width
 const MAX_SIDE = 2160
 
@@ -22,13 +24,12 @@ const toJpeg = (input: Buffer) =>
 
 export const saveUploadedImage = async (input: Buffer) => {
   if (input.length > MAX_UPLOAD_BYTES) throw new AgentError(400, 'The image is larger than 15 MB')
-  try {
-    const { data, info } = await toJpeg(input)
-    return saveMedia(data, info.width, info.height)
-  } catch (err) {
-    if (err instanceof AgentError) throw err
+  const { data, info } = await toJpeg(input).catch(() => {
     throw new AgentError(400, 'The file is not an image')
-  }
+  })
+  // Uploaded first, so a row always has its file
+  const id = await uploadPostImage(data)
+  return saveMedia(id, info.width, info.height)
 }
 
 // In production public/ only has .webp versions of PNG and JPEG images
@@ -37,6 +38,11 @@ const publicDir = () => path.join(process.cwd(), 'public')
 
 const readSiteFile = async (sitePath: string): Promise<Buffer> => {
   if (!isSafeSitePath(sitePath)) throw new AgentError(400, `"${sitePath}" is not a site image`)
+  if (isMediaUrl(sitePath)) {
+    const data = await readMedia(sitePath)
+    if (!data) throw new AgentError(404, `Image "${sitePath}" was not found`)
+    return data
+  }
   const full = path.join(publicDir(), sitePath)
   if (!full.startsWith(publicDir() + path.sep)) throw new AgentError(400, 'Invalid image path')
   const candidates = [full, full.replace(/\.(png|jpe?g)$/i, '.webp')]
@@ -50,6 +56,7 @@ const readSiteFile = async (sitePath: string): Promise<Buffer> => {
 const cache = new Map<string, Buffer>()
 
 // A site image as JPEG, cached since site images only change with a deployment
+// and uploaded event images never change
 export const siteImageAsJpeg = async (sitePath: string): Promise<Buffer> => {
   const cached = cache.get(sitePath)
   if (cached) return cached
@@ -67,8 +74,9 @@ export const siteImageSize = async (sitePath: string) => {
 export const loadImage = async (image: PostImage, index: number): Promise<LoadedImage> => {
   if ('mediaId' in image) {
     const media = await getMedia(image.mediaId)
-    if (!media) throw new AgentError(404, `Uploaded image ${image.mediaId} was not found`)
-    return { data: media.data, contentType: media.content_type, filename: `image${index + 1}.jpg` }
+    const data = media && (media.data ?? (await readMedia(postImageUrl(image.mediaId))))
+    if (!media || !data) throw new AgentError(404, `Uploaded image ${image.mediaId} was not found`)
+    return { data, contentType: media.content_type, filename: `image${index + 1}.jpg` }
   }
   return {
     data: await siteImageAsJpeg(image.sitePath),
@@ -80,27 +88,9 @@ export const loadImage = async (image: PostImage, index: number): Promise<Loaded
 // A public JPEG URL of the image, e.g. for Instagram, which fetches images itself
 export const publicImageUrl = (image: PostImage, baseUrl: string) => {
   const base = baseUrl.replace(/\/+$/, '')
-  return 'mediaId' in image
-    ? `${base}/api/posts/media/${image.mediaId}`
-    : `${base}/api/posts/site-image?path=${encodeURIComponent(image.sitePath)}`
-}
-
-// Images under public/images, for picking an existing site image
-export const listSiteImages = async (): Promise<string[]> => {
-  const dir = path.join(publicDir(), 'images')
-  const walk = async (folder: string): Promise<string[]> => {
-    const entries = await fs.readdir(folder, { withFileTypes: true }).catch(() => [])
-    const nested = await Promise.all(
-      entries.map((entry) =>
-        entry.isDirectory() ? walk(path.join(folder, entry.name)) : [path.join(folder, entry.name)]
-      )
-    )
-    return nested.flat()
-  }
-  return (await walk(dir))
-    .map((file) => `/${path.relative(publicDir(), file).split(path.sep).join('/')}`)
-    .filter(isSafeSitePath)
-    .sort()
+  if ('sitePath' in image) return `${base}/api/posts/site-image?path=${encodeURIComponent(image.sitePath)}`
+  const url = postImageUrl(image.mediaId)
+  return url.startsWith('/') ? `${base}${url}` : url
 }
 
 // Instagram feed images must be between 4:5 (portrait) and 1.91:1 (landscape)

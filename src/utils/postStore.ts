@@ -6,6 +6,7 @@ import pool from './db_pg'
 import { AgentError } from './agentApi'
 import { randomSessionId } from './eventFiles'
 import { EVENT_TIMEZONE } from './eventUtils'
+import { deletePostImages, isMediaUrl } from './mediaStore'
 import {
   DEFAULT_SETTINGS,
   DISCORD_PINGS,
@@ -704,7 +705,9 @@ const parseContentTime = (value: unknown, name: string): string => {
 
 const SITE_PATH = /^\/[A-Za-z0-9._\-/ ]+\.(png|jpe?g|webp|gif)$/i
 
-export const isSafeSitePath = (path: string) => SITE_PATH.test(path) && !path.includes('..')
+// An image under public/ like /images/foo.png, or an uploaded event image (mediaStore.ts)
+export const isSafeSitePath = (path: string) =>
+  (SITE_PATH.test(path) && !path.includes('..')) || isMediaUrl(path)
 
 const parseImages = async (raw: PostImage[]): Promise<PostImage[]> => {
   if (!Array.isArray(raw)) throw new AgentError(400, 'images must be a list')
@@ -1592,32 +1595,38 @@ export const deletePreviewMessage = async (chatId: string, messageId: number) =>
 
 // Uploaded images
 
-export const saveMedia = async (data: Buffer, width: number, height: number) => {
-  const result = await pool.query<{ id: string }>(
-    `INSERT INTO post_media (data, content_type, width, height) VALUES ($1, 'image/jpeg', $2, $3)
-     RETURNING id`,
-    [data, width, height]
+// The file is uploaded first (mediaStore.ts), with `id` as its name
+export const saveMedia = async (id: string, width: number, height: number) => {
+  await pool.query(
+    `INSERT INTO post_media (id, content_type, width, height) VALUES ($1, 'image/jpeg', $2, $3)`,
+    [id, width, height]
   )
-  return { mediaId: result.rows[0].id, width, height }
+  return { mediaId: id, width, height }
 }
 
+// `data` is only set for images uploaded before they were moved to mediaStore
+// (scripts/movePostMedia.ts); the others are read with readMedia
 export const getMedia = async (id: string) => {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null
-  const result = await pool.query<{ data: Buffer; content_type: string; width: number; height: number }>(
+  const result = await pool.query<{ data: Buffer | null; content_type: string; width: number; height: number }>(
     'SELECT data, content_type, width, height FROM post_media WHERE id = $1',
     [id]
   )
   return result.rows[0] ?? null
 }
 
-// Uploads that never ended up in a post, or in a saved version of one (history)
+// Uploads that never ended up in a post, or in a saved version of one (history).
+// The foreign keys keep a row that a post starts using at the same time. A failed
+// file delete only leaves an unused file behind.
 export const deleteUnusedMedia = async () => {
-  await pool.query(
+  const result = await pool.query<{ id: string }>(
     `DELETE FROM post_media m WHERE m.created_at < now() - interval '2 days'
        AND NOT EXISTS (SELECT 1 FROM post_images i WHERE i.media_id = m.id)
        AND NOT EXISTS (
          SELECT 1 FROM post_events e, jsonb_array_elements(e.snapshot->'images') img
          WHERE img->>'mediaId' = m.id::text
-       )`
+       )
+     RETURNING id`
   )
+  await deletePostImages(result.rows.map((r) => r.id))
 }

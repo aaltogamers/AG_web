@@ -14,6 +14,7 @@ import {
 import { eventMoment, formatSessionTime, getSignupTargets } from '../eventUtils'
 import { deleteSignupForms, getSignupFormKeysOfEvent, getSignupSummaries, totalSignups } from '../signupForms'
 import pool from '../db_pg'
+import { postImageUrl, readMedia } from '../mediaStore'
 import { getMedia } from '../postStore'
 import { fillPlaceholders, type PlaceholderSession } from './render'
 import type {
@@ -386,8 +387,9 @@ export const runWebsiteChange = async (
     const extraFiles = []
     if (resolved.upload) {
       const media = await getMedia(resolved.upload.mediaId)
-      if (!media) throw new WebsiteChangeConflict('The uploaded event image no longer exists')
-      extraFiles.push({ path: resolved.upload.repoPath, content: media.data })
+      const data = media && (media.data ?? (await readMedia(postImageUrl(resolved.upload.mediaId))))
+      if (!data) throw new WebsiteChangeConflict('The uploaded event image no longer exists')
+      extraFiles.push({ path: resolved.upload.repoPath, content: data })
     }
     const verb = change.kind === 'create_event' ? 'Create' : 'Update'
     commitSha =

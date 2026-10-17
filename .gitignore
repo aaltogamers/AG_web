@@ -21,6 +21,9 @@ infra/bootstrap/terraform.tfvars
 .bootstrap.tfstate.lock.info
 *.tfvars
 *.tfvars.json
+# Uploaded images in development (src/utils/mediaStore.ts)
+/public/media/
+
 # Compressed public/ output (CI build)
 public-compressed/
 public-compressed.manifest.json
