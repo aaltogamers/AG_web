@@ -1,7 +1,6 @@
-// TEMPORARY: imports event files (the old src/content/events/*.md) and their
-// images into the database, all or nothing. Used when the server starts
-// (startupMigrations.ts) and by scripts/importEvents.ts. Remove with the event
-// files once production has its events.
+// Imports event files (the old src/content/events/*.md) and their images into
+// the database, all or nothing, e.g. to seed a local database
+// (scripts/importEvents.ts)
 import pool, { withTransaction } from './db_pg'
 import { eventsChanged, getEvent, saveEvent, validateEvent } from './eventStore'
 import { parseMarkdown } from './fileUtils'

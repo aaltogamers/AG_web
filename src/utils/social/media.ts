@@ -74,7 +74,7 @@ export const siteImageSize = async (sitePath: string) => {
 export const loadImage = async (image: PostImage, index: number): Promise<LoadedImage> => {
   if ('mediaId' in image) {
     const media = await getMedia(image.mediaId)
-    const data = media && (media.data ?? (await readMedia(postImageUrl(image.mediaId))))
+    const data = media && (await readMedia(postImageUrl(image.mediaId)))
     if (!media || !data) throw new AgentError(404, `Uploaded image ${image.mediaId} was not found`)
     return { data, contentType: media.content_type, filename: `image${index + 1}.jpg` }
   }
