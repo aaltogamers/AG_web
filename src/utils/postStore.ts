@@ -6,7 +6,7 @@ import pool, { withTransaction } from './db_pg'
 import { AgentError } from './agentApi'
 import { randomSessionId } from './eventStore'
 import { EVENT_TIMEZONE } from './eventUtils'
-import { deletePostImages, isMediaUrl } from './mediaStore'
+import { deletePostImages, isMediaUrl, uploadPostImage } from './mediaStore'
 import {
   DEFAULT_SETTINGS,
   DISCORD_PINGS,
@@ -1588,6 +1588,21 @@ export const getMedia = async (id: string) => {
     [id]
   )
   return result.rows[0] ?? null
+}
+
+// TEMPORARY: moves images uploaded before mediaStore out of post_media.data,
+// keeping their ids. Runs when the server starts (startupMigrations.ts) until none
+// are left; then drop post_media.data, this and the fallbacks that read it.
+export const moveOldPostMedia = async (log = console.log) => {
+  const { rows } = await pool.query<{ id: string }>('SELECT id FROM post_media WHERE data IS NOT NULL')
+  for (const { id } of rows) {
+    const result = await pool.query<{ data: Buffer | null }>('SELECT data FROM post_media WHERE id = $1', [id])
+    const data = result.rows[0]?.data
+    if (!data) continue
+    await uploadPostImage(data, id)
+    await pool.query('UPDATE post_media SET data = NULL WHERE id = $1', [id])
+  }
+  if (rows.length) log(`[posts] moved ${rows.length} uploaded images to mediaStore`)
 }
 
 // Uploads that never ended up in a post, or in a saved version of one (history).

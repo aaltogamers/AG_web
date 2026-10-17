@@ -22,6 +22,11 @@ COPY --chown=nextjs:nodejs public-compressed ./public
 # by Next.js), so they need to be copied into the image explicitly.
 COPY --chown=nextjs:nodejs migrations ./migrations
 
+# TEMPORARY: the event files and their original images, imported into the
+# database at the first start (src/utils/startupMigrations.ts)
+COPY --chown=nextjs:nodejs src/content/events ./src/content/events
+COPY --chown=nextjs:nodejs public/images ./event-import-images/images
+
 USER nextjs
 
 # server.js is created by next build from the standalone output
