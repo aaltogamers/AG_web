@@ -39,8 +39,6 @@ export const getStaticProps = async () => {
     throw error
   }
 
-  albums.reverse()
-
   return {
     props: { albums },
     revalidate: 600, // Revalidate every 10 minutes
