@@ -25,29 +25,35 @@ export const fetchLycheeAlbums = async (): Promise<LycheeAlbum[]> => {
   return data.albums || []
 }
 
-const CACHE_MS = 10 * 60_000
-let cached: { albums: LycheeAlbum[]; fetchedAt: number } | null = null
-let fetching: Promise<LycheeAlbum[]> | null = null
+const REFRESH_MS = 10 * 60_000
 
-// Cached for 10 min, since the event pages ask for them on every request. If
-// fetching fails, the last albums are used.
-export const getLycheeAlbums = async (): Promise<LycheeAlbum[]> => {
-  if (cached && Date.now() - cached.fetchedAt < CACHE_MS) return cached.albums
-  fetching ??= fetchLycheeAlbums()
+// In-memory albums for the event pages, refreshed every 10 min in the background
+// (instrumentation.ts), so that pages never wait for Lychee. Kept on globalThis so
+// that the pages and instrumentation.ts (separate bundles) share it.
+type Cache = { albums: LycheeAlbum[] | null; fetching: Promise<void> | null }
+const globalForLychee = globalThis as unknown as { __agLycheeAlbums?: Cache }
+const cache = (globalForLychee.__agLycheeAlbums ??= { albums: null, fetching: null })
+
+// If fetching fails, the last albums are kept
+const refreshLycheeAlbums = (): Promise<void> =>
+  (cache.fetching ??= fetchLycheeAlbums()
     .then((albums) => {
-      cached = { albums, fetchedAt: Date.now() }
-      return albums
+      cache.albums = albums
     })
-    .catch(() => {
-      console.warn('Failed to fetch Lychee albums, skipping album linking')
-      // Try again in a minute
-      cached = { albums: cached?.albums ?? [], fetchedAt: Date.now() - CACHE_MS + 60_000 }
-      return cached.albums
-    })
+    .catch((err) => console.warn('[lychee] fetching albums failed:', err))
     .finally(() => {
-      fetching = null
-    })
-  return fetching
+      cache.fetching = null
+    }))
+
+export const startLycheeAlbumRefresh = () => {
+  refreshLycheeAlbums()
+  setInterval(refreshLycheeAlbums, REFRESH_MS)
+}
+
+// The albums, or none (no album links) if they haven't been fetched yet
+export const getLycheeAlbums = (): LycheeAlbum[] => {
+  if (!cache.albums) refreshLycheeAlbums()
+  return cache.albums ?? []
 }
 
 const parseSetCookieHeaders = (response: Response) => {

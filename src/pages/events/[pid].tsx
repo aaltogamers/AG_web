@@ -14,11 +14,11 @@ const Event = ({ event }: Props) => <EventPage event={event} />
 export default Event
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const [events, albums] = await Promise.all([getEvents(), getLycheeAlbums()])
+  const events = await getEvents()
   const event = events.find((e) => e.slug === String(context.params?.pid))
   if (!event) return { notFound: true }
 
-  getRelevantAlbumsForEvents([event], albums)
+  getRelevantAlbumsForEvents([event], getLycheeAlbums())
 
   if (!event.albumID) {
     delete event.albumID

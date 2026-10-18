@@ -36,9 +36,9 @@ const Events = ({ events }: Props) => {
 export default Events
 
 export const getServerSideProps = async () => {
-  const [events, albums] = await Promise.all([getEvents(), getLycheeAlbums()])
+  const events = await getEvents()
 
-  getRelevantAlbumsForEvents(events, albums)
+  getRelevantAlbumsForEvents(events, getLycheeAlbums())
 
   return {
     props: { events: events },

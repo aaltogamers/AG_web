@@ -30,31 +30,37 @@ export const eventFromStored = (event: Pick<StoredEvent, 'slug' | 'data' | 'body
 
 export const isValidSlug = (slug: string) => /^[a-z0-9-]+$/.test(slug)
 
-// In-memory list of all events. Cleared after every write in this process, and
-// reloaded after 60 s in case another instance wrote. Kept on globalThis so that
-// pages, the calendar route and the API routes (separate bundles) share it.
-const TTL_MS = 60_000
-
+// In-memory list of all events, so that pages never wait for the database. Loaded
+// at startup (instrumentation.ts) and reloaded right after every write. All writes
+// go through this file and the site runs as one instance, so it never expires.
+// Kept on globalThis so that pages, the calendar route, the API routes and
+// instrumentation.ts (separate bundles) share it.
 type Cache = {
   events: StoredEvent[] | null
-  loadedAt: number
   // Bumped by every write, so that a reload that started before it isn't stored
   generation: number
+  // The generation `events` was loaded in
+  loadedGeneration: number
   loading: { generation: number; promise: Promise<StoredEvent[]> } | null
+  // Whether writes reload the list right away (only in the server, not in scripts)
+  isPreloaded: boolean
 }
 
 const globalForEvents = globalThis as unknown as { __agEvents?: Cache }
 const cache = (globalForEvents.__agEvents ??= {
   events: null,
-  loadedAt: 0,
   generation: 0,
+  loadedGeneration: -1,
   loading: null,
+  isPreloaded: false,
 })
 
 // Call after the COMMIT of a transaction that saved an event with a client
 export const eventsChanged = () => {
   cache.generation++
-  cache.loadedAt = 0
+  if (cache.isPreloaded) {
+    reload().catch((err) => console.error('[events] reloading events failed:', err))
+  }
 }
 
 const reload = (): Promise<StoredEvent[]> => {
@@ -66,7 +72,7 @@ const reload = (): Promise<StoredEvent[]> => {
     const result = await pool.query<EventRow>(`SELECT ${COLUMNS} FROM events`)
     if (cache.generation === generation) {
       cache.events = result.rows
-      cache.loadedAt = Date.now()
+      cache.loadedGeneration = generation
     }
     return result.rows
   })().finally(() => {
@@ -76,10 +82,23 @@ const reload = (): Promise<StoredEvent[]> => {
   return promise
 }
 
-// All events, from the in-memory list. If reloading fails, the last list is
-// used, so a short database outage doesn't take down the site.
+// Loads the list at startup, and makes writes reload it right away
+export const preloadEvents = async () => {
+  cache.isPreloaded = true
+  try {
+    await reload()
+    console.log('[events] loaded events')
+  } catch (err) {
+    // The first page that needs them tries again
+    console.error('[events] loading events failed:', err)
+  }
+}
+
+// All events, from the in-memory list. Only waits for the database when the list
+// hasn't been loaded yet, or a write is still reloading it. If reloading fails, the
+// last list is used, so a short database outage doesn't take down the site.
 export const listEvents = async (): Promise<StoredEvent[]> => {
-  if (cache.events && Date.now() - cache.loadedAt < TTL_MS) return cache.events
+  if (cache.events && cache.loadedGeneration === cache.generation) return cache.events
   try {
     return await reload()
   } catch (err) {

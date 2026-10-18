@@ -123,5 +123,10 @@ export async function register() {
       const { runSchedulerTick } = await import('./utils/social/scheduler')
       await runSchedulerTick()
     }, DAILY_CHECK_INTERVAL_MS)
+    // Events and Lychee albums in memory, so that the event pages never wait for them
+    const { preloadEvents } = await import('./utils/eventStore')
+    const { startLycheeAlbumRefresh } = await import('./utils/lychee')
+    preloadEvents()
+    startLycheeAlbumRefresh()
   }
 }

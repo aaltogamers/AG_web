@@ -86,7 +86,11 @@ the MCP server and by the website changes of scheduled posts, all through
 nobody saves over someone else's change. Every save and delete is also
 written to `event_revisions` (with who made it), for undoing a bad edit by
 hand; database backups (35 days) cover the rest. The pages read the events
-from an in-memory list that is reloaded after every change and every 60 s.
+from an in-memory list that is loaded at startup (`src/instrumentation.ts`)
+and reloaded right after every change, so they never wait for the database;
+changes made outside the site (by hand or with `import-events`) show after a
+restart. The Lychee albums that the event pages link to are refreshed every
+10 min in the background.
 
 In the event editor, an event's sign-up forms (`&signup=<key>`) and posts
 (`&post=<id>`) are listed, opened and added. Adding a form for the whole event
