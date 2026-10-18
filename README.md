@@ -69,6 +69,8 @@ docker compose down -v
 - `TELEGRAM_POSTS_BOT_TOKEN`, `TELEGRAM_POSTS_WEBHOOK_SECRET` (any random
   string), `DISCORD_BOT_TOKEN`, `INSTAGRAM_USER_ID`, `INSTAGRAM_ACCESS_TOKEN`
   (the first long-lived token) — scheduled posts (see below).
+- `LYCHEE_WEBHOOK_SECRET` — secret Lychee sends to `/api/lychee-webhook` (see
+  "Events and images"). Unset, the webhook is disabled.
 - `RCON_IP`, `RCON_PASSWORD`, `RCON_PORT` — Minecraft whitelist endpoint.
 - `APP_ID`, `PRIVATE_KEY`, `INSTALLATION_ID` — GitHub App credentials for
   the Decap CMS auth handshake (`/api/auth`).
@@ -90,7 +92,10 @@ from an in-memory list that is loaded at startup (`src/instrumentation.ts`)
 and reloaded right after every change, so they never wait for the database;
 changes made outside the site (by hand or with `import-events`) show after a
 restart. The Lychee albums that the event pages link to are refreshed every
-10 min in the background.
+10 min in the background, and 15 s after Lychee's webhooks: in Lychee, add a
+webhook for each of Photo Added, Photo Moved and Photo Deleted with method
+POST, URL `https://aaltogamers.fi/api/lychee-webhook`, secret
+`LYCHEE_WEBHOOK_SECRET` and secret header `X-Lychee-Secret`.
 
 In the event editor, an event's sign-up forms (`&signup=<key>`) and posts
 (`&post=<id>`) are listed, opened and added. Adding a form for the whole event

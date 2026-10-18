@@ -26,13 +26,20 @@ export const fetchLycheeAlbums = async (): Promise<LycheeAlbum[]> => {
 }
 
 const REFRESH_MS = 10 * 60_000
+// Uploading many photos sends a webhook for each, so refresh once they stop
+const WEBHOOK_DELAY_MS = 15_000
 
-// In-memory albums for the event pages, refreshed every 10 min in the background
-// (instrumentation.ts), so that pages never wait for Lychee. Kept on globalThis so
-// that the pages and instrumentation.ts (separate bundles) share it.
-type Cache = { albums: LycheeAlbum[] | null; fetching: Promise<void> | null }
+// In-memory albums for the event pages, refreshed by Lychee's webhooks
+// (/api/lychee-webhook) and every 10 min in the background (instrumentation.ts),
+// so that pages never wait for Lychee. Kept on globalThis so that the pages, the
+// webhook and instrumentation.ts (separate bundles) share it.
+type Cache = {
+  albums: LycheeAlbum[] | null
+  fetching: Promise<void> | null
+  webhookTimer: ReturnType<typeof setTimeout> | null
+}
 const globalForLychee = globalThis as unknown as { __agLycheeAlbums?: Cache }
-const cache = (globalForLychee.__agLycheeAlbums ??= { albums: null, fetching: null })
+const cache = (globalForLychee.__agLycheeAlbums ??= { albums: null, fetching: null, webhookTimer: null })
 
 // If fetching fails, the last albums are kept
 const refreshLycheeAlbums = (): Promise<void> =>
@@ -44,6 +51,15 @@ const refreshLycheeAlbums = (): Promise<void> =>
     .finally(() => {
       cache.fetching = null
     }))
+
+// Called by Lychee's webhook when photos are added, moved or deleted
+export const lycheeChanged = () => {
+  if (cache.webhookTimer) clearTimeout(cache.webhookTimer)
+  cache.webhookTimer = setTimeout(() => {
+    cache.webhookTimer = null
+    refreshLycheeAlbums()
+  }, WEBHOOK_DELAY_MS)
+}
 
 export const startLycheeAlbumRefresh = () => {
   refreshLycheeAlbums()

@@ -60,6 +60,13 @@ variable "telegram_posts_bot_token" {
   default     = ""
 }
 
+variable "lychee_webhook_secret" {
+  description = "Secret Lychee sends to its webhook (/api/lychee-webhook). Empty disables the webhook."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "telegram_posts_webhook_secret" {
   description = "Secret Telegram sends to the posts bot webhook (/api/telegram/posts-webhook)"
   type        = string
