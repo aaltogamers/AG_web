@@ -7,7 +7,7 @@ import { CalendarEvent, convertEventsToCalendarFormat } from '../utils/eventUtil
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import styles from './Calendar.module.css'
 import { useRouter } from 'next/router'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import Markdown from './Markdown'
 
 moment.locale('en-GB', {
@@ -21,8 +21,24 @@ const localizer = momentLocalizer(moment)
 // Custom Event Component with enhanced tooltip
 const CustomEvent = ({ event }: { event: CalendarEvent }) => {
   const [showTooltip, setShowTooltip] = useState(false)
+  const [tooltipPosition, setTooltipPosition] = useState({ shiftX: 0, below: false })
   const tooltipRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+
+  // The tooltip is centered above the event, so for events near the screen
+  // edges (or in the top row) move it so that it stays on screen.
+  useLayoutEffect(() => {
+    if (!showTooltip || !tooltipRef.current) return
+    const margin = 8
+    const rect = tooltipRef.current.getBoundingClientRect()
+    let shiftX = 0
+    if (rect.left < margin) {
+      shiftX = margin - rect.left
+    } else if (rect.right > window.innerWidth - margin) {
+      shiftX = window.innerWidth - margin - rect.right
+    }
+    setTooltipPosition({ shiftX, below: rect.top < margin })
+  }, [showTooltip])
 
   useEffect(() => {
     if (!showTooltip) return
@@ -41,7 +57,13 @@ const CustomEvent = ({ event }: { event: CalendarEvent }) => {
 
   return (
     <>
-      <div className="relative" onClick={() => setShowTooltip(true)}>
+      <div
+        className="relative"
+        onClick={() => {
+          if (!showTooltip) setTooltipPosition({ shiftX: 0, below: false })
+          setShowTooltip(true)
+        }}
+      >
         <div className="overflow-ellipsis overflow-hidden">
           <span>{event.title}</span>
         </div>
@@ -49,11 +71,11 @@ const CustomEvent = ({ event }: { event: CalendarEvent }) => {
         {showTooltip && (
           <div
             ref={tooltipRef}
-            className="absolute bg-gray-900 text-white p-4 pb-0 rounded-lg shadow-2xl border border-gray-700 w-[300px] md:w-[500px] z-50"
+            className="absolute bg-gray-900 text-white p-4 pb-0 rounded-lg shadow-2xl border border-gray-700 w-[min(300px,calc(100vw-16px))] md:w-[500px] z-50"
             style={{
               left: '50%',
-              bottom: '40px',
-              transform: 'translate(-50%, 0)',
+              ...(tooltipPosition.below ? { top: '40px' } : { bottom: '40px' }),
+              transform: `translate(calc(-50% + ${tooltipPosition.shiftX}px), 0)`,
             }}
             onClick={() => router.push(event.url)}
           >
