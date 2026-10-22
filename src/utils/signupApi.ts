@@ -151,6 +151,13 @@ export const listSignups = async (
   }
 }
 
+// Next.js answers a too large body with a plain-text 413
+const saveError = async (res: Response) => {
+  if (res.status === 413) return new Error('The image is too large. Try a smaller one.')
+  const err = (await res.json().catch(() => ({}))) as { error?: string }
+  return new Error(err.error || `HTTP ${res.status}`)
+}
+
 export const createSignup = async (
   signupKey: string,
   answers: AnswerMap,
@@ -164,10 +171,7 @@ export const createSignup = async (
     credentials: 'same-origin',
     body: JSON.stringify({ key: signupKey, answers, files, poolId, poolPassword }),
   })
-  if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { error?: string }
-    throw new Error(err.error || `HTTP ${res.status}`)
-  }
+  if (!res.ok) throw await saveError(res)
   return (await res.json()) as { id: string; submission_token: string; created_at: string }
 }
 
@@ -188,10 +192,7 @@ export const updateSignup = async (
     credentials: 'same-origin',
     body: JSON.stringify({ answers, files, poolId, poolPassword }),
   })
-  if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { error?: string }
-    throw new Error(err.error || `HTTP ${res.status}`)
-  }
+  if (!res.ok) throw await saveError(res)
 }
 
 export const deleteSignup = async (id: string, submissionToken?: string): Promise<void> => {

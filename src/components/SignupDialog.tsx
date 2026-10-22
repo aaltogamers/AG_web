@@ -132,18 +132,7 @@ const SignupDialog = ({
     setIsDraftRestored(false)
   }
 
-  const run = async (action: () => Promise<void>) => {
-    setError(null)
-    setIsBusy(true)
-    try {
-      await action()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
-    } finally {
-      setIsBusy(false)
-    }
-  }
-
+  // A field's error, or else the form's error below the fields
   const scrollToFirstError = () =>
     // After the errors have been rendered
     setTimeout(() => {
@@ -154,11 +143,25 @@ const SignupDialog = ({
       })
     })
 
+  const run = async (action: () => Promise<void>) => {
+    setError(null)
+    setIsBusy(true)
+    try {
+      await action()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+      scrollToFirstError()
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
     setHasTriedSubmit(true)
     if (Object.keys(validation.errors).length) {
-      setError('Check the fields marked in red.')
+      // Errors not about one field (e.g. too long answers) have the path ''
+      setError(validation.errors[''] ?? 'Check the fields marked in red.')
       scrollToFirstError()
       return
     }
@@ -425,7 +428,11 @@ const SignupDialog = ({
             'Answers marked (public) are shown to everyone. '}
           Never input any sensitive data on this form.
         </div>
-        {error && <div className="text-red mt-4">{error}</div>}
+        {error && (
+          <div className="text-red mt-4" data-signup-error>
+            {error}
+          </div>
+        )}
         <div className={footerClass}>
           {isConfirmingRemove ? (
             <>

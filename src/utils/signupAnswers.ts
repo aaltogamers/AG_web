@@ -145,7 +145,11 @@ export const validateAnswers = (
     else if (!isEmpty(result.value)) answers[key] = result.value
   })
 
-  if (JSON.stringify(answers).length > MAX_ANSWERS_BYTES) {
+  // Images not yet uploaded are data URLs; their size is checked on upload
+  const size = JSON.stringify(answers, (_, v) =>
+    typeof v === 'string' && v.startsWith('data:') ? '' : v
+  ).length
+  if (size > MAX_ANSWERS_BYTES) {
     errors[''] = 'The answers are too long'
   }
   return { answers, errors }
