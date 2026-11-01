@@ -105,7 +105,7 @@ const SwissSection = ({
         (selectedMatch.opponent1?.score != null || selectedMatch.opponent2?.score != null)))
 
   const gameNumberTextSpace = 12
-  const poolLabelWidth = bracketStyles.basicFontSize * 2.7
+  const poolLabelWidth = bracketStyles.basicFontSize * 2.4
   const poolBracketWidth = 5
 
   const headerStyle = {
@@ -185,7 +185,7 @@ const SwissSection = ({
     )
   }
 
-  const standingWidth = bracketStyles.teamWidth + bracketStyles.teamHeight * 2
+  const standingWidth = bracketStyles.teamWidth + bracketStyles.teamHeight * 1.5
 
   return (
     <div className="flex flex-row" style={{ color: bracketStyles.textColor }}>
@@ -214,7 +214,7 @@ const SwissSection = ({
           </h3>
           <div
             className="flex flex-col"
-            style={{ gap: bracketStyles.teamGapY, marginRight: bracketStyles.teamGapX }}
+            style={{ gap: bracketStyles.teamGapY, marginRight: bracketStyles.teamGapX / 2 }}
           >
             {getPools(data, roundIndex).map((pool, poolIndex) => (
               <div key={poolIndex} className="flex flex-row">
