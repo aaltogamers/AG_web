@@ -253,6 +253,7 @@ export type BracketData = {
   streamMatchId: Id | null
   bestOfByRoundId?: Record<Id, number>
   placeholderParticipantIds?: Set<Id>
+  roundNumberOffset?: number
 }
 
 export type BracketStyles = {

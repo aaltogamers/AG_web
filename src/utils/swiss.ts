@@ -199,15 +199,6 @@ const computePairing = (states: Map<Id, TeamState>): Pairing => {
   return { pairs, byeId }
 }
 
-const currentPairing = (matches: Match[]): Pairing => ({
-  pairs: matches
-    .filter((m) => !isSwissBye(m) && isPaired(m))
-    .map((m) => [m.opponent1!.id!, m.opponent2!.id!] as [Id, Id]),
-  byeId: matches.find((m) => isSwissBye(m))?.opponent1?.id ?? null,
-})
-
-const samePairing = (a: Pairing, b: Pairing) => JSON.stringify(a) === JSON.stringify(b)
-
 const writePairing = async (
   manager: BracketsManager,
   matches: Match[],
@@ -241,22 +232,31 @@ const isRoundDone = (swiss: SwissStage, round: Round) =>
 const syncSwissPairings = async (manager: BracketsManager, swissStageId: Id) => {
   const swiss = await loadSwissStage(manager, swissStageId)
   for (let r = 1; r < swiss.rounds.length; r++) {
-    const round = swiss.rounds[r]
-    const matches = swiss.matchesByRound[round.id]
+    const matches = swiss.matchesByRound[swiss.rounds[r].id]
     const previousDone = swiss.rounds.slice(0, r).every((prev) => isRoundDone(swiss, prev))
-    const started = matches.some(isMatchStarted)
+    const paired = matches.some(isPaired)
     if (!previousDone) {
-      if (matches.some(isPaired)) {
-        if (started) throw new Error(`Swiss round ${round.number} already has results.`)
-        await writePairing(manager, matches, null)
-      }
+      if (paired && !matches.some(isMatchStarted)) await writePairing(manager, matches, null)
       continue
     }
-    const expected = computePairing(computeTeamStates(swiss, r))
-    if (samePairing(currentPairing(matches), expected)) continue
-    if (started) throw new Error(`Swiss round ${round.number} already has results.`)
-    await writePairing(manager, matches, expected)
+    // Once paired, a round keeps its pairing; it's only cleared when an earlier winner changes.
+    if (!paired) await writePairing(manager, matches, computePairing(computeTeamStates(swiss, r)))
   }
+}
+
+const clearLaterRounds = async (manager: BracketsManager, match: Match) => {
+  const swiss = await loadSwissStage(manager, match.stage_id)
+  const roundNumber = swiss.rounds.find((r) => r.id === match.round_id)?.number ?? 0
+  for (const round of swiss.rounds) {
+    if (round.number <= roundNumber) continue
+    const matches = swiss.matchesByRound[round.id]
+    if (matches.some(isPaired)) await writePairing(manager, matches, null)
+  }
+}
+
+const havePlayoffsStarted = async (manager: BracketsManager) => {
+  const { playoffStageId } = await getStageIds(manager)
+  return (await manager.get.stageData(playoffStageId)).match.some(isMatchStarted)
 }
 
 const getPlaceholderIds = (swiss: SwissStage, advanceCount: number): Id[] => {
@@ -274,6 +274,7 @@ const syncPlayoffSeeding = async (
   playoffStageId: Id,
   advanceCount: number
 ) => {
+  if (await havePlayoffsStarted(manager)) return
   const swiss = await loadSwissStage(manager, swissStageId)
   const isComplete = swiss.rounds.every((round) => isRoundDone(swiss, round))
   const target = isComplete
@@ -292,8 +293,15 @@ export const syncSwissFormat = async (manager: BracketsManager, options: Tournam
   await syncPlayoffSeeding(manager, swissStageId, playoffStageId, options.advanceCount)
 }
 
-const assertOutcomeChangeable = async (manager: BracketsManager, match: Match) => {
-  const { playoffStageId } = await getStageIds(manager)
+const assertResultChangeable = async (
+  manager: BracketsManager,
+  match: Match,
+  winnerChanges: boolean
+) => {
+  if (await havePlayoffsStarted(manager)) {
+    throw new Error('The playoffs have already started. Reset them first to change Swiss results.')
+  }
+  if (!winnerChanges) return
   const swiss = await loadSwissStage(manager, match.stage_id)
   const roundNumber = swiss.rounds.find((r) => r.id === match.round_id)?.number ?? 0
   for (const round of swiss.rounds) {
@@ -303,10 +311,6 @@ const assertOutcomeChangeable = async (manager: BracketsManager, match: Match) =
         `Swiss round ${round.number} already has results. Reset those first to change this result.`
       )
     }
-  }
-  const playoffMatches = (await manager.get.stageData(playoffStageId)).match
-  if (playoffMatches.some(isMatchStarted)) {
-    throw new Error('The playoffs have already started. Reset them first to change this result.')
   }
 }
 
@@ -336,7 +340,8 @@ export const updateSwissMatchResult = async (
     : score1 > score2
       ? match.opponent1!.id
       : match.opponent2!.id
-  if (newWinnerId !== getSwissWinnerId(match)) await assertOutcomeChangeable(manager, match)
+  const winnerChanges = newWinnerId !== getSwissWinnerId(match)
+  await assertResultChangeable(manager, match, winnerChanges)
 
   const result = (won: boolean) =>
     inProgress ? undefined : won ? ('win' as const) : ('loss' as const)
@@ -346,17 +351,20 @@ export const updateSwissMatchResult = async (
     opponent1: { id: match.opponent1!.id, score: score1, result: result(score1 > score2) },
     opponent2: { id: match.opponent2!.id, score: score2, result: result(score2 > score1) },
   })
+  if (winnerChanges) await clearLaterRounds(manager, match)
 }
 
 export const resetSwissMatchResult = async (manager: BracketsManager, matchId: Id) => {
   const match = await getPlayableSwissMatch(manager, matchId)
-  if (getSwissWinnerId(match) != null) await assertOutcomeChangeable(manager, match)
+  const winnerChanges = getSwissWinnerId(match) != null
+  await assertResultChangeable(manager, match, winnerChanges)
   await manager.storage.update('match', match.id, {
     ...match,
     status: Status.Ready,
     opponent1: { id: match.opponent1!.id },
     opponent2: { id: match.opponent2!.id },
   })
+  if (winnerChanges) await clearLaterRounds(manager, match)
 }
 
 export const getSwissTeamNames = (teams: (string | null)[]): string[] =>
@@ -483,6 +491,7 @@ export const getSwissFormatData = async (
     {
       bestOfByRoundId: lastRound ? { [lastRound.id]: options.finalBestOf } : {},
       placeholderParticipantIds: new Set(getPlaceholderIds(swiss, options.advanceCount)),
+      roundNumberOffset: swiss.rounds.length,
     }
   )
 

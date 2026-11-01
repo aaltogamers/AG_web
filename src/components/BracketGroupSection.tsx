@@ -157,7 +157,13 @@ const GroupSection = ({
                 fontSize: bracketStyles.titleFontSize,
               }}
             >
-              {roundToLabel(round, groupLabel, matchesByRound, groupHasFinal, visibleRoundNumber)}
+              {roundToLabel(
+                round,
+                groupLabel,
+                matchesByRound,
+                groupHasFinal,
+                visibleRoundNumber + (bracketData.roundNumberOffset ?? 0)
+              )}
               {(bracketData.bestOfByRoundId?.[round.id] ?? 1) > 1 && (
                 <span style={{ fontSize: '0.6em', opacity: 0.75 }}>
                   {' '}

@@ -356,7 +356,10 @@ export const getEliminationBracketData = async (
   stageId: Id,
   matchIds: BracketData['matchIds'],
   streamMatchId: Id | null = null,
-  extra: Pick<BracketData, 'bestOfByRoundId' | 'placeholderParticipantIds'> = {}
+  extra: Pick<
+    BracketData,
+    'bestOfByRoundId' | 'placeholderParticipantIds' | 'roundNumberOffset'
+  > = {}
 ): Promise<BracketData> => {
   const {
     group: groups,
