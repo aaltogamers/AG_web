@@ -29,7 +29,7 @@ const getPools = (data: SwissData, roundIndex: number): Pool[] => {
   const round = data.rounds[roundIndex]
   const matches = data.matchesByRound[round.id] ?? []
   const isPaired = matches.some((m) => m.opponent1?.id != null)
-  if (roundIndex === 0 || !isPaired) return [{ label: null, matches }]
+  if (!isPaired) return [{ label: null, matches }]
 
   const records = data.recordsBeforeRound[round.id] ?? {}
   const pools: Pool[] = []
@@ -83,7 +83,8 @@ const SwissSection = ({
         (selectedMatch.opponent1?.score != null || selectedMatch.opponent2?.score != null)))
 
   const gameNumberTextSpace = 12
-  const poolLabelHeight = bracketStyles.basicFontSize
+  const poolLabelWidth = bracketStyles.basicFontSize * 2.7
+  const poolBracketWidth = 5
 
   const headerStyle = {
     backgroundColor: bracketStyles.roundColor,
@@ -194,27 +195,42 @@ const SwissSection = ({
             style={{ gap: bracketStyles.teamGapY, marginRight: bracketStyles.teamGapX }}
           >
             {getPools(data, roundIndex).map((pool, poolIndex) => (
-              <div
-                key={poolIndex}
-                className="flex flex-col"
-                style={{ gap: bracketStyles.teamGapY }}
-              >
-                {pool.label != null && (
-                  <div
-                    className="text-center"
-                    style={{
-                      marginLeft: gameNumberTextSpace,
-                      height: poolLabelHeight,
-                      lineHeight: `${poolLabelHeight}px`,
-                      fontSize: bracketStyles.basicFontSize * 0.8,
-                      color: bracketStyles.connectorColor,
-                      borderBottom: `1px solid ${bracketStyles.connectorColor}`,
-                    }}
-                  >
-                    {pool.label}
-                  </div>
-                )}
-                {pool.matches.map(renderMatch)}
+              <div key={poolIndex} className="flex flex-row">
+                <div
+                  className="relative flex items-center shrink-0"
+                  style={{ width: poolLabelWidth }}
+                >
+                  {pool.label != null && (
+                    <>
+                      <span
+                        className="rounded-sm text-center whitespace-nowrap"
+                        style={{
+                          width: poolLabelWidth - poolBracketWidth - 5,
+                          fontSize: bracketStyles.basicFontSize * 0.75,
+                          lineHeight: `${bracketStyles.basicFontSize * 1.2}px`,
+                          backgroundColor: bracketStyles.connectorColor,
+                          color: bracketStyles.textColor,
+                        }}
+                      >
+                        {pool.label}
+                      </span>
+                      <div
+                        className="absolute"
+                        style={{
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: poolBracketWidth,
+                          border: `2px solid ${bracketStyles.connectorColor}`,
+                          borderRight: 'none',
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
+                <div className="flex flex-col" style={{ gap: bracketStyles.teamGapY }}>
+                  {pool.matches.map(renderMatch)}
+                </div>
               </div>
             ))}
           </div>
