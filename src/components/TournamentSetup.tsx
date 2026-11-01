@@ -13,15 +13,20 @@ const DELIMITER_PATTERNS: Record<ImportDelimiter, RegExp> = {
 }
 
 import {
+  BEST_OF_OPTIONS,
   BracketDatabaseSnapshot,
   BracketType,
+  SWISS_ADVANCE_COUNT_OPTIONS,
+  SWISS_ROUND_OPTIONS,
   TOURNAMENT_BRACKET_TYPES,
   TOURNAMENT_TEAM_COUNTS,
   Tournament,
+  TournamentOptions,
   TournamentTeamCount,
   getBracketTypeLabel,
 } from '../types/types'
 import { createBracket } from '../utils/brackets'
+import { createSwissBracket } from '../utils/swiss'
 import { updateTournament } from '../utils/tournamentApi'
 
 type Props = {
@@ -40,6 +45,7 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
   const [bracketType, setBracketType] = useState<BracketType>(tournament.bracketType)
   const [teamCount, setTeamCount] = useState<TournamentTeamCount>(tournament.teamCount)
   const [teams, setTeams] = useState<string[]>(tournament.teams ?? [])
+  const [options, setOptions] = useState<TournamentOptions>(tournament.options)
   const [message, setMessage] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [building, setBuilding] = useState(false)
@@ -54,7 +60,10 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
     setBracketType(tournament.bracketType)
     setTeamCount(tournament.teamCount)
     setTeams(tournament.teams ?? [])
+    setOptions(tournament.options)
   }, [tournament])
+
+  const isSwiss = bracketType === 'swiss_to_single_elimination'
 
   const slotCount = teamCount
   const paddedTeams = useMemo(() => {
@@ -142,6 +151,7 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
         bracketType,
         teamCount,
         teams: paddedTeams,
+        options,
         // Settings change before start: drop any previously built bracket data
         // so the next "Build bracket" produces a clean snapshot.
         data: null as BracketDatabaseSnapshot | null,
@@ -177,13 +187,18 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
         const trimmed = t.trim()
         return trimmed === '' ? null : trimmed
       })
-      await createBracket(manager, bracketType, teamCount, seedingTeams)
+      if (isSwiss) {
+        await createSwissBracket(manager, seedingTeams, options)
+      } else {
+        await createBracket(manager, bracketType, teamCount, seedingTeams)
+      }
       const snapshot = (await manager.export()) as unknown as BracketDatabaseSnapshot
       const updated = await updateTournament(tournament.slug, {
         name: name.trim(),
         bracketType,
         teamCount,
         teams: paddedTeams,
+        options,
         data: snapshot,
       })
       await onChanged(updated)
@@ -237,7 +252,7 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span>Number of teams</span>
+          <span>{isSwiss ? 'Max number of teams' : 'Number of teams'}</span>
           <select
             value={String(teamCount)}
             onChange={(e) => setTeamCount(Number(e.target.value) as TournamentTeamCount)}
@@ -250,6 +265,29 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
             ))}
           </select>
         </label>
+        {isSwiss &&
+          (
+            [
+              ['swissRounds', 'Swiss rounds (Bo1)', SWISS_ROUND_OPTIONS],
+              ['advanceCount', 'Teams advancing to playoffs', SWISS_ADVANCE_COUNT_OPTIONS],
+              ['finalBestOf', 'Playoff final best of', BEST_OF_OPTIONS],
+            ] as const
+          ).map(([key, label, values]) => (
+            <label key={key} className="flex flex-col gap-1">
+              <span>{label}</span>
+              <select
+                value={String(options[key])}
+                onChange={(e) => setOptions((prev) => ({ ...prev, [key]: Number(e.target.value) }))}
+                className="p-2 rounded-md bg-white text-black"
+              >
+                {values.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
       </div>
 
       <div>
@@ -261,15 +299,36 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
         </div>
 
         <span className="text-sm opacity-75 mb-4">
-          <p>
-            Move teams up/down to change seeding. The top seed is matched against the bottom seed,
-            etc.
-          </p>
-          <p>
-            You should fill the teams in order of their skill level (best team as 1st seed). This
-            maximizes the chance that the best teams make it to the later rounds.
-          </p>
-          <p>Empty teams become BYEs (free rounds).</p>
+          {isSwiss ? (
+            <>
+              <p>
+                Move teams up/down to change seeding. In Swiss round 1, the top half plays the
+                bottom half (1st vs {Math.ceil(filledCount / 2) + 1}th, etc.). Later rounds pair
+                teams with the same record, without rematches.
+              </p>
+              <p>
+                After the Swiss rounds, the top {options.advanceCount} teams (by wins, then
+                Buchholz, then seed) advance to a single elimination playoff, seeded 1st vs{' '}
+                {options.advanceCount}th, etc.
+              </p>
+              <p>
+                Empty slots are skipped. With an odd number of teams, one team gets a free win (BYE)
+                each round.
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                Move teams up/down to change seeding. The top seed is matched against the bottom
+                seed, etc.
+              </p>
+              <p>
+                You should fill the teams in order of their skill level (best team as 1st seed).
+                This maximizes the chance that the best teams make it to the later rounds.
+              </p>
+              <p>Empty teams become BYEs (free rounds).</p>
+            </>
+          )}
         </span>
 
         <div className="flex flex-col gap-2">

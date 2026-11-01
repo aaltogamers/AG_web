@@ -1,18 +1,17 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BracketsManager } from 'brackets-manager'
-import type { Database } from 'brackets-manager'
-import { InMemoryDatabase } from 'brackets-memory-db'
 
-import type {
-  BracketData,
-  BracketDatabaseSnapshot,
-  BracketStyles,
-  Tournament,
-} from '../types/types'
-import { getBracketData, getBracketsData, syncFinalsSeedingFromQualifiers } from '../utils/brackets'
+import type { BracketDatabaseSnapshot, BracketStyles, Tournament } from '../types/types'
 import { saveTournamentData } from '../utils/tournamentApi'
+import {
+  TournamentStageView,
+  importTournamentData,
+  loadTournamentStages,
+  syncTournamentStages,
+} from '../utils/tournamentStages'
 import BracketsSection from './BracketsSection'
+import SwissSection from './SwissSection'
 
 export const defaultBracketStyles: BracketStyles = {
   textColor: '#FFFFFF',
@@ -62,7 +61,7 @@ const TournamentBracketView = ({
   // can use it without re-rendering the BracketsSection tree.
   const managerRef = useRef<BracketsManager | null>(null)
 
-  const [data, setData] = useState<BracketData[]>([])
+  const [data, setData] = useState<TournamentStageView[]>([])
   const [error, setError] = useState<string | null>(null)
   const dataRef = useRef(data)
   dataRef.current = data
@@ -89,21 +88,9 @@ const TournamentBracketView = ({
         if (!cancelled) setData([])
         return
       }
-      const storage = new InMemoryDatabase()
-      const manager = new BracketsManager(storage)
       try {
-        await manager.import(tournament.data as unknown as Database)
-        const stages = (tournament.data.stage ?? []) as { id: number }[]
-        if (stages.length < 2) {
-          throw new Error('Bracket data is incomplete (missing stages).')
-        }
-        const newData = await getBracketsData(
-          manager,
-          stages[0].id,
-          stages[1].id,
-          tournament.teamCount,
-          tournament.streamMatchId ?? null
-        )
+        const manager = await importTournamentData(tournament)
+        const newData = await loadTournamentStages(manager, tournament)
         if (cancelled) return
         managerRef.current = manager
         setData(newData)
@@ -119,7 +106,7 @@ const TournamentBracketView = ({
     return () => {
       cancelled = true
     }
-  }, [tournament.data, tournament.teamCount, tournament.streamMatchId])
+  }, [tournament])
 
   // Called by BracketGroupSection after a successful library mutation. We
   // refresh the on-screen data from the manager AND persist the full snapshot
@@ -127,35 +114,13 @@ const TournamentBracketView = ({
   const refreshAfterMutation = useCallback(async () => {
     const manager = managerRef.current
     if (!manager) return
-    const current = dataRef.current
-    if (current.length !== 2) return
-    const [qualifier, finals] = current
-    const qualifierStageId = qualifier.stages[0].id
-    const finalsStageId = finals.stages[0].id
-
-    // Propagate qualifier winners into the finals semi-finals before
-    // re-reading. The library doesn't link stages on its own, so we re-seed
-    // the finals stage from the (now mutated) qualifier results. Uses fresh
-    // qualifier data, since the mutation already landed in the manager.
     try {
-      const refreshedQualifier = await getBracketData(
-        manager,
-        qualifierStageId,
-        tournament.teamCount,
-        tournament.streamMatchId ?? null
-      )
-      await syncFinalsSeedingFromQualifiers(manager, refreshedQualifier, finalsStageId)
+      await syncTournamentStages(manager, tournament, dataRef.current)
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Failed to propagate qualifier winners')
+      throw new Error(err instanceof Error ? err.message : 'Failed to propagate results')
     }
 
-    const newData = await getBracketsData(
-      manager,
-      qualifierStageId,
-      finalsStageId,
-      tournament.teamCount,
-      tournament.streamMatchId ?? null
-    )
+    const newData = await loadTournamentStages(manager, tournament)
     setData(newData)
     const snapshot = (await manager.export()) as unknown as BracketDatabaseSnapshot
     try {
@@ -164,7 +129,7 @@ const TournamentBracketView = ({
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to save bracket')
     }
-  }, [tournament.slug, tournament.teamCount, tournament.streamMatchId, onSaved])
+  }, [tournament, onSaved])
 
   if (error) {
     return <div className="text-red text-center my-8">{error}</div>
@@ -180,18 +145,30 @@ const TournamentBracketView = ({
 
   return (
     <div className="flex flex-row overflow-x-auto">
-      {visibleData.map((bracketData) => (
-        <BracketsSection
-          key={bracketData.stages[0].id}
-          data={bracketData}
-          bracketStyles={bracketStyles}
-          isEditingMode={isAdmin}
-          onMatchResultSaved={refreshAfterMutation}
-          visibleGroups={visibleGroups}
-          tournamentSlug={tournament.slug}
-          onStreamMatchSaved={onStreamMatchSaved}
-        />
-      ))}
+      {visibleData.map((stage) =>
+        stage.kind === 'swiss' ? (
+          <SwissSection
+            key={stage.data.stage.id}
+            data={stage.data}
+            bracketStyles={bracketStyles}
+            isEditingMode={isAdmin}
+            onMatchResultSaved={refreshAfterMutation}
+            tournamentSlug={tournament.slug}
+            onStreamMatchSaved={onStreamMatchSaved}
+          />
+        ) : (
+          <BracketsSection
+            key={stage.data.stages[0].id}
+            data={stage.data}
+            bracketStyles={bracketStyles}
+            isEditingMode={isAdmin}
+            onMatchResultSaved={refreshAfterMutation}
+            visibleGroups={visibleGroups}
+            tournamentSlug={tournament.slug}
+            onStreamMatchSaved={onStreamMatchSaved}
+          />
+        )
+      )}
     </div>
   )
 }

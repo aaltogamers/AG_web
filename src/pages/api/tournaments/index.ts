@@ -12,6 +12,7 @@ import {
   Tournament,
   TournamentSummary,
   TournamentTeamCount,
+  normalizeTournamentOptions,
 } from '../../../types/types'
 
 type TournamentRow = {
@@ -20,6 +21,7 @@ type TournamentRow = {
   bracket_type: string
   team_count: number
   teams: string[]
+  options?: unknown
   data: BracketDatabaseSnapshot | null
   updated_at?: Date
   stream_match_id?: number | null
@@ -31,6 +33,7 @@ const rowToSummary = (r: TournamentRow): TournamentSummary => ({
   bracketType: r.bracket_type as BracketType,
   teamCount: r.team_count as TournamentTeamCount,
   teams: r.teams ?? [],
+  options: normalizeTournamentOptions(r.options),
   isStarted: isTournamentStarted(r.data ?? null),
 })
 
@@ -39,6 +42,7 @@ type CreateBody = {
   bracketType?: unknown
   teamCount?: unknown
   teams?: unknown
+  options?: unknown
 }
 
 const isAllowedBracketType = (t: unknown): t is BracketType =>
@@ -57,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const result = await pool.query(
-      `SELECT slug, name, bracket_type, team_count, teams, data
+      `SELECT slug, name, bracket_type, team_count, teams, options, data
        FROM tournaments ORDER BY created_at DESC`
     )
     return res
@@ -93,10 +97,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       const result = await pool.query(
-        `INSERT INTO tournaments (slug, name, bracket_type, team_count, teams, updated_at)
-         VALUES ($1, $2, $3, $4, $5::jsonb, now())
-         RETURNING slug, name, bracket_type, team_count, teams, data, updated_at, stream_match_id`,
-        [tournamentSlug, name, body.bracketType, body.teamCount, JSON.stringify(teams)]
+        `INSERT INTO tournaments (slug, name, bracket_type, team_count, teams, options, updated_at)
+         VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, now())
+         RETURNING slug, name, bracket_type, team_count, teams, options, data, updated_at, stream_match_id`,
+        [
+          tournamentSlug,
+          name,
+          body.bracketType,
+          body.teamCount,
+          JSON.stringify(teams),
+          JSON.stringify(normalizeTournamentOptions(body.options)),
+        ]
       )
       const row = result.rows[0] as TournamentRow
       const ua = row.updated_at

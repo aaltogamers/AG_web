@@ -251,6 +251,8 @@ export type BracketData = {
     gold: Set<Id>
   }
   streamMatchId: Id | null
+  bestOfByRoundId?: Record<Id, number>
+  placeholderParticipantIds?: Set<Id>
 }
 
 export type BracketStyles = {
@@ -278,13 +280,18 @@ export type BracketType =
   | 'single_elimination'
   | 'double_elimination'
   | 'double_elimination_to_top_4'
+  | 'swiss_to_single_elimination'
 
-export const TOURNAMENT_BRACKET_TYPES: BracketType[] = ['double_elimination_to_top_4']
+export const TOURNAMENT_BRACKET_TYPES: BracketType[] = [
+  'double_elimination_to_top_4',
+  'swiss_to_single_elimination',
+]
 
 export const BRACKET_TYPE_LABELS: Record<BracketType, string> = {
   single_elimination: 'Single Elimination',
   double_elimination: 'Double Elimination',
   double_elimination_to_top_4: 'Double Elimination with 4-team Final',
+  swiss_to_single_elimination: 'Swiss → Single Elimination',
 }
 
 export const getBracketTypeLabel = (type: BracketType): string => BRACKET_TYPE_LABELS[type] ?? type
@@ -292,12 +299,49 @@ export const getBracketTypeLabel = (type: BracketType): string => BRACKET_TYPE_L
 export const TOURNAMENT_TEAM_COUNTS = [16, 32] as const
 export type TournamentTeamCount = (typeof TOURNAMENT_TEAM_COUNTS)[number]
 
+export const SWISS_ROUND_OPTIONS = [3, 4, 5] as const
+export const SWISS_ADVANCE_COUNT_OPTIONS = [4, 8, 16] as const
+export const BEST_OF_OPTIONS = [1, 3, 5] as const
+
+export type TournamentOptions = {
+  swissRounds: (typeof SWISS_ROUND_OPTIONS)[number]
+  advanceCount: (typeof SWISS_ADVANCE_COUNT_OPTIONS)[number]
+  finalBestOf: (typeof BEST_OF_OPTIONS)[number]
+}
+
+export const DEFAULT_TOURNAMENT_OPTIONS: TournamentOptions = {
+  swissRounds: 3,
+  advanceCount: 16,
+  finalBestOf: 3,
+}
+
+const pickOption = <T extends number>(allowed: readonly T[], value: unknown, fallback: T): T =>
+  (allowed as readonly unknown[]).includes(value) ? (value as T) : fallback
+
+export const normalizeTournamentOptions = (raw: unknown): TournamentOptions => {
+  const o = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  return {
+    swissRounds: pickOption(
+      SWISS_ROUND_OPTIONS,
+      o.swissRounds,
+      DEFAULT_TOURNAMENT_OPTIONS.swissRounds
+    ),
+    advanceCount: pickOption(
+      SWISS_ADVANCE_COUNT_OPTIONS,
+      o.advanceCount,
+      DEFAULT_TOURNAMENT_OPTIONS.advanceCount
+    ),
+    finalBestOf: pickOption(BEST_OF_OPTIONS, o.finalBestOf, DEFAULT_TOURNAMENT_OPTIONS.finalBestOf),
+  }
+}
+
 export type TournamentSettings = {
   slug: string
   name: string
   bracketType: BracketType
   teamCount: TournamentTeamCount
   teams: string[]
+  options: TournamentOptions
 }
 
 // Exported snapshot of the BracketsManager database. We mirror the library's
@@ -311,6 +355,11 @@ export type BracketDatabaseSnapshot = {
   match_game: unknown[]
   participant: unknown[]
 }
+
+export const getFormatDescription = (t: TournamentSettings): string =>
+  t.bracketType === 'swiss_to_single_elimination'
+    ? `${getBracketTypeLabel(t.bracketType)} — up to ${t.teamCount} teams — ${t.options.swissRounds} Swiss rounds, top ${t.options.advanceCount} advance, final Bo${t.options.finalBestOf}`
+    : `${getBracketTypeLabel(t.bracketType)} — ${t.teamCount} teams`
 
 export type TournamentSummary = TournamentSettings & {
   isStarted: boolean

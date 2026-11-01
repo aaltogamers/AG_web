@@ -11,6 +11,7 @@ import {
   TournamentSummary,
   TournamentTeamCount,
   getBracketTypeLabel,
+  getFormatDescription,
 } from '../types/types'
 import { createTournament, deleteTournament, listTournaments } from '../utils/tournamentApi'
 
@@ -144,7 +145,7 @@ const TournamentList = () => {
                   {t.name}
                 </Link>
                 <span className="text-sm opacity-75">
-                  /{t.slug} — {getBracketTypeLabel(t.bracketType)} — {t.teamCount} teams —{' '}
+                  /{t.slug} — {getFormatDescription(t)} —{' '}
                   {t.isStarted ? 'started (locked)' : 'not started'}
                 </span>
               </div>

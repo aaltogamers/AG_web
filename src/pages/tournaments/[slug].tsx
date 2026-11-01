@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import PageWrapper from '../../components/PageWrapper'
 import TournamentBracketView, { defaultBracketStyles } from '../../components/TournamentBracketView'
 import TournamentSetup from '../../components/TournamentSetup'
-import { Tournament, getBracketTypeLabel } from '../../types/types'
+import { Tournament, getFormatDescription } from '../../types/types'
 import { checkAdminSession } from '../../utils/adminAuth'
 import { getTournament, getTournamentUpdatedAt, updateTournament } from '../../utils/tournamentApi'
 import makeBackgroundInvisible from '../../utils/makeBackgroundInvisible'
@@ -15,7 +15,9 @@ import {
   isStreamMode,
   parseStreamBracketStyles,
   parseStreamStageFilter,
+  shouldFitToScreen,
 } from '../../utils/streamMode'
+import FitToScreen from '../../components/FitToScreen'
 
 const TournamentPage = () => {
   const router = useRouter()
@@ -30,6 +32,7 @@ const TournamentPage = () => {
   const [restarting, setRestarting] = useState(false)
 
   const streamMode = router.isReady && isStreamMode(router.query)
+  const fitToScreen = router.isReady && shouldFitToScreen(router.query)
 
   const lastServerUpdatedAtRef = useRef<string | null>(null)
 
@@ -179,18 +182,21 @@ const TournamentPage = () => {
   // through the overlay.
   if (streamMode) {
     if (!tournament.data) return null
+    const streamBracket = (
+      <TournamentBracketView
+        tournament={tournament}
+        isAdmin={false}
+        bracketStyles={streamBracketStyles}
+        visibleStages={streamStageFilter.stageIndices}
+        visibleGroups={streamStageFilter.groups}
+      />
+    )
     return (
       <>
         <Head>
           <title>{tournament.name} - Aalto Gamers</title>
         </Head>
-        <TournamentBracketView
-          tournament={tournament}
-          isAdmin={false}
-          bracketStyles={streamBracketStyles}
-          visibleStages={streamStageFilter.stageIndices}
-          visibleGroups={streamStageFilter.groups}
-        />
+        {fitToScreen ? <FitToScreen>{streamBracket}</FitToScreen> : streamBracket}
       </>
     )
   }
@@ -215,7 +221,7 @@ const TournamentPage = () => {
           <div>
             <h1 className="text-4xl">{tournament.name}</h1>
             <p className="text-sm opacity-75">
-              {getBracketTypeLabel(tournament.bracketType)} — {tournament.teamCount} teams
+              {getFormatDescription(tournament)}
               {isAdmin &&
                 (tournament.isStarted ? ' — started (settings locked)' : ' — not started')}
             </p>

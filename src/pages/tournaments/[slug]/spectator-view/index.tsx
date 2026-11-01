@@ -1,20 +1,19 @@
 'use client'
-import type { Database } from 'brackets-manager'
-import { BracketsManager } from 'brackets-manager'
 import { Match, Status, type Id } from 'brackets-model'
-import { InMemoryDatabase } from 'brackets-memory-db'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import PageWrapper from '../../../../components/PageWrapper'
-import type { BracketData, Tournament } from '../../../../types/types'
+import type { Tournament } from '../../../../types/types'
+import { teamNameToShortName } from '../../../../utils/brackets'
 import {
-  getBracketsData,
-  getParticipantsById,
-  teamNameToShortName,
-} from '../../../../utils/brackets'
+  TournamentStageView,
+  findStageMatch,
+  importTournamentData,
+  loadTournamentStages,
+} from '../../../../utils/tournamentStages'
 import makeBackgroundInvisible from '../../../../utils/makeBackgroundInvisible'
 import { isStreamMode, shouldFlipTeams } from '../../../../utils/streamMode'
 import { getTournament, getTournamentUpdatedAt } from '../../../../utils/tournamentApi'
@@ -27,23 +26,16 @@ const OVERLAY_TEAM_CONTAINER_ID = 'team-container'
 const POLL_MS = 2000
 
 function findStreamMatch(
-  brackets: BracketData[],
+  stages: TournamentStageView[],
   streamMatchId: number | null
 ): { name1: string; name2: string; match: Match | null } {
   if (streamMatchId == null) return { name1: '', name2: '', match: null }
-  const id = streamMatchId as Id
-  for (const bd of brackets) {
-    const match = bd.matches.find((m) => m.id === id)
-    if (!match) continue
-    const participantsById = getParticipantsById(bd)
-    const name1 =
-      match.opponent1?.id != null ? (participantsById[match.opponent1.id]?.name ?? '') : ''
-    const name2 =
-      match.opponent2?.id != null ? (participantsById[match.opponent2.id]?.name ?? '') : ''
-
-    return { name1, name2, match }
-  }
-  return { name1: '', name2: '', match: null }
+  const found = findStageMatch(stages, streamMatchId as Id)
+  if (!found) return { name1: '', name2: '', match: null }
+  const { match, participants } = found
+  const nameOf = (id: Id | null | undefined) =>
+    id != null ? (participants.find((p) => p.id === id)?.name ?? '') : ''
+  return { name1: nameOf(match.opponent1?.id), name2: nameOf(match.opponent2?.id), match }
 }
 
 const SpectatorViewScore = ({
@@ -174,21 +166,9 @@ const SpectatorViewPage = () => {
         return
       }
 
-      const storage = new InMemoryDatabase()
-      const manager = new BracketsManager(storage)
-
       try {
-        await manager.import(tournament.data as unknown as Database)
-        const stages = (tournament.data.stage ?? []) as { id: number }[]
-        if (stages.length < 2) throw new Error('Bracket data is incomplete (missing stages).')
-
-        const bracketBundle = await getBracketsData(
-          manager,
-          stages[0].id,
-          stages[1].id,
-          tournament.teamCount,
-          tournament.streamMatchId ?? null
-        )
+        const manager = await importTournamentData(tournament)
+        const bracketBundle = await loadTournamentStages(manager, tournament)
         if (cancelled) return
 
         const { name1, name2, match } = findStreamMatch(
@@ -211,7 +191,7 @@ const SpectatorViewPage = () => {
     return () => {
       cancelled = true
     }
-  }, [tournament?.data, tournament?.teamCount, tournament?.streamMatchId, tournament?.updatedAt])
+  }, [tournament])
 
   const streamUrl = useMemo(() => {
     if (!slug || !origin) return ''

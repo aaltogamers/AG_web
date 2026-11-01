@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import PageWrapper from '../../components/PageWrapper'
 import AdminLoginForm from '../../components/AdminLoginForm'
@@ -34,9 +35,14 @@ const TournamentsAdminPage = () => {
           <>
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-4xl">Tournaments</h2>
-              <button type="button" className="borderbutton" onClick={onLogout}>
-                Log out
-              </button>
+              <div className="flex gap-2">
+                <Link href="/tournaments/info" className="borderbutton">
+                  Public info page
+                </Link>
+                <button type="button" className="borderbutton" onClick={onLogout}>
+                  Log out
+                </button>
+              </div>
             </div>
             <TournamentList />
           </>

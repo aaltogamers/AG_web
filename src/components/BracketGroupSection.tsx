@@ -1,11 +1,9 @@
 import { useState, useCallback } from 'react'
 import type { Id, Match, Participant, Round } from 'brackets-model'
 import { Status } from 'brackets-model'
-import { BracketsManager } from 'brackets-manager'
-import { useForm, SubmitHandler } from 'react-hook-form'
 
 import MatchResultRow from './BracketMatchResultRow'
-import Dialog from './Dialog'
+import BracketMatchEditDialog, { type MatchResultInput } from './BracketMatchEditDialog'
 import type { BracketData, BracketStyles, Tournament } from '../types/types'
 import {
   getGroupHasFinal,
@@ -14,155 +12,8 @@ import {
   roundToLabel,
   updateMatchResult,
 } from '../utils/brackets'
-import { updateTournament } from '../utils/tournamentApi'
 import { FaPen } from 'react-icons/fa'
-import ThreeDotMenu from './ThreeDotMenu'
 import TwitchLogo from './TwitchLogo'
-
-type RenameTeamDialogProps = {
-  participantId: Id
-  participantName: string
-  manager: BracketsManager
-  onClose: () => void
-  onRenamed: () => Promise<void> | void
-}
-
-const RenameTeamDialog = ({
-  participantId,
-  participantName,
-  manager,
-  onClose,
-  onRenamed,
-}: RenameTeamDialogProps) => {
-  const [draft, setDraft] = useState(participantName)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const save = async () => {
-    const trimmed = draft.trim()
-    if (!trimmed) {
-      setError('Name cannot be empty.')
-      return
-    }
-    if (trimmed === participantName) {
-      onClose()
-      return
-    }
-    setBusy(true)
-    setError(null)
-    try {
-      const existing = (await manager.storage.select(
-        'participant',
-        participantId
-      )) as Participant | null
-      if (!existing) {
-        setError('Participant not found.')
-        return
-      }
-      await manager.storage.update('participant', participantId, {
-        ...existing,
-        name: trimmed,
-      })
-      await onRenamed()
-      onClose()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to rename.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <Dialog title="Rename team" onClose={onClose} busy={busy} zClass="z-[60]">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          void save()
-        }}
-        className="flex flex-col gap-4"
-      >
-        <label className="flex flex-col gap-1">
-          <span>Team name</span>
-          <input
-            type="text"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            className="p-2 rounded-md bg-white text-black"
-            autoFocus
-            disabled={busy}
-          />
-        </label>
-
-        {error != null && (
-          <p className="text-red text-center" role="alert">
-            {error}
-          </p>
-        )}
-
-        <div className="flex flex-wrap gap-3 justify-center pt-2">
-          <button type="button" className="borderbutton" onClick={onClose} disabled={busy}>
-            Cancel
-          </button>
-          <button type="submit" className="mainbutton" disabled={busy}>
-            {busy ? 'Saving…' : 'Save'}
-          </button>
-        </div>
-      </form>
-    </Dialog>
-  )
-}
-
-type ParticipantNameEditorProps = {
-  participantId: Id | null | undefined
-  participantName: string | undefined
-  manager: BracketsManager
-  onRenamed: () => Promise<void> | void
-}
-
-const ParticipantNameEditor = ({
-  participantId,
-  participantName,
-  manager,
-  onRenamed,
-}: ParticipantNameEditorProps) => {
-  const [dialogOpen, setDialogOpen] = useState(false)
-
-  if (participantId == null) {
-    return <span>{participantName ?? 'TBD'}</span>
-  }
-
-  return (
-    <>
-      <span className="flex items-center gap-2">
-        <span>{participantName ?? 'TBD'}</span>
-        <button
-          type="button"
-          className="opacity-60 hover:opacity-100"
-          onClick={() => setDialogOpen(true)}
-          aria-label="Rename team"
-          title="Rename team"
-        >
-          <FaPen />
-        </button>
-      </span>
-      {dialogOpen && (
-        <RenameTeamDialog
-          participantId={participantId}
-          participantName={participantName ?? ''}
-          manager={manager}
-          onClose={() => setDialogOpen(false)}
-          onRenamed={onRenamed}
-        />
-      )}
-    </>
-  )
-}
-
-type EditMatchFormValues = {
-  score1: string
-  score2: string
-  inProgress: boolean
-}
 
 type Props = {
   groupLabel: string
@@ -193,127 +44,27 @@ const GroupSection = ({
   const baseGap = bracketStyles.teamGapY
 
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [streamSaving, setStreamSaving] = useState(false)
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setError,
-    formState: { errors },
-  } = useForm<EditMatchFormValues>({
-    defaultValues: { score1: '', score2: '', inProgress: false },
-  })
-
-  const openEditDialog = useCallback(
-    (match: Match) => {
-      setSelectedMatch(match)
-
-      const hasScores = match.opponent1?.score != null || match.opponent2?.score != null
-
-      const isCompleted = match.status === Status.Completed || match.status === Status.Archived
-
-      reset({
-        score1: String(match.opponent1?.score ?? ''),
-        score2: String(match.opponent2?.score ?? ''),
-        inProgress: hasScores ? !isCompleted : false,
-      })
-    },
-    [reset]
-  )
+  const openEditDialog = useCallback((match: Match) => setSelectedMatch(match), [])
 
   const closeDialog = useCallback(() => {
     setSelectedMatch(null)
   }, [])
 
-  const onSubmit: SubmitHandler<EditMatchFormValues> = useCallback(
-    async (data) => {
+  const saveResult = useCallback(
+    async (result: MatchResultInput) => {
       if (!selectedMatch) return
-
-      if (!data.inProgress) {
-        const s1 = data.score1.trim() === '' ? NaN : Number(data.score1)
-        const s2 = data.score2.trim() === '' ? NaN : Number(data.score2)
-        if (Number.isNaN(s1) || Number.isNaN(s2)) {
-          setError('root', { message: 'Please enter valid numbers for both scores.' })
-          return
-        }
-        if (s1 < 0 || s2 < 0) {
-          setError('root', { message: 'Scores cannot be negative.' })
-          return
-        }
-      }
-
-      setSaving(true)
-      try {
-        await updateMatchResult(bracketData.manager, {
-          matchId: selectedMatch.id,
-          score1: data.inProgress ? Number(data.score1) || 0 : Number(data.score1),
-          score2: data.inProgress ? Number(data.score2) || 0 : Number(data.score2),
-          inProgress: data.inProgress,
-        })
-
-        await onMatchResultSaved?.()
-        closeDialog()
-      } catch (err) {
-        setError('root', {
-          message: err instanceof Error ? err.message : 'Failed to save match result.',
-        })
-      } finally {
-        setSaving(false)
-      }
+      await updateMatchResult(bracketData.manager, { matchId: selectedMatch.id, ...result })
+      await onMatchResultSaved?.()
     },
-    [selectedMatch, bracketData.manager, onMatchResultSaved, closeDialog, setError]
+    [selectedMatch, bracketData.manager, onMatchResultSaved]
   )
 
-  const handleReset = useCallback(async () => {
+  const resetResult = useCallback(async () => {
     if (!selectedMatch) return
-
-    try {
-      await resetMatchResult(bracketData.manager, selectedMatch.id)
-      await onMatchResultSaved?.()
-      closeDialog()
-    } catch (err) {
-      setError('root', {
-        message: err instanceof Error ? err.message : 'Failed to reset match result.',
-      })
-    }
-  }, [selectedMatch, bracketData.manager, onMatchResultSaved, closeDialog, setError])
-
-  const handleStreamGameToggle = useCallback(async () => {
-    if (!selectedMatch) return
-
-    const matchNum = Number(selectedMatch.id)
-    if (!Number.isInteger(matchNum) || matchNum < 0) {
-      setError('root', { message: 'Invalid match id.' })
-      return
-    }
-
-    const isCurrentStream =
-      bracketData.streamMatchId != null && Number(bracketData.streamMatchId) === matchNum
-
-    setStreamSaving(true)
-    try {
-      const updated = await updateTournament(tournamentSlug, {
-        streamMatchId: isCurrentStream ? null : matchNum,
-      })
-      onStreamMatchSaved?.(updated)
-      closeDialog()
-    } catch (err) {
-      setError('root', {
-        message: err instanceof Error ? err.message : 'Failed to update stream game.',
-      })
-    } finally {
-      setStreamSaving(false)
-    }
-  }, [
-    selectedMatch,
-    bracketData.streamMatchId,
-    tournamentSlug,
-    onStreamMatchSaved,
-    closeDialog,
-    setError,
-  ])
+    await resetMatchResult(bracketData.manager, selectedMatch.id)
+    await onMatchResultSaved?.()
+  }, [selectedMatch, bracketData.manager, onMatchResultSaved])
 
   const groupHasFinal = getGroupHasFinal(groupLabel, roundsByGroup, matchesByRound)
 
@@ -324,86 +75,24 @@ const GroupSection = ({
       (selectedMatch.status === Status.Running &&
         (selectedMatch.opponent1?.score != null || selectedMatch.opponent2?.score != null)))
 
-  const possibleActions = [
-    ...(isResettable ? [{ label: 'Reset match', onClick: () => handleReset() }] : []),
-    {
-      label:
-        selectedMatch?.id === bracketData.streamMatchId
-          ? 'Unmark as stream game'
-          : 'Mark as stream game',
-      onClick: () => handleStreamGameToggle(),
-    },
-  ]
-
-  const dialogTitle = (
-    <div className="flex items-center gap-2">
-      Edit match {selectedMatch?.id}
-      {selectedMatch?.id === bracketData.streamMatchId && <TwitchLogo size={24} />}
-    </div>
-  )
-
   return (
     <div className="flex flex-row " style={{ color: bracketStyles.textColor }}>
       {selectedMatch != null && (
-        <Dialog title={dialogTitle} onClose={closeDialog} busy={saving || streamSaving}>
-          <ThreeDotMenu items={possibleActions}></ThreeDotMenu>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-            <label className="flex flex-col gap-1">
-              <ParticipantNameEditor
-                participantId={selectedMatch.opponent1?.id ?? null}
-                participantName={participantsById[selectedMatch.opponent1?.id ?? -1]?.name}
-                manager={bracketData.manager}
-                onRenamed={async () => {
-                  await onMatchResultSaved?.()
-                }}
-              />
-              <input
-                type="number"
-                min={0}
-                {...register('score1')}
-                className="p-2 rounded-md bg-white text-black"
-              />
-            </label>
-
-            <label className="flex flex-col gap-1">
-              <ParticipantNameEditor
-                participantId={selectedMatch.opponent2?.id ?? null}
-                participantName={participantsById[selectedMatch.opponent2?.id ?? -1]?.name}
-                manager={bracketData.manager}
-                onRenamed={async () => {
-                  await onMatchResultSaved?.()
-                }}
-              />
-              <input
-                type="number"
-                min={0}
-                {...register('score2')}
-                className="p-2 rounded-md bg-white text-black"
-              />
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" {...register('inProgress')} />
-              <span>Match still in progress</span>
-            </label>
-
-            {errors.root?.message != null && (
-              <p className="text-red text-center" role="alert">
-                {errors.root.message}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-3 justify-center pt-2">
-              <button type="button" className="borderbutton" onClick={closeDialog}>
-                Cancel
-              </button>
-
-              <button type="submit" disabled={saving || streamSaving} className="mainbutton">
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </form>
-        </Dialog>
+        <BracketMatchEditDialog
+          match={selectedMatch}
+          participantsById={participantsById}
+          manager={bracketData.manager}
+          streamMatchId={bracketData.streamMatchId}
+          tournamentSlug={tournamentSlug}
+          isResettable={!!isResettable}
+          onClose={closeDialog}
+          saveResult={saveResult}
+          resetResult={resetResult}
+          onRenamed={async () => {
+            await onMatchResultSaved?.()
+          }}
+          onStreamMatchSaved={onStreamMatchSaved}
+        />
       )}
       {roundsByGroup[groupLabel]?.map((round, i) => {
         if (isRoundAllBye(round, matchesByRound)) return null
@@ -468,7 +157,13 @@ const GroupSection = ({
                 fontSize: bracketStyles.titleFontSize,
               }}
             >
-              {roundToLabel(round, matchesByRound, groupHasFinal, visibleRoundNumber)}
+              {roundToLabel(round, groupLabel, matchesByRound, groupHasFinal, visibleRoundNumber)}
+              {(bracketData.bestOfByRoundId?.[round.id] ?? 1) > 1 && (
+                <span style={{ fontSize: '0.6em', opacity: 0.75 }}>
+                  {' '}
+                  Bo{bracketData.bestOfByRoundId?.[round.id]}
+                </span>
+              )}
             </h3>
             <div
               className="flex flex-col"
@@ -486,6 +181,8 @@ const GroupSection = ({
                   isBye ||
                   match.opponent1?.id == null ||
                   match.opponent2?.id == null ||
+                  !!bracketData.placeholderParticipantIds?.has(match.opponent1.id) ||
+                  !!bracketData.placeholderParticipantIds?.has(match.opponent2.id) ||
                   (match.status === Status.Archived && !bracketData.matchIds.gold?.has(match.id))
 
                 const prevMatches = bracketData.prevMatches[match.id]

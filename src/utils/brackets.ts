@@ -85,20 +85,24 @@ export const getParticipantsById = (data: BracketData): Record<Id, Participant> 
   return participantsById
 }
 
-// TODO: Make support more than double elim -> single elim
-export const groupToLabel = (groupId: Id): RoundLabel => {
-  switch (groupId) {
-    case 0:
-      return 'Upper'
-    case 1:
-      return 'Lower'
-    case 2:
-      return `Final`
-    case 3:
-      return 'Upper'
-    default:
-      return `Unknown`
+const DOUBLE_ELIMINATION_GROUP_LABELS: Record<number, RoundLabel> = {
+  1: 'Upper',
+  2: 'Lower',
+  3: 'Final',
+}
+
+export const groupToLabel = (
+  data: Pick<BracketData, 'groups' | 'stages'>,
+  groupId: Id
+): RoundLabel => {
+  const group = data.groups.find((g) => g.id === groupId)
+  const stage = group && data.stages.find((s) => s.id === group.stage_id)
+  if (!group || !stage) return 'Unknown'
+  if (stage.type === 'double_elimination') {
+    return DOUBLE_ELIMINATION_GROUP_LABELS[group.number] ?? 'Unknown'
   }
+  if (stage.type === 'single_elimination' && group.number === 1) return 'Upper'
+  return 'Unknown'
 }
 
 export const getGroupHasFinal = (
@@ -113,12 +117,11 @@ export const getGroupHasFinal = (
 
 export const roundToLabel = (
   round: Round,
+  groupLabel: string,
   matchesByRound: Record<Id, Match[]>,
   groupHasFinal: boolean,
   visibleRoundNumber: number = round.number
 ) => {
-  const groupLabel = groupToLabel(round.group_id)
-
   if (groupLabel === 'Final') {
     return groupLabel
   }
@@ -228,7 +231,7 @@ export const getRoundsByGroup = (data: BracketData) => {
   const roundsByGroup: Partial<Record<RoundLabel, Round[]>> = {}
 
   for (const round of data.rounds) {
-    const groupLabel = groupToLabel(round.group_id)
+    const groupLabel = groupToLabel(data, round.group_id)
 
     if (!roundsByGroup[groupLabel]) {
       roundsByGroup[groupLabel] = []
@@ -273,8 +276,8 @@ const getQualifierFeederMatches = (qualifierData: BracketData): Match[] => {
     qualifierData.matchIds?.qualifying?.has(match.id)
   )
   feeders.sort((a, b) => {
-    const groupOrderA = groupToLabel(a.group_id) === 'Upper' ? 0 : 1
-    const groupOrderB = groupToLabel(b.group_id) === 'Upper' ? 0 : 1
+    const groupOrderA = groupToLabel(qualifierData, a.group_id) === 'Upper' ? 0 : 1
+    const groupOrderB = groupToLabel(qualifierData, b.group_id) === 'Upper' ? 0 : 1
     if (groupOrderA !== groupOrderB) return groupOrderA - groupOrderB
     return a.number - b.number
   })
@@ -345,6 +348,15 @@ export const getBracketData = async (
   stageId: Id,
   teamCount: 8 | 16 | 32 | 64,
   streamMatchId: Id | null = null
+): Promise<BracketData> =>
+  getEliminationBracketData(manager, stageId, MATCH_IDS[teamCount], streamMatchId)
+
+export const getEliminationBracketData = async (
+  manager: BracketsManager,
+  stageId: Id,
+  matchIds: BracketData['matchIds'],
+  streamMatchId: Id | null = null,
+  extra: Pick<BracketData, 'bestOfByRoundId' | 'placeholderParticipantIds'> = {}
 ): Promise<BracketData> => {
   const {
     group: groups,
@@ -355,7 +367,6 @@ export const getBracketData = async (
     stage: stages,
   } = await manager.get.stageData(stageId)
 
-  const matchIds = MATCH_IDS[teamCount]
   const matchIdsToSkip = matchIds.skip || new Set<Id>()
 
   const filteredMatches = (matches ?? []).filter((match) => !matchIdsToSkip.has(match.id))
@@ -377,6 +388,7 @@ export const getBracketData = async (
     siblingMatches,
     matchIds,
     streamMatchId,
+    ...extra,
   }
 }
 

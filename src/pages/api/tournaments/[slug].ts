@@ -11,6 +11,7 @@ import {
   TOURNAMENT_TEAM_COUNTS,
   Tournament,
   TournamentTeamCount,
+  normalizeTournamentOptions,
 } from '../../../types/types'
 
 type TournamentRow = {
@@ -19,6 +20,7 @@ type TournamentRow = {
   bracket_type: string
   team_count: number
   teams: string[]
+  options: unknown
   data: BracketDatabaseSnapshot | null
   updated_at: Date
   stream_match_id: number | null
@@ -36,6 +38,7 @@ const rowToTournament = (r: TournamentRow): Tournament => ({
   bracketType: r.bracket_type as BracketType,
   teamCount: r.team_count as TournamentTeamCount,
   teams: r.teams ?? [],
+  options: normalizeTournamentOptions(r.options),
   data: r.data ?? null,
   isStarted: isTournamentStarted(r.data ?? null),
   updatedAt: updatedAtToIso(r.updated_at),
@@ -47,6 +50,7 @@ type PutBody = {
   bracketType?: unknown
   teamCount?: unknown
   teams?: unknown
+  options?: unknown
   // `data: null` clears the built bracket; an object overwrites it.
   data?: unknown
   streamMatchId?: unknown
@@ -80,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const result = await pool.query(
-      `SELECT slug, name, bracket_type, team_count, teams, data, updated_at, stream_match_id
+      `SELECT slug, name, bracket_type, team_count, teams, options, data, updated_at, stream_match_id
        FROM tournaments WHERE slug = $1`,
       [slug]
     )
@@ -98,7 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await client.query('BEGIN')
 
       const existingRes = await client.query(
-        `SELECT slug, name, bracket_type, team_count, teams, data, updated_at, stream_match_id
+        `SELECT slug, name, bracket_type, team_count, teams, options, data, updated_at, stream_match_id
          FROM tournaments WHERE slug = $1 FOR UPDATE`,
         [slug]
       )
@@ -120,7 +124,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         body.name !== undefined ||
         body.bracketType !== undefined ||
         body.teamCount !== undefined ||
-        body.teams !== undefined
+        body.teams !== undefined ||
+        body.options !== undefined
 
       if (wasStarted && isSettingsChange) {
         await client.query('ROLLBACK')
@@ -175,6 +180,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updates.push(`teams = $${params.length}::jsonb`)
       }
 
+      if (body.options !== undefined) {
+        if (!body.options || typeof body.options !== 'object') {
+          await client.query('ROLLBACK')
+          return res.status(400).json({ error: 'Invalid options' })
+        }
+        params.push(JSON.stringify(normalizeTournamentOptions(body.options)))
+        updates.push(`options = $${params.length}::jsonb`)
+      }
+
       if (body.data !== undefined) {
         if (body.data === null) {
           updates.push(`data = NULL`)
@@ -224,7 +238,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         result = await client.query(
           `UPDATE tournaments SET ${updates.join(', ')} WHERE slug = $${params.length}
-           RETURNING slug, name, bracket_type, team_count, teams, data, updated_at, stream_match_id`,
+           RETURNING slug, name, bracket_type, team_count, teams, options, data, updated_at, stream_match_id`,
           params
         )
       } catch (err) {

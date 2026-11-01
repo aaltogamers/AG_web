@@ -2,6 +2,7 @@ import type {
   BracketDatabaseSnapshot,
   BracketType,
   Tournament,
+  TournamentOptions,
   TournamentSummary,
   TournamentTeamCount,
 } from '../types/types'
@@ -11,6 +12,7 @@ export type CreateTournamentPayload = {
   bracketType: BracketType
   teamCount: TournamentTeamCount
   teams?: string[]
+  options?: TournamentOptions
 }
 
 export type UpdateTournamentSettingsPayload = {
@@ -18,6 +20,7 @@ export type UpdateTournamentSettingsPayload = {
   bracketType?: BracketType
   teamCount?: TournamentTeamCount
   teams?: string[]
+  options?: TournamentOptions
   // Pass `null` to clear the built bracket (e.g. when changing settings before
   // start), or a full exported snapshot to overwrite.
   data?: BracketDatabaseSnapshot | null

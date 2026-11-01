@@ -49,6 +49,8 @@ export const isStreamMode = (query: ParsedUrlQuery): boolean =>
 
 export const shouldFlipTeams = (query: ParsedUrlQuery): boolean => query.flip !== undefined
 
+export const shouldFitToScreen = (query: ParsedUrlQuery): boolean => query.fit !== undefined
+
 const normalizeColor = (raw: string): string => {
   const trimmed = raw.trim()
   if (!trimmed) return trimmed
@@ -92,12 +94,14 @@ export const parseStreamBracketStyles = (
  *   - `winners` / `upper` — qualifier stage, Upper only.
  *   - `losers` / `lower` — qualifier stage, Lower only.
  *   - `finals` — finals stage only.
+ *   - `swiss` / `playoffs` — aliases of `qualifier` / `finals` for Swiss tournaments.
  */
 export const parseStreamStageFilter = (query: ParsedUrlQuery): StreamStageFilter => {
   const raw = getStringParam(query, 'stage')?.toLowerCase().trim()
   if (!raw || raw === 'all') return {}
   switch (raw) {
     case 'qualifier':
+    case 'swiss':
       return { stageIndices: [0] }
     case 'winners':
     case 'upper':
@@ -106,6 +110,7 @@ export const parseStreamStageFilter = (query: ParsedUrlQuery): StreamStageFilter
     case 'lower':
       return { stageIndices: [0], groups: ['Lower'] }
     case 'finals':
+    case 'playoffs':
       return { stageIndices: [1] }
     default:
       return {}
@@ -141,10 +146,17 @@ export const buildStreamParamDocs = (defaults: BracketStyles): StreamParamDoc[] 
   {
     name: 'stage',
     description:
-      'Which part of the bracket to show. One of: all, qualifier, winners (alias: upper), losers (alias: lower), finals.',
+      'Which part of the bracket to show. One of: all, qualifier, winners (alias: upper), losers (alias: lower), finals. For Swiss tournaments: swiss, playoffs.',
     type: 'enum',
     example: 'stage=winners',
     defaultValue: 'all',
+  },
+  {
+    name: 'fit',
+    description:
+      'Scales the bracket to exactly fit the browser window / OBS browser source, so the whole bracket is always visible.',
+    type: 'flag',
+    example: 'fit=1',
   },
   ...(
     [

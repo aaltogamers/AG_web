@@ -25,7 +25,16 @@ import {
 } from '../../../utils/streamConfigApi'
 import { getTournament } from '../../../utils/tournamentApi'
 
-const STAGE_OPTIONS = ['', 'all', 'qualifier', 'winners', 'losers', 'finals'] as const
+const STAGE_OPTIONS = [
+  '',
+  'all',
+  'qualifier',
+  'winners',
+  'losers',
+  'finals',
+  'swiss',
+  'playoffs',
+] as const
 
 const STREAM_FLAGS = new Set(['stream', 'fullscreen'])
 
@@ -37,7 +46,7 @@ const queryStringToFormValues = (query: string): Record<string, string> => {
   const out: Record<string, string> = {}
   params.forEach((value, key) => {
     if (STREAM_FLAGS.has(key)) return
-    out[key] = value
+    out[key] = key === 'fit' && value === '' ? '1' : value
   })
   return out
 }
@@ -266,6 +275,17 @@ const StreamCustomizationPage = () => {
         </select>
       )
     }
+    if (doc.type === 'flag') {
+      return (
+        <input
+          id={inputId}
+          type="checkbox"
+          checked={value !== ''}
+          onChange={(e) => updateValue(doc.name, e.target.checked ? '1' : '')}
+          className="w-5 h-5"
+        />
+      )
+    }
     if (doc.type === 'number') {
       return (
         <input
@@ -339,10 +359,7 @@ const StreamCustomizationPage = () => {
                   key={doc.name}
                   className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3"
                 >
-                  <label
-                    htmlFor={`param-${doc.name}`}
-                    className="font-mono text-sm w-40 shrink-0"
-                  >
+                  <label htmlFor={`param-${doc.name}`} className="font-mono text-sm w-40 shrink-0">
                     {doc.name}
                   </label>
                   <div className="w-full md:w-64 shrink-0">{inputForDoc(doc)}</div>
@@ -354,9 +371,7 @@ const StreamCustomizationPage = () => {
             <div className="mb-4">
               <div className="text-sm mb-1">Generated URL</div>
               <div className="flex flex-wrap items-center gap-2">
-                <code className="font-mono text-sm break-all flex-1 min-w-0">
-                  {generatedUrl}
-                </code>
+                <code className="font-mono text-sm break-all flex-1 min-w-0">{generatedUrl}</code>
                 <button
                   type="button"
                   className="borderbutton"
@@ -443,9 +458,7 @@ const StreamCustomizationPage = () => {
                       >
                         <div className="min-w-0">
                           <div className="text-xl">{cfg.name}</div>
-                          <div className="text-sm opacity-75 font-mono truncate">
-                            ?{cfg.query}
-                          </div>
+                          <div className="text-sm opacity-75 font-mono truncate">?{cfg.query}</div>
                         </div>
                         <div className="flex gap-2 flex-wrap">
                           <button
