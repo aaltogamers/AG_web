@@ -27,7 +27,7 @@ Teams are seeded by expected skill (seed 1 = strongest). Good seeds meet weaker 
 - Round 1: the top half of seeds plays the bottom half (e.g. with 16 teams: 1st vs 9th, 2nd vs 10th, etc.).
 - After that, you play a team with the same record (e.g. 1–0 vs 1–0), never the same team twice.
 - With an odd number of teams, one team gets a BYE each round, which counts as a win.
-- **Standings:** wins, then Buchholz (the total wins of all your opponents, so beating strong teams helps), then seed.
+- **Standings:** wins, then Buchholz (the total wins of all your opponents, so beating strong teams helps), then round difference (rounds won minus rounds lost), then seed.
 - **Playoffs:** the top teams (e.g. 16) go to a single elimination bracket, seeded by standings (1st vs 16th, etc.). One loss and you're out. The final can be longer (e.g. Bo3).
 `
 

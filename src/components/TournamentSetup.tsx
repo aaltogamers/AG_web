@@ -308,8 +308,8 @@ const TournamentSetup = ({ tournament, onChanged }: Props) => {
               </p>
               <p>
                 After the Swiss rounds, the top {options.advanceCount} teams (by wins, then
-                Buchholz, then seed) advance to a single elimination playoff, seeded 1st vs{' '}
-                {options.advanceCount}th, etc.
+                Buchholz, then round difference, then seed) advance to a single elimination playoff,
+                seeded 1st vs {options.advanceCount}th, etc.
               </p>
               <p>
                 Empty slots are skipped. With an odd number of teams, one team gets a free win (BYE)

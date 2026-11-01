@@ -233,7 +233,7 @@ const SwissSection = ({
               <Fragment key={standing.participantId}>
                 <div
                   className="flex flex-row items-stretch rounded-sm overflow-hidden"
-                  title={`Buchholz ${standing.buchholz}`}
+                  title={`Buchholz ${standing.buchholz}, round difference ${standing.roundDiff > 0 ? '+' : ''}${standing.roundDiff}`}
                   style={{
                     height: bracketStyles.teamHeight,
                     lineHeight: `${bracketStyles.teamHeight}px`,

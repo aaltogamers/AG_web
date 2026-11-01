@@ -13,6 +13,7 @@ export type SwissStanding = SwissRecord & {
   participantId: Id
   seed: number
   buchholz: number
+  roundDiff: number
   rank: number
 }
 
@@ -30,7 +31,7 @@ export type SwissData = {
   streamMatchId: Id | null
 }
 
-type TeamState = SwissRecord & { seed: number; opponents: Id[]; byes: number }
+type TeamState = SwissRecord & { seed: number; opponents: Id[]; byes: number; roundDiff: number }
 
 type SwissStage = {
   stage: Stage
@@ -98,7 +99,7 @@ const loadSwissStage = async (manager: BracketsManager, stageId: Id): Promise<Sw
 const computeTeamStates = (swiss: SwissStage, roundCount: number): Map<Id, TeamState> => {
   const states = new Map<Id, TeamState>()
   swiss.seedIds.forEach((id, seed) =>
-    states.set(id, { wins: 0, losses: 0, seed, opponents: [], byes: 0 })
+    states.set(id, { wins: 0, losses: 0, seed, opponents: [], byes: 0, roundDiff: 0 })
   )
   for (const round of swiss.rounds.slice(0, roundCount)) {
     for (const match of swiss.matchesByRound[round.id]) {
@@ -118,8 +119,11 @@ const computeTeamStates = (swiss: SwissStage, roundCount: number): Map<Id, TeamS
       states.get(id2)?.opponents.push(id1)
       if (winnerId == null) continue
       const loserId = winnerId === id1 ? id2 : id1
+      const diff = Math.abs((match.opponent1?.score ?? 0) - (match.opponent2?.score ?? 0))
       states.get(winnerId)!.wins++
+      states.get(winnerId)!.roundDiff += diff
       states.get(loserId)!.losses++
+      states.get(loserId)!.roundDiff -= diff
     }
   }
   return states
@@ -132,10 +136,16 @@ const rankTeams = (states: Map<Id, TeamState>): SwissStanding[] => {
     wins: s.wins,
     losses: s.losses,
     buchholz: s.opponents.reduce<number>((sum, opp) => sum + (states.get(opp)?.wins ?? 0), 0),
+    roundDiff: s.roundDiff,
     rank: 0,
   }))
   standings.sort(
-    (a, b) => b.wins - a.wins || a.losses - b.losses || b.buchholz - a.buchholz || a.seed - b.seed
+    (a, b) =>
+      b.wins - a.wins ||
+      a.losses - b.losses ||
+      b.buchholz - a.buchholz ||
+      b.roundDiff - a.roundDiff ||
+      a.seed - b.seed
   )
   standings.forEach((s, i) => (s.rank = i + 1))
   return standings
@@ -415,7 +425,10 @@ export const createSwissBracket = async (
     .map((p) => p.id)
     .filter((id) => !placeholderIds.includes(id))
   const states = new Map<Id, TeamState>(
-    allIds.map((id, seed) => [id, { wins: 0, losses: 0, seed, opponents: [], byes: 0 }])
+    allIds.map((id, seed) => [
+      id,
+      { wins: 0, losses: 0, seed, opponents: [], byes: 0, roundDiff: 0 },
+    ])
   )
   await writePairing(manager, swiss.matchesByRound[swiss.rounds[0].id], computePairing(states))
 
