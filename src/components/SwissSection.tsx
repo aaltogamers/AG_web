@@ -32,10 +32,32 @@ const getPools = (data: SwissData, roundIndex: number): Pool[] => {
   if (!isPaired) return [{ label: null, matches }]
 
   const records = data.recordsBeforeRound[round.id] ?? {}
+  const recordOf = (match: Match) =>
+    match.opponent1?.id != null ? records[match.opponent1.id] : undefined
+  const labelOf = (match: Match) => {
+    const record = recordOf(match)
+    return record ? `${record.wins}–${record.losses}` : null
+  }
+
+  const ordered = matches.filter((m) => !isSwissBye(m))
+  const bye = matches.find(isSwissBye)
+  if (bye) {
+    const byeLabel = labelOf(bye)
+    const byeWins = recordOf(bye)?.wins ?? -1
+    const lastSameGroup = ordered.findLastIndex((m) => labelOf(m) === byeLabel)
+    const firstLowerGroup = ordered.findIndex((m) => (recordOf(m)?.wins ?? -1) < byeWins)
+    const insertAt =
+      lastSameGroup >= 0
+        ? lastSameGroup + 1
+        : firstLowerGroup >= 0
+          ? firstLowerGroup
+          : ordered.length
+    ordered.splice(insertAt, 0, bye)
+  }
+
   const pools: Pool[] = []
-  for (const match of matches) {
-    const record = match.opponent1?.id != null ? records[match.opponent1.id] : undefined
-    const label = isSwissBye(match) ? 'Bye' : record ? `${record.wins}–${record.losses}` : null
+  for (const match of ordered) {
+    const label = labelOf(match)
     const last = pools[pools.length - 1]
     if (last && last.label === label) last.matches.push(match)
     else pools.push({ label, matches: [match] })
