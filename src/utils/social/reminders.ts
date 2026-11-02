@@ -1,7 +1,8 @@
 // Reminders of unapproved posts in the review topic before their first message:
 // that it is a draft (REMINDER_DAYS), approval requests (APPROVAL_REQUEST_DAYS)
 // and missing images (IMAGE_REMINDER_DAYS). Ones due at once are sent as one message.
-import { listPostsToRemind, markReminded, type ReminderKind } from '../postStore'
+// The agent's posts sent on approval are sent for approval right away.
+import { listAgentPostsToRequest, listPostsToRemind, markReminded, type ReminderKind } from '../postStore'
 import { requestApproval } from './actions'
 import { formatTime, sendNotice } from './review'
 import { escapeTelegramHtml as esc } from './telegram'
@@ -22,13 +23,15 @@ const DAYS: Record<ReminderKind, readonly number[]> = {
   image: IMAGE_REMINDER_DAYS,
 }
 
-const remind = async (post: Post, firstSendAt: string, kinds: Set<ReminderKind>) => {
+const remind = async (post: Post, firstSendAt: string | null, kinds: Set<ReminderKind>) => {
   // Marked first, so that a failing message isn't sent again every minute
   await markReminded(post.id, [...kinds])
   const askImage = needsImage(post) && (kinds.has('image') || kinds.has('approval'))
   if (!kinds.has('approval') && !kinds.has('draft') && !askImage) return
 
-  const when = `the first message goes out ${formatTime(firstSendAt)} (in ${timeLeft(firstSendAt)})`
+  const when = firstSendAt
+    ? `the first message goes out ${formatTime(firstSendAt)} (in ${timeLeft(firstSendAt)})`
+    : 'it is sent when approved'
   const lines: string[] = []
   if (kinds.has('approval')) {
     await requestApproval(post)
@@ -48,7 +51,10 @@ const remind = async (post: Post, firstSendAt: string, kinds: Set<ReminderKind>)
 }
 
 export const sendReminders = async () => {
-  const due = new Map<string, { post: Post; firstSendAt: string; kinds: Set<ReminderKind> }>()
+  const due = new Map<string, { post: Post; firstSendAt: string | null; kinds: Set<ReminderKind> }>()
+  for (const post of await listAgentPostsToRequest()) {
+    due.set(post.id, { post, firstSendAt: null, kinds: new Set(['approval']) })
+  }
   for (const kind of Object.keys(DAYS) as ReminderKind[]) {
     for (const { post, firstSendAt } of await listPostsToRemind(kind, DAYS[kind])) {
       const entry = due.get(post.id) ?? { post, firstSendAt, kinds: new Set() }

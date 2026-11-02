@@ -1587,6 +1587,16 @@ export const listPostsToRemind = async (
   return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at.toISOString() }))
 }
 
+// Drafts by the agent that are sent on approval and haven't been sent for approval
+// yet; they have no send time to request it before (social/reminders.ts)
+export const listAgentPostsToRequest = async (): Promise<Post[]> => {
+  const result = await pool.query<PostRow>(
+    `SELECT * FROM posts WHERE status = 'draft' AND send_on_approval AND created_by = 'agent'
+       AND approval_requested_at IS NULL`
+  )
+  return loadPosts(result.rows)
+}
+
 export const markReminded = async (postId: string, kinds: ReminderKind[]) => {
   if (!kinds.length) return
   await pool.query(

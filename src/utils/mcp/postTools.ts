@@ -68,7 +68,7 @@ const postFields = {
   sendAt: z.string().nullable().describe(`Default send time of all channels. ${TIME_HINT}`),
   sendOnApproval: z
     .boolean()
-    .describe('Send the channels without their own sendAt right when a human approves the post, instead of at sendAt'),
+    .describe('Send the channels without their own sendAt right when a human approves the post, instead of at sendAt. Such a post is sent for approval in Telegram right after it is created.'),
   images: z.array(imageSchema).describe('Up to 10 images; Instagram needs at least one. Replaces all images.'),
   responsible: z
     .string()
@@ -180,14 +180,14 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Create post',
       description:
-        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels. Write it like the posts from get_example_posts. Check it with preview_post. Drafts with a send time are sent for approval in Telegram automatically 2 days before (and again 1 day before); nothing is sent before a human approves it.',
+        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels. Write it like the posts from get_example_posts. Check it with preview_post. Drafts with a send time are sent for approval in Telegram automatically 2 days before (and again 1 day before), and ones with sendOnApproval right away; nothing is sent before a human approves it.',
       inputSchema: { ...optionalPostFields, title: postFields.title, body: postFields.body },
     },
     runTool('create_post', async (args) => {
       const post = await createPostAction(await parsePostArgs(givenArgs(args)), AGENT)
       return {
         post: await describePost(post, await listChannels(), { full: true }),
-        note: 'Saved as a draft. Check it with preview_post. It is sent for approval automatically 2 days before its first message, or a human can approve it on the website. Link the post to the user.',
+        note: `Saved as a draft. Check it with preview_post. It is sent for approval automatically ${post.sendOnApproval ? 'within a minute' : '2 days before its first message'}, or a human can approve it on the website. Link the post to the user.`,
       }
     })
   )

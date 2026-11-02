@@ -182,7 +182,8 @@ review topic (`src/utils/social/reminders.ts`) is reminded that it's a draft 5
 days before its first message, mentioning the responsible user. Approval is
 requested automatically (the review with the Approve / Reject buttons) 2 days
 before, and again 1 day before; a post made later, or edited on the website
-while in review after that, is sent for approval right away. It can't be requested by hand, but it can be approved on the website at
+while in review after that, is sent for approval right away. So are the AI agent's posts that are sent
+right when approved. It can't be requested by hand, but it can be approved on the website at
 any time. While the post has no image, the image maker (or the responsible
 user) is asked for one 7, 5 and 3 days before and with the approval requests.
 Reminders due at the same time are sent as one message.
