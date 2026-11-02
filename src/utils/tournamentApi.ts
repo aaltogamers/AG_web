@@ -75,6 +75,21 @@ export const createTournament = async (
   return data.tournament
 }
 
+export const createChallengermodeTournament = async (payload: {
+  challengermode: string
+  name?: string
+}): Promise<TournamentSummary> => {
+  const res = await fetch('/api/tournaments', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ source: 'challengermode', ...payload }),
+  })
+  if (!res.ok) await handleError(res, `HTTP ${res.status}`)
+  const data = (await res.json()) as { tournament: TournamentSummary }
+  return data.tournament
+}
+
 export const updateTournament = async (
   slug: string,
   payload: UpdateTournamentSettingsPayload

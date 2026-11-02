@@ -2,11 +2,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BracketsManager } from 'brackets-manager'
 
-import type { BracketDatabaseSnapshot, BracketStyles, Tournament } from '../types/types'
+import {
+  hasBracket,
+  type BracketDatabaseSnapshot,
+  type BracketStyles,
+  type Tournament,
+} from '../types/types'
 import { saveTournamentData } from '../utils/tournamentApi'
 import {
   TournamentStageView,
-  importTournamentData,
+  loadAnyTournamentStages,
   loadTournamentStages,
   syncTournamentStages,
 } from '../utils/tournamentStages'
@@ -84,13 +89,12 @@ const TournamentBracketView = ({
     setError(null)
 
     const run = async () => {
-      if (!tournament.data) {
+      if (!hasBracket(tournament)) {
         if (!cancelled) setData([])
         return
       }
       try {
-        const manager = await importTournamentData(tournament)
-        const newData = await loadTournamentStages(manager, tournament)
+        const { manager, stages: newData } = await loadAnyTournamentStages(tournament)
         if (cancelled) return
         managerRef.current = manager
         setData(newData)
@@ -135,7 +139,7 @@ const TournamentBracketView = ({
     return <div className="text-red text-center my-8">{error}</div>
   }
 
-  if (!tournament.data) {
+  if (!hasBracket(tournament)) {
     return null
   }
 
@@ -145,8 +149,12 @@ const TournamentBracketView = ({
 
   return (
     <div className="flex flex-row overflow-x-auto">
-      {visibleData.map((stage) =>
-        stage.kind === 'swiss' ? (
+      {visibleData.map((stage, i) =>
+        stage.kind === 'note' ? (
+          <div key={`note-${i}`} className="self-start p-4 mr-4 border border-lightgray opacity-75">
+            {stage.text}
+          </div>
+        ) : stage.kind === 'swiss' ? (
           <SwissSection
             key={stage.data.stage.id}
             data={stage.data}

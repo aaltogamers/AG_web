@@ -10,7 +10,7 @@ type Props = {
   waitingForMatchId?: Id | null
   waitingForMatchType?: 'winner' | 'loser'
   feedInfo?: OpponentFroMatch
-  bracketData: Pick<BracketData, 'matchIds' | 'placeholderParticipantIds'>
+  bracketData: Pick<BracketData, 'matchIds' | 'placeholderParticipantIds' | 'matchNumbers'>
 }
 
 const PRIZE_COLORS = {
@@ -41,7 +41,7 @@ const MatchResultRow = ({
   const tbdLabel = feedInfo ? (
     feedInfo.outcome === 'loser' ? (
       <i className="opacity-75" style={{ fontSize: '0.9em' }}>
-        Loser of match {feedInfo.match.id}
+        Loser of match {bracketData.matchNumbers?.[feedInfo.match.id] ?? feedInfo.match.id}
       </i>
     ) : (
       ''

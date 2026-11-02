@@ -12,6 +12,10 @@ const content = `
 - **BYE** means a free round: the team advances without playing.
 - Match length is Bo1 unless the round header says otherwise (e.g. *Final Bo3*).
 
+## Challengermode tournaments
+
+Some tournaments are run on Challengermode. Their bracket here is updated from Challengermode a few seconds after results are reported there, and the rules and seeding are Challengermode's. Swiss standings may order tied teams differently than Challengermode, but the teams that advanced are always shown on top. Follow the "View on Challengermode" link for details.
+
 ## Seeding
 
 Teams are seeded by expected skill (seed 1 = strongest). Good seeds meet weaker teams first.

@@ -18,7 +18,8 @@ export type SwissStanding = SwissRecord & {
 }
 
 export type SwissData = {
-  manager: BracketsManager
+  // Missing for display-only (Challengermode) tournaments
+  manager?: BracketsManager
   stage: Stage
   rounds: Round[]
   matchesByRound: Record<Id, Match[]>
@@ -29,11 +30,12 @@ export type SwissData = {
   isComplete: boolean
   matchIds: BracketData['matchIds']
   streamMatchId: Id | null
+  matchNumbers?: Record<Id, number>
 }
 
 type TeamState = SwissRecord & { seed: number; opponents: Id[]; byes: number; roundDiff: number }
 
-type SwissStage = {
+export type SwissStage = {
   stage: Stage
   rounds: Round[]
   matchesByRound: Record<Id, Match[]>
@@ -449,14 +451,22 @@ export const createSwissBracket = async (
   })
 }
 
-export const getSwissFormatData = async (
-  manager: BracketsManager,
-  options: TournamentOptions,
-  streamMatchId: Id | null
-): Promise<[SwissData, BracketData]> => {
-  const { swissStageId, playoffStageId } = await getStageIds(manager)
-  const swiss = await loadSwissStage(manager, swissStageId)
-
+export const buildSwissData = (
+  swiss: SwissStage,
+  {
+    advanceCount,
+    streamMatchId,
+    manager,
+    roundCount = swiss.rounds.length,
+    matchNumbers,
+  }: {
+    advanceCount: number
+    streamMatchId: Id | null
+    manager?: BracketsManager
+    roundCount?: number
+    matchNumbers?: Record<Id, number>
+  }
+): SwissData => {
   const recordsBeforeRound: Record<Id, Record<Id, SwissRecord>> = {}
   swiss.rounds.forEach((round, r) => {
     const records: Record<Id, SwissRecord> = {}
@@ -464,7 +474,7 @@ export const getSwissFormatData = async (
     recordsBeforeRound[round.id] = records
   })
 
-  const swissData: SwissData = {
+  return {
     manager,
     stage: swiss.stage,
     rounds: swiss.rounds,
@@ -472,11 +482,27 @@ export const getSwissFormatData = async (
     participants: swiss.participants,
     standings: rankTeams(computeTeamStates(swiss, swiss.rounds.length)),
     recordsBeforeRound,
-    advanceCount: options.advanceCount,
-    isComplete: swiss.rounds.every((round) => isRoundDone(swiss, round)),
+    advanceCount,
+    isComplete:
+      swiss.rounds.length >= roundCount && swiss.rounds.every((round) => isRoundDone(swiss, round)),
     matchIds: emptyMatchIds(),
     streamMatchId,
+    matchNumbers,
   }
+}
+
+export const getSwissFormatData = async (
+  manager: BracketsManager,
+  options: TournamentOptions,
+  streamMatchId: Id | null
+): Promise<[SwissData, BracketData]> => {
+  const { swissStageId, playoffStageId } = await getStageIds(manager)
+  const swiss = await loadSwissStage(manager, swissStageId)
+  const swissData = buildSwissData(swiss, {
+    advanceCount: options.advanceCount,
+    streamMatchId,
+    manager,
+  })
 
   const playoffStage = await manager.get.stageData(playoffStageId)
   const lastRound = [...playoffStage.round].sort((a, b) => b.number - a.number)[0]

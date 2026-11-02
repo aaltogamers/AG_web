@@ -228,7 +228,8 @@ export type HeaderLink = {
 }
 
 export type BracketData = {
-  manager: BracketsManager
+  // Missing for display-only (Challengermode) tournaments
+  manager?: BracketsManager
   stages: Stage[]
   groups: Group[]
   rounds: Round[]
@@ -254,6 +255,8 @@ export type BracketData = {
   bestOfByRoundId?: Record<Id, number>
   placeholderParticipantIds?: Set<Id>
   roundNumberOffset?: number
+  matchNumbers?: Record<Id, number>
+  roundTitles?: Record<Id, string>
 }
 
 export type BracketStyles = {
@@ -282,6 +285,7 @@ export type BracketType =
   | 'double_elimination'
   | 'double_elimination_to_top_4'
   | 'swiss_to_single_elimination'
+  | 'challengermode'
 
 export const TOURNAMENT_BRACKET_TYPES: BracketType[] = [
   'double_elimination_to_top_4',
@@ -293,6 +297,7 @@ export const BRACKET_TYPE_LABELS: Record<BracketType, string> = {
   double_elimination: 'Double Elimination',
   double_elimination_to_top_4: 'Double Elimination with 4-team Final',
   swiss_to_single_elimination: 'Swiss → Single Elimination',
+  challengermode: 'Challengermode',
 }
 
 export const getBracketTypeLabel = (type: BracketType): string => BRACKET_TYPE_LABELS[type] ?? type
@@ -336,9 +341,13 @@ export const normalizeTournamentOptions = (raw: unknown): TournamentOptions => {
   }
 }
 
+export type TournamentSource = 'local' | 'challengermode'
+
 export type TournamentSettings = {
   slug: string
   name: string
+  source: TournamentSource
+  challengermodeId: string | null
   bracketType: BracketType
   teamCount: TournamentTeamCount
   teams: string[]
@@ -357,10 +366,28 @@ export type BracketDatabaseSnapshot = {
   participant: unknown[]
 }
 
-export const getFormatDescription = (t: TournamentSettings): string =>
-  t.bracketType === 'swiss_to_single_elimination'
+const CHALLENGERMODE_FORMAT_LABELS: Record<ChallengermodeStageFormat, string> = {
+  SINGLE_ELIMINATION: 'Single Elimination',
+  DOUBLE_ELIMINATION: 'Double Elimination',
+  SWISS: 'Swiss',
+  ROUND_ROBIN: 'Round Robin',
+  OTHER: 'Custom',
+  UNKNOWN: 'Unknown',
+}
+
+export const getFormatDescription = (
+  t: TournamentSettings & { challengermode?: ChallengermodeTournament | null }
+): string => {
+  if (t.source === 'challengermode') {
+    const stages = t.challengermode?.stages ?? []
+    if (stages.length === 0) return 'Challengermode'
+    const formats = stages.map((s) => CHALLENGERMODE_FORMAT_LABELS[s.format] ?? s.format)
+    return `Challengermode — ${formats.join(' → ')} — ${stages[0].lineupCount} teams`
+  }
+  return t.bracketType === 'swiss_to_single_elimination'
     ? `${getBracketTypeLabel(t.bracketType)} — up to ${t.teamCount} teams — ${t.options.swissRounds} Swiss rounds, top ${t.options.advanceCount} advance, final Bo${t.options.finalBestOf}`
     : `${getBracketTypeLabel(t.bracketType)} — ${t.teamCount} teams`
+}
 
 export type TournamentSummary = TournamentSettings & {
   isStarted: boolean
@@ -373,7 +400,71 @@ export type Tournament = TournamentSettings & {
   updatedAt: string
   /** Match ID from bracket snapshot designated for stream overlay; null if unset. */
   streamMatchId: number | null
+  // Only for Challengermode tournaments; null when it couldn't be fetched
+  challengermode: ChallengermodeTournament | null
 }
+
+export type ChallengermodeStageFormat =
+  | 'SINGLE_ELIMINATION'
+  | 'DOUBLE_ELIMINATION'
+  | 'SWISS'
+  | 'ROUND_ROBIN'
+  | 'OTHER'
+  | 'UNKNOWN'
+
+export type ChallengermodeSeriesState =
+  | 'UNKNOWN'
+  | 'WAITING'
+  | 'RUNNING'
+  | 'PAUSED'
+  | 'COMPLETED'
+  | 'NULLIFIED'
+
+export type ChallengermodeSlot = {
+  lineupId: string
+  name: string
+  seed: number | null
+  score: number | null
+  result: 'win' | 'loss' | 'draw' | null
+}
+
+export type ChallengermodeSeries = {
+  ordinal: number
+  state: ChallengermodeSeriesState
+  bestOf: number
+  labels: string[]
+  // null = no team (yet)
+  slots: [ChallengermodeSlot | null, ChallengermodeSlot | null]
+}
+
+export type ChallengermodeRound = { title: string; series: ChallengermodeSeries[] }
+
+export type ChallengermodeBracketKind = 'single' | 'upper' | 'lower' | 'final' | 'swiss'
+
+export type ChallengermodeBracket = {
+  kind: ChallengermodeBracketKind
+  rounds: ChallengermodeRound[]
+}
+
+export type ChallengermodeStage = {
+  format: ChallengermodeStageFormat
+  lineupCount: number
+  roundCount: number
+  brackets: ChallengermodeBracket[]
+}
+
+export type ChallengermodeTournament = {
+  id: string
+  name: string
+  state: string
+  stages: ChallengermodeStage[]
+}
+
+export const challengermodeTournamentUrl = (id: string) =>
+  `https://www.challengermode.com/tournaments/${id}`
+
+export const hasBracket = (t: Pick<Tournament, 'source' | 'data' | 'challengermode'>): boolean =>
+  t.source === 'challengermode' ? (t.challengermode?.stages.length ?? 0) > 0 : !!t.data
 
 export type StreamConfig = {
   id: string

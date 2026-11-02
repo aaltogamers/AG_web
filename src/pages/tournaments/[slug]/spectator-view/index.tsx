@@ -6,13 +6,12 @@ import { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import PageWrapper from '../../../../components/PageWrapper'
-import type { Tournament } from '../../../../types/types'
+import { hasBracket, type Tournament } from '../../../../types/types'
 import { teamNameToShortName } from '../../../../utils/brackets'
 import {
   TournamentStageView,
   findStageMatch,
-  importTournamentData,
-  loadTournamentStages,
+  loadAnyTournamentStages,
 } from '../../../../utils/tournamentStages'
 import makeBackgroundInvisible from '../../../../utils/makeBackgroundInvisible'
 import { isStreamMode, shouldFlipTeams } from '../../../../utils/streamMode'
@@ -139,7 +138,8 @@ const SpectatorViewPage = () => {
   }, [router.isReady, refresh])
 
   useEffect(() => {
-    if (!router.isReady || !slug || loading || !tournament?.data) return
+    if (!router.isReady || !slug || loading || !tournament) return
+    if (tournament.source !== 'challengermode' && !tournament.data) return
 
     const tick = async () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
@@ -156,19 +156,18 @@ const SpectatorViewPage = () => {
       void tick()
     }, POLL_MS)
     return () => clearInterval(id)
-  }, [router.isReady, slug, loading, tournament?.data, refresh])
+  }, [router.isReady, slug, loading, tournament, refresh])
 
   useEffect(() => {
     let cancelled = false
 
     const run = async () => {
-      if (!tournament?.data) {
+      if (!tournament || !hasBracket(tournament)) {
         return
       }
 
       try {
-        const manager = await importTournamentData(tournament)
-        const bracketBundle = await loadTournamentStages(manager, tournament)
+        const { stages: bracketBundle } = await loadAnyTournamentStages(tournament)
         if (cancelled) return
 
         const { name1, name2, match } = findStreamMatch(
@@ -238,7 +237,7 @@ const SpectatorViewPage = () => {
     streamMatch?.status === Status.Running
 
   if (streamMode) {
-    if (!tournament.data) return null
+    if (!hasBracket(tournament)) return null
 
     return (
       <>

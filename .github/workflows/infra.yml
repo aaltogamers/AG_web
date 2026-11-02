@@ -27,6 +27,7 @@ env:
   TF_VAR_telegram_posts_bot_token: ${{ secrets.TELEGRAM_POSTS_BOT_TOKEN }}
   TF_VAR_telegram_posts_webhook_secret: ${{ secrets.TELEGRAM_POSTS_WEBHOOK_SECRET }}
   TF_VAR_lychee_webhook_secret: ${{ secrets.LYCHEE_WEBHOOK_SECRET }}
+  TF_VAR_challengermode_refresh_key: ${{ secrets.CHALLENGERMODE_REFRESH_KEY }}
   TF_VAR_discord_bot_token: ${{ secrets.DISCORD_BOT_TOKEN }}
   TF_VAR_instagram_user_id: ${{ secrets.INSTAGRAM_USER_ID }}
   TF_VAR_instagram_access_token: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}

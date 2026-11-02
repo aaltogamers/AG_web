@@ -53,7 +53,7 @@ const GroupSection = ({
 
   const saveResult = useCallback(
     async (result: MatchResultInput) => {
-      if (!selectedMatch) return
+      if (!selectedMatch || !bracketData.manager) return
       await updateMatchResult(bracketData.manager, { matchId: selectedMatch.id, ...result })
       await onMatchResultSaved?.()
     },
@@ -61,7 +61,7 @@ const GroupSection = ({
   )
 
   const resetResult = useCallback(async () => {
-    if (!selectedMatch) return
+    if (!selectedMatch || !bracketData.manager) return
     await resetMatchResult(bracketData.manager, selectedMatch.id)
     await onMatchResultSaved?.()
   }, [selectedMatch, bracketData.manager, onMatchResultSaved])
@@ -80,6 +80,7 @@ const GroupSection = ({
       {selectedMatch != null && (
         <BracketMatchEditDialog
           match={selectedMatch}
+          matchNumber={bracketData.matchNumbers?.[selectedMatch.id]}
           participantsById={participantsById}
           manager={bracketData.manager}
           streamMatchId={bracketData.streamMatchId}
@@ -122,7 +123,14 @@ const GroupSection = ({
         const shouldCollapseThisRound =
           shouldCollapseFirstRound && round.id === firstRoundInGroup.id
 
-        const roundDepth = groupLabel === 'Lower' ? Math.floor(i / 2) : i
+        const groupRounds = roundsByGroup[groupLabel] ?? []
+        const roundDepth = groupRounds
+          .slice(0, i)
+          .filter(
+            (r, j) =>
+              (matchesByRound[r.id]?.length ?? 0) ===
+              2 * (matchesByRound[groupRounds[j + 1].id]?.length ?? 0)
+          ).length
         const roundMultiplier =
           2 ** (roundDepth - (shouldCollapseFirstRound && !shouldCollapseThisRound ? 1 : 0))
 
@@ -157,13 +165,14 @@ const GroupSection = ({
                 fontSize: bracketStyles.titleFontSize,
               }}
             >
-              {roundToLabel(
-                round,
-                groupLabel,
-                matchesByRound,
-                groupHasFinal,
-                visibleRoundNumber + (bracketData.roundNumberOffset ?? 0)
-              )}
+              {bracketData.roundTitles?.[round.id] ??
+                roundToLabel(
+                  round,
+                  groupLabel,
+                  matchesByRound,
+                  groupHasFinal,
+                  visibleRoundNumber + (bracketData.roundNumberOffset ?? 0)
+                )}
               {(bracketData.bestOfByRoundId?.[round.id] ?? 1) > 1 && (
                 <span style={{ fontSize: '0.6em', opacity: 0.75 }}>
                   {' '}
@@ -183,13 +192,14 @@ const GroupSection = ({
               {roundMatches.map((match, matchIndex) => {
                 const isBye = match.opponent1 === null || match.opponent2 === null
 
-                const isLocked =
-                  isBye ||
-                  match.opponent1?.id == null ||
-                  match.opponent2?.id == null ||
-                  !!bracketData.placeholderParticipantIds?.has(match.opponent1.id) ||
-                  !!bracketData.placeholderParticipantIds?.has(match.opponent2.id) ||
-                  (match.status === Status.Archived && !bracketData.matchIds.gold?.has(match.id))
+                const isLocked = !bracketData.manager
+                  ? isBye
+                  : isBye ||
+                    match.opponent1?.id == null ||
+                    match.opponent2?.id == null ||
+                    !!bracketData.placeholderParticipantIds?.has(match.opponent1.id) ||
+                    !!bracketData.placeholderParticipantIds?.has(match.opponent2.id) ||
+                    (match.status === Status.Archived && !bracketData.matchIds.gold?.has(match.id))
 
                 const prevMatches = bracketData.prevMatches[match.id]
                 const siblingMatch = bracketData.siblingMatches[match.id]
@@ -257,9 +267,9 @@ const GroupSection = ({
                         onKeyDown={(e) => e.key === 'Enter' && openEditDialog(match)}
                         role="button"
                         tabIndex={0}
-                        aria-label="Edit match score"
+                        aria-label={bracketData.manager ? 'Edit match score' : 'Set stream game'}
                       >
-                        <FaPen />
+                        {bracketData.manager ? <FaPen /> : <TwitchLogo size={16} />}
                       </div>
                     )}
 
@@ -278,7 +288,7 @@ const GroupSection = ({
                           width: bracketStyles.basicFontSize * 0.75,
                         }}
                       >
-                        {match.id}
+                        {bracketData.matchNumbers?.[match.id] ?? match.id}
                       </div>
                     )}
 
