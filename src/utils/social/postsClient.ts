@@ -51,10 +51,8 @@ export const sendTestPost = (id: string | null, post: PostInput, channelId: stri
   request<object>('/api/posts/test-send', 'POST', { id: id ?? undefined, post, channelId })
 
 export type PostAction =
-  | 'request-approval'
   | 'approve'
   | 'unschedule'
-  | 'withdraw'
   | 'retry'
   | 'send-anyway'
 

@@ -10,6 +10,7 @@ import {
   getPostOrThrow,
   getSettings,
   markApproved,
+  markReminded,
   markRejected,
   markUnscheduled,
   releaseHeld,
@@ -18,7 +19,6 @@ import {
   setWebsiteChangeSlug,
   updatePost,
   websiteRunAt,
-  withdrawApprovalRequest,
 } from '../postStore'
 import { buildPreview, previewErrors } from './preview'
 import { escapeTelegramHtml as esc } from './telegram'
@@ -51,22 +51,13 @@ const sendReviewWithNote = async (post: Post, options?: Parameters<typeof sendRe
     : 'No review topic is set up in Telegram, so it can only be approved on the website.'
 }
 
-export const requestApproval = async (id: string, actor: Actor) => {
-  const post = await getPostOrThrow(id)
-  if (post.status !== 'draft' && post.status !== 'awaiting_approval') {
-    throw new AgentError(409, `The post is ${post.status.replace('_', ' ')}; only drafts can be sent for approval`)
-  }
-  await ensureValid(post)
-  await setAwaitingApproval(post, actor)
-  const updated = await getPostOrThrow(id)
-  return { post: updated, note: await sendReviewWithNote(updated) }
-}
-
-export const withdrawApproval = async (id: string, actor: Actor) => {
-  const post = await getPostOrThrow(id)
-  await withdrawApprovalRequest(post, actor)
-  await closeOpenMessages(post.id, `<i>Withdrawn by ${esc(describeActor(actor))}</i>`).catch(() => undefined)
-  return getPostOrThrow(id)
+// Sends a draft for approval, by the scheduler before it goes out (reminders.ts).
+// The review lists what must be fixed before it can be approved.
+export const requestApproval = async (post: Post) => {
+  await setAwaitingApproval(post, 'scheduler')
+  const updated = await getPostOrThrow(post.id)
+  await sendReview(updated)
+  return updated
 }
 
 // Edits a post. The agent's edits of a post awaiting approval or approved send a
@@ -82,6 +73,7 @@ export const editPost = async (
   let note: string | undefined
   if (actor === 'agent' && wasInReview) {
     const reviewNote = await sendReviewWithNote(post, { editedAfterApproval: previousStatus === 'scheduled' })
+    await markReminded(post.id, ['approval'])
     note = `${previousStatus === 'scheduled' ? 'The post was approved, so the edit took it off the schedule until it is approved again. ' : ''}${reviewNote}`
   } else if (wasInReview) {
     await closeOpenMessages(post.id, '<i>✏️ Edited on the website</i>').catch(() => undefined)

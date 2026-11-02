@@ -8,9 +8,9 @@ import {
   describePreview,
   parsePostArgs,
 } from '../agentPosts'
-import { AgentError, formatAgentTime, parseAgentTime } from '../agentApi'
+import { AgentError, parseAgentTime } from '../agentApi'
 import { getPostHistory, getPostOrThrow, getSettings, listChannels, listPosts, listSentPosts } from '../postStore'
-import { createPostAction, deletePost, editPost, requestApproval, withdrawApproval } from '../social/actions'
+import { createPostAction, deletePost, editPost } from '../social/actions'
 import { isDiscordConfigured, listGuildRoles } from '../social/discord'
 import { buildPreview } from '../social/preview'
 import { PLACEHOLDER_HELP } from '../social/render'
@@ -74,7 +74,7 @@ const postFields = {
     .string()
     .nullable()
     .describe(
-      'Telegram user id (from find_task_users) of who finishes the post and gets it approved. Reminded in the review topic 5, 2 and 1 days before the first message while the post is not approved.'
+      'Telegram user id (from find_task_users) of who finishes the post and gets it approved. Reminded in the review topic 5 days before the first message, and when it is sent for approval 2 and 1 days before, while the post is not approved.'
     ),
   shouldHaveImage: z.boolean().describe("The post can't be approved without an image"),
   imageResponsible: z
@@ -180,14 +180,14 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Create post',
       description:
-        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels. Write it like the posts from get_example_posts. Check it with preview_post, then ask a human to approve it with request_approval. Nothing is sent before a human approves it.',
+        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels. Write it like the posts from get_example_posts. Check it with preview_post. Drafts with a send time are sent for approval in Telegram automatically 2 days before (and again 1 day before); nothing is sent before a human approves it.',
       inputSchema: { ...optionalPostFields, title: postFields.title, body: postFields.body },
     },
     runTool('create_post', async (args) => {
       const post = await createPostAction(await parsePostArgs(givenArgs(args)), AGENT)
       return {
         post: await describePost(post, await listChannels(), { full: true }),
-        note: 'Saved as a draft. Check it with preview_post, then call request_approval. Link the post to the user.',
+        note: 'Saved as a draft. Check it with preview_post. It is sent for approval automatically 2 days before its first message, or a human can approve it on the website. Link the post to the user.',
       }
     })
   )
@@ -224,33 +224,6 @@ export const registerPostTools = (server: McpServer) => {
     runTool('preview_post', async ({ postId }) => {
       const post = await getPostOrThrow(postId)
       return { postId: post.id, version: post.version, preview: describePreview(await buildPreview(post)) }
-    })
-  )
-
-  server.registerTool(
-    'request_approval',
-    {
-      title: 'Request approval',
-      description:
-        'Asks a human to approve a draft: sends a review with Approve / Reject buttons to the review topic in Telegram. Only a human can approve; after approval the post is sent at its times.',
-      inputSchema: { postId: z.string() },
-    },
-    runTool('request_approval', async ({ postId }) => {
-      const { post, note } = await requestApproval(postId, AGENT)
-      return { post: await describePost(post, await listChannels()), note }
-    })
-  )
-
-  server.registerTool(
-    'withdraw_approval_request',
-    {
-      title: 'Withdraw approval request',
-      description: 'Takes a post that is awaiting approval back to draft.',
-      inputSchema: { postId: z.string() },
-    },
-    runTool('withdraw_approval_request', async ({ postId }) => {
-      const post = await withdrawApproval(postId, AGENT)
-      return { post: await describePost(post, await listChannels()), at: formatAgentTime(new Date()) }
     })
   )
 

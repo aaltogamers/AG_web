@@ -151,7 +151,7 @@ Client Tool with "HTTP Streamable" and Bearer auth; in Claude Code run
 Tools return participants' sign-up counts, never their answers. Event
 changes show on the site right away. Tools are defined in `src/utils/mcp/`.
 
-The post tools only make drafts and ask for approval; the agent can never
+The post tools only make drafts; the agent can never
 approve, schedule or send a post. It can delete its own drafts and posts
 awaiting approval, but not posts made by a human. The agent is told to read the most recently
 sent posts (`get_example_posts`) first and write new posts the same way.
@@ -178,9 +178,14 @@ has when the post is sent (or the one its website change gives the event). A
 post can have a responsible Telegram user (from those who have opened the task
 board), and "Should have an image" with someone who makes it; such a post can't
 be approved without an image. Until a post with a send time is approved, the
-review topic is reminded 5, 2 and 1 days before its first message
-(`src/utils/social/reminders.ts`), mentioning the responsible user, and the
-image maker while the post has no image.
+review topic (`src/utils/social/reminders.ts`) is reminded that it's a draft 5
+days before its first message, mentioning the responsible user. Approval is
+requested automatically (the review with the Approve / Reject buttons) 2 days
+before, and again 1 day before; a post made later, or edited on the website
+while in review after that, is sent for approval right away. It can't be requested by hand, but it can be approved on the website at
+any time. While the post has no image, the image maker (or the responsible
+user) is asked for one 7, 5 and 3 days before and with the approval requests.
+Reminders due at the same time are sent as one message.
 
 Website changes are hidden for now: the post editor only shows one a post
 already has, and the MCP server can't make or see them.

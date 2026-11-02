@@ -4,15 +4,13 @@ import {
   approvePost,
   deletePost,
   releaseHeldPost,
-  requestApproval,
   unschedulePost,
-  withdrawApproval,
 } from '../../../../utils/social/actions'
 import { adminRoute, routeParam } from '../../../../utils/social/adminApi'
 
 type Body = { version?: number; newTime?: string | null }
 
-// Admin: request-approval, approve, unschedule, delete, withdraw, retry, send-anyway
+// Admin: approve, unschedule, delete, retry, send-anyway
 export default adminRoute({
   POST: async (req) => {
     const id = routeParam(req, 'id')
@@ -23,8 +21,6 @@ export default adminRoute({
       return version
     }
     switch (routeParam(req, 'action')) {
-      case 'request-approval':
-        return requestApproval(id, 'admin')
       case 'approve':
         return { post: await approvePost(id, needsVersion(), 'admin') }
       case 'unschedule':
@@ -32,8 +28,6 @@ export default adminRoute({
       case 'delete':
         await deletePost(id, 'admin')
         return {}
-      case 'withdraw':
-        return { post: await withdrawApproval(id, 'admin') }
       case 'retry':
         return { post: await releaseHeldPost(id, needsVersion(), 'admin', 'retry', body.newTime ?? null) }
       case 'send-anyway':

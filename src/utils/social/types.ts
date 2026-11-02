@@ -67,12 +67,14 @@ export const imagePreviewUrl = (image: PostImage, eventImage: string | null) =>
   'eventImage' in image ? eventImage : 'mediaId' in image ? `/api/posts/media/${image.mediaId}` : image.sitePath
 
 // A Telegram user who is responsible for a post or its image, reminded in the
-// review topic (REMINDER_DAYS)
+// review topic (reminders.ts)
 export type PostPerson = { id: string; name: string }
 
-// Days before the first message when the responsible people of an unapproved
-// post are reminded
-export const REMINDER_DAYS = [5, 2, 1] as const
+// Days before the first message of an unapproved post when its responsible person
+// is reminded, when approval is requested, and when its missing image is asked for
+export const REMINDER_DAYS = [5] as const
+export const APPROVAL_REQUEST_DAYS = [2, 1] as const
+export const IMAGE_REMINDER_DAYS = [7, 5, 3] as const
 
 // Discord pings other than roles
 export const DISCORD_PINGS = ['here', 'everyone'] as const

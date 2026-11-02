@@ -35,7 +35,7 @@ import {
 import { MAX_IMAGES } from './social/render'
 
 // Who did something: the admin page, the AI agent, or an approver in Telegram
-export type Actor = 'admin' | 'agent' | `tg:${string}`
+export type Actor = 'admin' | 'agent' | 'scheduler' | `tg:${string}`
 
 const toISO = (d: Date | null | undefined) => (d ? d.toISOString() : null)
 
@@ -1131,7 +1131,8 @@ export const updatePost = async (
     await client.query(
       `UPDATE posts SET title = $2, body_md = $3, event_slug = $4, send_at = $5, status = $6,
          version = version + 1, updated_by = $7, updated_at = now(), missed_notice_at = NULL,
-         send_on_approval = $8, responsible = $9::jsonb, should_have_image = $10, image_responsible = $11::jsonb
+         send_on_approval = $8, responsible = $9::jsonb, should_have_image = $10, image_responsible = $11::jsonb,
+         approval_requested_at = CASE WHEN $12 THEN NULL ELSE approval_requested_at END
        WHERE id = $1`,
       [
         id,
@@ -1145,6 +1146,8 @@ export const updatePost = async (
         JSON.stringify(data.responsible !== undefined ? data.responsible : existing.responsible),
         data.shouldHaveImage ?? existing.shouldHaveImage,
         JSON.stringify(data.imageResponsible !== undefined ? data.imageResponsible : existing.imageResponsible),
+        // Taken out of review by the edit, so it is sent for approval again (reminders.ts)
+        nextStatus === 'draft' && existing.status !== 'draft',
       ]
     )
     if (data.images) await writeImages(client, id, data.images)
@@ -1169,16 +1172,6 @@ export const setAwaitingApproval = async (post: Post, actor: Actor) => {
   )
   if (!result.rowCount) throw outOfDate()
   await addPostEvent(post.id, post.version, 'approval requested', actor)
-}
-
-export const withdrawApprovalRequest = async (post: Post, actor: Actor) => {
-  const result = await pool.query(
-    `UPDATE posts SET status = 'draft', updated_at = now()
-     WHERE id = $1 AND status = 'awaiting_approval'`,
-    [post.id]
-  )
-  if (!result.rowCount) throw new AgentError(409, 'The post is not awaiting approval')
-  await addPostEvent(post.id, post.version, 'approval request withdrawn', actor)
 }
 
 export type ApprovalData = {
@@ -1562,9 +1555,21 @@ export const claimMissedApprovals = async (leadMinutes: number): Promise<string[
   return result.rows.map((r) => String(r.id))
 }
 
-// Unapproved posts with a send time whose responsible people haven't been
-// reminded since the last of `days` before the first message (social/reminders.ts)
-export const listPostsToRemind = async (days: readonly number[]): Promise<{ post: Post; firstSendAt: string }[]> => {
+export type ReminderKind = 'draft' | 'approval' | 'image'
+
+const REMINDER_COLUMNS: Record<ReminderKind, string> = {
+  draft: 'reminded_at',
+  approval: 'approval_requested_at',
+  image: 'image_reminded_at',
+}
+
+// Unapproved posts with a send time that haven't had a `kind` reminder since the
+// last of `days` before the first message (social/reminders.ts)
+export const listPostsToRemind = async (
+  kind: ReminderKind,
+  days: readonly number[]
+): Promise<{ post: Post; firstSendAt: string }[]> => {
+  const column = REMINDER_COLUMNS[kind]
   const result = await pool.query<PostRow & { first_send_at: Date }>(
     `SELECT * FROM (
        SELECT p.*, (SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t
@@ -1572,7 +1577,7 @@ export const listPostsToRemind = async (days: readonly number[]): Promise<{ post
        FROM posts p WHERE p.status IN ('draft', 'awaiting_approval') AND NOT p.send_on_approval
      ) p
      WHERE first_send_at > now() AND first_send_at <= now() + make_interval(days => $2)
-       AND (reminded_at IS NULL OR reminded_at < (
+       AND (${column} IS NULL OR ${column} < (
          SELECT MAX(first_send_at - make_interval(days => d)) FROM unnest($1::int[]) d
          WHERE first_send_at - make_interval(days => d) <= now()
        ))`,
@@ -1582,8 +1587,12 @@ export const listPostsToRemind = async (days: readonly number[]): Promise<{ post
   return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at.toISOString() }))
 }
 
-export const markReminded = async (postId: string) => {
-  await pool.query('UPDATE posts SET reminded_at = now() WHERE id = $1', [postId])
+export const markReminded = async (postId: string, kinds: ReminderKind[]) => {
+  if (!kinds.length) return
+  await pool.query(
+    `UPDATE posts SET ${kinds.map((k) => `${REMINDER_COLUMNS[k]} = now()`).join(', ')} WHERE id = $1`,
+    [postId]
+  )
 }
 
 // Review topic messages
