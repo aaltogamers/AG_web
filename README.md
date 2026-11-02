@@ -71,6 +71,9 @@ docker compose down -v
   (the first long-lived token) — scheduled posts (see below).
 - `LYCHEE_WEBHOOK_SECRET` — secret Lychee sends to `/api/lychee-webhook` (see
   "Events and images"). Unset, the webhook is disabled.
+- `CHALLENGERMODE_REFRESH_KEY` — refresh key of a Challengermode application,
+  for showing Challengermode tournaments (see "Tournaments"). In production it
+  comes from the `CHALLENGERMODE_REFRESH_KEY` GitHub secret (see `infra`).
 - `RCON_IP`, `RCON_PASSWORD`, `RCON_PORT` — Minecraft whitelist endpoint.
 - `APP_ID`, `PRIVATE_KEY`, `INSTALLATION_ID` — GitHub App credentials for
   the Decap CMS auth handshake (`/api/auth`).
@@ -116,6 +119,25 @@ events that differ. `npm run seed-events` imports the tag `pre-db-events`.
 Signups, map bans, and bets live in Postgres. Live updates to `/mapban`,
 `/bet`, and `/betboard` use Server-Sent Events streamed from
 `/api/stream/:topic` (`mapbans`, `polls`, `votes`).
+
+### Tournaments
+
+Tournaments are made on `/tournaments` (admin). A local tournament is run on
+the site: its bracket is a `brackets-manager` snapshot in `tournaments.data`,
+edited in the browser. A Challengermode tournament is added by its link and is
+display only: the bracket and scores are read from the Challengermode API
+(`src/utils/challengermode.ts`, read-only queries) and turned into the same
+bracket data (`src/utils/challengermodeStages.ts`), so the bracket page, stream
+mode, stream customization and the spectator overlay work the same way. Only
+the name and the stream game are saved on the site. Any number of single
+elimination, double elimination and Swiss stages are shown; other stage types
+link to Challengermode.
+
+Challengermode allows 20 requests per minute, so each tournament is fetched at
+most every 10 s however many people are watching (finished ones every 5 min,
+failed ones every 30 s), and the site never sends more than 15 requests per
+minute: over that, the last loaded bracket is shown until a request is free. The Challengermode API has no map bans and
+no team sides; marking a stream game fills in the team names on `/mapban`.
 
 ### AI agent MCP server
 

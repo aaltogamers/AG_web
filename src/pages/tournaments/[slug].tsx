@@ -7,7 +7,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import PageWrapper from '../../components/PageWrapper'
 import TournamentBracketView, { defaultBracketStyles } from '../../components/TournamentBracketView'
 import TournamentSetup from '../../components/TournamentSetup'
-import { Tournament, getFormatDescription } from '../../types/types'
+import {
+  Tournament,
+  challengermodeTournamentUrl,
+  getFormatDescription,
+  hasBracket,
+} from '../../types/types'
 import { checkAdminSession } from '../../utils/adminAuth'
 import { getTournament, getTournamentUpdatedAt, updateTournament } from '../../utils/tournamentApi'
 import makeBackgroundInvisible from '../../utils/makeBackgroundInvisible'
@@ -121,16 +126,19 @@ const TournamentPage = () => {
   )
   const streamStageFilter = useMemo(() => parseStreamStageFilter(router.query), [router.query])
 
+  const isChallengermode = tournament?.source === 'challengermode'
+
   const showSetup = useMemo(
-    () => isAdmin && (editingSettings || !tournament?.data),
-    [isAdmin, editingSettings, tournament?.data]
+    () => isAdmin && !isChallengermode && (editingSettings || !tournament?.data),
+    [isAdmin, isChallengermode, editingSettings, tournament?.data]
   )
 
   const bracketVisible = useMemo(() => {
+    if (isChallengermode) return true
     if (!tournament?.data) return false
     if (streamMode) return true
     return !showSetup
-  }, [tournament?.data, streamMode, showSetup])
+  }, [isChallengermode, tournament?.data, streamMode, showSetup])
 
   const BRACKET_POLL_MS = 2000
 
@@ -181,7 +189,7 @@ const TournamentPage = () => {
   // disabled regardless of admin status so scores can't be changed by clicking
   // through the overlay.
   if (streamMode) {
-    if (!tournament.data) return null
+    if (!hasBracket(tournament)) return null
     const streamBracket = (
       <TournamentBracketView
         tournament={tournament}
@@ -223,12 +231,28 @@ const TournamentPage = () => {
             <p className="text-sm opacity-75">
               {getFormatDescription(tournament)}
               {isAdmin &&
+                !isChallengermode &&
                 (tournament.isStarted ? ' — started (settings locked)' : ' — not started')}
             </p>
+            {tournament.challengermodeId && (
+              <a
+                href={challengermodeTournamentUrl(tournament.challengermodeId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-red hover:underline"
+              >
+                View on Challengermode
+              </a>
+            )}
+            {isAdmin && tournament.challengermodeError && (
+              <p className="text-sm text-red">
+                Couldn&apos;t refresh from Challengermode: {tournament.challengermodeError}
+              </p>
+            )}
           </div>
           {isAdmin && (
             <div className="flex gap-2">
-              {!tournament.isStarted && tournament.data && (
+              {!isChallengermode && !tournament.isStarted && tournament.data && (
                 <button
                   type="button"
                   className="borderbutton"
@@ -237,7 +261,7 @@ const TournamentPage = () => {
                   {editingSettings ? 'Back to bracket' : 'Edit settings'}
                 </button>
               )}
-              {tournament.data && (
+              {!isChallengermode && tournament.data && (
                 <button
                   type="button"
                   className="borderbutton"
@@ -272,7 +296,7 @@ const TournamentPage = () => {
 
         {showSetup ? (
           <TournamentSetup tournament={tournament} onChanged={handleSaved} />
-        ) : tournament.data ? (
+        ) : hasBracket(tournament) ? (
           <TournamentBracketView
             tournament={tournament}
             isAdmin={isAdmin}
@@ -285,6 +309,10 @@ const TournamentPage = () => {
               lastServerUpdatedAtRef.current = t.updatedAt
             }}
           />
+        ) : isChallengermode && !tournament.challengermode ? (
+          <div className="text-center mt-8 opacity-75">
+            Couldn&apos;t load the bracket from Challengermode. Retrying…
+          </div>
         ) : (
           <div className="text-center mt-8 opacity-75">
             This tournament has not been built yet. Come back soon!

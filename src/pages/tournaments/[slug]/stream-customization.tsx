@@ -9,7 +9,7 @@ import PageWrapper from '../../../components/PageWrapper'
 import TournamentBracketView, {
   defaultBracketStyles,
 } from '../../../components/TournamentBracketView'
-import { StreamConfig, Tournament } from '../../../types/types'
+import { StreamConfig, Tournament, hasBracket } from '../../../types/types'
 import { checkAdminSession } from '../../../utils/adminAuth'
 import {
   buildStreamParamDocs,
@@ -505,7 +505,7 @@ const StreamCustomizationPage = () => {
               <div className="opacity-75 text-sm">Loading…</div>
             ) : !tournament ? (
               <div className="opacity-75 text-sm">Tournament not found.</div>
-            ) : !tournament.data ? (
+            ) : !hasBracket(tournament) ? (
               <div className="opacity-75 text-sm">
                 The bracket for this tournament hasn&apos;t been built yet.
               </div>

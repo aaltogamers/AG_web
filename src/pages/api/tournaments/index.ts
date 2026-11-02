@@ -4,18 +4,22 @@ import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { parseJsonBody } from '../../../utils/apiUtils'
 import { isTournamentStarted } from '../../../utils/brackets'
+import { getChallengermodeTournament, parseChallengermodeId } from '../../../utils/challengermode'
 import {
   BracketDatabaseSnapshot,
   BracketType,
   TOURNAMENT_BRACKET_TYPES,
   TOURNAMENT_TEAM_COUNTS,
   Tournament,
+  TournamentSource,
   TournamentSummary,
   TournamentTeamCount,
   normalizeTournamentOptions,
 } from '../../../types/types'
 
 type TournamentRow = {
+  source: TournamentSource
+  challengermode_id: string | null
   slug: string
   name: string
   bracket_type: string
@@ -30,6 +34,8 @@ type TournamentRow = {
 const rowToSummary = (r: TournamentRow): TournamentSummary => ({
   slug: r.slug,
   name: r.name,
+  source: r.source,
+  challengermodeId: r.challengermode_id,
   bracketType: r.bracket_type as BracketType,
   teamCount: r.team_count as TournamentTeamCount,
   teams: r.teams ?? [],
@@ -38,6 +44,8 @@ const rowToSummary = (r: TournamentRow): TournamentSummary => ({
 })
 
 type CreateBody = {
+  source?: unknown
+  challengermode?: unknown
   name?: unknown
   bracketType?: unknown
   teamCount?: unknown
@@ -61,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const result = await pool.query(
-      `SELECT slug, name, bracket_type, team_count, teams, options, data
+      `SELECT slug, name, source, challengermode_id, bracket_type, team_count, teams, options, data
        FROM tournaments ORDER BY created_at DESC`
     )
     return res
@@ -75,6 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const body = parseJsonBody<CreateBody>(req)
+    if (body?.source === 'challengermode') return createChallengermodeTournament(body, res)
     if (!body || typeof body.name !== 'string' || !body.name.trim()) {
       return res.status(400).json({ error: 'Invalid body: name is required' })
     }
@@ -99,7 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const result = await pool.query(
         `INSERT INTO tournaments (slug, name, bracket_type, team_count, teams, options, updated_at)
          VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, now())
-         RETURNING slug, name, bracket_type, team_count, teams, options, data, updated_at, stream_match_id`,
+         RETURNING slug, name, source, challengermode_id, bracket_type, team_count, teams, options, data, updated_at, stream_match_id`,
         [
           tournamentSlug,
           name,
@@ -121,6 +130,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         data: row.data ?? null,
         updatedAt,
         streamMatchId: row.stream_match_id ?? null,
+        challengermode: null,
+        challengermodeError: null,
       }
       return res.status(201).json({
         tournament,
@@ -136,4 +147,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   return res.status(405).json({ error: 'Method not allowed' })
+}
+
+const createChallengermodeTournament = async (body: CreateBody, res: NextApiResponse) => {
+  const challengermodeId =
+    typeof body.challengermode === 'string' ? parseChallengermodeId(body.challengermode) : null
+  if (!challengermodeId) {
+    return res.status(400).json({ error: 'Invalid Challengermode tournament link or ID' })
+  }
+
+  const cm = await getChallengermodeTournament(challengermodeId)
+  if (!cm.data) {
+    return res
+      .status(400)
+      .json({ error: `Could not load the Challengermode tournament: ${cm.error}` })
+  }
+
+  const name =
+    typeof body.name === 'string' && body.name.trim() ? body.name.trim() : cm.data.name.trim()
+  const tournamentSlug = slug(name)
+  if (!tournamentSlug) return res.status(400).json({ error: 'Name must produce a non-empty slug' })
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO tournaments (slug, name, source, challengermode_id, bracket_type, team_count, updated_at)
+       VALUES ($1, $2, 'challengermode', $3, 'challengermode', 0, now())
+       RETURNING slug, name, source, challengermode_id, bracket_type, team_count, teams, options, data`,
+      [tournamentSlug, name, challengermodeId]
+    )
+    return res.status(201).json({ tournament: rowToSummary(result.rows[0] as TournamentRow) })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('duplicate key')) {
+      return res.status(409).json({ error: 'A tournament with that name or slug already exists' })
+    }
+    console.error('[tournaments] insert failed:', err)
+    return res.status(500).json({ error: 'Internal error' })
+  }
 }

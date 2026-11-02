@@ -13,7 +13,12 @@ import {
   getBracketTypeLabel,
   getFormatDescription,
 } from '../types/types'
-import { createTournament, deleteTournament, listTournaments } from '../utils/tournamentApi'
+import {
+  createChallengermodeTournament,
+  createTournament,
+  deleteTournament,
+  listTournaments,
+} from '../utils/tournamentApi'
 
 type Inputs = {
   name: string
@@ -32,6 +37,10 @@ const TournamentList = () => {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([])
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [cmLink, setCmLink] = useState('')
+  const [cmName, setCmName] = useState('')
+  const [cmMessage, setCmMessage] = useState<string | null>(null)
+  const [cmBusy, setCmBusy] = useState(false)
 
   const refresh = async () => {
     const list = await listTournaments()
@@ -63,6 +72,27 @@ const TournamentList = () => {
       setTimeout(() => setMessage(null), 2000)
     } catch (e) {
       setMessage(`Error: ${e instanceof Error ? e.message : e}`)
+    }
+  }
+
+  const onAddChallengermode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCmMessage(null)
+    setCmBusy(true)
+    try {
+      const created = await createChallengermodeTournament({
+        challengermode: cmLink,
+        name: cmName.trim() || undefined,
+      })
+      setCmMessage(`Added "${created.name}"`)
+      setCmLink('')
+      setCmName('')
+      await refresh()
+      setTimeout(() => setCmMessage(null), 2000)
+    } catch (err) {
+      setCmMessage(`Error: ${err instanceof Error ? err.message : err}`)
+    } finally {
+      setCmBusy(false)
     }
   }
 
@@ -125,6 +155,41 @@ const TournamentList = () => {
         </button>
       </form>
 
+      <form onSubmit={onAddChallengermode} className="flex flex-col items-center text-xl mb-12">
+        <h3 className="text-2xl mb-2">Add a Challengermode tournament</h3>
+        <p className="text-sm opacity-75 mb-4 text-center">
+          The bracket and scores come from Challengermode; only the stream game and stream styles
+          are set here.
+        </p>
+        <div className="grid grid-cols-input w-full md:w-2/3">
+          <label className="flex items-center" htmlFor="cmLink">
+            Challengermode link or ID
+          </label>
+          <input
+            id="cmLink"
+            value={cmLink}
+            onChange={(e) => setCmLink(e.target.value)}
+            placeholder="https://www.challengermode.com/tournaments/…"
+            className="p-2 rounded-md mt-2 mb-8 md:m-4 w-full bg-white text-black"
+            required
+          />
+          <label className="flex items-center" htmlFor="cmName">
+            Name (optional)
+          </label>
+          <input
+            id="cmName"
+            value={cmName}
+            onChange={(e) => setCmName(e.target.value)}
+            placeholder="Defaults to the name on Challengermode"
+            className="p-2 rounded-md mt-2 mb-8 md:m-4 w-full bg-white text-black"
+          />
+        </div>
+        <div className="text-center h-4 mt-2 mb-6">{cmMessage}</div>
+        <button type="submit" className="mainbutton" disabled={cmBusy}>
+          {cmBusy ? 'Adding…' : 'Add tournament'}
+        </button>
+      </form>
+
       <h3 className="text-2xl mb-4 text-center">All tournaments</h3>
       {loading ? (
         <div className="text-center opacity-75">Loading…</div>
@@ -145,8 +210,8 @@ const TournamentList = () => {
                   {t.name}
                 </Link>
                 <span className="text-sm opacity-75">
-                  /{t.slug} — {getFormatDescription(t)} —{' '}
-                  {t.isStarted ? 'started (locked)' : 'not started'}
+                  /{t.slug} — {getFormatDescription(t)}
+                  {t.source === 'local' && (t.isStarted ? ' — started (locked)' : ' — not started')}
                 </span>
               </div>
               <div className="flex gap-2">

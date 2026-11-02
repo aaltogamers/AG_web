@@ -74,6 +74,7 @@ resource "azurerm_linux_web_app" "main" {
       TELEGRAM_POSTS_BOT_TOKEN            = var.telegram_posts_bot_token
       TELEGRAM_POSTS_WEBHOOK_SECRET       = var.telegram_posts_webhook_secret
       LYCHEE_WEBHOOK_SECRET               = var.lychee_webhook_secret
+      CHALLENGERMODE_REFRESH_KEY          = var.challengermode_refresh_key
       DISCORD_BOT_TOKEN                   = var.discord_bot_token
       INSTAGRAM_USER_ID                   = var.instagram_user_id
       INSTAGRAM_ACCESS_TOKEN              = var.instagram_access_token

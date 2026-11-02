@@ -6,10 +6,12 @@ import { InMemoryDatabase } from 'brackets-memory-db'
 import type { BracketData, Tournament } from '../types/types'
 import { getBracketData, getBracketsData, syncFinalsSeedingFromQualifiers } from './brackets'
 import { SwissData, getSwissFormatData, syncSwissFormat } from './swiss'
+import { loadChallengermodeStages } from './challengermodeStages'
 
 export type TournamentStageView =
   | { kind: 'elimination'; data: BracketData }
   | { kind: 'swiss'; data: SwissData }
+  | { kind: 'note'; text: string }
 
 type StageSource = Pick<
   Tournament,
@@ -53,6 +55,21 @@ export const loadTournamentStages = async (
   ]
 }
 
+// Returns no manager for Challengermode tournaments, which can't be edited here
+export const loadAnyTournamentStages = async (
+  tournament: Tournament
+): Promise<{ manager: BracketsManager | null; stages: TournamentStageView[] }> => {
+  if (tournament.source === 'challengermode') {
+    if (!tournament.challengermode) return { manager: null, stages: [] }
+    return {
+      manager: null,
+      stages: loadChallengermodeStages(tournament.challengermode, tournament.streamMatchId),
+    }
+  }
+  const manager = await importTournamentData(tournament)
+  return { manager, stages: await loadTournamentStages(manager, tournament) }
+}
+
 /** Propagates results between stages after a mutation (e.g. qualifier winners into finals). */
 export const syncTournamentStages = async (
   manager: BracketsManager,
@@ -84,6 +101,7 @@ export const findStageMatch = (
   matchId: Id
 ): { match: Match; participants: Participant[] } | null => {
   for (const stage of stages) {
+    if (stage.kind === 'note') continue
     const matches =
       stage.kind === 'swiss' ? Object.values(stage.data.matchesByRound).flat() : stage.data.matches
     const match = matches.find((m) => m.id === matchId)

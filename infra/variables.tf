@@ -67,6 +67,13 @@ variable "lychee_webhook_secret" {
   default     = ""
 }
 
+variable "challengermode_refresh_key" {
+  description = "Refresh key of the Challengermode application, for Challengermode tournaments. Empty disables them."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "telegram_posts_webhook_secret" {
   description = "Secret Telegram sends to the posts bot webhook (/api/telegram/posts-webhook)"
   type        = string

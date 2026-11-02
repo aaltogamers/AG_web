@@ -4,17 +4,22 @@ import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { parseJsonBody } from '../../../utils/apiUtils'
 import { isTournamentStarted } from '../../../utils/brackets'
+import { ChallengermodeResult, getChallengermodeTournament } from '../../../utils/challengermode'
+import { getStreamMatchTeams, setMapBanTeams } from '../../../utils/streamMatchTeams'
 import {
   BracketDatabaseSnapshot,
   BracketType,
   TOURNAMENT_BRACKET_TYPES,
   TOURNAMENT_TEAM_COUNTS,
   Tournament,
+  TournamentSource,
   TournamentTeamCount,
   normalizeTournamentOptions,
 } from '../../../types/types'
 
 type TournamentRow = {
+  source: TournamentSource
+  challengermode_id: string | null
   slug: string
   name: string
   bracket_type: string
@@ -32,18 +37,40 @@ const updatedAtToIso = (v: unknown): string => {
   return new Date(0).toISOString()
 }
 
-const rowToTournament = (r: TournamentRow): Tournament => ({
-  slug: r.slug,
-  name: r.name,
-  bracketType: r.bracket_type as BracketType,
-  teamCount: r.team_count as TournamentTeamCount,
-  teams: r.teams ?? [],
-  options: normalizeTournamentOptions(r.options),
-  data: r.data ?? null,
-  isStarted: isTournamentStarted(r.data ?? null),
-  updatedAt: updatedAtToIso(r.updated_at),
-  streamMatchId: r.stream_match_id ?? null,
-})
+const COLUMNS = `slug, name, source, challengermode_id, bracket_type, team_count, teams, options, data, updated_at, stream_match_id`
+
+const loadChallengermode = async (r: Pick<TournamentRow, 'source' | 'challengermode_id'>) =>
+  r.source === 'challengermode' && r.challengermode_id
+    ? await getChallengermodeTournament(r.challengermode_id)
+    : null
+
+const versionOf = (updatedAt: unknown, cm: ChallengermodeResult | null) => {
+  const iso = updatedAtToIso(updatedAt)
+  return cm ? `${iso}|${cm.hash}${cm.error ? '|error' : ''}` : iso
+}
+
+const rowToTournament = (r: TournamentRow, cm: ChallengermodeResult | null): Tournament => {
+  const challengermode = cm?.data ?? null
+  return {
+    slug: r.slug,
+    name: r.name,
+    source: r.source,
+    challengermodeId: r.challengermode_id,
+    bracketType: r.bracket_type as BracketType,
+    teamCount: r.team_count as TournamentTeamCount,
+    teams: r.teams ?? [],
+    options: normalizeTournamentOptions(r.options),
+    data: r.data ?? null,
+    isStarted:
+      r.source === 'challengermode'
+        ? challengermode?.state === 'RUNNING' || challengermode?.state === 'COMPLETED'
+        : isTournamentStarted(r.data ?? null),
+    updatedAt: versionOf(r.updated_at, cm),
+    streamMatchId: r.stream_match_id ?? null,
+    challengermode,
+    challengermodeError: cm?.error ?? null,
+  }
+}
 
 type PutBody = {
   name?: unknown
@@ -78,18 +105,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const rawPoll = req.query.poll
     const poll = Array.isArray(rawPoll) ? rawPoll[0] : rawPoll
     if (poll === '1') {
-      const light = await pool.query(`SELECT updated_at FROM tournaments WHERE slug = $1`, [slug])
+      const light = await pool.query(
+        `SELECT updated_at, source, challengermode_id FROM tournaments WHERE slug = $1`,
+        [slug]
+      )
       if (light.rows.length === 0) return res.status(404).json({ error: 'Not found' })
-      return res.status(200).json({ updatedAt: updatedAtToIso(light.rows[0].updated_at) })
+      const row = light.rows[0]
+      const cm = await loadChallengermode(row)
+      return res.status(200).json({ updatedAt: versionOf(row.updated_at, cm) })
     }
 
-    const result = await pool.query(
-      `SELECT slug, name, bracket_type, team_count, teams, options, data, updated_at, stream_match_id
-       FROM tournaments WHERE slug = $1`,
-      [slug]
-    )
+    const result = await pool.query(`SELECT ${COLUMNS} FROM tournaments WHERE slug = $1`, [slug])
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' })
-    return res.status(200).json({ tournament: rowToTournament(result.rows[0] as TournamentRow) })
+    const row = result.rows[0] as TournamentRow
+    const cm = await loadChallengermode(row)
+    return res.status(200).json({ tournament: rowToTournament(row, cm) })
   }
 
   if (req.method === 'PUT') {
@@ -102,8 +132,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await client.query('BEGIN')
 
       const existingRes = await client.query(
-        `SELECT slug, name, bracket_type, team_count, teams, options, data, updated_at, stream_match_id
-         FROM tournaments WHERE slug = $1 FOR UPDATE`,
+        `SELECT ${COLUMNS} FROM tournaments WHERE slug = $1 FOR UPDATE`,
         [slug]
       )
       if (existingRes.rows.length === 0) {
@@ -126,6 +155,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         body.teamCount !== undefined ||
         body.teams !== undefined ||
         body.options !== undefined
+
+      const isChallengermode = existing.source === 'challengermode'
+      if (
+        isChallengermode &&
+        (body.bracketType !== undefined ||
+          body.teamCount !== undefined ||
+          body.teams !== undefined ||
+          body.options !== undefined ||
+          body.data !== undefined)
+      ) {
+        await client.query('ROLLBACK')
+        return res
+          .status(400)
+          .json({ error: 'Challengermode tournaments are edited on Challengermode' })
+      }
 
       if (wasStarted && isSettingsChange) {
         await client.query('ROLLBACK')
@@ -229,7 +273,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (updates.length === 0) {
         await client.query('ROLLBACK')
-        return res.status(200).json({ tournament: rowToTournament(existing) })
+        const cm = await loadChallengermode(existing)
+        return res.status(200).json({ tournament: rowToTournament(existing, cm) })
       }
 
       updates.push(`updated_at = now()`)
@@ -238,7 +283,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         result = await client.query(
           `UPDATE tournaments SET ${updates.join(', ')} WHERE slug = $${params.length}
-           RETURNING slug, name, bracket_type, team_count, teams, options, data, updated_at, stream_match_id`,
+           RETURNING ${COLUMNS}`,
           params
         )
       } catch (err) {
@@ -256,7 +301,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const row = result.rows[0] as TournamentRow
       // If slug changed, surface the new one through the response.
       void nextSlug
-      return res.status(200).json({ tournament: rowToTournament(row) })
+      const cm = await loadChallengermode(row)
+      if (typeof body.streamMatchId === 'number') {
+        const teams = getStreamMatchTeams(body.streamMatchId, {
+          data: row.data,
+          challengermode: cm?.data ?? null,
+        })
+        if (teams) {
+          await setMapBanTeams(teams).catch((err) =>
+            console.error('[tournaments/:slug] updating map ban teams failed:', err)
+          )
+        }
+      }
+      return res.status(200).json({ tournament: rowToTournament(row, cm) })
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined)
       console.error('[tournaments/:slug] update failed:', err)

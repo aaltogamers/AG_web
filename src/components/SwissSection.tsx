@@ -85,7 +85,7 @@ const SwissSection = ({
 
   const saveResult = useCallback(
     async (result: MatchResultInput) => {
-      if (!selectedMatch) return
+      if (!selectedMatch || !data.manager) return
       await updateSwissMatchResult(data.manager, { matchId: selectedMatch.id, ...result })
       await onMatchResultSaved?.()
     },
@@ -93,7 +93,7 @@ const SwissSection = ({
   )
 
   const resetResult = useCallback(async () => {
-    if (!selectedMatch) return
+    if (!selectedMatch || !data.manager) return
     await resetSwissMatchResult(data.manager, selectedMatch.id)
     await onMatchResultSaved?.()
   }, [selectedMatch, data.manager, onMatchResultSaved])
@@ -117,7 +117,9 @@ const SwissSection = ({
 
   const renderMatch = (match: Match) => {
     const isBye = isSwissBye(match)
-    const isLocked = isBye || match.opponent1?.id == null || match.opponent2?.id == null
+    const isLocked = !data.manager
+      ? isBye
+      : isBye || match.opponent1?.id == null || match.opponent2?.id == null
     const isStreamMatch = match.id === data.streamMatchId
 
     return (
@@ -159,9 +161,9 @@ const SwissSection = ({
             onKeyDown={(e) => e.key === 'Enter' && setSelectedMatch(match)}
             role="button"
             tabIndex={0}
-            aria-label="Edit match score"
+            aria-label={data.manager ? 'Edit match score' : 'Set stream game'}
           >
-            <FaPen />
+            {data.manager ? <FaPen /> : <TwitchLogo size={16} />}
           </div>
         )}
 
@@ -178,7 +180,7 @@ const SwissSection = ({
               width: bracketStyles.basicFontSize * 0.75,
             }}
           >
-            {match.id}
+            {data.matchNumbers?.[match.id] ?? match.id}
           </div>
         )}
       </div>
@@ -192,6 +194,7 @@ const SwissSection = ({
       {selectedMatch != null && (
         <BracketMatchEditDialog
           match={selectedMatch}
+          matchNumber={data.matchNumbers?.[selectedMatch.id]}
           participantsById={participantsById}
           manager={data.manager}
           streamMatchId={data.streamMatchId}

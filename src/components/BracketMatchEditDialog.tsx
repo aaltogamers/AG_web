@@ -160,8 +160,10 @@ export type MatchResultInput = { score1: number; score2: number; inProgress: boo
 
 type Props = {
   match: Match
+  matchNumber?: number
   participantsById: Record<Id, Participant>
-  manager: BracketsManager
+  // Without a manager the match is display-only and only the stream game can be changed
+  manager?: BracketsManager
   streamMatchId: Id | null
   tournamentSlug: string
   isResettable: boolean
@@ -184,6 +186,7 @@ const getDefaultValues = (match: Match): EditMatchFormValues => {
 
 const BracketMatchEditDialog = ({
   match,
+  matchNumber = Number(match.id),
   participantsById,
   manager,
   streamMatchId,
@@ -285,10 +288,49 @@ const BracketMatchEditDialog = ({
 
   const dialogTitle = (
     <div className="flex items-center gap-2">
-      Edit match {match.id}
+      {manager ? 'Edit match' : 'Match'} {matchNumber}
       {match.id === streamMatchId && <TwitchLogo size={24} />}
     </div>
   )
+
+  if (!manager) {
+    return (
+      <Dialog title={dialogTitle} onClose={onClose} busy={streamSaving}>
+        <div className="flex flex-col gap-4">
+          {(['opponent1', 'opponent2'] as const).map((side) => (
+            <div key={side} className="flex justify-between gap-4">
+              <span>
+                {match[side] === null
+                  ? 'BYE'
+                  : (participantsById[match[side]?.id ?? -1]?.name ?? 'TBD')}
+              </span>
+              <span>{match[side]?.score ?? ''}</span>
+            </div>
+          ))}
+
+          {errors.root?.message != null && (
+            <p className="text-red text-center" role="alert">
+              {errors.root.message}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-3 justify-center pt-2">
+            <button type="button" className="borderbutton" onClick={onClose}>
+              Close
+            </button>
+            <button
+              type="button"
+              className="mainbutton"
+              disabled={streamSaving}
+              onClick={() => void handleStreamGameToggle()}
+            >
+              {match.id === streamMatchId ? 'Unmark as stream game' : 'Mark as stream game'}
+            </button>
+          </div>
+        </div>
+      </Dialog>
+    )
+  }
 
   return (
     <Dialog title={dialogTitle} onClose={onClose} busy={saving || streamSaving}>
