@@ -13,6 +13,8 @@ const API_URL = 'https://publicapi.challengermode.com'
 // Cloudflare rejects some default user agents
 const USER_AGENT = 'AaltoGamersWeb/1.0 (+https://aaltogamers.fi)'
 const CACHE_TTL_MS = 10_000
+const COMPLETED_CACHE_TTL_MS = 5 * 60_000
+const ERROR_RETRY_MS = 30_000
 const REQUEST_LIMIT_PER_MINUTE = 15
 
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
@@ -65,26 +67,33 @@ type RawStage = {
 
 type RawTournament = { id: string; name: string | null; state: string; stages: RawStage[] }
 
-const globalForCm = globalThis as unknown as {
-  __agChallengermode?: {
-    accessKey: { value: string; expiresAt: number } | null
-    requestTimes: number[]
-    cache: Map<string, { data: ChallengermodeTournament; hash: string; fetchedAt: number }>
-    inFlight: Map<string, Promise<ChallengermodeTournament>>
-  }
+type CmState = {
+  accessKey: { value: string; expiresAt: number } | null
+  requestTimes: number[]
+  cache: Map<string, ChallengermodeResult & { expiresAt: number }>
+  inFlight: Map<string, Promise<void>>
 }
 
-const state = (globalForCm.__agChallengermode ??= {
+const globalForCm = globalThis as unknown as { __agChallengermode?: CmState }
+
+const state: CmState = (globalForCm.__agChallengermode ??= {
   accessKey: null,
   requestTimes: [],
   cache: new Map(),
   inFlight: new Map(),
 })
 
-const takeRequestSlot = () => {
+const freeRequestSlots = () => {
   const now = Date.now()
   state.requestTimes = state.requestTimes.filter((t) => now - t < 60_000)
-  if (state.requestTimes.length >= REQUEST_LIMIT_PER_MINUTE) {
+  return REQUEST_LIMIT_PER_MINUTE - state.requestTimes.length
+}
+
+const hasValidAccessKey = () => !!state.accessKey && state.accessKey.expiresAt > Date.now() + 60_000
+
+const takeRequestSlot = () => {
+  const now = Date.now()
+  if (freeRequestSlots() <= 0) {
     throw new Error('Challengermode request limit reached, try again in a minute')
   }
   state.requestTimes.push(now)
@@ -106,7 +115,7 @@ const post = async (path: string, body: unknown, accessKey?: string): Promise<un
 }
 
 const getAccessKey = async (): Promise<string> => {
-  if (state.accessKey && state.accessKey.expiresAt > Date.now() + 60_000) {
+  if (state.accessKey && hasValidAccessKey()) {
     return state.accessKey.value
   }
   const refreshKey = process.env.CHALLENGERMODE_REFRESH_KEY
@@ -227,30 +236,42 @@ export type ChallengermodeResult = {
   error?: string
 }
 
-// Cached, so any number of viewers polling the site cause at most one Challengermode request per tournament every CACHE_TTL_MS
-export const getChallengermodeTournament = async (id: string): Promise<ChallengermodeResult> => {
-  const cached = state.cache.get(id)
-  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
-    return { data: cached.data, hash: cached.hash }
-  }
+const hashOf = (data: ChallengermodeTournament) =>
+  createHash('sha1').update(JSON.stringify(data)).digest('hex').slice(0, 16)
 
-  let request = state.inFlight.get(id)
-  if (!request) {
-    request = fetchTournament(id).finally(() => state.inFlight.delete(id))
-    state.inFlight.set(id, request)
-  }
-
+const load = async (id: string, previous: ChallengermodeResult | undefined) => {
   try {
-    const data = await request
-    const hash = createHash('sha1').update(JSON.stringify(data)).digest('hex').slice(0, 16)
-    state.cache.set(id, { data, hash, fetchedAt: Date.now() })
-    return { data, hash }
+    const data = await fetchTournament(id)
+    const ttl = data.state === 'COMPLETED' ? COMPLETED_CACHE_TTL_MS : CACHE_TTL_MS
+    state.cache.set(id, { data, hash: hashOf(data), expiresAt: Date.now() + ttl })
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err)
     console.error(`[challengermode] fetching ${id} failed:`, error)
-    if (cached) return { data: cached.data, hash: cached.hash, error }
-    return { data: null, hash: 'error', error }
+    state.cache.set(id, {
+      data: previous?.data ?? null,
+      hash: previous?.data ? previous.hash : 'error',
+      error,
+      expiresAt: Date.now() + ERROR_RETRY_MS,
+    })
   }
+}
+
+// Cached, also on errors, so any number of viewers polling the site cause at most one Challengermode request per tournament per TTL
+export const getChallengermodeTournament = async (id: string): Promise<ChallengermodeResult> => {
+  const cached = state.cache.get(id)
+  const neededSlots = hasValidAccessKey() ? 1 : 2
+  // Over our own request budget, stale data is served as is and refreshed once a slot frees up
+  const canRefresh = !cached?.data || freeRequestSlots() >= neededSlots
+  if (canRefresh && (!cached || !(cached.expiresAt > Date.now()))) {
+    let request = state.inFlight.get(id)
+    if (!request) {
+      request = load(id, cached).finally(() => state.inFlight.delete(id))
+      state.inFlight.set(id, request)
+    }
+    await request
+  }
+  const { data, hash, error } = state.cache.get(id)!
+  return error ? { data, hash, error } : { data, hash }
 }
 
 export const findChallengermodeSeries = (

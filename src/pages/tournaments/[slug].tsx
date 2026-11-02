@@ -244,6 +244,11 @@ const TournamentPage = () => {
                 View on Challengermode
               </a>
             )}
+            {isAdmin && tournament.challengermodeError && (
+              <p className="text-sm text-red">
+                Couldn&apos;t refresh from Challengermode: {tournament.challengermodeError}
+              </p>
+            )}
           </div>
           {isAdmin && (
             <div className="flex gap-2">

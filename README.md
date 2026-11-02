@@ -134,8 +134,9 @@ elimination, double elimination and Swiss stages are shown; other stage types
 link to Challengermode.
 
 Challengermode allows 20 requests per minute, so each tournament is fetched at
-most every 10 s however many people are watching, and the site never sends
-more than 15 requests per minute. The Challengermode API has no map bans and
+most every 10 s however many people are watching (finished ones every 5 min,
+failed ones every 30 s), and the site never sends more than 15 requests per
+minute: over that, the last loaded bracket is shown until a request is free. The Challengermode API has no map bans and
 no team sides; marking a stream game fills in the team names on `/mapban`.
 
 ### AI agent MCP server

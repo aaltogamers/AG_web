@@ -4,12 +4,11 @@ import pool, { ensureMigrated } from '../../../utils/db_pg'
 import { isAdminAuthorized } from '../../../utils/adminSession'
 import { parseJsonBody } from '../../../utils/apiUtils'
 import { isTournamentStarted } from '../../../utils/brackets'
-import { getChallengermodeTournament } from '../../../utils/challengermode'
+import { ChallengermodeResult, getChallengermodeTournament } from '../../../utils/challengermode'
 import { getStreamMatchTeams, setMapBanTeams } from '../../../utils/streamMatchTeams'
 import {
   BracketDatabaseSnapshot,
   BracketType,
-  ChallengermodeTournament,
   TOURNAMENT_BRACKET_TYPES,
   TOURNAMENT_TEAM_COUNTS,
   Tournament,
@@ -45,27 +44,33 @@ const loadChallengermode = async (r: Pick<TournamentRow, 'source' | 'challengerm
     ? await getChallengermodeTournament(r.challengermode_id)
     : null
 
-const rowToTournament = (
-  r: TournamentRow,
-  challengermode: ChallengermodeTournament | null = null
-): Tournament => ({
-  slug: r.slug,
-  name: r.name,
-  source: r.source,
-  challengermodeId: r.challengermode_id,
-  bracketType: r.bracket_type as BracketType,
-  teamCount: r.team_count as TournamentTeamCount,
-  teams: r.teams ?? [],
-  options: normalizeTournamentOptions(r.options),
-  data: r.data ?? null,
-  isStarted:
-    r.source === 'challengermode'
-      ? challengermode?.state === 'RUNNING' || challengermode?.state === 'COMPLETED'
-      : isTournamentStarted(r.data ?? null),
-  updatedAt: updatedAtToIso(r.updated_at),
-  streamMatchId: r.stream_match_id ?? null,
-  challengermode,
-})
+const versionOf = (updatedAt: unknown, cm: ChallengermodeResult | null) => {
+  const iso = updatedAtToIso(updatedAt)
+  return cm ? `${iso}|${cm.hash}${cm.error ? '|error' : ''}` : iso
+}
+
+const rowToTournament = (r: TournamentRow, cm: ChallengermodeResult | null): Tournament => {
+  const challengermode = cm?.data ?? null
+  return {
+    slug: r.slug,
+    name: r.name,
+    source: r.source,
+    challengermodeId: r.challengermode_id,
+    bracketType: r.bracket_type as BracketType,
+    teamCount: r.team_count as TournamentTeamCount,
+    teams: r.teams ?? [],
+    options: normalizeTournamentOptions(r.options),
+    data: r.data ?? null,
+    isStarted:
+      r.source === 'challengermode'
+        ? challengermode?.state === 'RUNNING' || challengermode?.state === 'COMPLETED'
+        : isTournamentStarted(r.data ?? null),
+    updatedAt: versionOf(r.updated_at, cm),
+    streamMatchId: r.stream_match_id ?? null,
+    challengermode,
+    challengermodeError: cm?.error ?? null,
+  }
+}
 
 type PutBody = {
   name?: unknown
@@ -107,21 +112,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (light.rows.length === 0) return res.status(404).json({ error: 'Not found' })
       const row = light.rows[0]
       const cm = await loadChallengermode(row)
-      const updatedAt = updatedAtToIso(row.updated_at)
-      return res.status(200).json({ updatedAt: cm ? `${updatedAt}|${cm.hash}` : updatedAt })
+      return res.status(200).json({ updatedAt: versionOf(row.updated_at, cm) })
     }
 
     const result = await pool.query(`SELECT ${COLUMNS} FROM tournaments WHERE slug = $1`, [slug])
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' })
     const row = result.rows[0] as TournamentRow
     const cm = await loadChallengermode(row)
-    const tournament = rowToTournament(row, cm?.data ?? null)
-    return res.status(200).json({
-      tournament: cm
-        ? { ...tournament, updatedAt: `${tournament.updatedAt}|${cm.hash}` }
-        : tournament,
-      ...(cm?.error ? { challengermodeError: cm.error } : {}),
-    })
+    return res.status(200).json({ tournament: rowToTournament(row, cm) })
   }
 
   if (req.method === 'PUT') {
@@ -276,7 +274,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (updates.length === 0) {
         await client.query('ROLLBACK')
         const cm = await loadChallengermode(existing)
-        return res.status(200).json({ tournament: rowToTournament(existing, cm?.data ?? null) })
+        return res.status(200).json({ tournament: rowToTournament(existing, cm) })
       }
 
       updates.push(`updated_at = now()`)
@@ -315,12 +313,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           )
         }
       }
-      const tournament = rowToTournament(row, cm?.data ?? null)
-      return res.status(200).json({
-        tournament: cm
-          ? { ...tournament, updatedAt: `${tournament.updatedAt}|${cm.hash}` }
-          : tournament,
-      })
+      return res.status(200).json({ tournament: rowToTournament(row, cm) })
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined)
       console.error('[tournaments/:slug] update failed:', err)

@@ -402,6 +402,7 @@ export type Tournament = TournamentSettings & {
   streamMatchId: number | null
   // Only for Challengermode tournaments; null when it couldn't be fetched
   challengermode: ChallengermodeTournament | null
+  challengermodeError: string | null
 }
 
 export type ChallengermodeStageFormat =

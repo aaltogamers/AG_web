@@ -131,6 +131,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updatedAt,
         streamMatchId: row.stream_match_id ?? null,
         challengermode: null,
+        challengermodeError: null,
       }
       return res.status(201).json({
         tournament,

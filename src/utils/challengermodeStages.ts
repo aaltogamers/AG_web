@@ -11,6 +11,7 @@ import type {
   ChallengermodeTournament,
 } from '../types/types'
 import { buildSwissData, type SwissData } from './swiss'
+import type { TournamentStageView } from './tournamentStages'
 
 const TOURNAMENT_ID = 1
 
@@ -24,11 +25,6 @@ export const splitChallengermodeMatchId = (matchId: number) => ({
   stageIndex: Math.floor(matchId / CHALLENGERMODE_STAGE_ID_FACTOR),
   ordinal: matchId % CHALLENGERMODE_STAGE_ID_FACTOR,
 })
-
-export type ChallengermodeStageView =
-  | { kind: 'elimination'; data: BracketData }
-  | { kind: 'swiss'; data: SwissData }
-  | { kind: 'note'; text: string }
 
 type Context = {
   nextId: () => number
@@ -465,12 +461,12 @@ const markAdvancing = (
 export const loadChallengermodeStages = (
   tournament: ChallengermodeTournament,
   streamMatchId: Id | null
-): ChallengermodeStageView[] => {
+): TournamentStageView[] => {
   let id = 0
   const ctx: Context = { nextId: () => ++id, participantIds: new Map(), participants: [] }
   const { stages } = tournament
 
-  return stages.map((stage, stageIndex): ChallengermodeStageView => {
+  return stages.map((stage, stageIndex): TournamentStageView => {
     const isLastStage = stageIndex === stages.length - 1
     if (stage.format === 'SWISS') {
       if (!stage.brackets[0]?.rounds.length) {
