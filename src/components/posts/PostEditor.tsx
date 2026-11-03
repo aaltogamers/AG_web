@@ -427,6 +427,16 @@ const PostEditor = ({
                 disabled={!editable}
               />
             </label>
+            <div className="flex flex-col gap-1 text-base">
+              Can&apos;t be made before
+              <PostTimePicker
+                value={draft.canMakeFrom ?? ''}
+                onChange={(canMakeFrom) => set({ canMakeFrom })}
+                eventStart={eventStart}
+                clearable
+                disabled={!editable}
+              />
+            </div>
             <MarkdownEditor
               value={draft.bodyMd}
               onChange={(bodyMd) => set({ bodyMd })}
@@ -469,8 +479,11 @@ const PostEditor = ({
               </label>
             )}
             <div className="text-sm text-lightgray">
-              Until the post is approved, the review topic is reminded 5, 2 and 1 days before its first message,
-              mentioning who is responsible (and who makes the image, while it has none).
+              Until the post is approved, the review topic is reminded 5 days before its first message, and it
+              is sent for approval there 2 and 1 days before, mentioning who is responsible. While it has no
+              image, who makes it is asked 7, 5 and 3 days before. If it can&apos;t be made before a time, there are
+              no reminders before it. Then, and daily until it is edited, who is responsible is asked to make it.
+              Edits from 2 days before (or from when it can be made) are sent for approval a minute later.
             </div>
           </Section>
 
@@ -661,16 +674,6 @@ const PostEditor = ({
                     }
                   >
                     Approve
-                  </button>
-                )}
-                {postId && status === 'draft' && !isDirty && (
-                  <button
-                    type="button"
-                    className="borderbutton"
-                    disabled={busy}
-                    onClick={() => act('request-approval', 'Sent for approval.')}
-                  >
-                    Request approval in Telegram
                   </button>
                 )}
                 {postId &&

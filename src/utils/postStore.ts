@@ -35,7 +35,7 @@ import {
 import { MAX_IMAGES } from './social/render'
 
 // Who did something: the admin page, the AI agent, or an approver in Telegram
-export type Actor = 'admin' | 'agent' | `tg:${string}`
+export type Actor = 'admin' | 'agent' | 'scheduler' | `tg:${string}`
 
 const toISO = (d: Date | null | undefined) => (d ? d.toISOString() : null)
 
@@ -396,6 +396,7 @@ type PostRow = {
   responsible: PostPerson | null
   should_have_image: boolean
   image_responsible: PostPerson | null
+  can_make_from: Date | null
   created_by: string
   updated_by: string
   created_at: Date
@@ -445,8 +446,8 @@ type ImageRow = {
 }
 
 const POST_COLUMNS = `id, title, body_md, event_slug, status, version, approved_version, approved_by,
-  approved_at, send_at, send_on_approval, responsible, should_have_image, image_responsible, created_by,
-  updated_by, created_at, updated_at`
+  approved_at, send_at, send_on_approval, responsible, should_have_image, image_responsible, can_make_from,
+  created_by, updated_by, created_at, updated_at`
 const TARGET_COLUMNS = `id, post_id, channel_id, send_at, body_override_md, footer_override_md, pings, status,
   external_message_id, sent_at, error, attempts, forwarded_by, forwarded_at`
 
@@ -529,6 +530,7 @@ const loadPosts = async (rows: PostRow[]): Promise<Post[]> => {
       responsible: row.responsible,
       shouldHaveImage: row.should_have_image,
       imageResponsible: row.image_responsible,
+      canMakeFrom: toISO(row.can_make_from),
       targets: targets.rows.filter((t) => String(t.post_id) === String(row.id)).map(rowToTarget),
       websiteChange: change ? rowToWebsiteChange(change) : null,
     }
@@ -810,6 +812,7 @@ type NormalizedInput = {
   responsible?: PostPerson | null
   shouldHaveImage?: boolean
   imageResponsible?: PostPerson | null
+  canMakeFrom?: string | null
   targets?: {
     channelId: string
     sendAt: string | null
@@ -872,6 +875,7 @@ const normalizePostInput = async (
   if (input.imageResponsible !== undefined) {
     out.imageResponsible = parsePerson(input.imageResponsible, 'imageResponsible')
   }
+  if (input.canMakeFrom !== undefined) out.canMakeFrom = parseIsoTime(input.canMakeFrom, 'canMakeFrom')
 
   if (input.targets !== undefined) {
     if (!Array.isArray(input.targets)) throw new AgentError(400, 'channels must be a list')
@@ -959,6 +963,7 @@ export const postFromInput = async (input: PostInput, existing: Post | null): Pr
     responsible: null,
     shouldHaveImage: false,
     imageResponsible: null,
+    canMakeFrom: null,
     createdBy: 'admin',
     updatedBy: 'admin',
     createdAt: now,
@@ -980,6 +985,7 @@ export const postFromInput = async (input: PostInput, existing: Post | null): Pr
     responsible: data.responsible !== undefined ? data.responsible : base.responsible,
     shouldHaveImage: data.shouldHaveImage ?? base.shouldHaveImage,
     imageResponsible: data.imageResponsible !== undefined ? data.imageResponsible : base.imageResponsible,
+    canMakeFrom: data.canMakeFrom !== undefined ? data.canMakeFrom : base.canMakeFrom,
     targets: data.targets
       ? [
           ...lockedTargets,
@@ -1068,8 +1074,8 @@ export const createPost = async (input: PostInput, actor: Actor): Promise<Post> 
   const id = await withTransaction(async (client) => {
     const result = await client.query<{ id: string }>(
       `INSERT INTO posts (title, body_md, event_slug, send_at, send_on_approval, created_by, updated_by,
-         responsible, should_have_image, image_responsible)
-       VALUES ($1, $2, $3, $4, $6, $5, $5, $7::jsonb, $8, $9::jsonb) RETURNING id`,
+         responsible, should_have_image, image_responsible, can_make_from)
+       VALUES ($1, $2, $3, $4, $6, $5, $5, $7::jsonb, $8, $9::jsonb, $10) RETURNING id`,
       [
         data.title ?? '',
         data.bodyMd ?? '',
@@ -1080,6 +1086,7 @@ export const createPost = async (input: PostInput, actor: Actor): Promise<Post> 
         JSON.stringify(data.responsible ?? null),
         data.shouldHaveImage ?? false,
         JSON.stringify(data.imageResponsible ?? null),
+        data.canMakeFrom ?? null,
       ]
     )
     const postId = String(result.rows[0].id)
@@ -1131,7 +1138,8 @@ export const updatePost = async (
     await client.query(
       `UPDATE posts SET title = $2, body_md = $3, event_slug = $4, send_at = $5, status = $6,
          version = version + 1, updated_by = $7, updated_at = now(), missed_notice_at = NULL,
-         send_on_approval = $8, responsible = $9::jsonb, should_have_image = $10, image_responsible = $11::jsonb
+         send_on_approval = $8, responsible = $9::jsonb, should_have_image = $10, image_responsible = $11::jsonb,
+         can_make_from = $12
        WHERE id = $1`,
       [
         id,
@@ -1145,6 +1153,7 @@ export const updatePost = async (
         JSON.stringify(data.responsible !== undefined ? data.responsible : existing.responsible),
         data.shouldHaveImage ?? existing.shouldHaveImage,
         JSON.stringify(data.imageResponsible !== undefined ? data.imageResponsible : existing.imageResponsible),
+        data.canMakeFrom !== undefined ? data.canMakeFrom : existing.canMakeFrom,
       ]
     )
     if (data.images) await writeImages(client, id, data.images)
@@ -1169,16 +1178,6 @@ export const setAwaitingApproval = async (post: Post, actor: Actor) => {
   )
   if (!result.rowCount) throw outOfDate()
   await addPostEvent(post.id, post.version, 'approval requested', actor)
-}
-
-export const withdrawApprovalRequest = async (post: Post, actor: Actor) => {
-  const result = await pool.query(
-    `UPDATE posts SET status = 'draft', updated_at = now()
-     WHERE id = $1 AND status = 'awaiting_approval'`,
-    [post.id]
-  )
-  if (!result.rowCount) throw new AgentError(409, 'The post is not awaiting approval')
-  await addPostEvent(post.id, post.version, 'approval request withdrawn', actor)
 }
 
 export type ApprovalData = {
@@ -1562,28 +1561,95 @@ export const claimMissedApprovals = async (leadMinutes: number): Promise<string[
   return result.rows.map((r) => String(r.id))
 }
 
-// Unapproved posts with a send time whose responsible people haven't been
-// reminded since the last of `days` before the first message (social/reminders.ts)
-export const listPostsToRemind = async (days: readonly number[]): Promise<{ post: Post; firstSendAt: string }[]> => {
+export type ReminderKind = 'draft' | 'approval' | 'image' | 'canMake'
+
+const REMINDER_COLUMNS: Record<ReminderKind, string> = {
+  draft: 'reminded_at',
+  approval: 'approval_requested_at',
+  image: 'image_reminded_at',
+  canMake: 'can_make_reminded_at',
+}
+
+// Unapproved posts with their first pending send time and last edit (or creation)
+const UNAPPROVED_POSTS = `SELECT p.*,
+    (SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t
+     WHERE t.post_id = p.id AND t.status = 'pending') AS first_send_at,
+    (SELECT MAX(e.created_at) FROM post_events e
+     WHERE e.post_id = p.id AND e.action IN ('created', 'edited')) AS edited_at
+  FROM posts p WHERE p.status IN ('draft', 'awaiting_approval')`
+
+// Edited since can_make_from, and not in the last minute, so a few saves in a row are
+// sent for approval once
+const MADE = `edited_at > can_make_from AND edited_at <= now() - interval '1 minute'`
+
+// Unapproved posts with a send time that haven't had a `kind` reminder since the
+// last of `days` before the first message, not counting days before can_make_from.
+// Posts with can_make_from are only sent for approval once they've been made
+// (social/reminders.ts).
+export const listPostsToRemind = async (
+  kind: Exclude<ReminderKind, 'canMake'>,
+  days: readonly number[]
+): Promise<{ post: Post; firstSendAt: string }[]> => {
+  const column = REMINDER_COLUMNS[kind]
   const result = await pool.query<PostRow & { first_send_at: Date }>(
-    `SELECT * FROM (
-       SELECT p.*, (SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t
-                    WHERE t.post_id = p.id AND t.status = 'pending') AS first_send_at
-       FROM posts p WHERE p.status IN ('draft', 'awaiting_approval') AND NOT p.send_on_approval
-     ) p
+    `SELECT * FROM (${UNAPPROVED_POSTS} AND NOT p.send_on_approval) p
      WHERE first_send_at > now() AND first_send_at <= now() + make_interval(days => $2)
-       AND (reminded_at IS NULL OR reminded_at < (
-         SELECT MAX(first_send_at - make_interval(days => d)) FROM unnest($1::int[]) d
-         WHERE first_send_at - make_interval(days => d) <= now()
-       ))`,
+       AND COALESCE(${column}, '-infinity') < (
+         SELECT MAX(at) FROM (SELECT first_send_at - make_interval(days => d) AS at FROM unnest($1::int[]) d) d
+         WHERE at <= now() AND at >= COALESCE(can_make_from, '-infinity')
+       )
+       ${kind === 'approval' ? `AND (can_make_from IS NULL OR (${MADE}))` : ''}`,
     [days, Math.max(...days)]
   )
   const posts = await loadPosts(result.rows)
   return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at.toISOString() }))
 }
 
-export const markReminded = async (postId: string) => {
-  await pool.query('UPDATE posts SET reminded_at = now() WHERE id = $1', [postId])
+// Drafts with can_make_from that haven't been made since it: nudged at it and then
+// daily. firstSendAt is null for posts sent on approval (social/reminders.ts).
+export const listPostsToNudgeCanMake = async (): Promise<{ post: Post; firstSendAt: string | null }[]> => {
+  const result = await pool.query<PostRow & { first_send_at: Date | null }>(
+    `SELECT * FROM (${UNAPPROVED_POSTS} AND p.status = 'draft' AND p.can_make_from <= now()) p
+     WHERE (send_on_approval OR first_send_at > now())
+       AND COALESCE(edited_at, '-infinity') <= can_make_from
+       AND (can_make_reminded_at IS NULL OR can_make_reminded_at < can_make_from
+         OR can_make_reminded_at <= now() - interval '1 day')`
+  )
+  const posts = await loadPosts(result.rows)
+  return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at?.toISOString() ?? null }))
+}
+
+// Drafts edited in their review window and not sent for approval since, once no edit
+// has come in the last minute. The window starts at can_make_from, `days` before the
+// first message, or, for the agent's posts sent on approval, at creation. firstSendAt
+// is null for posts sent on approval (social/reminders.ts).
+export const listEditedPostsToRequest = async (
+  days: number
+): Promise<{ post: Post; firstSendAt: string | null }[]> => {
+  const result = await pool.query<PostRow & { first_send_at: Date | null }>(
+    `SELECT * FROM (
+       SELECT u.*, CASE
+           WHEN can_make_from IS NOT NULL THEN can_make_from
+           WHEN NOT send_on_approval THEN first_send_at - make_interval(days => $1)
+           WHEN created_by = 'agent' THEN '-infinity'
+         END AS review_from
+       FROM (${UNAPPROVED_POSTS} AND p.status = 'draft') u
+     ) p
+     WHERE (send_on_approval OR first_send_at > now())
+       AND edited_at > review_from AND edited_at <= now() - interval '1 minute'
+       AND COALESCE(approval_requested_at, '-infinity') < edited_at`,
+    [days]
+  )
+  const posts = await loadPosts(result.rows)
+  return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at?.toISOString() ?? null }))
+}
+
+export const markReminded = async (postId: string, kinds: ReminderKind[]) => {
+  if (!kinds.length) return
+  await pool.query(
+    `UPDATE posts SET ${kinds.map((k) => `${REMINDER_COLUMNS[k]} = now()`).join(', ')} WHERE id = $1`,
+    [postId]
+  )
 }
 
 // Review topic messages

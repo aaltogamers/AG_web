@@ -56,7 +56,7 @@ export const createMcpServer = () => {
         'Marketing posts to Telegram, Discord and Instagram are written once in markdown with placeholders like {{event}}, {{signup}} and {{link:discord}}, filled in for each channel; their times are Helsinki times too. ' +
         'Before writing a post, read earlier posts with get_example_posts and write it the same way they are written, so all posts look alike. ' +
         'Keep posts as short as possible while still interesting and informative. ' +
-        'The agent can only make drafts and ask for approval: only a human can approve, schedule or send a post.',
+        'The agent can only make drafts; they are sent for approval automatically 2 days before they go out, and only a human can approve, schedule or send a post.',
     }
   )
   registerEventTools(server)

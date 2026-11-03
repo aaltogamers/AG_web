@@ -84,6 +84,7 @@ export type PostDraft = {
   responsible: PostPerson | null
   shouldHaveImage: boolean
   imageResponsible: PostPerson | null
+  canMakeFrom: string
   targets: TargetDraft[]
   websiteChange: WebsiteChangeDraft | null
 }
@@ -98,6 +99,7 @@ export const emptyPostDraft = (): PostDraft => ({
   responsible: null,
   shouldHaveImage: false,
   imageResponsible: null,
+  canMakeFrom: '',
   targets: [],
   websiteChange: null,
 })
@@ -185,6 +187,7 @@ export const postToDraft = (post: Post, events: AGEvent[]): PostDraft => {
     responsible: post.responsible,
     shouldHaveImage: post.shouldHaveImage,
     imageResponsible: post.imageResponsible,
+    canMakeFrom: toLocal(post.canMakeFrom),
     targets: post.targets
       .filter((t) => t.status !== 'cancelled')
       .map((t) => ({
@@ -254,6 +257,7 @@ export const draftToInput = (draft: PostDraft): PostInput => {
     responsible: draft.responsible ?? null,
     shouldHaveImage: draft.shouldHaveImage ?? false,
     imageResponsible: draft.imageResponsible ?? null,
+    canMakeFrom: draft.canMakeFrom ? fromLocal(draft.canMakeFrom) : null,
     targets: draft.targets.map((t) => ({
       channelId: t.channelId,
       sendAt: t.ownTime ? fromLocal(t.sendAt) : null,
@@ -281,6 +285,7 @@ export const duplicateDraft = (post: Post, events: AGEvent[]): PostDraft => {
     eventSlug: post.eventSlug && events.some((e) => e.slug === post.eventSlug) ? post.eventSlug : '',
     sendAt: '',
     sendOnApproval: false,
+    canMakeFrom: '',
     targets: draft.targets.map((t) => ({ ...t, ownTime: false, sendAt: '', locked: false })),
     websiteChange: null,
   }

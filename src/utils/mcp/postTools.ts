@@ -8,9 +8,9 @@ import {
   describePreview,
   parsePostArgs,
 } from '../agentPosts'
-import { AgentError, formatAgentTime, parseAgentTime } from '../agentApi'
+import { AgentError, parseAgentTime } from '../agentApi'
 import { getPostHistory, getPostOrThrow, getSettings, listChannels, listPosts, listSentPosts } from '../postStore'
-import { createPostAction, deletePost, editPost, requestApproval, withdrawApproval } from '../social/actions'
+import { createPostAction, deletePost, editPost } from '../social/actions'
 import { isDiscordConfigured, listGuildRoles } from '../social/discord'
 import { buildPreview } from '../social/preview'
 import { PLACEHOLDER_HELP } from '../social/render'
@@ -68,19 +68,25 @@ const postFields = {
   sendAt: z.string().nullable().describe(`Default send time of all channels. ${TIME_HINT}`),
   sendOnApproval: z
     .boolean()
-    .describe('Send the channels without their own sendAt right when a human approves the post, instead of at sendAt'),
+    .describe('Send the channels without their own sendAt right when a human approves the post, instead of at sendAt. Such a post is sent for approval in Telegram a minute after it is created or edited.'),
   images: z.array(imageSchema).describe('Up to 10 images; Instagram needs at least one. Replaces all images.'),
   responsible: z
     .string()
     .nullable()
     .describe(
-      'Telegram user id (from find_task_users) of who finishes the post and gets it approved. Reminded in the review topic 5, 2 and 1 days before the first message while the post is not approved.'
+      'Telegram user id (from find_task_users) of who finishes the post and gets it approved. Reminded in the review topic 5 days before the first message, and when it is sent for approval 2 and 1 days before, while the post is not approved.'
     ),
   shouldHaveImage: z.boolean().describe("The post can't be approved without an image"),
   imageResponsible: z
     .string()
     .nullable()
     .describe('Telegram user id (from find_task_users) of who makes the image, reminded with the post while it has none'),
+  canMakeFrom: z
+    .string()
+    .nullable()
+    .describe(
+      `When the post can be made at the earliest, e.g. the day of the event for a post about its winners. ${TIME_HINT}. There are no reminders or approval requests before it. Then, and daily until the post is edited, the responsible user is asked to make it, and it is sent for approval a minute after it is edited.`
+    ),
   channels: z
     .array(channelSchema)
     .describe('Where the post goes. Replaces all channels; channels already sent to are kept as they are.'),
@@ -180,14 +186,14 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Create post',
       description:
-        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels. Write it like the posts from get_example_posts. Check it with preview_post, then ask a human to approve it with request_approval. Nothing is sent before a human approves it.',
+        'Creates a draft of a marketing post to Telegram, Discord and Instagram channels. Write it like the posts from get_example_posts. Check it with preview_post. Drafts with a send time are sent for approval in Telegram automatically 2 days before (and again 1 day before), and ones with sendOnApproval a minute after they are created; edits after that are sent for approval again a minute later; nothing is sent before a human approves it.',
       inputSchema: { ...optionalPostFields, title: postFields.title, body: postFields.body },
     },
     runTool('create_post', async (args) => {
       const post = await createPostAction(await parsePostArgs(givenArgs(args)), AGENT)
       return {
         post: await describePost(post, await listChannels(), { full: true }),
-        note: 'Saved as a draft. Check it with preview_post, then call request_approval. Link the post to the user.',
+        note: `Saved as a draft. Check it with preview_post. It is sent for approval automatically ${post.sendOnApproval ? 'within a minute' : '2 days before its first message'}, or a human can approve it on the website. Link the post to the user.`,
       }
     })
   )
@@ -197,7 +203,7 @@ export const registerPostTools = (server: McpServer) => {
     {
       title: 'Update post',
       description:
-        'Changes only the given fields of a post. Editing a post that is awaiting approval or approved sends a new review, and an approved post is taken off the schedule until a human approves it again.',
+        'Changes only the given fields of a post. Editing a post that is awaiting approval or approved sends a new review, editing a rejected draft after it was sent for approval sends it again a minute later, and an approved post is taken off the schedule until a human approves it again.',
       inputSchema: { postId: z.string(), ...optionalPostFields },
       annotations: { idempotentHint: true },
     },
@@ -224,33 +230,6 @@ export const registerPostTools = (server: McpServer) => {
     runTool('preview_post', async ({ postId }) => {
       const post = await getPostOrThrow(postId)
       return { postId: post.id, version: post.version, preview: describePreview(await buildPreview(post)) }
-    })
-  )
-
-  server.registerTool(
-    'request_approval',
-    {
-      title: 'Request approval',
-      description:
-        'Asks a human to approve a draft: sends a review with Approve / Reject buttons to the review topic in Telegram. Only a human can approve; after approval the post is sent at its times.',
-      inputSchema: { postId: z.string() },
-    },
-    runTool('request_approval', async ({ postId }) => {
-      const { post, note } = await requestApproval(postId, AGENT)
-      return { post: await describePost(post, await listChannels()), note }
-    })
-  )
-
-  server.registerTool(
-    'withdraw_approval_request',
-    {
-      title: 'Withdraw approval request',
-      description: 'Takes a post that is awaiting approval back to draft.',
-      inputSchema: { postId: z.string() },
-    },
-    runTool('withdraw_approval_request', async ({ postId }) => {
-      const post = await withdrawApproval(postId, AGENT)
-      return { post: await describePost(post, await listChannels()), at: formatAgentTime(new Date()) }
     })
   )
 
