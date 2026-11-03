@@ -85,7 +85,7 @@ const postFields = {
     .string()
     .nullable()
     .describe(
-      `When the post can be made at the earliest, e.g. the day of the event for a post about its winners. ${TIME_HINT}. There are no reminders or approval requests before it, and the responsible user is asked to make it at that time.`
+      `When the post can be made at the earliest, e.g. the day of the event for a post about its winners. ${TIME_HINT}. There are no reminders or approval requests before it. Then, and daily until the post is edited, the responsible user is asked to make it, and it is sent for approval a minute after it is edited.`
     ),
   channels: z
     .array(channelSchema)

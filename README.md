@@ -188,8 +188,9 @@ any time. While the post has no image, the image maker (or the responsible
 user) is asked for one 7, 5 and 3 days before and with the approval requests.
 Reminders due at the same time are sent as one message. A post that "Can't be
 made before" a time (e.g. a winners post) has no reminders or approval requests
-before it; at that time the responsible user is asked to make it and get it
-approved.
+before it. At that time, and every day after until it is edited, the
+responsible user is asked to make it; a minute after it is edited, it is sent
+for approval.
 
 Website changes are hidden for now: the post editor only shows one a post
 already has, and the MCP server can't make or see them.

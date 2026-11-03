@@ -1572,25 +1572,35 @@ const REMINDER_COLUMNS: Record<ReminderKind, string> = {
   canMake: 'can_make_reminded_at',
 }
 
+// Unapproved posts with their first pending send time and last edit (or creation)
+const UNAPPROVED_POSTS = `SELECT p.*,
+    (SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t
+     WHERE t.post_id = p.id AND t.status = 'pending') AS first_send_at,
+    (SELECT MAX(e.created_at) FROM post_events e
+     WHERE e.post_id = p.id AND e.action IN ('created', 'edited')) AS edited_at
+  FROM posts p WHERE p.status IN ('draft', 'awaiting_approval')`
+
+// Edited since can_make_from, and not in the last minute, so a few saves in a row are
+// sent for approval once
+const MADE = `edited_at > can_make_from AND edited_at <= now() - interval '1 minute'`
+
 // Unapproved posts with a send time that haven't had a `kind` reminder since the
-// last of `days` before the first message, not counting days before can_make_from
-// (social/reminders.ts)
+// last of `days` before the first message, not counting days before can_make_from.
+// Posts with can_make_from are only sent for approval once they've been made
+// (social/reminders.ts).
 export const listPostsToRemind = async (
   kind: Exclude<ReminderKind, 'canMake'>,
   days: readonly number[]
 ): Promise<{ post: Post; firstSendAt: string }[]> => {
   const column = REMINDER_COLUMNS[kind]
   const result = await pool.query<PostRow & { first_send_at: Date }>(
-    `SELECT * FROM (
-       SELECT p.*, (SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t
-                    WHERE t.post_id = p.id AND t.status = 'pending') AS first_send_at
-       FROM posts p WHERE p.status IN ('draft', 'awaiting_approval') AND NOT p.send_on_approval
-     ) p
+    `SELECT * FROM (${UNAPPROVED_POSTS} AND NOT p.send_on_approval) p
      WHERE first_send_at > now() AND first_send_at <= now() + make_interval(days => $2)
        AND COALESCE(${column}, '-infinity') < (
          SELECT MAX(at) FROM (SELECT first_send_at - make_interval(days => d) AS at FROM unnest($1::int[]) d) d
          WHERE at <= now() AND at >= COALESCE(can_make_from, '-infinity')
-       )`,
+       )
+       ${kind === 'approval' ? `AND (can_make_from IS NULL OR (${MADE}))` : ''}`,
     [days, Math.max(...days)]
   )
   const posts = await loadPosts(result.rows)
@@ -1602,22 +1612,32 @@ export const listPostsToRemind = async (
 export const listAgentPostsToRequest = async (): Promise<Post[]> => {
   const result = await pool.query<PostRow>(
     `SELECT * FROM posts WHERE status = 'draft' AND send_on_approval AND created_by = 'agent'
-       AND approval_requested_at IS NULL AND COALESCE(can_make_from, '-infinity') <= now()`
+       AND approval_requested_at IS NULL AND can_make_from IS NULL`
   )
   return loadPosts(result.rows)
 }
 
-// Unapproved posts whose can_make_from has come and that haven't been told so
-// since (social/reminders.ts). firstSendAt is null for posts sent on approval.
+// Drafts with can_make_from that haven't been made since it: nudged at it and then
+// daily. firstSendAt is null for posts sent on approval (social/reminders.ts).
 export const listPostsToNudgeCanMake = async (): Promise<{ post: Post; firstSendAt: string | null }[]> => {
   const result = await pool.query<PostRow & { first_send_at: Date | null }>(
-    `SELECT * FROM (
-       SELECT p.*, (SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t
-                    WHERE t.post_id = p.id AND t.status = 'pending') AS first_send_at
-       FROM posts p WHERE p.status IN ('draft', 'awaiting_approval') AND p.can_make_from <= now()
-         AND COALESCE(p.can_make_reminded_at, '-infinity') < p.can_make_from
-     ) p
-     WHERE send_on_approval OR first_send_at > now()`
+    `SELECT * FROM (${UNAPPROVED_POSTS} AND p.status = 'draft' AND p.can_make_from <= now()) p
+     WHERE (send_on_approval OR first_send_at > now())
+       AND COALESCE(edited_at, '-infinity') <= can_make_from
+       AND (can_make_reminded_at IS NULL OR can_make_reminded_at < can_make_from
+         OR can_make_reminded_at <= now() - interval '1 day')`
+  )
+  const posts = await loadPosts(result.rows)
+  return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at?.toISOString() ?? null }))
+}
+
+// Drafts with can_make_from that have been made since it and not sent for approval
+// since the last edit (social/reminders.ts)
+export const listMadePostsToRequest = async (): Promise<{ post: Post; firstSendAt: string | null }[]> => {
+  const result = await pool.query<PostRow & { first_send_at: Date | null }>(
+    `SELECT * FROM (${UNAPPROVED_POSTS} AND p.status = 'draft' AND p.can_make_from <= now()) p
+     WHERE (send_on_approval OR first_send_at > now()) AND ${MADE}
+       AND COALESCE(approval_requested_at, '-infinity') < edited_at`
   )
   const posts = await loadPosts(result.rows)
   return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at?.toISOString() ?? null }))

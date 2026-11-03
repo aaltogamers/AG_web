@@ -2,9 +2,11 @@
 // that it is a draft (REMINDER_DAYS), approval requests (APPROVAL_REQUEST_DAYS)
 // and missing images (IMAGE_REMINDER_DAYS). Ones due at once are sent as one message.
 // The agent's posts sent on approval are sent for approval right away. A post with
-// canMakeFrom has none of these before it, and is nudged to be made at it.
+// canMakeFrom has none of these before it; it is nudged to be made at it and then
+// daily, and sent for approval a minute after it is edited.
 import {
   listAgentPostsToRequest,
+  listMadePostsToRequest,
   listPostsToNudgeCanMake,
   listPostsToRemind,
   markReminded,
@@ -46,7 +48,9 @@ const remind = async (post: Post, firstSendAt: string | null, kinds: Set<Reminde
     if (post.responsible) lines.push(`${mention(post.responsible)}, please check it and get it approved.`)
   } else if (kinds.has('canMake')) {
     lines.push(`🛠 <b>It can be made now</b>, and ${when}.`)
-    if (post.responsible) lines.push(`${mention(post.responsible)}, please make it and get it approved.`)
+    lines.push(
+      `${post.responsible ? `${mention(post.responsible)}, please make it` : 'Please make it'}; it is sent for approval a minute after it is edited.`
+    )
   } else if (kinds.has('draft')) {
     lines.push(`⏰ <b>Not approved yet</b>, and ${when}.`)
     if (post.responsible) lines.push(`${mention(post.responsible)}, please finish it and get it approved.`)
@@ -65,17 +69,15 @@ export const sendReminders = async () => {
   for (const post of await listAgentPostsToRequest()) {
     due.set(post.id, { post, firstSendAt: null, kinds: new Set(['approval']) })
   }
-  for (const { post, firstSendAt } of await listPostsToNudgeCanMake()) {
+  const add = (kind: ReminderKind, { post, firstSendAt }: { post: Post; firstSendAt: string | null }) => {
     const entry = due.get(post.id) ?? { post, firstSendAt, kinds: new Set() }
-    entry.kinds.add('canMake')
+    entry.kinds.add(kind)
     due.set(post.id, entry)
   }
+  for (const item of await listPostsToNudgeCanMake()) add('canMake', item)
+  for (const item of await listMadePostsToRequest()) add('approval', item)
   for (const kind of Object.keys(DAYS) as (keyof typeof DAYS)[]) {
-    for (const { post, firstSendAt } of await listPostsToRemind(kind, DAYS[kind])) {
-      const entry = due.get(post.id) ?? { post, firstSendAt, kinds: new Set() }
-      entry.kinds.add(kind)
-      due.set(post.id, entry)
-    }
+    for (const item of await listPostsToRemind(kind, DAYS[kind])) add(kind, item)
   }
   for (const { post, firstSendAt, kinds } of due.values()) {
     await remind(post, firstSendAt, kinds).catch((err) =>

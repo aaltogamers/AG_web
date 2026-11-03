@@ -482,7 +482,8 @@ const PostEditor = ({
               Until the post is approved, the review topic is reminded 5 days before its first message, and it
               is sent for approval there 2 and 1 days before, mentioning who is responsible. While it has no
               image, who makes it is asked 7, 5 and 3 days before. If it can&apos;t be made before a time, there are
-              no reminders before it, and who is responsible is asked to make it at that time.
+              no reminders before it. Then, and daily until it is edited, who is responsible is asked to make it,
+              and it is sent for approval a minute after it is edited.
             </div>
           </Section>
 
