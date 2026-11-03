@@ -1139,7 +1139,7 @@ export const updatePost = async (
       `UPDATE posts SET title = $2, body_md = $3, event_slug = $4, send_at = $5, status = $6,
          version = version + 1, updated_by = $7, updated_at = now(), missed_notice_at = NULL,
          send_on_approval = $8, responsible = $9::jsonb, should_have_image = $10, image_responsible = $11::jsonb,
-         approval_requested_at = CASE WHEN $12 THEN NULL ELSE approval_requested_at END, can_make_from = $13
+         can_make_from = $12
        WHERE id = $1`,
       [
         id,
@@ -1153,8 +1153,6 @@ export const updatePost = async (
         JSON.stringify(data.responsible !== undefined ? data.responsible : existing.responsible),
         data.shouldHaveImage ?? existing.shouldHaveImage,
         JSON.stringify(data.imageResponsible !== undefined ? data.imageResponsible : existing.imageResponsible),
-        // Taken out of review by the edit, so it is sent for approval again (reminders.ts)
-        nextStatus === 'draft' && existing.status !== 'draft',
         data.canMakeFrom !== undefined ? data.canMakeFrom : existing.canMakeFrom,
       ]
     )
@@ -1607,16 +1605,6 @@ export const listPostsToRemind = async (
   return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at.toISOString() }))
 }
 
-// Drafts by the agent that are sent on approval and haven't been sent for approval
-// yet; they have no send time to request it before (social/reminders.ts)
-export const listAgentPostsToRequest = async (): Promise<Post[]> => {
-  const result = await pool.query<PostRow>(
-    `SELECT * FROM posts WHERE status = 'draft' AND send_on_approval AND created_by = 'agent'
-       AND approval_requested_at IS NULL AND can_make_from IS NULL`
-  )
-  return loadPosts(result.rows)
-}
-
 // Drafts with can_make_from that haven't been made since it: nudged at it and then
 // daily. firstSendAt is null for posts sent on approval (social/reminders.ts).
 export const listPostsToNudgeCanMake = async (): Promise<{ post: Post; firstSendAt: string | null }[]> => {
@@ -1631,13 +1619,26 @@ export const listPostsToNudgeCanMake = async (): Promise<{ post: Post; firstSend
   return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at?.toISOString() ?? null }))
 }
 
-// Drafts with can_make_from that have been made since it and not sent for approval
-// since the last edit (social/reminders.ts)
-export const listMadePostsToRequest = async (): Promise<{ post: Post; firstSendAt: string | null }[]> => {
+// Drafts edited in their review window and not sent for approval since, once no edit
+// has come in the last minute. The window starts at can_make_from, `days` before the
+// first message, or, for the agent's posts sent on approval, at creation. firstSendAt
+// is null for posts sent on approval (social/reminders.ts).
+export const listEditedPostsToRequest = async (
+  days: number
+): Promise<{ post: Post; firstSendAt: string | null }[]> => {
   const result = await pool.query<PostRow & { first_send_at: Date | null }>(
-    `SELECT * FROM (${UNAPPROVED_POSTS} AND p.status = 'draft' AND p.can_make_from <= now()) p
-     WHERE (send_on_approval OR first_send_at > now()) AND ${MADE}
-       AND COALESCE(approval_requested_at, '-infinity') < edited_at`
+    `SELECT * FROM (
+       SELECT u.*, CASE
+           WHEN can_make_from IS NOT NULL THEN can_make_from
+           WHEN NOT send_on_approval THEN first_send_at - make_interval(days => $1)
+           WHEN created_by = 'agent' THEN '-infinity'
+         END AS review_from
+       FROM (${UNAPPROVED_POSTS} AND p.status = 'draft') u
+     ) p
+     WHERE (send_on_approval OR first_send_at > now())
+       AND edited_at > review_from AND edited_at <= now() - interval '1 minute'
+       AND COALESCE(approval_requested_at, '-infinity') < edited_at`,
+    [days]
   )
   const posts = await loadPosts(result.rows)
   return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at?.toISOString() ?? null }))

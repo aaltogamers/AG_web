@@ -1,12 +1,11 @@
 // Reminders of unapproved posts in the review topic before their first message:
 // that it is a draft (REMINDER_DAYS), approval requests (APPROVAL_REQUEST_DAYS)
 // and missing images (IMAGE_REMINDER_DAYS). Ones due at once are sent as one message.
-// The agent's posts sent on approval are sent for approval right away. A post with
-// canMakeFrom has none of these before it; it is nudged to be made at it and then
-// daily, and sent for approval a minute after it is edited.
+// A post with canMakeFrom has none of these before it; it is nudged to be made at it
+// and then daily. Edits from the first approval request time on (canMakeFrom, or
+// creation for the agent's posts sent on approval) are sent for approval a minute later.
 import {
-  listAgentPostsToRequest,
-  listMadePostsToRequest,
+  listEditedPostsToRequest,
   listPostsToNudgeCanMake,
   listPostsToRemind,
   markReminded,
@@ -66,16 +65,13 @@ const remind = async (post: Post, firstSendAt: string | null, kinds: Set<Reminde
 
 export const sendReminders = async () => {
   const due = new Map<string, { post: Post; firstSendAt: string | null; kinds: Set<ReminderKind> }>()
-  for (const post of await listAgentPostsToRequest()) {
-    due.set(post.id, { post, firstSendAt: null, kinds: new Set(['approval']) })
-  }
   const add = (kind: ReminderKind, { post, firstSendAt }: { post: Post; firstSendAt: string | null }) => {
     const entry = due.get(post.id) ?? { post, firstSendAt, kinds: new Set() }
     entry.kinds.add(kind)
     due.set(post.id, entry)
   }
   for (const item of await listPostsToNudgeCanMake()) add('canMake', item)
-  for (const item of await listMadePostsToRequest()) add('approval', item)
+  for (const item of await listEditedPostsToRequest(Math.max(...APPROVAL_REQUEST_DAYS))) add('approval', item)
   for (const kind of Object.keys(DAYS) as (keyof typeof DAYS)[]) {
     for (const item of await listPostsToRemind(kind, DAYS[kind])) add(kind, item)
   }
