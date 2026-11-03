@@ -75,6 +75,7 @@ export const parsePostArgs = async (args: Record<string, unknown>): Promise<Post
   if ('imageResponsible' in args) {
     input.imageResponsible = await parsePerson(args.imageResponsible, 'imageResponsible')
   }
+  if ('canMakeFrom' in args) input.canMakeFrom = args.canMakeFrom === null ? null : toIso(args.canMakeFrom, 'canMakeFrom')
   if ('channels' in args) {
     input.targets = (optionalArray(args.channels, 'channels') ?? []).map((raw, i) => {
       const t = asRecord(raw, `channels[${i}]`)
@@ -123,6 +124,7 @@ export const describePost = async (
   responsible: post.responsible,
   shouldHaveImage: post.shouldHaveImage,
   imageResponsible: post.imageResponsible,
+  canMakeFrom: time(post.canMakeFrom),
   channels: post.targets.map((t) => {
     const channel = channels.find((c) => c.id === t.channelId)
     return {

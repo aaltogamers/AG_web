@@ -81,6 +81,12 @@ const postFields = {
     .string()
     .nullable()
     .describe('Telegram user id (from find_task_users) of who makes the image, reminded with the post while it has none'),
+  canMakeFrom: z
+    .string()
+    .nullable()
+    .describe(
+      `When the post can be made at the earliest, e.g. the day of the event for a post about its winners. ${TIME_HINT}. There are no reminders or approval requests before it, and the responsible user is asked to make it at that time.`
+    ),
   channels: z
     .array(channelSchema)
     .describe('Where the post goes. Replaces all channels; channels already sent to are kept as they are.'),

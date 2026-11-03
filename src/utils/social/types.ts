@@ -182,6 +182,8 @@ export type Post = {
   shouldHaveImage: boolean
   // Who makes the image
   imageResponsible: PostPerson | null
+  // Before this, the post can't be made (e.g. a winners post) and isn't reminded about
+  canMakeFrom: string | null
   targets: PostTarget[]
   websiteChange: WebsiteChange | null
 }
@@ -197,6 +199,7 @@ export type PostInput = {
   responsible?: PostPerson | null
   shouldHaveImage?: boolean
   imageResponsible?: PostPerson | null
+  canMakeFrom?: string | null
   targets?: {
     channelId: string
     sendAt?: string | null

@@ -396,6 +396,7 @@ type PostRow = {
   responsible: PostPerson | null
   should_have_image: boolean
   image_responsible: PostPerson | null
+  can_make_from: Date | null
   created_by: string
   updated_by: string
   created_at: Date
@@ -445,8 +446,8 @@ type ImageRow = {
 }
 
 const POST_COLUMNS = `id, title, body_md, event_slug, status, version, approved_version, approved_by,
-  approved_at, send_at, send_on_approval, responsible, should_have_image, image_responsible, created_by,
-  updated_by, created_at, updated_at`
+  approved_at, send_at, send_on_approval, responsible, should_have_image, image_responsible, can_make_from,
+  created_by, updated_by, created_at, updated_at`
 const TARGET_COLUMNS = `id, post_id, channel_id, send_at, body_override_md, footer_override_md, pings, status,
   external_message_id, sent_at, error, attempts, forwarded_by, forwarded_at`
 
@@ -529,6 +530,7 @@ const loadPosts = async (rows: PostRow[]): Promise<Post[]> => {
       responsible: row.responsible,
       shouldHaveImage: row.should_have_image,
       imageResponsible: row.image_responsible,
+      canMakeFrom: toISO(row.can_make_from),
       targets: targets.rows.filter((t) => String(t.post_id) === String(row.id)).map(rowToTarget),
       websiteChange: change ? rowToWebsiteChange(change) : null,
     }
@@ -810,6 +812,7 @@ type NormalizedInput = {
   responsible?: PostPerson | null
   shouldHaveImage?: boolean
   imageResponsible?: PostPerson | null
+  canMakeFrom?: string | null
   targets?: {
     channelId: string
     sendAt: string | null
@@ -872,6 +875,7 @@ const normalizePostInput = async (
   if (input.imageResponsible !== undefined) {
     out.imageResponsible = parsePerson(input.imageResponsible, 'imageResponsible')
   }
+  if (input.canMakeFrom !== undefined) out.canMakeFrom = parseIsoTime(input.canMakeFrom, 'canMakeFrom')
 
   if (input.targets !== undefined) {
     if (!Array.isArray(input.targets)) throw new AgentError(400, 'channels must be a list')
@@ -959,6 +963,7 @@ export const postFromInput = async (input: PostInput, existing: Post | null): Pr
     responsible: null,
     shouldHaveImage: false,
     imageResponsible: null,
+    canMakeFrom: null,
     createdBy: 'admin',
     updatedBy: 'admin',
     createdAt: now,
@@ -980,6 +985,7 @@ export const postFromInput = async (input: PostInput, existing: Post | null): Pr
     responsible: data.responsible !== undefined ? data.responsible : base.responsible,
     shouldHaveImage: data.shouldHaveImage ?? base.shouldHaveImage,
     imageResponsible: data.imageResponsible !== undefined ? data.imageResponsible : base.imageResponsible,
+    canMakeFrom: data.canMakeFrom !== undefined ? data.canMakeFrom : base.canMakeFrom,
     targets: data.targets
       ? [
           ...lockedTargets,
@@ -1068,8 +1074,8 @@ export const createPost = async (input: PostInput, actor: Actor): Promise<Post> 
   const id = await withTransaction(async (client) => {
     const result = await client.query<{ id: string }>(
       `INSERT INTO posts (title, body_md, event_slug, send_at, send_on_approval, created_by, updated_by,
-         responsible, should_have_image, image_responsible)
-       VALUES ($1, $2, $3, $4, $6, $5, $5, $7::jsonb, $8, $9::jsonb) RETURNING id`,
+         responsible, should_have_image, image_responsible, can_make_from)
+       VALUES ($1, $2, $3, $4, $6, $5, $5, $7::jsonb, $8, $9::jsonb, $10) RETURNING id`,
       [
         data.title ?? '',
         data.bodyMd ?? '',
@@ -1080,6 +1086,7 @@ export const createPost = async (input: PostInput, actor: Actor): Promise<Post> 
         JSON.stringify(data.responsible ?? null),
         data.shouldHaveImage ?? false,
         JSON.stringify(data.imageResponsible ?? null),
+        data.canMakeFrom ?? null,
       ]
     )
     const postId = String(result.rows[0].id)
@@ -1132,7 +1139,7 @@ export const updatePost = async (
       `UPDATE posts SET title = $2, body_md = $3, event_slug = $4, send_at = $5, status = $6,
          version = version + 1, updated_by = $7, updated_at = now(), missed_notice_at = NULL,
          send_on_approval = $8, responsible = $9::jsonb, should_have_image = $10, image_responsible = $11::jsonb,
-         approval_requested_at = CASE WHEN $12 THEN NULL ELSE approval_requested_at END
+         approval_requested_at = CASE WHEN $12 THEN NULL ELSE approval_requested_at END, can_make_from = $13
        WHERE id = $1`,
       [
         id,
@@ -1148,6 +1155,7 @@ export const updatePost = async (
         JSON.stringify(data.imageResponsible !== undefined ? data.imageResponsible : existing.imageResponsible),
         // Taken out of review by the edit, so it is sent for approval again (reminders.ts)
         nextStatus === 'draft' && existing.status !== 'draft',
+        data.canMakeFrom !== undefined ? data.canMakeFrom : existing.canMakeFrom,
       ]
     )
     if (data.images) await writeImages(client, id, data.images)
@@ -1555,18 +1563,20 @@ export const claimMissedApprovals = async (leadMinutes: number): Promise<string[
   return result.rows.map((r) => String(r.id))
 }
 
-export type ReminderKind = 'draft' | 'approval' | 'image'
+export type ReminderKind = 'draft' | 'approval' | 'image' | 'canMake'
 
 const REMINDER_COLUMNS: Record<ReminderKind, string> = {
   draft: 'reminded_at',
   approval: 'approval_requested_at',
   image: 'image_reminded_at',
+  canMake: 'can_make_reminded_at',
 }
 
 // Unapproved posts with a send time that haven't had a `kind` reminder since the
-// last of `days` before the first message (social/reminders.ts)
+// last of `days` before the first message, not counting days before can_make_from
+// (social/reminders.ts)
 export const listPostsToRemind = async (
-  kind: ReminderKind,
+  kind: Exclude<ReminderKind, 'canMake'>,
   days: readonly number[]
 ): Promise<{ post: Post; firstSendAt: string }[]> => {
   const column = REMINDER_COLUMNS[kind]
@@ -1577,10 +1587,10 @@ export const listPostsToRemind = async (
        FROM posts p WHERE p.status IN ('draft', 'awaiting_approval') AND NOT p.send_on_approval
      ) p
      WHERE first_send_at > now() AND first_send_at <= now() + make_interval(days => $2)
-       AND (${column} IS NULL OR ${column} < (
-         SELECT MAX(first_send_at - make_interval(days => d)) FROM unnest($1::int[]) d
-         WHERE first_send_at - make_interval(days => d) <= now()
-       ))`,
+       AND COALESCE(${column}, '-infinity') < (
+         SELECT MAX(at) FROM (SELECT first_send_at - make_interval(days => d) AS at FROM unnest($1::int[]) d) d
+         WHERE at <= now() AND at >= COALESCE(can_make_from, '-infinity')
+       )`,
     [days, Math.max(...days)]
   )
   const posts = await loadPosts(result.rows)
@@ -1592,9 +1602,25 @@ export const listPostsToRemind = async (
 export const listAgentPostsToRequest = async (): Promise<Post[]> => {
   const result = await pool.query<PostRow>(
     `SELECT * FROM posts WHERE status = 'draft' AND send_on_approval AND created_by = 'agent'
-       AND approval_requested_at IS NULL`
+       AND approval_requested_at IS NULL AND COALESCE(can_make_from, '-infinity') <= now()`
   )
   return loadPosts(result.rows)
+}
+
+// Unapproved posts whose can_make_from has come and that haven't been told so
+// since (social/reminders.ts). firstSendAt is null for posts sent on approval.
+export const listPostsToNudgeCanMake = async (): Promise<{ post: Post; firstSendAt: string | null }[]> => {
+  const result = await pool.query<PostRow & { first_send_at: Date | null }>(
+    `SELECT * FROM (
+       SELECT p.*, (SELECT MIN(COALESCE(t.send_at, p.send_at)) FROM post_targets t
+                    WHERE t.post_id = p.id AND t.status = 'pending') AS first_send_at
+       FROM posts p WHERE p.status IN ('draft', 'awaiting_approval') AND p.can_make_from <= now()
+         AND COALESCE(p.can_make_reminded_at, '-infinity') < p.can_make_from
+     ) p
+     WHERE send_on_approval OR first_send_at > now()`
+  )
+  const posts = await loadPosts(result.rows)
+  return result.rows.map((row, i) => ({ post: posts[i], firstSendAt: row.first_send_at?.toISOString() ?? null }))
 }
 
 export const markReminded = async (postId: string, kinds: ReminderKind[]) => {
