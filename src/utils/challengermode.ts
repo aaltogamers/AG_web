@@ -7,7 +7,6 @@ import type {
   ChallengermodeStage,
   ChallengermodeTournament,
 } from '../types/types'
-import { splitChallengermodeMatchId } from './challengermodeStages'
 
 const API_URL = 'https://publicapi.challengermode.com'
 // Cloudflare rejects some default user agents
@@ -35,11 +34,17 @@ query ($id: UUID!) {
 }
 fragment MS on MatchSeries {
   ordinal state bestOf labels
-  lineups { id name seed }
+  lineups { id name seed logo(size: LARGE) { url } members { user { username } } }
   results { final draw lineupResults { lineupNumber score placement } }
 }`
 
-type RawLineup = { id: string; name: string; seed: number | null } | null
+type RawLineup = {
+  id: string
+  name: string
+  seed: number | null
+  logo: { url: string | null } | null
+  members: { user: { username: string | null } | null }[] | null
+} | null
 
 type RawSeries = {
   ordinal: number
@@ -165,6 +170,8 @@ const toSlots = (series: RawSeries): ChallengermodeSeries['slots'] => {
       lineupId: lineup.id,
       name: lineup.name,
       seed: lineup.seed,
+      logo: lineup.logo?.url || null,
+      players: (lineup.members ?? []).flatMap((m) => (m.user?.username ? [m.user.username] : [])),
       score: r?.score ?? null,
       result,
     }
@@ -272,18 +279,4 @@ export const getChallengermodeTournament = async (id: string): Promise<Challenge
   }
   const { data, hash, error } = state.cache.get(id)!
   return error ? { data, hash, error } : { data, hash }
-}
-
-export const findChallengermodeSeries = (
-  data: ChallengermodeTournament,
-  matchId: number
-): ChallengermodeSeries | null => {
-  const { stageIndex, ordinal } = splitChallengermodeMatchId(matchId)
-  for (const bracket of data.stages[stageIndex]?.brackets ?? []) {
-    for (const round of bracket.rounds) {
-      const series = round.series.find((s) => s.ordinal === ordinal)
-      if (series) return series
-    }
-  }
-  return null
 }

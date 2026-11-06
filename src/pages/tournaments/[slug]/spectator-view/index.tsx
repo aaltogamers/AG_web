@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import PageWrapper from '../../../../components/PageWrapper'
 import { hasBracket, type Tournament } from '../../../../types/types'
 import { teamNameToShortName } from '../../../../utils/brackets'
+import { findChallengermodeSeries } from '../../../../utils/challengermodeStages'
 import {
   TournamentStageView,
   findStageMatch,
@@ -37,6 +38,24 @@ function findStreamMatch(
   return { name1: nameOf(match.opponent1?.id), name2: nameOf(match.opponent2?.id), match }
 }
 
+// Only Challengermode teams have logos
+const logoOf = (tournament: Tournament, name: string): string | null => {
+  if (!name || !tournament.challengermode || tournament.streamMatchId == null) return null
+  const series = findChallengermodeSeries(tournament.challengermode, tournament.streamMatchId)
+  return series?.slots.find((slot) => slot?.name === name)?.logo ?? null
+}
+
+const SpectatorViewLogo = ({ logo, team }: { logo: string | null; team: string }) =>
+  logo ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={logo}
+      alt=""
+      id={`${team}-logo`}
+      className="h-12 w-12 mx-2 object-contain self-center"
+    />
+  ) : null
+
 const SpectatorViewScore = ({
   score,
   color,
@@ -63,12 +82,16 @@ const SpectatorViewScore = ({
 const SpectatorViewNames = ({
   team1,
   team2,
+  logo1,
+  logo2,
   showScores,
   opponent1Score,
   opponent2Score,
 }: {
   team1: string
   team2: string
+  logo1: string | null
+  logo2: string | null
   showScores: boolean
   opponent1Score: number
   opponent2Score: number
@@ -79,6 +102,7 @@ const SpectatorViewNames = ({
       id={OVERLAY_TEAM_CONTAINER_ID}
     >
       <span id={OVERLAY_TEAM1_ID} className="text-[#0783bd] w-60 text-right flex justify-end">
+        <SpectatorViewLogo logo={logo1} team="team1" />
         {showScores && <SpectatorViewScore score={opponent1Score} color="#0783bd" team="team1" />}
         {team1}
       </span>
@@ -86,6 +110,7 @@ const SpectatorViewNames = ({
       <span id={OVERLAY_TEAM2_ID} className="pl-3 text-[#b63f42] w-60 text-left flex justify-start">
         {team2}
         {showScores && <SpectatorViewScore score={opponent2Score} color="#b63f42" team="team2" />}
+        <SpectatorViewLogo logo={logo2} team="team2" />
       </span>
     </div>
   )
@@ -103,6 +128,8 @@ const SpectatorViewPage = () => {
   const [loading, setLoading] = useState(true)
   const [shortOpponent1, setShortOpponent1] = useState('')
   const [shortOpponent2, setShortOpponent2] = useState('')
+  const [logo1, setLogo1] = useState<string | null>(null)
+  const [logo2, setLogo2] = useState<string | null>(null)
   const [streamMatch, setStreamMatch] = useState<Match | null>(null)
 
   const [origin, setOrigin] = useState('')
@@ -176,12 +203,16 @@ const SpectatorViewPage = () => {
         )
         setShortOpponent1(name1 ? teamNameToShortName(name1) : '')
         setShortOpponent2(name2 ? teamNameToShortName(name2) : '')
+        setLogo1(logoOf(tournament, name1))
+        setLogo2(logoOf(tournament, name2))
         setStreamMatch(match)
       } catch (err) {
         if (cancelled) return
         console.error('[SpectatorView] hydrate failed:', err)
         setShortOpponent1('')
         setShortOpponent2('')
+        setLogo1(null)
+        setLogo2(null)
         setStreamMatch(null)
       }
     }
@@ -248,6 +279,8 @@ const SpectatorViewPage = () => {
           <SpectatorViewNames
             team1={flipTeams ? shortOpponent2 : shortOpponent1}
             team2={flipTeams ? shortOpponent1 : shortOpponent2}
+            logo1={flipTeams ? logo2 : logo1}
+            logo2={flipTeams ? logo1 : logo2}
             showScores={isOngoing}
             opponent1Score={flipTeams ? opponent2Score : opponent1Score}
             opponent2Score={flipTeams ? opponent1Score : opponent2Score}
@@ -295,6 +328,10 @@ const SpectatorViewPage = () => {
               <li>
                 <code>#{OVERLAY_TEAM2_ID}</code> — right side / bottom team in bracket
               </li>
+              <li>
+                <code>#team1-logo</code>, <code>#team2-logo</code> — team logos (Challengermode
+                tournaments only)
+              </li>
             </ul>
           </div>
 
@@ -332,6 +369,8 @@ const SpectatorViewPage = () => {
               <SpectatorViewNames
                 team1={shortOpponent1}
                 team2={shortOpponent2}
+                logo1={logo1}
+                logo2={logo2}
                 showScores={isOngoing}
                 opponent1Score={opponent1Score}
                 opponent2Score={opponent2Score}

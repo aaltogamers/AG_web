@@ -139,6 +139,16 @@ failed ones every 30 s), and the site never sends more than 15 requests per
 minute: over that, the last loaded bracket is shown until a request is free. The Challengermode API has no map bans and
 no team sides; marking a stream game fills in the team names on `/mapban`.
 
+The stream overlay (`/tournaments/<slug>/spectator-view?stream`) shows the
+team logos of Challengermode tournaments. `GET
+/api/tournaments/<slug>/stream-match` (public, no auth, CORS open) returns the
+stream game's teams for stream tools:
+`{ team1, team2 }`, each `{ name, shortName, logo, players, score }` or `null`
+when no stream game with both teams is set. `logo` is a 128×128 image URL and
+`players` the Challengermode usernames; for tournaments run on the site they
+are `null` and `[]`. `score` is the games won in the series. Player names are
+only for this endpoint and are not shown anywhere on the site.
+
 ### AI agent MCP server
 
 `/api/mcp` is an [MCP](https://modelcontextprotocol.io) server (Streamable

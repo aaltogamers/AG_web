@@ -26,6 +26,20 @@ export const splitChallengermodeMatchId = (matchId: number) => ({
   ordinal: matchId % CHALLENGERMODE_STAGE_ID_FACTOR,
 })
 
+export const findChallengermodeSeries = (
+  data: ChallengermodeTournament,
+  matchId: number
+): ChallengermodeSeries | null => {
+  const { stageIndex, ordinal } = splitChallengermodeMatchId(matchId)
+  for (const bracket of data.stages[stageIndex]?.brackets ?? []) {
+    for (const round of bracket.rounds) {
+      const series = round.series.find((s) => s.ordinal === ordinal)
+      if (series) return series
+    }
+  }
+  return null
+}
+
 type Context = {
   nextId: () => number
   participantIds: Map<string, number>

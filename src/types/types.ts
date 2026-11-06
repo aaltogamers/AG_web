@@ -425,6 +425,10 @@ export type ChallengermodeSlot = {
   lineupId: string
   name: string
   seed: number | null
+  // URL of the team's 128×128 logo; null when the lineup has none
+  logo: string | null
+  // Challengermode usernames; only for the stream-match endpoint, never shown on the site
+  players: string[]
   score: number | null
   result: 'win' | 'loss' | 'draw' | null
 }
