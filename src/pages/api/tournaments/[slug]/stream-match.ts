@@ -2,13 +2,18 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import pool, { ensureMigrated } from '../../../../utils/db_pg'
 import { getChallengermodeTournament } from '../../../../utils/challengermode'
 import { getStreamMatch } from '../../../../utils/streamMatchTeams'
-import type { BracketDatabaseSnapshot, TournamentSource } from '../../../../types/types'
+import {
+  normalizeTournamentOptions,
+  type BracketDatabaseSnapshot,
+  type TournamentSource,
+} from '../../../../types/types'
 
 type Row = {
   source: TournamentSource
   challengermode_id: string | null
   data: BracketDatabaseSnapshot | null
   stream_match_id: number | null
+  options: unknown
 }
 
 // Public, no auth: the teams and series score of the tournament's stream game, for stream tools
@@ -31,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!slug) return res.status(400).json({ error: 'Missing slug' })
 
   const result = await pool.query<Row>(
-    'SELECT source, challengermode_id, data, stream_match_id FROM tournaments WHERE slug = $1',
+    'SELECT source, challengermode_id, data, stream_match_id, options FROM tournaments WHERE slug = $1',
     [slug]
   )
   const row = result.rows[0]
@@ -42,11 +47,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     row.source === 'challengermode' && row.challengermode_id
       ? await getChallengermodeTournament(row.challengermode_id)
       : null
-  const teams =
+  const match =
     row.stream_match_id != null
-      ? getStreamMatch(row.stream_match_id, { data: row.data, challengermode: cm?.data ?? null })
+      ? getStreamMatch(row.stream_match_id, {
+          data: row.data,
+          challengermode: cm?.data ?? null,
+          options: normalizeTournamentOptions(row.options),
+        })
       : null
 
   res.setHeader('Cache-Control', 'no-store')
-  return res.status(200).json({ team1: teams?.[0] ?? null, team2: teams?.[1] ?? null })
+  return res.status(200).json({
+    team1: match?.teams[0] ?? null,
+    team2: match?.teams[1] ?? null,
+    bestOf: match?.bestOf ?? null,
+  })
 }

@@ -143,8 +143,9 @@ The stream overlay (`/tournaments/<slug>/spectator-view?stream`) shows the
 team logos of Challengermode tournaments. `GET
 /api/tournaments/<slug>/stream-match` (public, no auth, CORS open) returns the
 stream game's teams for stream tools:
-`{ team1, team2 }`, each `{ name, shortName, logo, players, score }` or `null`
-when no stream game with both teams is set. `logo` is a 128×128 image URL and
+`{ team1, team2, bestOf }`, teams being `{ name, shortName, logo, players, score }`,
+all `null` when no stream game with both teams is set. `bestOf` is the series
+length (1, 3, 5...). `logo` is a 128×128 image URL and
 `players` the Challengermode usernames; for tournaments run on the site they
 are `null` and `[]`. `score` is the games won in the series. Player names are
 only for this endpoint and are not shown anywhere on the site.

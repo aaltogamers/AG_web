@@ -1,10 +1,14 @@
-import type { Match, Participant } from 'brackets-model'
+import type { Match, Participant, Round, Stage } from 'brackets-model'
 
 import pool from './db_pg'
 import { publish } from './bus'
 import { teamNameToShortName } from './brackets'
 import { findChallengermodeSeries } from './challengermodeStages'
-import type { BracketDatabaseSnapshot, ChallengermodeTournament } from '../types/types'
+import type {
+  BracketDatabaseSnapshot,
+  ChallengermodeTournament,
+  TournamentOptions,
+} from '../types/types'
 
 export type StreamMatchTeam = {
   name: string
@@ -17,9 +21,17 @@ export type StreamMatchTeam = {
   score: number
 }
 
+export type StreamMatch = {
+  teams: [StreamMatchTeam, StreamMatchTeam]
+  // Series length, e.g. 3 for a Bo3
+  bestOf: number
+}
+
 type StreamMatchSource = {
   data: BracketDatabaseSnapshot | null
   challengermode: ChallengermodeTournament | null
+  // Needed for the best of of local tournaments
+  options?: TournamentOptions
 }
 
 const toTeam = (
@@ -35,16 +47,32 @@ const toTeam = (
   score: score ?? 0,
 })
 
+// Local tournaments only play Bo1, except the playoff final of Swiss tournaments (see getSwissFormatData)
+const getLocalBestOf = (match: Match, source: StreamMatchSource) => {
+  const stages = (source.data?.stage ?? []) as Stage[]
+  const rounds = (source.data?.round ?? []) as Round[]
+  const isSwiss = stages.some((s) => s.type === 'round_robin')
+  const stage = stages.find((s) => s.id === match.stage_id)
+  if (!isSwiss || stage?.type !== 'single_elimination' || !source.options) return 1
+  const lastRound = rounds
+    .filter((r) => r.stage_id === stage.id)
+    .sort((a, b) => b.number - a.number)[0]
+  return match.round_id === lastRound?.id ? source.options.finalBestOf : 1
+}
+
 // Both teams of the match, or null when the match doesn't exist or doesn't have both teams yet
-export const getStreamMatch = (
-  matchId: number,
-  source: StreamMatchSource
-): [StreamMatchTeam, StreamMatchTeam] | null => {
+export const getStreamMatch = (matchId: number, source: StreamMatchSource): StreamMatch | null => {
   if (source.challengermode) {
     const series = findChallengermodeSeries(source.challengermode, matchId)
     const [a, b] = series?.slots ?? []
-    return a && b
-      ? [toTeam(a.name, a.score, a.logo, a.players), toTeam(b.name, b.score, b.logo, b.players)]
+    return series && a && b
+      ? {
+          teams: [
+            toTeam(a.name, a.score, a.logo, a.players),
+            toTeam(b.name, b.score, b.logo, b.players),
+          ],
+          bestOf: series.bestOf,
+        }
       : null
   }
   const match = (source.data?.match as Match[] | undefined)?.find((m) => m.id === matchId)
@@ -52,8 +80,11 @@ export const getStreamMatch = (
   const nameOf = (id: unknown) => participants.find((p) => p.id === id)?.name
   const team1 = nameOf(match?.opponent1?.id)
   const team2 = nameOf(match?.opponent2?.id)
-  return team1 && team2
-    ? [toTeam(team1, match?.opponent1?.score), toTeam(team2, match?.opponent2?.score)]
+  return match && team1 && team2
+    ? {
+        teams: [toTeam(team1, match.opponent1?.score), toTeam(team2, match.opponent2?.score)],
+        bestOf: getLocalBestOf(match, source),
+      }
     : null
 }
 
@@ -61,8 +92,8 @@ export const getStreamMatchTeams = (
   matchId: number,
   source: StreamMatchSource
 ): [string, string] | null => {
-  const teams = getStreamMatch(matchId, source)
-  return teams && [teams[0].name, teams[1].name]
+  const teams = getStreamMatch(matchId, source)?.teams
+  return teams ? [teams[0].name, teams[1].name] : null
 }
 
 export const setMapBanTeams = async ([team1, team2]: [string, string]) => {
