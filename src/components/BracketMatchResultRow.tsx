@@ -1,4 +1,4 @@
-import { Id, Match, Participant } from 'brackets-model'
+import { Id, Match, Participant, Status } from 'brackets-model'
 import { BracketData, BracketStyles, OpponentFroMatch } from '../types/types'
 import { FaMedal, FaTrophy } from 'react-icons/fa'
 
@@ -38,6 +38,9 @@ const MatchResultRow = ({
 
   const isWin = participantData?.result === 'win'
 
+  // Shown once per match, above its first row, so live scores aren't mistaken for final ones
+  const showLiveBadge = participant === 'opponent1' && match.status === Status.Running && !isBye
+
   const tbdLabel = feedInfo ? (
     feedInfo.outcome === 'loser' ? (
       <i className="opacity-75" style={{ fontSize: '0.9em' }}>
@@ -52,6 +55,16 @@ const MatchResultRow = ({
 
   return (
     <div className="relative">
+      {showLiveBadge && (
+        <div
+          className="absolute z-20 flex items-center gap-0.5 rounded-sm bg-red-600 px-1 font-bold text-white"
+          // Straddles the card's top edge so it stays clear of the match above
+          style={{ top: -6, right: 2, fontSize: 8, lineHeight: '11px' }}
+        >
+          <span className="h-1 w-1 animate-pulse rounded-full bg-white" />
+          LIVE
+        </div>
+      )}
       <div
         className={`flex flex-row justify-between  overflow-hidden`}
         style={{ height: bracketStyles.teamHeight }}

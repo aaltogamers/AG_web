@@ -36,7 +36,10 @@ fragment MS on MatchSeries {
   ordinal state bestOf labels
   lineups { id name seed logo(size: LARGE) { url } members { user { username } } }
   results { final draw lineupResults { lineupNumber score placement } }
-  matches { results { lineupResults { lineupNumber score } } }
+  matches {
+    results { lineupResults { lineupNumber score } }
+    statistics { gameSessionStatistics { lineupStatistics { nodes { lineup { number } name serializedValue } } } }
+  }
 }`
 
 type RawLineup = {
@@ -58,7 +61,29 @@ type RawSeries = {
     draw: boolean
     lineupResults: { lineupNumber: number; score: number | null; placement: number | null }[]
   }
-  matches: { results: { lineupResults: { lineupNumber: number; score: number | null }[] } }[]
+  matches: RawGame[]
+}
+
+type RawGame = {
+  results: { lineupResults: { lineupNumber: number; score: number | null }[] }
+  statistics: {
+    gameSessionStatistics: {
+      lineupStatistics: {
+        nodes: { lineup: { number: number }; name: string; serializedValue: string | null }[] | null
+      } | null
+    }
+  } | null
+}
+
+// The game's reported score, or while it's running, the live rounds won (e.g. CS2)
+const gameScoreOf = (game: RawGame, lineupNumber: number): number | null => {
+  const reported = game.results.lineupResults.find((r) => r.lineupNumber === lineupNumber)?.score
+  if (reported != null) return reported
+  const live = game.statistics?.gameSessionStatistics.lineupStatistics?.nodes?.find(
+    (n) => n.lineup.number === lineupNumber && n.name === 'RoundsWon'
+  )?.serializedValue
+  const value = live != null ? Number(live) : NaN
+  return Number.isInteger(value) ? value : null
 }
 
 type RawRound = { title: string; matchSeries: RawSeries[] }
@@ -154,12 +179,8 @@ const toSlots = (series: RawSeries): ChallengermodeSeries['slots'] => {
   const results = series.results.lineupResults
   const resultOf = (lineupNumber: number) => results.find((r) => r.lineupNumber === lineupNumber)
   // In a best-of-one the series score is just 1-0, so show the game's own score (e.g. CS2 rounds 13-8)
-  const gameResults =
-    series.bestOf === 1 && series.matches?.length === 1
-      ? series.matches[0].results.lineupResults
-      : null
-  const roundScoreOf = (lineupNumber: number) =>
-    gameResults?.find((r) => r.lineupNumber === lineupNumber)?.score ?? null
+  const game = series.bestOf === 1 && series.matches?.length === 1 ? series.matches[0] : null
+  const roundScoreOf = (lineupNumber: number) => (game ? gameScoreOf(game, lineupNumber) : null)
 
   const toSlot = (lineup: NonNullable<RawLineup>, lineupNumber: number): ChallengermodeSlot => {
     const r = resultOf(lineupNumber)

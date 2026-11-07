@@ -431,7 +431,7 @@ export type ChallengermodeSlot = {
   players: string[]
   // Series score, i.e. games won
   score: number | null
-  // Best-of-one only: the game's own score (e.g. CS2 rounds won); null when not reported
+  // Best-of-one only: the game's score (e.g. CS2 rounds won), live while it runs; null if unknown
   roundScore: number | null
   result: 'win' | 'loss' | 'draw' | null
 }
