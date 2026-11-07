@@ -185,22 +185,22 @@ export type ScoreBoardEntry = {
 
 export const CS_ACTIVE_DUTY_MAPS = [
   'Ancient',
+  'Anubis',
+  'Cache',
   'Dust II',
   'Inferno',
   'Mirage',
   'Nuke',
-  'Overpass',
-  'Train',
 ] as const
 
 export const VALORANT_ACTIVE_DUTY_MAPS = [
   'Abyss',
   'Bind',
-  'Haven',
-  'Breeze',
   'Corrode',
-  'Pearl',
-  'Split',
+  'Haven',
+  'Lotus',
+  'Summit',
+  'Sunset',
 ] as const
 
 export const GAMES = ['CS 2', 'Valorant'] as const
