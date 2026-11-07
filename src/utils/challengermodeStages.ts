@@ -65,11 +65,19 @@ const toStatus = (series: ChallengermodeSeries): Status => {
   return series.slots[0] && series.slots[1] ? Status.Ready : Status.Waiting
 }
 
-const toOpponent = (ctx: Context, slot: ChallengermodeSlot): ParticipantResult => ({
-  id: participantIdOf(ctx, slot),
-  ...(slot.score != null ? { score: slot.score } : {}),
-  ...(slot.result ? { result: slot.result } : {}),
-})
+const toOpponent = (
+  ctx: Context,
+  slot: ChallengermodeSlot,
+  other: ChallengermodeSlot | null
+): ParticipantResult => {
+  // Best-of-ones show the game's score (e.g. 13-8) instead of 1-0 when both sides have one
+  const score = slot.roundScore != null && other?.roundScore != null ? slot.roundScore : slot.score
+  return {
+    id: participantIdOf(ctx, slot),
+    ...(score != null ? { score } : {}),
+    ...(slot.result ? { result: slot.result } : {}),
+  }
+}
 
 const filledCount = (series: ChallengermodeSeries) => series.slots.filter(Boolean).length
 
@@ -299,7 +307,7 @@ const buildElimination = (
           const filled = slots[slot]
           const key = slot === 0 ? 'opponent1' : 'opponent2'
           if (filled) {
-            match[key] = toOpponent(ctx, filled)
+            match[key] = toOpponent(ctx, filled, slots[slot === 0 ? 1 : 0])
             return
           }
           const source = slotSource(brackets, orders, kind, roundIndex, index, slot)
@@ -427,8 +435,8 @@ const buildSwiss = (
         number: index + 1,
         child_count: 0,
         status: toStatus(series),
-        opponent1: teams[0] ? toOpponent(ctx, teams[0]) : { id: null },
-        opponent2: isBye ? null : teams[1] ? toOpponent(ctx, teams[1]) : { id: null },
+        opponent1: teams[0] ? toOpponent(ctx, teams[0], teams[1] ?? null) : { id: null },
+        opponent2: isBye ? null : teams[1] ? toOpponent(ctx, teams[1], teams[0]) : { id: null },
       }
     })
   })

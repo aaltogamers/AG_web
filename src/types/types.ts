@@ -429,7 +429,10 @@ export type ChallengermodeSlot = {
   logo: string | null
   // Challengermode usernames; only for the stream-match endpoint, never shown on the site
   players: string[]
+  // Series score, i.e. games won
   score: number | null
+  // Best-of-one only: the game's own score (e.g. CS2 rounds won); null when not reported
+  roundScore: number | null
   result: 'win' | 'loss' | 'draw' | null
 }
 

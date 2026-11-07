@@ -36,6 +36,7 @@ fragment MS on MatchSeries {
   ordinal state bestOf labels
   lineups { id name seed logo(size: LARGE) { url } members { user { username } } }
   results { final draw lineupResults { lineupNumber score placement } }
+  matches { results { lineupResults { lineupNumber score } } }
 }`
 
 type RawLineup = {
@@ -57,6 +58,7 @@ type RawSeries = {
     draw: boolean
     lineupResults: { lineupNumber: number; score: number | null; placement: number | null }[]
   }
+  matches: { results: { lineupResults: { lineupNumber: number; score: number | null }[] } }[]
 }
 
 type RawRound = { title: string; matchSeries: RawSeries[] }
@@ -151,6 +153,13 @@ const toSlots = (series: RawSeries): ChallengermodeSeries['slots'] => {
   const lineups = series.lineups.filter((l): l is NonNullable<RawLineup> => l != null)
   const results = series.results.lineupResults
   const resultOf = (lineupNumber: number) => results.find((r) => r.lineupNumber === lineupNumber)
+  // In a best-of-one the series score is just 1-0, so show the game's own score (e.g. CS2 rounds 13-8)
+  const gameResults =
+    series.bestOf === 1 && series.matches?.length === 1
+      ? series.matches[0].results.lineupResults
+      : null
+  const roundScoreOf = (lineupNumber: number) =>
+    gameResults?.find((r) => r.lineupNumber === lineupNumber)?.score ?? null
 
   const toSlot = (lineup: NonNullable<RawLineup>, lineupNumber: number): ChallengermodeSlot => {
     const r = resultOf(lineupNumber)
@@ -173,6 +182,7 @@ const toSlots = (series: RawSeries): ChallengermodeSeries['slots'] => {
       logo: lineup.logo?.url || null,
       players: (lineup.members ?? []).flatMap((m) => (m.user?.username ? [m.user.username] : [])),
       score: r?.score ?? null,
+      roundScore: roundScoreOf(lineupNumber),
       result,
     }
   }
