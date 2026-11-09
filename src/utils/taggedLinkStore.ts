@@ -62,14 +62,20 @@ export const createTaggedLink = async (input: {
 }): Promise<TaggedLink> => {
   const name = requireString(input.name, 'name')
   const url = parseUrl(input.url)
-  const tag = parseTag(input.tag ?? tagFromName(name))
+  const tag = input.tag === '' ? '' : parseTag(input.tag ?? tagFromName(name))
   const { rows } = await pool.query<Row>(
     `INSERT INTO tagged_links (name, url, tag) VALUES ($1, $2, $3)
      ON CONFLICT (url, tag) DO NOTHING RETURNING *`,
     [name, url, tag]
   )
-  if (!rows[0])
-    throw new AgentError(409, `This link already has a saved link with the tag "${tag}"`)
+  if (!rows[0]) {
+    throw new AgentError(
+      409,
+      tag
+        ? `This link already has a saved link with the tag "${tag}"`
+        : 'This link is already saved without a tag'
+    )
+  }
   return toLink(rows[0])
 }
 

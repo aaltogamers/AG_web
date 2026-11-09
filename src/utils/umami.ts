@@ -62,7 +62,7 @@ const fetchDaily = async (path: string, tag: string): Promise<DailyVisitors[]> =
 // null when Umami isn't set up, the link is outside the site, or Umami fails
 export const getTagStats = (url: string, tag: string): Promise<TaggedLinkStats | null> => {
   const path = statsPath(url)
-  if (!process.env.UMAMI_API_KEY || !path) return Promise.resolve(null)
+  if (!process.env.UMAMI_API_KEY || !path || !tag) return Promise.resolve(null)
   const key = `${path}?${tag}`
   const cached = statsCache.get(key)
   if (cached && Date.now() - cached.at < CACHE_MS) return cached.stats

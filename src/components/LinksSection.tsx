@@ -75,21 +75,29 @@ const NewTaggedLinkForm = ({
   const [selected, setSelected] = useState(groups.length ? '0:0' : CUSTOM)
   const [customUrl, setCustomUrl] = useState('https://aaltogamers.fi/')
   const [name, setName] = useState('')
+  const [customName, setCustomName] = useState('')
+  const [addTag, setAddTag] = useState(true)
   const [saving, setSaving] = useState(false)
 
+  const isCustom = selected === CUSTOM
+  const tagged = !isCustom || addTag
+
   const target = useMemo(() => {
-    if (selected === CUSTOM) return { name: 'Custom', url: customUrl }
+    if (selected === CUSTOM) return { name: customName.trim(), url: customUrl }
     const [g, t] = selected.split(':').map(Number)
     return groups[g].targets[t]
-  }, [selected, customUrl, groups])
+  }, [selected, customUrl, customName, groups])
 
-  const tag = tagFromName(name)
-  const fullName = selected === CUSTOM ? name.trim() : `${target.name} – ${name.trim()}`
-  const canSave = !!target.url && TAG_PATTERN.test(tag) && !saving
+  const tag = tagged ? tagFromName(name) : ''
+  const fullName = [target.name, tagged ? name.trim() : ''].filter(Boolean).join(' – ')
+  const canSave = !!target.url && !!fullName && (!tagged || TAG_PATTERN.test(tag)) && !saving
 
   const save = async () => {
     setSaving(true)
-    if (await onSave({ name: fullName, url: target.url, tag })) setName('')
+    if (await onSave({ name: fullName, url: target.url, tag })) {
+      setName('')
+      setCustomName('')
+    }
     setSaving(false)
   }
 
@@ -119,26 +127,43 @@ const NewTaggedLinkForm = ({
           <option value={CUSTOM}>Custom URL</option>
         </select>
       </Field>
-      {selected === CUSTOM && (
-        <Field label="URL">
+      {isCustom && (
+        <>
+          <Field label="URL">
+            <input
+              className={inputClass}
+              value={customUrl}
+              onChange={(e) => setCustomUrl(e.target.value)}
+            />
+          </Field>
+          <Field label="Name">
+            <input
+              className={inputClass}
+              value={customName}
+              placeholder="e.g. Assembly tournament page"
+              onChange={(e) => setCustomName(e.target.value)}
+            />
+          </Field>
+          <label className="flex gap-2 items-center text-sm">
+            <input type="checkbox" checked={addTag} onChange={(e) => setAddTag(e.target.checked)} />
+            Add a statistics tag (?ref=…). Turn off if the site doesn&apos;t allow extra parameters
+            in the link.
+          </label>
+        </>
+      )}
+      {tagged && (
+        <Field label="Where it's used">
           <input
             className={inputClass}
-            value={customUrl}
-            onChange={(e) => setCustomUrl(e.target.value)}
+            value={name}
+            placeholder="e.g. Otaniemi events"
+            onChange={(e) => setName(e.target.value)}
           />
         </Field>
       )}
-      <Field label="Where it's used">
-        <input
-          className={inputClass}
-          value={name}
-          placeholder="e.g. Otaniemi events"
-          onChange={(e) => setName(e.target.value)}
-        />
-      </Field>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col text-sm min-w-0">
-          <span>{tag ? fullName : '\u00a0'}</span>
+          <span>{fullName || '\u00a0'}</span>
           <span className="break-all text-lightgray">{withTag(target.url, tag)}</span>
         </div>
         <button type="button" className="mainbutton" disabled={!canSave} onClick={save}>
@@ -274,8 +299,12 @@ const LinksSection = ({ groups, initialLinkId }: Props) => {
                     </td>
                     <td className="p-2 break-all">
                       {link.taggedUrl.replace(/^https:\/\//, '')}
-                      {!statsPath(link.url) && (
-                        <div className="text-lightgray">No stats for links outside the site</div>
+                      {!link.tag ? (
+                        <div className="text-lightgray">No statistics tag, so no stats</div>
+                      ) : (
+                        !statsPath(link.url) && (
+                          <div className="text-lightgray">No stats for links outside the site</div>
+                        )
                       )}
                     </td>
                     <StatsCells stats={link.stats} max={maxDaily} />

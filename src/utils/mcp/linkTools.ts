@@ -54,7 +54,7 @@ export const registerLinkTools = (server: McpServer) => {
           .string()
           .optional()
           .describe(
-            'Lowercase letters, numbers, - and _, e.g. otaniemi-events. By default made from the name.'
+            'Lowercase letters, numbers, - and _, e.g. otaniemi-events. By default made from the name. An empty string saves the link without a tag, so it has no stats.'
           ),
       },
     },
