@@ -1,11 +1,5 @@
-import { getFile } from '../../../utils/fileUtils'
 import { redirect } from 'next/navigation'
-
-type Redirect = {
-  name: string
-  slug: string
-  url: string
-}
+import { getRedirects } from '../../../utils/redirects'
 
 type Props = {
   params: Promise<{ pid: string }>
@@ -13,8 +7,7 @@ type Props = {
 
 const Links = async ({ params }: Props) => {
   const pid = (await params).pid
-  const { redirects } = getFile('redirects', './public/') as unknown as { redirects: Redirect[] }
-  const redirectItem = redirects.find((r) => r.slug === pid)
+  const redirectItem = getRedirects().find((r) => r.slug === pid)
 
   if (redirectItem) {
     redirect(redirectItem.url)
@@ -30,6 +23,5 @@ const Links = async ({ params }: Props) => {
 export default Links
 
 export async function generateStaticParams() {
-  const { redirects } = getFile('redirects', './public/') as unknown as { redirects: Redirect[] }
-  return redirects.map((item) => ({ slug: `/link/${item.slug}` }))
+  return getRedirects().map((item) => ({ slug: `/link/${item.slug}` }))
 }
