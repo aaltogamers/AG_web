@@ -7,6 +7,7 @@ import { AgentError } from '../agentApi'
 import { getHeader } from '../apiUtils'
 import { ensureMigrated } from '../db_pg'
 import { registerEventTools } from './eventTools'
+import { registerLinkTools } from './linkTools'
 import { registerPostTools } from './postTools'
 import { registerSignupFormTools } from './signupFormTools'
 import { registerTaskTools } from './taskTools'
@@ -49,19 +50,21 @@ export const createMcpServer = () => {
     { name: 'aaltogamers', title: 'Aalto Gamers', version: '1.0.0' },
     {
       instructions:
-        'Manages Aalto Gamers events, their sign-up forms, the task board and scheduled marketing posts. ' +
+        'Manages Aalto Gamers events, their sign-up forms, the task board, scheduled marketing posts and tagged links. ' +
         'Times are Helsinki wall-clock times like 2026-10-24T18:00, unless they have an offset. ' +
         'Event changes are visible on aaltogamers.fi right away. ' +
         'When telling the user about an event, sign-up form or task, link it with the url (or taskBoardUrl) from the tool result. ' +
         'Marketing posts to Telegram, Discord and Instagram are written once in markdown with placeholders like {{event}}, {{signup}} and {{link:discord}}, filled in for each channel; their times are Helsinki times too. ' +
         'Before writing a post, read earlier posts with get_example_posts and write it the same way they are written, so all posts look alike. ' +
         'Keep posts as short as possible while still interesting and informative. ' +
-        'The agent can only make drafts; they are sent for approval automatically 2 days before they go out, and only a human can approve, schedule or send a post.',
+        'The agent can only make drafts; they are sent for approval automatically 2 days before they go out, and only a human can approve, schedule or send a post. ' +
+        'Tagged links add a statistics tag (?ref=<tag>) to a link, e.g. for a poster QR code, to see how many people arrived through it.',
     }
   )
   registerEventTools(server)
   registerSignupFormTools(server)
   registerTaskTools(server)
   registerPostTools(server)
+  registerLinkTools(server)
   return server
 }

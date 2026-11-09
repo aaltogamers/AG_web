@@ -18,9 +18,9 @@ type Props = {
 const tabClass = (active: boolean) => `text-4xl ${active ? 'underline' : ''}`
 
 const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
-  // The events, calendar and QR code pages are in light mode
+  // The events, calendar and links pages are in light mode
   useEffect(() => {
-    if (section !== 'events' && section !== 'posts' && section !== 'qr') return
+    if (section !== 'events' && section !== 'posts' && section !== 'links') return
     document.body.classList.add('admin-light')
     return () => document.body.classList.remove('admin-light')
   }, [section])
@@ -40,8 +40,8 @@ const AdminDashboard = ({ section, events, onLogout, children }: Props) => {
         <Link href="/admin/mapbans" className={tabClass(section === 'mapbans')}>
           Map Bans
         </Link>
-        <Link href="/admin/qr" className={tabClass(section === 'qr')}>
-          QR Codes
+        <Link href="/admin/links" className={tabClass(section === 'links')}>
+          Links &amp; QR
         </Link>
         <Link href="/tournaments" className="text-4xl">
           Tournaments

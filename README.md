@@ -74,6 +74,9 @@ docker compose down -v
 - `CHALLENGERMODE_REFRESH_KEY` — refresh key of a Challengermode application,
   for showing Challengermode tournaments (see "Tournaments"). In production it
   comes from the `CHALLENGERMODE_REFRESH_KEY` GitHub secret (see `infra`).
+- `UMAMI_API_KEY` — API key of the Umami analytics at stats.aaltogamers.fi,
+  for the visitor stats of tagged links (see "Links and QR codes"). In
+  production it comes from the `UMAMI_API_KEY` GitHub secret.
 - `RCON_IP`, `RCON_PASSWORD`, `RCON_PORT` — Minecraft whitelist endpoint.
 - `APP_ID`, `PRIVATE_KEY`, `INSTALLATION_ID` — GitHub App credentials for
   the Decap CMS auth handshake (`/api/auth`).
@@ -154,7 +157,7 @@ only for this endpoint and are not shown anywhere on the site.
 
 `/api/mcp` is an [MCP](https://modelcontextprotocol.io) server (Streamable
 HTTP transport, stateless, JSON responses) with tools for managing events,
-their sign-up forms and the task board. Clients authenticate with
+their sign-up forms, the task board, scheduled posts and tagged links. Clients authenticate with
 `Authorization: Bearer <AGENT_API_KEY>`. For example, in n8n use the MCP
 Client Tool with "HTTP Streamable" and Bearer auth; in Claude Code run
 `claude mcp add --transport http aaltogamers https://aaltogamers.fi/api/mcp --header "Authorization: Bearer <key>"`.
@@ -272,6 +275,24 @@ In production, set the env variables as GitHub Actions secrets and run the
    Set `INSTAGRAM_USER_ID` and `INSTAGRAM_ACCESS_TOKEN`; the token is renewed
    automatically. Instagram fetches the images from this site, so it must be
    public.
+
+### Links and QR codes
+
+`/admin/links` makes QR codes for the redirect links (`/link/<slug>`, edited
+in the CMS under "Redirect Links"), sign-ups, events, pages or any URL, as
+4096 px PNG or SVG. A QR code's link gets a statistics tag (`?ref=<tag>`,
+default `qr`).
+
+A link can be saved with its tag as a tagged link (`tagged_links` table,
+`src/utils/taggedLinkStore.ts`); the page then shows how many people arrived
+through it, fetched from the Umami API (`src/utils/umami.ts`, cached for 5
+minutes). Visits are matched by the link's path and its `ref`, so only links on
+aaltogamers.fi have stats. Tagged links can be renamed or deleted, but their
+link and tag can't change, so printed QR codes keep counting. The MCP server
+has tools to list, create, rename and delete them.
+
+`/link/<slug>` redirects before the Umami script loads, so the server sends
+those page views to Umami itself (only in production).
 
 ### Content manager (Decap CMS)
 

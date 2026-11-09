@@ -1,15 +1,12 @@
 import { ReactNode, useMemo, useState } from 'react'
 import { QRCodeErrorCorrectionLevel } from 'qrcode'
+import slug from 'slug'
 import { CornerStyle, DotStyle, qrSvg, svgToPng } from '../utils/qrSvg'
+import type { TaggedLink } from '../utils/taggedLinks'
 
-export type QRTarget = { name: string; fileName: string; url: string }
-export type QRTargetGroup = { label: string; targets: QRTarget[] }
+type Props = { link: TaggedLink }
 
-type Props = { groups: QRTargetGroup[] }
-
-const CUSTOM = 'custom'
 const PNG_SIZE = 4096
-const REDIRECTS_CMS_URL = '/cms#/collections/links/entries/links'
 
 const ERROR_LEVELS: { value: QRCodeErrorCorrectionLevel; label: string }[] = [
   { value: 'L', label: 'Low (7%)' },
@@ -30,18 +27,14 @@ const CORNER_STYLES: { value: CornerStyle; label: string }[] = [
   { value: 'circle', label: 'Circle' },
 ]
 
-const inputClass = 'p-2 rounded-md bg-white text-black border border-gray-300'
+export const inputClass = 'p-2 rounded-md bg-white text-black border border-gray-300'
 
-const withRef = (url: string, ref: string) => {
-  if (!ref) return url
-  try {
-    const u = new URL(url)
-    u.searchParams.set('ref', ref)
-    return u.toString()
-  } catch {
-    return url
-  }
-}
+export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
+  <label className="flex flex-col gap-1">
+    <span className="text-sm text-lightgray">{label}</span>
+    {children}
+  </label>
+)
 
 const download = (href: string, fileName: string) => {
   const a = document.createElement('a')
@@ -49,13 +42,6 @@ const download = (href: string, fileName: string) => {
   a.download = fileName
   a.click()
 }
-
-const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-  <label className="flex flex-col gap-1">
-    <span className="text-sm text-lightgray">{label}</span>
-    {children}
-  </label>
-)
 
 const Choice = <T extends string>({
   options,
@@ -82,27 +68,18 @@ const Choice = <T extends string>({
   </div>
 )
 
-const QRCodeGenerator = ({ groups }: Props) => {
-  const [selected, setSelected] = useState(groups.length ? '0:0' : CUSTOM)
-  const [customUrl, setCustomUrl] = useState('https://aaltogamers.fi/')
+// QR code maker for a saved tagged link
+const QRCodeGenerator = ({ link }: Props) => {
   const [errorLevel, setErrorLevel] = useState<QRCodeErrorCorrectionLevel>('M')
   const [dotStyle, setDotStyle] = useState<DotStyle>('square')
   const [cornerStyle, setCornerStyle] = useState<CornerStyle>('square')
   const [color, setColor] = useState('#000000')
   const [background, setBackground] = useState('#ffffff')
   const [transparent, setTransparent] = useState(false)
-  const [ref, setRef] = useState('qr')
 
-  const target = useMemo<QRTarget>(() => {
-    if (selected === CUSTOM) return { name: 'Custom', fileName: 'custom', url: customUrl }
-    const [g, t] = selected.split(':').map(Number)
-    return groups[g].targets[t]
-  }, [selected, customUrl, groups])
-
-  const url = withRef(target.url, ref.trim())
+  const url = link.taggedUrl
 
   const { svg, error } = useMemo(() => {
-    if (!url) return { svg: '', error: 'Enter a URL' }
     try {
       const svg = qrSvg(url, {
         errorCorrectionLevel: errorLevel,
@@ -117,69 +94,28 @@ const QRCodeGenerator = ({ groups }: Props) => {
     }
   }, [url, errorLevel, dotStyle, cornerStyle, color, background, transparent])
 
-  const fileName = `qr-${target.fileName}`
+  const fileName = `qr-${slug(link.name)}`
 
   const downloadPng = async () => download(await svgToPng(svg, PNG_SIZE), `${fileName}.png`)
 
   const downloadSvg = () => {
-    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
-    download(url, `${fileName}.svg`)
-    URL.revokeObjectURL(url)
+    const blobUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
+    download(blobUrl, `${fileName}.svg`)
+    URL.revokeObjectURL(blobUrl)
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-5xl mx-auto">
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <h2 className="text-3xl">QR codes</h2>
-        <a
-          href={REDIRECTS_CMS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="borderbutton"
-        >
-          Edit redirect links
-        </a>
-      </div>
-      <div className="flex flex-wrap gap-12">
+    <div className="flex flex-col gap-6">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="break-all underline text-sm"
+      >
+        {url}
+      </a>
+      <div className="flex flex-wrap gap-10">
         <div className="flex flex-col gap-5 flex-1 min-w-72">
-          <Field label="Link">
-            <select
-              className={inputClass}
-              value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-            >
-              {groups.map((group, g) => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.targets.map((t, i) => (
-                    <option key={t.url} value={`${g}:${i}`}>
-                      {t.name}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-              <option value={CUSTOM}>Custom URL</option>
-            </select>
-          </Field>
-          {selected === CUSTOM && (
-            <Field label="URL">
-              <input
-                className={inputClass}
-                value={customUrl}
-                onChange={(e) => setCustomUrl(e.target.value)}
-              />
-            </Field>
-          )}
-          <Field label="Statistics tag (see how many people arrived at link through this code)">
-            <input className={inputClass} value={ref} onChange={(e) => setRef(e.target.value)} />
-          </Field>
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="break-all underline text-sm"
-          >
-            {url}
-          </a>
           <Field label="Dots">
             <Choice options={DOT_STYLES} value={dotStyle} onChange={setDotStyle} />
           </Field>
@@ -225,7 +161,7 @@ const QRCodeGenerator = ({ groups }: Props) => {
         </div>
         <div className="flex flex-col gap-4 items-center">
           <div
-            className="w-80 h-80 flex items-center justify-center rounded-md border border-gray-300 overflow-hidden"
+            className="w-72 h-72 flex items-center justify-center rounded-md border border-gray-300 overflow-hidden"
             style={{
               background: transparent
                 ? 'repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 0 0 / 20px 20px'

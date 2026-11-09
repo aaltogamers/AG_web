@@ -74,6 +74,13 @@ variable "challengermode_refresh_key" {
   default     = ""
 }
 
+variable "umami_api_key" {
+  description = "API key of stats.aaltogamers.fi, for the visitor stats of tagged links. Empty hides them."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "telegram_posts_webhook_secret" {
   description = "Secret Telegram sends to the posts bot webhook (/api/telegram/posts-webhook)"
   type        = string

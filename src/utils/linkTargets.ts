@@ -1,10 +1,10 @@
-import type { GetServerSideProps } from 'next'
-import AdminPage from '../../components/AdminPage'
-import QRCodeGenerator, { QRTargetGroup } from '../../components/QRCodeGenerator'
-import { getEvents } from '../../utils/eventStore'
-import { getRedirects } from '../../utils/redirects'
+// Links that can get a statistics tag and a QR code on the "Links and QR codes" admin page
+import { getEvents } from './eventStore'
+import { getRedirects } from './redirects'
+import { SITE_URL } from './taggedLinks'
 
-const BASE_URL = 'https://aaltogamers.fi'
+export type LinkTarget = { name: string; fileName: string; url: string }
+export type LinkTargetGroup = { label: string; targets: LinkTarget[] }
 
 const PAGES = [
   { name: 'Home', path: '/' },
@@ -17,32 +17,19 @@ const PAGES = [
   { name: 'Tournaments', path: '/tournaments' },
 ]
 
-type Props = { groups: QRTargetGroup[] }
+export const redirectLinkTargets = (): LinkTarget[] =>
+  getRedirects().map((r) => ({ name: r.name, fileName: r.slug, url: `${SITE_URL}/link/${r.slug}` }))
 
-const QRCodesPage = ({ groups }: Props) => (
-  <AdminPage events={[]} section="qr">
-    <QRCodeGenerator groups={groups} />
-  </AdminPage>
-)
-
-export default QRCodesPage
-
-export const getServerSideProps: GetServerSideProps<Props> = async () => {
+// Events that are upcoming or ended in the last week
+export const getLinkTargetGroups = async (): Promise<LinkTargetGroup[]> => {
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
   const events = (await getEvents()).filter((e) => {
     const end = e.sessions.at(-1)?.end
     return end && new Date(end).getTime() > weekAgo
   })
 
-  const groups: QRTargetGroup[] = [
-    {
-      label: 'Redirect links',
-      targets: getRedirects().map((r) => ({
-        name: r.name,
-        fileName: r.slug,
-        url: `${BASE_URL}/link/${r.slug}`,
-      })),
-    },
+  const groups: LinkTargetGroup[] = [
+    { label: 'Redirect links', targets: redirectLinkTargets() },
     {
       label: 'Sign-ups',
       targets: events
@@ -50,7 +37,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async () => {
         .map((e) => ({
           name: `${e.name} sign-up`,
           fileName: `${e.slug}-signup`,
-          url: `${BASE_URL}/events/${e.slug}#signups`,
+          url: `${SITE_URL}/events/${e.slug}#signups`,
         })),
     },
     {
@@ -58,7 +45,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async () => {
       targets: events.map((e) => ({
         name: e.name,
         fileName: e.slug,
-        url: `${BASE_URL}/events/${e.slug}`,
+        url: `${SITE_URL}/events/${e.slug}`,
       })),
     },
     {
@@ -66,10 +53,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async () => {
       targets: PAGES.map((p) => ({
         name: p.name,
         fileName: p.path === '/' ? 'home' : p.path.slice(1),
-        url: `${BASE_URL}${p.path}`,
+        url: `${SITE_URL}${p.path}`,
       })),
     },
   ]
-
-  return { props: { groups: groups.filter((g) => g.targets.length > 0) } }
+  return groups.filter((g) => g.targets.length > 0)
 }

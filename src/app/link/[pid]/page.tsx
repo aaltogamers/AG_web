@@ -1,15 +1,21 @@
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getRedirects } from '../../../utils/redirects'
+import { trackPageView } from '../../../utils/umami'
 
 type Props = {
   params: Promise<{ pid: string }>
+  searchParams: Promise<{ ref?: string | string[] }>
 }
 
-const Links = async ({ params }: Props) => {
+const Links = async ({ params, searchParams }: Props) => {
   const pid = (await params).pid
   const redirectItem = getRedirects().find((r) => r.slug === pid)
 
   if (redirectItem) {
+    const { ref } = await searchParams
+    const query = typeof ref === 'string' && ref ? `?ref=${encodeURIComponent(ref)}` : ''
+    trackPageView(`/link/${pid}${query}`, await headers())
     redirect(redirectItem.url)
   }
 
@@ -21,7 +27,3 @@ const Links = async ({ params }: Props) => {
 }
 
 export default Links
-
-export async function generateStaticParams() {
-  return getRedirects().map((item) => ({ slug: `/link/${item.slug}` }))
-}

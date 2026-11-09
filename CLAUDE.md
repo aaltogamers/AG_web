@@ -18,6 +18,7 @@ There are no unit or E2E tests, and you should not add them.
 
 - Put sign-up form and task database logic in `src/utils/signupForms.ts` and `src/utils/taskStore.ts`, which both the regular endpoints and the MCP tools use, not in the route handlers or tools.
 - When event fields change (the validation in `src/utils/eventStore.ts`), update `src/utils/agentEvents.ts` and the tool schemas in `src/utils/mcp/eventTools.ts`.
+- Put tagged link database logic in `src/utils/taggedLinkStore.ts`, used by the admin API and the MCP tools (`src/utils/mcp/linkTools.ts`).
 - The MCP server must never return participants' answers, only counts.
 - The MCP server must never schedule, approve or send posts; only a human can approve them (on the website or with the Telegram buttons).
 
