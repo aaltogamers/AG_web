@@ -16,10 +16,10 @@ const bar = (x: number, h: number) => {
 
 const dayLabel = (date: string) => moment(date).format('ddd D MMM')
 
-// Visitors per day of the last 30 days, with the day under the pointer in a tooltip
-const VisitorsSparkline = ({ daily }: { daily: DailyVisitors[] }) => {
+// Visitors per day of the last 30 days, with the day under the pointer in a tooltip.
+// `max` is the busiest day of all the charts on the page, so they share a scale.
+const VisitorsSparkline = ({ daily, max }: { daily: DailyVisitors[]; max: number }) => {
   const [hovered, setHovered] = useState<number | null>(null)
-  const max = Math.max(1, ...daily.map((d) => d.visitors))
   const width = daily.length * SLOT
   const peak = daily.reduce((a, b) => (b.visitors > a.visitors ? b : a), daily[0])
   const day = hovered === null ? null : daily[hovered]
@@ -43,7 +43,7 @@ const VisitorsSparkline = ({ daily }: { daily: DailyVisitors[] }) => {
           d.visitors > 0 ? (
             <path
               key={d.date}
-              d={bar(i * SLOT + 1, Math.max(2, (d.visitors / max) * HEIGHT))}
+              d={bar(i * SLOT + 1, Math.max(2, (d.visitors / Math.max(1, max)) * HEIGHT))}
               fill={hovered === i ? HOVER_COLOR : COLOR}
             />
           ) : null

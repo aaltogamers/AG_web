@@ -26,7 +26,7 @@ const errorMessage = async (res: Response) =>
   ((await res.json().catch(() => null)) as { error?: string } | null)?.error ??
   `Error ${res.status}`
 
-const StatsCells = ({ stats }: { stats: TaggedLinkStats | null }) => {
+const StatsCells = ({ stats, max }: { stats: TaggedLinkStats | null; max: number }) => {
   if (!stats) {
     return (
       <>
@@ -40,7 +40,7 @@ const StatsCells = ({ stats }: { stats: TaggedLinkStats | null }) => {
     <>
       <td className="p-2">
         <div className="flex items-end justify-end gap-3">
-          <VisitorsSparkline daily={stats.daily} />
+          <VisitorsSparkline daily={stats.daily} max={max} />
           <span className="min-w-8 text-right tabular-nums" title={tooltip(stats.last30Days)}>
             {stats.last30Days.visitors}
           </span>
@@ -158,6 +158,12 @@ const LinksSection = ({ groups, initialLinkId }: Props) => {
   const [postLinks, setPostLinks] = useState<PostLinkWithStats[] | null>(null)
 
   const openLink = links?.find((l) => l.id === openId)
+  const maxDaily = Math.max(
+    0,
+    ...[...(links ?? []), ...(postLinks ?? [])].flatMap(
+      (l) => l.stats?.daily.map((d) => d.visitors) ?? []
+    )
+  )
 
   const setOpen = (id: string | null) => {
     setOpenId(id)
@@ -272,7 +278,7 @@ const LinksSection = ({ groups, initialLinkId }: Props) => {
                         <div className="text-lightgray">No stats for links outside the site</div>
                       )}
                     </td>
-                    <StatsCells stats={link.stats} />
+                    <StatsCells stats={link.stats} max={maxDaily} />
                     <td className="p-2">
                       <div className="flex gap-2 justify-end whitespace-nowrap">
                         <button
@@ -329,7 +335,7 @@ const LinksSection = ({ groups, initialLinkId }: Props) => {
                       </a>
                     </td>
                     <td className="p-2">{link.channelName}</td>
-                    <StatsCells stats={link.stats} />
+                    <StatsCells stats={link.stats} max={maxDaily} />
                     <td className="p-2 whitespace-nowrap text-lightgray">
                       {moment(link.lastSentAt).format('D MMM YYYY')}
                       {link.postCount > 1 && ` (${link.postCount} posts)`}
