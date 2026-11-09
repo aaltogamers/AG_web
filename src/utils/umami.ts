@@ -13,6 +13,21 @@ const statsCache = new Map<string, { at: number; stats: Promise<TaggedLinkStats 
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
+const MAX_REQUESTS = 6
+let activeRequests = 0
+const waiting: (() => void)[] = []
+
+const limited = async <T>(run: () => Promise<T>): Promise<T> => {
+  if (activeRequests >= MAX_REQUESTS) await new Promise<void>((resolve) => waiting.push(resolve))
+  activeRequests++
+  try {
+    return await run()
+  } finally {
+    activeRequests--
+    waiting.shift()?.()
+  }
+}
+
 const fetchUmami = async <T>(
   endpoint: string,
   path: string,
@@ -27,12 +42,14 @@ const fetchUmami = async <T>(
     query: `re.(^|&)ref=${escapeRegex(tag)}(&|$)`,
     ...extra,
   })
-  const res = await fetch(`${UMAMI_URL}/api/websites/${UMAMI_WEBSITE_ID}/${endpoint}?${params}`, {
-    headers: { Authorization: `Bearer ${process.env.UMAMI_API_KEY}` },
-    signal: AbortSignal.timeout(10_000),
+  return limited(async () => {
+    const res = await fetch(`${UMAMI_URL}/api/websites/${UMAMI_WEBSITE_ID}/${endpoint}?${params}`, {
+      headers: { Authorization: `Bearer ${process.env.UMAMI_API_KEY}` },
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!res.ok) throw new Error(`Umami answered ${res.status}`)
+    return (await res.json()) as T
   })
-  if (!res.ok) throw new Error(`Umami answered ${res.status}`)
-  return (await res.json()) as T
 }
 
 const fetchStats = async (path: string, tag: string, startAt: number): Promise<LinkStats> => {

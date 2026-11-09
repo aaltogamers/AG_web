@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
+import moment from 'moment'
 import Dialog from './Dialog'
 import QRCodeGenerator, { Field, inputClass } from './QRCodeGenerator'
 import { useToast } from './Toast'
 import VisitorsSparkline from './VisitorsSparkline'
 import type { LinkTargetGroup } from '../utils/linkTargets'
+import type { PostLinkWithStats } from '../utils/social/postLinks'
 import {
   LinkStats,
   TAG_PATTERN,
+  TaggedLinkStats,
   TaggedLinkWithStats,
   statsPath,
   tagFromName,
@@ -23,17 +26,44 @@ const errorMessage = async (res: Response) =>
   ((await res.json().catch(() => null)) as { error?: string } | null)?.error ??
   `Error ${res.status}`
 
-const StatsCell = ({ stats }: { stats: LinkStats | undefined }) =>
-  stats ? (
-    <td
-      className="p-2 text-right tabular-nums"
-      title={`${stats.visits} visits, ${stats.pageviews} page views`}
-    >
-      {stats.visitors}
-    </td>
-  ) : (
-    <td className="p-2 text-right text-lightgray">–</td>
+const StatsCells = ({ stats }: { stats: TaggedLinkStats | null }) => {
+  if (!stats) {
+    return (
+      <>
+        <td className="p-2 text-right text-lightgray">–</td>
+        <td className="p-2 text-right text-lightgray">–</td>
+      </>
+    )
+  }
+  const tooltip = (s: LinkStats) => `${s.visits} visits, ${s.pageviews} page views`
+  return (
+    <>
+      <td className="p-2">
+        <div className="flex items-end justify-end gap-3">
+          <VisitorsSparkline daily={stats.daily} />
+          <span className="min-w-8 text-right tabular-nums" title={tooltip(stats.last30Days)}>
+            {stats.last30Days.visitors}
+          </span>
+        </div>
+      </td>
+      <td className="p-2 text-right tabular-nums" title={tooltip(stats.allTime)}>
+        {stats.allTime.visitors}
+      </td>
+    </>
   )
+}
+
+const TableHead = ({ second, extra }: { second: string; extra?: string }) => (
+  <thead>
+    <tr className="text-left text-lightgray border-b border-gray-300">
+      <th className="p-2 font-normal">Name</th>
+      <th className="p-2 font-normal">{second}</th>
+      <th className="p-2 font-normal text-right">Visitors, last 30 days</th>
+      <th className="p-2 font-normal text-right">Visitors, all time</th>
+      <th className="p-2 font-normal">{extra}</th>
+    </tr>
+  </thead>
+)
 
 const NewTaggedLinkForm = ({
   groups,
@@ -125,6 +155,7 @@ const LinksSection = ({ groups, initialLinkId }: Props) => {
   const [links, setLinks] = useState<TaggedLinkWithStats[] | null>(null)
   const [statsEnabled, setStatsEnabled] = useState(true)
   const [openId, setOpenId] = useState(initialLinkId)
+  const [postLinks, setPostLinks] = useState<PostLinkWithStats[] | null>(null)
 
   const openLink = links?.find((l) => l.id === openId)
 
@@ -146,6 +177,14 @@ const LinksSection = ({ groups, initialLinkId }: Props) => {
   useEffect(() => {
     void load()
   }, [load])
+
+  useEffect(() => {
+    void (async () => {
+      const res = await fetch('/api/admin/links/posts', { credentials: 'same-origin' })
+      if (!res.ok) return toast(await errorMessage(res), { isError: true })
+      setPostLinks(((await res.json()) as { links: PostLinkWithStats[] }).links)
+    })()
+  }, [toast])
 
   const save = async (input: { name: string; url: string; tag: string }) => {
     const res = await fetch('/api/admin/links', {
@@ -214,15 +253,7 @@ const LinksSection = ({ groups, initialLinkId }: Props) => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-lightgray border-b border-gray-300">
-                  <th className="p-2 font-normal">Name</th>
-                  <th className="p-2 font-normal">Link</th>
-                  <th className="p-2 font-normal text-right">Visitors, last 30 days</th>
-                  <th className="p-2 font-normal text-right">Visitors, all time</th>
-                  <th className="p-2" />
-                </tr>
-              </thead>
+              <TableHead second="Link" />
               <tbody>
                 {links.map((link) => (
                   <tr key={link.id} className="border-b border-gray-200">
@@ -241,21 +272,7 @@ const LinksSection = ({ groups, initialLinkId }: Props) => {
                         <div className="text-lightgray">No stats for links outside the site</div>
                       )}
                     </td>
-                    <td className="p-2">
-                      {link.stats && (
-                        <div className="flex items-end justify-end gap-3">
-                          <VisitorsSparkline daily={link.stats.daily} />
-                          <span
-                            className="min-w-8 text-right tabular-nums"
-                            title={`${link.stats.last30Days.visits} visits, ${link.stats.last30Days.pageviews} page views`}
-                          >
-                            {link.stats.last30Days.visitors}
-                          </span>
-                        </div>
-                      )}
-                      {!link.stats && <div className="text-right text-lightgray">–</div>}
-                    </td>
-                    <StatsCell stats={link.stats?.allTime} />
+                    <StatsCells stats={link.stats} />
                     <td className="p-2">
                       <div className="flex gap-2 justify-end whitespace-nowrap">
                         <button
@@ -276,6 +293,46 @@ const LinksSection = ({ groups, initialLinkId }: Props) => {
                           Delete
                         </button>
                       </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col gap-3">
+        <h3 className="text-2xl">From posts</h3>
+        <p className="text-sm text-lightgray">
+          Links in sent posts are tagged with their channel automatically, so you can see how many
+          people came from each channel.
+        </p>
+        {postLinks === null ? (
+          <span>Loading…</span>
+        ) : postLinks.length === 0 ? (
+          <span className="text-lightgray">No sent posts with links yet.</span>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <TableHead second="Channel" extra="Last sent" />
+              <tbody>
+                {postLinks.map((link) => (
+                  <tr key={`${link.url}|${link.tag}`} className="border-b border-gray-200">
+                    <td className="p-2">
+                      <a
+                        href={link.taggedUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                      >
+                        {link.label}
+                      </a>
+                    </td>
+                    <td className="p-2">{link.channelName}</td>
+                    <StatsCells stats={link.stats} />
+                    <td className="p-2 whitespace-nowrap text-lightgray">
+                      {moment(link.lastSentAt).format('D MMM YYYY')}
+                      {link.postCount > 1 && ` (${link.postCount} posts)`}
                     </td>
                   </tr>
                 ))}

@@ -291,6 +291,12 @@ aaltogamers.fi have stats. Tagged links can be renamed or deleted, but their
 link and tag can't change, so printed QR codes keep counting. The MCP server
 has tools to list, create, rename and delete them.
 
+Links in sent posts already get their channel's ref, so the page also lists
+them under "From posts" with their stats, one row per link and channel
+(`src/utils/social/postLinks.ts`). They are worked out from the sent posts each
+time, not saved, so they cover old posts too. An event page and its sign-up
+count as one link, since they have the same stats.
+
 `/link/<slug>` redirects before the Umami script loads, so the server sends
 those page views to Umami itself (only in production).
 

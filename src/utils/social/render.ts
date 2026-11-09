@@ -73,6 +73,25 @@ const withRef = (url: string, ref: string) => {
   return `${beforeHash}${sep}ref=${encodeURIComponent(ref)}${hash !== undefined ? `#${hash}` : ''}`
 }
 
+const PLACEHOLDER_PATTERN = /\{\{\s*([a-zA-Z]+)\s*(?::\s*([^}]*?)\s*)?\}\}/g
+
+const redirectUrl = (base: string, name: string) => `${base}/link/${encodeURIComponent(name)}`
+const eventPageUrl = (base: string, slug: string) => `${base}/events/${slug}`
+const signupPageUrl = (base: string, slug: string) => `${eventPageUrl(base, slug)}?signup`
+
+// The links that {{link:name}}, {{event}} and {{signup}} placeholders become, without the ref
+export const placeholderLinks = (markdown: string, baseUrl: string, eventSlug: string | null) => {
+  const base = baseUrl.replace(/\/+$/, '')
+  return [...markdown.matchAll(PLACEHOLDER_PATTERN)].flatMap(([, rawName, arg]) => {
+    const name = rawName.toLowerCase()
+    if (name === 'link') return arg ? [redirectUrl(base, arg)] : []
+    if (!eventSlug) return []
+    if (name === 'event') return [eventPageUrl(base, eventSlug)]
+    if (name === 'signup') return [signupPageUrl(base, eventSlug)]
+    return []
+  })
+}
+
 // Fills in {{link:name}}, {{event}} and {{signup}}. Unknown or unusable
 // placeholders are left as they are and reported.
 export const fillPlaceholders = (
@@ -83,7 +102,7 @@ export const fillPlaceholders = (
   const warnings: string[] = []
   const base = ctx.baseUrl.replace(/\/+$/, '')
   const text = markdown.replace(
-    /\{\{\s*([a-zA-Z]+)\s*(?::\s*([^}]*?)\s*)?\}\}/g,
+    PLACEHOLDER_PATTERN,
     (match, rawName: string, arg?: string) => {
       const name = rawName.toLowerCase()
       if (name === 'link') {
@@ -95,15 +114,14 @@ export const fillPlaceholders = (
           errors.push(`${match}: there is no /link/${arg} redirect`)
           return match
         }
-        return withRef(`${base}/link/${encodeURIComponent(arg)}`, ctx.ref)
+        return withRef(redirectUrl(base, arg), ctx.ref)
       }
       if (name === 'event' || name === 'signup') {
         if (!ctx.eventSlug) {
           errors.push(`${match}: the post has no event`)
           return match
         }
-        const eventUrl = `${base}/events/${ctx.eventSlug}`
-        if (name === 'event') return withRef(eventUrl, ctx.ref)
+        if (name === 'event') return withRef(eventPageUrl(base, ctx.eventSlug), ctx.ref)
         if (!ctx.signupSessions) {
           errors.push(`${match}: the event has no sign-up`)
           return match
@@ -119,7 +137,7 @@ export const fillPlaceholders = (
         } else if (ctx.signupSessions.length > 1) {
           errors.push(`${match}: the event has several sign-ups, pick one with {{signup:<session name>}}`)
         }
-        return withRef(`${eventUrl}?signup`, ctx.ref)
+        return withRef(signupPageUrl(base, ctx.eventSlug), ctx.ref)
       }
       if (SESSION_PLACEHOLDERS.includes(name)) {
         if (!ctx.eventSlug || !ctx.sessions) {

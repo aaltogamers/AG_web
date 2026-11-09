@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { AgentError } from '../agentApi'
 import { redirectLinkTargets } from '../linkTargets'
+import { postLinksWithStats } from '../social/postLinks'
 import { TaggedLink, qrPageUrl } from '../taggedLinks'
 import {
   createTaggedLink,
@@ -23,7 +24,7 @@ export const registerLinkTools = (server: McpServer) => {
     {
       title: 'List tagged links',
       description:
-        'Lists the tagged links with their visitor counts (last 30 days and all time; null if unavailable or the link is outside aaltogamers.fi), and the redirect links (aaltogamers.fi/link/<slug>) that can be tagged.',
+        'Lists the tagged links with their visitor counts (last 30 days and all time; null if unavailable or the link is outside aaltogamers.fi), the links in sent posts (tagged with their channel automatically, so their stats show how many people came from each channel), and the redirect links (aaltogamers.fi/link/<slug>) that can be tagged.',
       annotations: { readOnlyHint: true },
     },
     runTool('list_tagged_links', async () => ({
@@ -31,6 +32,7 @@ export const registerLinkTools = (server: McpServer) => {
         ...describe(l),
         stats: l.stats,
       })),
+      postLinks: await postLinksWithStats(),
       redirectLinks: redirectLinkTargets().map(({ name, url }) => ({ name, url })),
     }))
   )
