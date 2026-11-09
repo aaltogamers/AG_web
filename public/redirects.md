@@ -55,7 +55,4 @@ redirects:
   - name: Sims Build-Off 2026 Sign-Up
     slug: sims-2026
     url: https://forms.gle/Vmq7SHmvKjvhU8nw5
-  - name: AG Vipps
-    url: https://qr.mobilepay.fi/vp/EYoBNJ_nM
-    slug: vipps
 ---
